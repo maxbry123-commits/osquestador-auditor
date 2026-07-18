@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osquestador — Tareas Kanban</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --bg-4:#222; --border:#2e2e2e; --text-1:#fff; --text-2:#b0aea5; --text-3:#9ca3af; --text-4:#6b7280; --icon:#b0aea5; --accent:#3b82f6; --accent-hover:#2563eb; --focus-ring:#3898ec; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif; font-size:14px; line-height:1.5; color:var(--text-1); background:var(--bg-0); min-height:100vh; overflow:hidden; -webkit-font-smoothing:antialiased; }
+.serif { font-family:'Charter','Iowan Old Style','Apple Garamond',Georgia,serif; }
+.mono { font-family:'JetBrains Mono','SF Mono',Menlo,monospace; }
+.skip-link { position:absolute; top:-40px; left:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:0 0 6px 6px; z-index:999; text-decoration:none; font-size:12px; }
+.skip-link:focus { top:0; }
+*:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:3px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.icon-sm { width:12px; height:12px; }
+.app { display:grid; grid-template-rows:60px 1fr 32px; height:100vh; }
+.header { background:var(--bg-1); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; min-height:60px; }
+.page-title { font-family:'Charter',Georgia,serif; font-size:18px; font-weight:400; }
+.header-context { color:var(--text-4); font-size:12px; padding-left:12px; border-left:1px solid var(--border); }
+.header-spacer { flex:1; }
+.btn { padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid var(--border); background:var(--bg-2); color:var(--text-1); transition:all 150ms; min-height:32px; display:inline-flex; align-items:center; gap:6px; }
+.btn:hover { background:var(--bg-3); }
+.btn-primary { background:var(--accent); color:white; border-color:var(--accent); }
+.btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+.main { overflow-y:auto; padding:24px; }
+.kanban { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; min-height:100%; }
+@media (max-width: 1024px) { .kanban { grid-template-columns:repeat(2, 1fr); } }
+@media (max-width: 640px) { .kanban { grid-template-columns:1fr; } }
+.column { background:var(--bg-1); border:1px solid var(--border); border-radius:8px; padding:12px; min-height:400px; display:flex; flex-direction:column; }
+.col-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.col-title { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); display:flex; align-items:center; gap:8px; }
+.col-count { background:var(--bg-3); padding:2px 8px; border-radius:10px; font-size:10px; color:var(--text-2); font-family:'JetBrains Mono',monospace; }
+.col-add { color:var(--text-4); cursor:pointer; background:transparent; border:none; padding:4px; border-radius:4px; display:flex; }
+.col-add:hover { color:var(--text-1); background:var(--bg-3); }
+.card { background:var(--bg-2); border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:8px; cursor:pointer; transition:all 150ms; }
+.card:hover { border-color:var(--accent); transform:translateY(-1px); }
+.card.priority-high { border-left:3px solid var(--err); }
+.card.priority-med { border-left:3px solid var(--warn); }
+.card.priority-low { border-left:3px solid var(--ok); }
+.card.done { opacity:0.6; }
+.card-priority { display:inline-block; padding:1px 6px; border-radius:3px; font-size:9px; font-weight:600; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.05em; }
+.card-priority.high { background:rgba(239,68,68,0.1); color:var(--err); }
+.card-priority.med { background:rgba(245,158,11,0.1); color:var(--warn); }
+.card-priority.low { background:rgba(16,185,129,0.1); color:var(--ok); }
+.card-title { font-size:13px; font-weight:500; margin-bottom:6px; line-height:1.3; color:var(--text-1); }
+.card-desc { font-size:11px; color:var(--text-3); line-height:1.4; margin-bottom:8px; }
+.card-meta { display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--text-4); }
+.card-tag { padding:1px 6px; background:var(--bg-3); border-radius:3px; font-family:'JetBrains Mono',monospace; color:var(--text-2); }
+.card-id { font-family:'JetBrains Mono',monospace; }
+.status { background:var(--bg-1); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:16px; font-size:11px; color:var(--text-3); min-height:32px; }
+.dot { width:5px; height:5px; border-radius:50%; background:var(--ok); display:inline-block; margin-right:6px; }
+.mono { font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+<div class="app">
+  <header class="header" role="banner">
+    <h1 class="page-title">Tareas</h1>
+    <span class="header-context">osquestador-v3</span>
+    <div class="header-spacer"></div>
+    <button class="btn" aria-label="Filtros">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filtros
+    </button>
+    <button class="btn" aria-label="Sincronizar Kanboard">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Sync Kanboard
+    </button>
+    <button class="btn btn-primary">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva tarea
+    </button>
+  </header>
+  <main class="main" id="main-content" role="main" aria-label="Tablero Kanban">
+    <div class="kanban" role="list">
+      <section class="column" aria-labelledby="col-backlog">
+        <div class="col-header">
+          <div class="col-title" id="col-backlog">Backlog <span class="col-count">4</span></div>
+          <button class="col-add" aria-label="Añadir tarea a Backlog">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <article class="card priority-med" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">D38: Investigar Pydantic AI RunContext</div>
+          <div class="card-desc">Type safety layer para el kernel — RunContext[Dependencies] pattern + Logfire integration</div>
+          <div class="card-meta">
+            <span class="card-tag">#orquestador</span>
+            <span class="card-id">#42</span>
+          </div>
+        </article>
+        <article class="card priority-low" tabindex="0" role="listitem">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">D39: Adoptar OpenAI Agents guardrails</div>
+          <div class="card-desc">Input/output/tool guardrails + handoffs para delegar entre agentes</div>
+          <div class="card-meta">
+            <span class="card-tag">#seguridad</span>
+            <span class="card-id">#41</span>
+          </div>
+        </article>
+        <article class="card priority-med" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Comparar LangGraph 1.0 vs CrewAI</div>
+          <div class="card-desc">Evaluar state machines (LangGraph) vs role-based multi-agent (CrewAI) para el Orquestador</div>
+          <div class="card-meta">
+            <span class="card-tag">#arquitectura</span>
+            <span class="card-id">#40</span>
+          </div>
+        </article>
+        <article class="card priority-low" tabindex="0" role="listitem">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Mastra TypeScript — viabilidad</div>
+          <div class="card-desc">Evaluar si el stack TS es viable para sub-agentes ligeros en el panel</div>
+          <div class="card-meta">
+            <span class="card-tag">#research</span>
+            <span class="card-id">#39</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="column" aria-labelledby="col-doing">
+        <div class="col-header">
+          <div class="col-title" id="col-doing">Doing <span class="col-count">3</span></div>
+          <button class="col-add" aria-label="Añadir tarea a Doing">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <article class="card priority-high" tabindex="0" role="listitem">
+          <div class="card-priority high">High</div>
+          <div class="card-title">D37: Integrar MCP-Graphiti 3 transports</div>
+          <div class="card-desc">stdio (Claude Desktop) + SSE (Cursor) + HTTP (panel propio). FastAPI decoupled wrapper.</div>
+          <div class="card-meta">
+            <span class="card-tag">#mcp</span>
+            <span class="card-id">#38</span>
+          </div>
+        </article>
+        <article class="card priority-high" tabindex="0" role="listitem">
+          <div class="card-priority high">High</div>
+          <div class="card-title">Aplicar correcciones estéticas a 16 HTMLs</div>
+          <div class="card-desc">Quitar emojis a color, agregar iconos monocromáticos, paleta grises+azul sutil, serif para títulos</div>
+          <div class="card-meta">
+            <span class="card-tag">#ui</span>
+            <span class="card-id">#37</span>
+          </div>
+        </article>
+        <article class="card priority-med" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Configurar FalkorDB single container</div>
+          <div class="card-desc">docker-compose con FalkorDB + Graphiti MCP + health endpoint. SEMAPHORE_LIMIT=5</div>
+          <div class="card-meta">
+            <span class="card-tag">#deploy</span>
+            <span class="card-id">#36</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="column" aria-labelledby="col-review">
+        <div class="col-header">
+          <div class="col-title" id="col-review">Review <span class="col-count">2</span></div>
+          <button class="col-add" aria-label="Añadir tarea a Review">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <article class="card priority-med" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Prototipo v4 — 7 HTMLs verificados</div>
+          <div class="card-desc">Dashboard + Memoria + Tareas + Skills + Docs + Modal + Panel final. Score 95/100 auditoría.</div>
+          <div class="card-meta">
+            <span class="card-tag">#prototipo</span>
+            <span class="card-id">#35</span>
+          </div>
+        </article>
+        <article class="card priority-low" tabindex="0" role="listitem">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Documentar 218 fotos de interfaces</div>
+          <div class="card-desc">16 programas × 5 fotos. README con descripciones y atribuciones.</div>
+          <div class="card-meta">
+            <span class="card-tag">#docs</span>
+            <span class="card-id">#34</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="column" aria-labelledby="col-done">
+        <div class="col-header">
+          <div class="col-title" id="col-done">Done <span class="col-count">4</span></div>
+          <button class="col-add" aria-label="Añadir tarea a Done">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+        <article class="card priority-low done" tabindex="0" role="listitem">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Investigación 29 pasadas Obsidian+Graphiti</div>
+          <div class="card-desc">15 Obsidian + 14 Graphiti. 5 decisiones D33-D37.</div>
+          <div class="card-meta">
+            <span class="card-tag">#research</span>
+            <span class="card-id">#33</span>
+          </div>
+        </article>
+        <article class="card priority-low done" tabindex="0" role="listitem">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Investigar 4 tareas (frameworks AI)</div>
+          <div class="card-desc">5 Kanban AI + 5 plugins Obsidian AI + 12 funciones Graphiti + 10 frameworks. D27-D32.</div>
+          <div class="card-meta">
+            <span class="card-tag">#research</span>
+            <span class="card-id">#32</span>
+          </div>
+        </article>
+        <article class="card priority-med done" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Baidu OCR como sistema faltante</div>
+          <div class="card-desc">Detectado por Max. API REST aip.baidubce.com + 25+ idiomas. D26 + idea K. 13 programas ahora.</div>
+          <div class="card-meta">
+            <span class="card-tag">#spec</span>
+            <span class="card-id">#31</span>
+          </div>
+        </article>
+        <article class="card priority-med done" tabindex="0" role="listitem">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Re-búsqueda 150 fotos Graphiti+Obsidian+Kanboard</div>
+          <div class="card-desc">5 fotos por directorio. Recortado de 150 → 75. _extras/ con el resto.</div>
+          <div class="card-meta">
+            <span class="card-tag">#assets</span>
+            <span class="card-id">#30</span>
+          </div>
+        </article>
+      </section>
+    </div>
+  </main>
+  <footer class="status" role="contentinfo">
+    <div><span class="dot"></span>Kanboard: synced 8s ago</div>
+    <div>Total: <span class="mono">13 tareas</span></div>
+    <div>Backlog: <span class="mono">4</span></div>
+    <div>Doing: <span class="mono">3</span></div>
+    <div>Review: <span class="mono">2</span></div>
+    <div>Done: <span class="mono">4</span></div>
+    <div style="flex:1"></div>
+    <div class="mono">v0.4.5 · Tareas</div>
+  </footer>
+</div>
+</body>
+</html>

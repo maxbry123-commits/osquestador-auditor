@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Osquestador — Modal Input-Block Accesible</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --bg-4:#222; --border:#2e2e2e; --text-1:#fff; --text-2:#b0aea5; --text-3:#9ca3af; --text-4:#6b7280; --icon:#b0aea5; --accent:#3b82f6; --accent-hover:#2563eb; --focus-ring:#3898ec; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif; font-size:14px; line-height:1.5; color:var(--text-1); background:var(--bg-0); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; -webkit-font-smoothing:antialiased; }
+.serif { font-family:'Charter','Iowan Old Style','Apple Garamond',Georgia,serif; }
+.mono { font-family:'JetBrains Mono','SF Mono',Menlo,monospace; }
+.skip-link { position:absolute; top:-40px; left:8px; background:var(--accent); color:white; padding:8px 16px; border-radius:0 0 6px 6px; z-index:999; text-decoration:none; font-size:12px; }
+.skip-link:focus { top:0; }
+*:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:3px; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.icon-sm { width:12px; height:12px; }
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:100; }
+.modal { position:relative; max-width:720px; width:100%; max-height:90vh; background:var(--bg-1); border:1px solid var(--border); border-radius:12px; z-index:101; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(0,0,0,0.5); overflow:hidden; }
+.modal-header { padding:20px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.modal-title-block { flex:1; }
+.modal-title { font-family:'Charter',Georgia,serif; font-size:20px; font-weight:400; margin-bottom:4px; line-height:1.3; }
+.modal-subtitle { font-size:11px; color:var(--text-4); }
+.modal-close { background:transparent; border:1px solid var(--border); color:var(--text-2); width:32px; height:32px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 150ms; flex-shrink:0; margin-left:12px; }
+.modal-close:hover { background:var(--bg-3); color:var(--text-1); }
+.modal-body { padding:24px; overflow-y:auto; flex:1; }
+.field { margin-bottom:16px; }
+.field-label { display:block; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); margin-bottom:6px; }
+.field-hint { font-size:10px; color:var(--text-4); margin-top:4px; }
+.input, .textarea, .select { width:100%; background:var(--bg-2); border:1px solid var(--border); color:var(--text-1); padding:10px 12px; border-radius:6px; font-size:13px; font-family:inherit; outline:none; transition:border-color 150ms; }
+.input:focus, .textarea:focus, .select:focus { border-color:var(--accent); }
+.textarea { min-height:90px; resize:vertical; font-family:'JetBrains Mono',monospace; line-height:1.6; }
+.row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width: 640px) { .row-2 { grid-template-columns:1fr; } }
+.pinned-list { background:var(--bg-2); border:1px solid var(--border); border-radius:6px; padding:8px; margin-bottom:16px; }
+.pinned-item { display:flex; align-items:center; gap:8px; padding:6px 8px; background:var(--bg-1); border:1px solid var(--border); border-radius:4px; margin-bottom:4px; font-size:12px; }
+.pinned-item:last-child { margin-bottom:0; }
+.pinned-item .icon { color:var(--icon); flex-shrink:0; }
+.pinned-item .name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pinned-item .size { color:var(--text-4); font-size:11px; font-family:'JetBrains Mono',monospace; }
+.pinned-remove { background:transparent; border:none; color:var(--text-4); cursor:pointer; padding:2px 6px; border-radius:3px; font-size:14px; line-height:1; }
+.pinned-remove:hover { color:var(--err); background:var(--bg-3); }
+.detection { background:var(--bg-2); border:1px solid var(--border); border-radius:6px; padding:14px; }
+.detection-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.detection-row { display:flex; justify-content:space-between; padding:4px 0; font-size:12px; }
+.detection-key { color:var(--text-3); }
+.detection-val { font-family:'JetBrains Mono',monospace; color:var(--ok); font-size:11px; }
+.checkbox-group { display:flex; align-items:center; gap:8px; padding:6px 0; cursor:pointer; }
+.checkbox-group input { position:absolute; opacity:0; width:0; height:0; }
+.checkbox-box { width:16px; height:16px; border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; justify-content:center; background:var(--bg-2); flex-shrink:0; transition:all 150ms; }
+.checkbox-group input:checked + .checkbox-box { background:var(--accent); border-color:var(--accent); }
+.checkbox-group input:checked + .checkbox-box::after { content:"✓"; color:white; font-size:11px; }
+.checkbox-group input:focus-visible + .checkbox-box { outline:2px solid var(--focus-ring); outline-offset:2px; }
+.checkbox-label { font-size:12px; color:var(--text-2); user-select:none; }
+.modal-footer { padding:16px 24px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; background:var(--bg-1); }
+.kbd-hint { font-size:11px; color:var(--text-4); display:flex; align-items:center; gap:6px; }
+.kbd { background:var(--bg-3); border:1px solid var(--border); border-radius:3px; padding:1px 6px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-2); }
+.btn-group { display:flex; gap:8px; }
+.btn { padding:8px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:1px solid var(--border); background:var(--bg-2); color:var(--text-1); transition:all 150ms; min-height:36px; }
+.btn:hover { background:var(--bg-3); }
+.btn-primary { background:var(--accent); color:white; border-color:var(--accent); }
+.btn-primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+</style>
+</head>
+<body>
+<a href="#modal-title" class="skip-link">Saltar al modal</a>
+<div class="overlay" aria-hidden="true"></div>
+<div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-subtitle" id="main-content">
+  <div class="modal-header">
+    <div class="modal-title-block">
+      <h1 class="modal-title serif" id="modal-title">Input-Block — Detección completa</h1>
+      <p class="modal-subtitle" id="modal-subtitle">Sistema activó 120 puntos de auto-verificación</p>
+    </div>
+    <button class="modal-close" aria-label="Cerrar modal (Escape)">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="field">
+      <label class="field-label" for="instr">Tu instrucción</label>
+      <textarea class="textarea" id="instr" aria-describedby="instr-hint">Investiga los 3 frameworks AI más usados en producción agentica y dame un comparison matrix con código fuente real de cada uno. Adjunto 2 papers y 1 benchmark. Quiero resultado en formato markdown con tabla comparativa.</textarea>
+      <div class="field-hint" id="instr-hint">Detectado: instrucción + 3 adjuntos referenciados. 847 caracteres.</div>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label class="field-label" for="proj">Proyecto destino</label>
+        <select class="select" id="proj">
+          <option>osquestador-v3 (actual)</option>
+          <option>m3-vps-chat</option>
+          <option>research-paper</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="model">Modelo LLM</label>
+        <select class="select" id="model">
+          <option>claude-sonnet-4.5 (Anthropic)</option>
+          <option>gpt-oss-120b (Groq)</option>
+          <option>MiniMax-M3 (MiniMax)</option>
+          <option>— Comparar 3 modelos</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <span class="field-label">Archivos pinned (3)</span>
+      <div class="pinned-list" role="list">
+        <div class="pinned-item" role="listitem">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="name">compiled-ai-arxiv-2604.05150.pdf</span>
+          <span class="size">2.4 MB</span>
+          <button class="pinned-remove" aria-label="Quitar compiled-ai-arxiv">×</button>
+        </div>
+        <div class="pinned-item" role="listitem">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="name">letta-memgpt-paper.pdf</span>
+          <span class="size">1.8 MB</span>
+          <button class="pinned-remove" aria-label="Quitar letta-memgpt-paper">×</button>
+        </div>
+        <div class="pinned-item" role="listitem">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="name">longmemeval-benchmark.json</span>
+          <span class="size">340 KB</span>
+          <button class="pinned-remove" aria-label="Quitar longmemeval-benchmark">×</button>
+        </div>
+      </div>
+    </div>
+    <div class="detection" aria-label="Resultados de auto-detección">
+      <div class="detection-title">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Auto-detección (120 puntos)
+      </div>
+      <div class="detection-row"><span class="detection-key">Tipo</span><span class="detection-val">investigación + comparación</span></div>
+      <div class="detection-row"><span class="detection-key">Complejidad</span><span class="detection-val">media-alta</span></div>
+      <div class="detection-row"><span class="detection-key">Tiempo estimado</span><span class="detection-val">~4 min</span></div>
+      <div class="detection-row"><span class="detection-key">Tokens input</span><span class="detection-val">2,847</span></div>
+      <div class="detection-row"><span class="detection-key">Tokens output est.</span><span class="detection-val">~3,500</span></div>
+      <div class="detection-row"><span class="detection-key">Costo estimado</span><span class="detection-val">$0.018</span></div>
+      <div class="detection-row"><span class="detection-key">Agentes a activar</span><span class="detection-val">Investigador + Escritor + Code</span></div>
+      <div class="detection-row"><span class="detection-key">Skills a cargar</span><span class="detection-val">input-block-reader, haystack-search, web-fetch</span></div>
+      <div class="detection-row"><span class="detection-key">MCPs a usar</span><span class="detection-val">Graphiti, Kanboard (crear tarea), FS</span></div>
+    </div>
+    <div class="field" style="margin-top:16px">
+      <span class="field-label">Opciones de ejecución</span>
+      <label class="checkbox-group">
+        <input type="checkbox" checked />
+        <span class="checkbox-box" aria-hidden="true"></span>
+        <span class="checkbox-label">Activar modo investigación profunda (3 búsquedas por gap)</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" checked />
+        <span class="checkbox-box" aria-hidden="true"></span>
+        <span class="checkbox-label">Crear tarea Kanboard automáticamente</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" />
+        <span class="checkbox-box" aria-hidden="true"></span>
+        <span class="checkbox-label">Notificar a Telegram al terminar</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" checked />
+        <span class="checkbox-box" aria-hidden="true"></span>
+        <span class="checkbox-label">Indexar resultado en Graphiti (memory)</span>
+      </label>
+      <label class="checkbox-group">
+        <input type="checkbox" />
+        <span class="checkbox-box" aria-hidden="true"></span>
+        <span class="checkbox-label">Modo background (no bloquea input)</span>
+      </label>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <div class="kbd-hint">
+      <span class="kbd">Esc</span> cerrar ·
+      <span class="kbd">Cmd</span>+<span class="kbd">Enter</span> enviar ·
+      <span class="kbd">Tab</span> navegar
+    </div>
+    <div class="btn-group">
+      <button class="btn">Cancelar</button>
+      <button class="btn">Guardar borrador</button>
+      <button class="btn btn-primary">Enviar al Osquestador</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
