@@ -1,0 +1,93 @@
+{
+  "pipeline_id": "osquestador-auditor-v1",
+  "session_id": "418434919792827",
+  "pipeline_name": "Osquestador Auditor",
+  "mode": "SHERIFF-v8.2-STRICT",
+  "owner": "maxbry123-commits",
+  "agent": "Mavis",
+  "started_at": "2026-07-17T22:55:00Z",
+  "last_update": "2026-07-17T23:30:00Z",
+  "current_phase": "FASE_3",
+  "current_node": "3.5",
+  "current_task": "Subir INVESTIGACION + 5 SKILL + SKILLS + INSTRUCCIONES + CHECKPOINTS + state.json",
+  "current_step": "commit-pendiente",
+  "current_worker": "Mavis",
+  "next_node": "FASE_4_diseno_panel",
+  "previous_node": "FASE_2_doc_gate",
+  "node_status": "IN_PROGRESS",
+  "certification_status": "PENDING",
+  "phases": {
+    "FASE_0_investigacion": {
+      "status": "COMPLETADA",
+      "checkpoint": "ckpt-f0-investigacion",
+      "nodos": 30,
+      "fuentes": 90,
+      "duration_s": 1800
+    },
+    "FASE_1_skills": {
+      "status": "COMPLETADA",
+      "checkpoint": "ckpt-f1-skills",
+      "skills_generadas": 5,
+      "duration_s": 600
+    },
+    "FASE_2_doc_gate": {
+      "status": "COMPLETADA",
+      "checkpoint": "ckpt-f2-docs",
+      "docs_total": 8,
+      "duration_s": 300
+    },
+    "FASE_3_repositorio": {
+      "status": "IN_PROGRESS",
+      "checkpoint": "ckpt-f3-repo",
+      "commits": 4,
+      "archivos_subidos": 28
+    },
+    "FASE_4_diseno": {"status": "PENDING"},
+    "FASE_5_panel": {"status": "PENDING"},
+    "FASE_6_deploy_pages": {"status": "PENDING"},
+    "FASE_7_deploy_vps": {"status": "PENDING"},
+    "FASE_8_e2e": {"status": "PENDING"},
+    "FASE_9_certificacion": {"status": "PENDING"}
+  },
+  "evidence": {
+    "repos_upstream_verificados": [
+      {"name": "haystack", "url": "https://github.com/deepset-ai/haystack", "hash": "007c66b", "http": 200},
+      {"name": "plandex", "url": "https://github.com/plandex-ai/plandex", "hash": "e2d7720", "http": 200},
+      {"name": "SWE-agent", "url": "https://github.com/SWE-agent/SWE-agent", "hash": "3ea751c", "http": 200},
+      {"name": "repomix", "url": "https://github.com/yamadashy/repomix", "hash": "a5577d5", "http": 200},
+      {"name": "kanboard", "url": "https://github.com/kanboard/kanboard", "hash": "564cc30", "http": 200},
+      {"name": "graphiti", "url": "https://github.com/getzep/graphiti", "hash": "0b4bcf1", "http": 200},
+      {"name": "litellm", "url": "https://github.com/BerriAI/litellm", "hash": "dbb5b81", "http": 200},
+      {"name": "tesseract", "url": "https://github.com/tesseract-ocr/tesseract", "hash": "4b70b7d", "http": 200},
+      {"name": "PaddleOCR", "url": "https://github.com/PaddlePaddle/PaddleOCR", "hash": "211989f", "http": 200}
+    ],
+    "repos_escalados": [
+      {"name": "OpenClaw", "razon": "es npm package, no repo GitHub público", "alternativa": "npm install openclaw@2026.6.11"},
+      {"name": "Hermes", "razon": "es modelo/dataset de HuggingFace, no código"},
+      {"name": "Obsidian", "razon": "app de pago, no OSS"},
+      {"name": "Anthropic Console", "razon": "producto cerrado"},
+      {"name": "Telegram (binary)", "razon": "es API + libs cliente, no repo único"}
+    ]
+  },
+  "health": {
+    "status": "alive",
+    "last_check": "2026-07-17T23:30:00Z",
+    "openclaw_intacto": true,
+    "vps_alcanzable": true,
+    "github_alcanzable": true,
+    "cloudflare_alcanzable": true
+  },
+  "security": {
+    "openclaw_isolated": true,
+    "sandbox_workspace": "/root/osquestador/",
+    "openclaw_path": "/opt/nct/agents/* (intocable)",
+    "regla": "prohibido modificar /opt/nct/agents/*, /opt/nct/secrets/, /opt/nct/keep/, /etc/systemd/system/openclaw*"
+  },
+  "metrics": {
+    "commits_total": 4,
+    "archivos_total": 30,
+    "investigaciones_completadas": 30,
+    "skills_generadas": 5,
+    "pendientes": ["FASE_4-9"]
+  }
+}
