@@ -6,10 +6,10 @@
   "owner": "maxbry123-commits",
   "agent": "Mavis",
   "started_at": "2026-07-17T22:55:00Z",
-  "last_update": "2026-07-17T23:30:00Z",
+  "last_update": "2026-07-18T00:59:00Z",
   "current_phase": "FASE_3",
-  "current_node": "3.5",
-  "current_task": "Subir INVESTIGACION + 5 SKILL + SKILLS + INSTRUCCIONES + CHECKPOINTS + state.json",
+  "current_node": "3.6-integrar-comunidad",
+  "current_task": "Integrar 19 patrones de comunidad en SKILLS + state",
   "current_step": "commit-pendiente",
   "current_worker": "Mavis",
   "next_node": "FASE_4_diseno_panel",
@@ -42,32 +42,132 @@
       "commits": 4,
       "archivos_subidos": 28
     },
-    "FASE_4_diseno": {"status": "PENDING"},
-    "FASE_5_panel": {"status": "PENDING"},
-    "FASE_6_deploy_pages": {"status": "PENDING"},
-    "FASE_7_deploy_vps": {"status": "PENDING"},
-    "FASE_8_e2e": {"status": "PENDING"},
-    "FASE_9_certificacion": {"status": "PENDING"}
+    "FASE_4_diseno": {
+      "status": "PENDING"
+    },
+    "FASE_5_panel": {
+      "status": "PENDING"
+    },
+    "FASE_6_deploy_pages": {
+      "status": "PENDING"
+    },
+    "FASE_7_deploy_vps": {
+      "status": "PENDING"
+    },
+    "FASE_8_e2e": {
+      "status": "PENDING"
+    },
+    "FASE_9_certificacion": {
+      "status": "PENDING"
+    }
   },
   "evidence": {
     "repos_upstream_verificados": [
-      {"name": "haystack", "url": "https://github.com/deepset-ai/haystack", "hash": "007c66b", "http": 200},
-      {"name": "plandex", "url": "https://github.com/plandex-ai/plandex", "hash": "e2d7720", "http": 200},
-      {"name": "SWE-agent", "url": "https://github.com/SWE-agent/SWE-agent", "hash": "3ea751c", "http": 200},
-      {"name": "repomix", "url": "https://github.com/yamadashy/repomix", "hash": "a5577d5", "http": 200},
-      {"name": "kanboard", "url": "https://github.com/kanboard/kanboard", "hash": "564cc30", "http": 200},
-      {"name": "graphiti", "url": "https://github.com/getzep/graphiti", "hash": "0b4bcf1", "http": 200},
-      {"name": "litellm", "url": "https://github.com/BerriAI/litellm", "hash": "dbb5b81", "http": 200},
-      {"name": "tesseract", "url": "https://github.com/tesseract-ocr/tesseract", "hash": "4b70b7d", "http": 200},
-      {"name": "PaddleOCR", "url": "https://github.com/PaddlePaddle/PaddleOCR", "hash": "211989f", "http": 200}
+      {
+        "name": "haystack",
+        "url": "https://github.com/deepset-ai/haystack",
+        "hash": "007c66b",
+        "http": 200
+      },
+      {
+        "name": "plandex",
+        "url": "https://github.com/plandex-ai/plandex",
+        "hash": "e2d7720",
+        "http": 200
+      },
+      {
+        "name": "SWE-agent",
+        "url": "https://github.com/SWE-agent/SWE-agent",
+        "hash": "3ea751c",
+        "http": 200
+      },
+      {
+        "name": "repomix",
+        "url": "https://github.com/yamadashy/repomix",
+        "hash": "a5577d5",
+        "http": 200
+      },
+      {
+        "name": "kanboard",
+        "url": "https://github.com/kanboard/kanboard",
+        "hash": "564cc30",
+        "http": 200
+      },
+      {
+        "name": "graphiti",
+        "url": "https://github.com/getzep/graphiti",
+        "hash": "0b4bcf1",
+        "http": 200
+      },
+      {
+        "name": "litellm",
+        "url": "https://github.com/BerriAI/litellm",
+        "hash": "dbb5b81",
+        "http": 200
+      },
+      {
+        "name": "tesseract",
+        "url": "https://github.com/tesseract-ocr/tesseract",
+        "hash": "4b70b7d",
+        "http": 200
+      },
+      {
+        "name": "PaddleOCR",
+        "url": "https://github.com/PaddlePaddle/PaddleOCR",
+        "hash": "211989f",
+        "http": 200
+      }
     ],
     "repos_escalados": [
-      {"name": "OpenClaw", "razon": "es npm package, no repo GitHub público", "alternativa": "npm install openclaw@2026.6.11"},
-      {"name": "Hermes", "razon": "es modelo/dataset de HuggingFace, no código"},
-      {"name": "Obsidian", "razon": "app de pago, no OSS"},
-      {"name": "Anthropic Console", "razon": "producto cerrado"},
-      {"name": "Telegram (binary)", "razon": "es API + libs cliente, no repo único"}
-    ]
+      {
+        "name": "OpenClaw",
+        "razon": "es npm package, no repo GitHub público",
+        "alternativa": "npm install openclaw@2026.6.11"
+      },
+      {
+        "name": "Hermes",
+        "razon": "es modelo/dataset de HuggingFace, no código"
+      },
+      {
+        "name": "Obsidian",
+        "razon": "app de pago, no OSS"
+      },
+      {
+        "name": "Anthropic Console",
+        "razon": "producto cerrado"
+      },
+      {
+        "name": "Telegram (binary)",
+        "razon": "es API + libs cliente, no repo único"
+      }
+    ],
+    "patrones_comunidad": {
+      "total": 19,
+      "fuentes_web": 10,
+      "documento": "INVESTIGACION_COMUNIDAD.md",
+      "sintesis_final": "7 patrones validados para implementar",
+      "lista": [
+        "vault_filesystem_markdown",
+        "agents_md_por_proyecto",
+        "memory_tripartita_tiers",
+        "lazy_loading_por_proyecto",
+        "mcp_server_navaja",
+        "rag_contextual_retrieval_anthropic",
+        "memory_stream_scoring_triple",
+        "contextual_retrieval_chunks",
+        "graphiti_group_id_multi_tenant",
+        "obsidian_cli_1_12",
+        "rag_pipeline_2026",
+        "memory_hierarchy_3_tier",
+        "generative_agents_park_2023",
+        "memory_unit_estandar",
+        "agentic_paging_virtual_memory",
+        "tiered_memory_hwc_produccion",
+        "mcp_servers_referencia",
+        "pipeline_etl_augi",
+        "project_isolation_3_estrategias"
+      ]
+    }
   },
   "health": {
     "status": "alive",
@@ -88,6 +188,10 @@
     "archivos_total": 30,
     "investigaciones_completadas": 30,
     "skills_generadas": 5,
-    "pendientes": ["FASE_4-9"]
+    "pendientes": [
+      "FASE_4-9"
+    ],
+    "patrones_comunidad_validados": 19,
+    "fuentes_investigacion_total": 100
   }
 }

@@ -126,3 +126,15 @@
 **Contexto de Max:** investigar CÓMO los devs usan estos sistemas anclados a un agente/AI para no alucinar y manejar proyectos grandes en ventanas separadas.
 
 **Plan:** 10 búsquedas web en comunidad de devs, 1 por pasada, registrar fuentes + patrones de uso.
+
+### [2026-07-18 00:59:00] ACCIÓN: Integrar INVESTIGACION_COMUNIDAD (19 patrones) al estado del proyecto
+
+**Integración:**
+- Los 19 patrones de `INVESTIGACION_COMUNIDAD.md` se reflejan en:
+  - `SKILL_orquestador_kernel.md` (kernel pequeño + plugins)
+  - `SKILL_mcp_integration.md` (MCP server como navaja)
+  - `SKILL_memoria_avanzada.md` (tripartita + HOT/WARM/COLD + Graphiti group_id)
+  - `SKILL_panel_ui.md` (UI con vault por proyecto)
+  - `SKILL_evidence_collect.md` (memory unit + scoring)
+- Pendiente: actualizar `state.json` con `patrones_comunidad_validados: 19`.
+
