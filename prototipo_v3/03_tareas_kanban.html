@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Tareas Kanban</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --bg-4:#222; --border:#2e2e2e; --text-1:#fff; --text-2:#d1d5db; --text-3:#9ca3af; --text-4:#6b7280; --icon:#d1d5db; --accent:#3b82f6; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; font-size:14px; color:var(--text-1); background:var(--bg-0); height:100vh; overflow:hidden; }
+.serif { font-family:'Charter','Iowan Old Style',Georgia,serif; }
+.mono { font-family:'JetBrains Mono','SF Mono',Menlo,monospace; }
+.app { display:grid; grid-template-rows:60px 1fr 32px; height:100vh; }
+.header { background:var(--bg-1); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; }
+.page-title { font-family:'Charter',Georgia,serif; font-size:18px; font-weight:400; }
+.header-spacer { flex:1; }
+.btn { padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid var(--border); background:var(--bg-2); color:var(--text-1); }
+.btn-primary { background:var(--accent); color:white; border-color:var(--accent); }
+.btn-primary:hover { background:#2563eb; }
+.main { overflow-y:auto; padding:24px; }
+.kanban { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; min-height:100%; }
+.column { background:var(--bg-1); border:1px solid var(--border); border-radius:8px; padding:12px; min-height:400px; }
+.col-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.col-title { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-3); display:flex; align-items:center; gap:8px; }
+.col-count { background:var(--bg-3); padding:2px 8px; border-radius:10px; font-size:10px; }
+.card { background:var(--bg-2); border:1px solid var(--border); border-radius:6px; padding:12px; margin-bottom:8px; cursor:pointer; }
+.card:hover { border-color:var(--accent); }
+.card-priority { display:inline-block; padding:2px 6px; border-radius:4px; font-size:9px; font-weight:600; text-transform:uppercase; margin-bottom:6px; }
+.card-priority.high { background:rgba(239,68,68,0.15); color:var(--err); }
+.card-priority.med { background:rgba(245,158,11,0.15); color:var(--warn); }
+.card-priority.low { background:rgba(16,185,129,0.15); color:var(--ok); }
+.card-title { font-size:13px; font-weight:500; margin-bottom:6px; line-height:1.3; }
+.card-desc { font-size:11px; color:var(--text-3); line-height:1.4; margin-bottom:8px; }
+.card-meta { display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--text-4); }
+.tag { padding:2px 6px; background:var(--bg-3); border-radius:4px; font-family:'JetBrains Mono',monospace; }
+.status { background:var(--bg-1); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:16px; font-size:11px; color:var(--text-3); }
+.dot { width:5px; height:5px; border-radius:50%; background:var(--ok); display:inline-block; margin-right:4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="page-title">Tareas</div>
+    <span style="color:var(--text-4); font-size:12px">osquestador-v3</span>
+    <div class="header-spacer"></div>
+    <button class="btn">Filtros</button>
+    <button class="btn">Kanboard Sync</button>
+    <button class="btn btn-primary">+ Nueva tarea</button>
+  </header>
+  <main class="main">
+    <div class="kanban">
+      <!-- BACKLOG -->
+      <div class="column">
+        <div class="col-header">
+          <div class="col-title">Backlog <span class="col-count">8</span></div>
+          <span style="color:var(--text-4); cursor:pointer">+</span>
+        </div>
+        <div class="card">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">D38: Investigar Pydantic AI RunContext</div>
+          <div class="card-desc">Type safety layer para el kernel — RunContext[Dependencies] pattern + Logfire integration</div>
+          <div class="card-meta">
+            <span class="tag">#orquestador</span>
+            <span>#42</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">D39: Adoptar OpenAI Agents guardrails</div>
+          <div class="card-desc">Input/output/tool guardrails + handoffs para delegar entre agentes</div>
+          <div class="card-meta">
+            <span class="tag">#seguridad</span>
+            <span>#41</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Comparar LangGraph 1.0 vs CrewAI</div>
+          <div class="card-desc">Evaluar state machines (LangGraph) vs role-based multi-agent (CrewAI) para Orquestador</div>
+          <div class="card-meta">
+            <span class="tag">#arquitectura</span>
+            <span>#40</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Mastra TypeScript — viabilidad</div>
+          <div class="card-desc">Evaluar si el stack TS es viable para sub-agentes ligeros en el panel</div>
+          <div class="card-meta">
+            <span class="tag">#research</span>
+            <span>#39</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOING -->
+      <div class="column">
+        <div class="col-header">
+          <div class="col-title">Doing <span class="col-count">3</span></div>
+          <span style="color:var(--text-4); cursor:pointer">+</span>
+        </div>
+        <div class="card">
+          <div class="card-priority high">High</div>
+          <div class="card-title">D37: Integrar MCP-Graphiti 3 transports</div>
+          <div class="card-desc">stdio (Claude Desktop) + SSE (Cursor) + HTTP (panel propio). FastAPI decoupled wrapper.</div>
+          <div class="card-meta">
+            <span class="tag">#mcp</span>
+            <span>#38</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority high">High</div>
+          <div class="card-title">Aplicar correcciones estéticas a 16 HTMLs</div>
+          <div class="card-desc">Quitar emojis a color, agregar iconos monocromáticos, paleta grises+azul sutil, serif para títulos</div>
+          <div class="card-meta">
+            <span class="tag">#ui</span>
+            <span>#37</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Configurar FalkorDB single container</div>
+          <div class="card-desc">docker-compose con FalkorDB + Graphiti MCP + health endpoint. SEMAPHORE_LIMIT=5</div>
+          <div class="card-meta">
+            <span class="tag">#deploy</span>
+            <span>#36</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- REVIEW -->
+      <div class="column">
+        <div class="col-header">
+          <div class="col-title">Review <span class="col-count">2</span></div>
+          <span style="color:var(--text-4); cursor:pointer">+</span>
+        </div>
+        <div class="card">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Prototipo v2 — 7 HTMLs</div>
+          <div class="card-desc">Dashboard + Memoria + Tareas + Skills + Docs + Modal + Panel final. 98KB total.</div>
+          <div class="card-meta">
+            <span class="tag">#prototipo</span>
+            <span>#35</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Documentar 218 fotos de interfaces</div>
+          <div class="card-desc">16 programas × 5 fotos. README con descripciones y atribuciones.</div>
+          <div class="card-meta">
+            <span class="tag">#docs</span>
+            <span>#34</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DONE -->
+      <div class="column">
+        <div class="col-header">
+          <div class="col-title">Done <span class="col-count">4</span></div>
+          <span style="color:var(--text-4); cursor:pointer">+</span>
+        </div>
+        <div class="card" style="opacity:0.65">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Investigación 29 pasadas Obsidian+Graphiti</div>
+          <div class="card-desc">15 Obsidian + 14 Graphiti. 5 decisiones D33-D37.</div>
+          <div class="card-meta">
+            <span class="tag">#research</span>
+            <span>#33</span>
+          </div>
+        </div>
+        <div class="card" style="opacity:0.65">
+          <div class="card-priority low">Low</div>
+          <div class="card-title">Investigar 4 tareas (Kanban AI + Obsidian + Graphiti + frameworks)</div>
+          <div class="card-desc">5 Kanban AI + 5 plugins Obsidian AI + 12 funciones Graphiti + 10 frameworks. D27-D32.</div>
+          <div class="card-meta">
+            <span class="tag">#research</span>
+            <span>#32</span>
+          </div>
+        </div>
+        <div class="card" style="opacity:0.65">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Baidu OCR como sistema faltante</div>
+          <div class="card-desc">Detectado por Max. API REST aip.baidubce.com + 25+ idiomas. D26 + idea K. 13 programas ahora.</div>
+          <div class="card-meta">
+            <span class="tag">#spec</span>
+            <span>#31</span>
+          </div>
+        </div>
+        <div class="card" style="opacity:0.65">
+          <div class="card-priority med">Med</div>
+          <div class="card-title">Re-búsqueda 150 fotos Graphiti+Obsidian+Kanboard</div>
+          <div class="card-desc">5 fotos por directorio. Recortado de 150 → 75. _extras/ con el resto.</div>
+          <div class="card-meta">
+            <span class="tag">#assets</span>
+            <span>#30</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="status">
+    <div><span class="dot"></span>Kanboard: synced 8s ago</div>
+    <div>Total: <span class="mono">17 tareas</span></div>
+    <div>Backlog: <span class="mono">8</span></div>
+    <div>Doing: <span class="mono">3</span></div>
+    <div>Review: <span class="mono">2</span></div>
+    <div>Done: <span class="mono">4</span></div>
+    <div style="flex:1"></div>
+    <div>v0.4.5 · Tareas</div>
+  </footer>
+</div>
+</body>
+</html>

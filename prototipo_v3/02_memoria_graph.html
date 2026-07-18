@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Memoria y Grafo</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --bg-4:#222; --border:#2e2e2e; --text-1:#fff; --text-2:#d1d5db; --text-3:#9ca3af; --text-4:#6b7280; --icon:#d1d5db; --accent:#3b82f6; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; font-size:14px; color:var(--text-1); background:var(--bg-0); height:100vh; overflow:hidden; }
+.serif { font-family:'Charter','Iowan Old Style',Georgia,serif; }
+.mono { font-family:'JetBrains Mono','SF Mono',Menlo,monospace; }
+.app { display:grid; grid-template-columns:280px 1fr 400px; grid-template-rows:60px 1fr 32px; grid-template-areas:"sidebar main right" "sidebar main right" "status status status"; height:100vh; }
+.sidebar { grid-area:sidebar; background:var(--bg-1); border-right:1px solid var(--border); padding:16px; overflow-y:auto; }
+.logo { font-family:'Charter',Georgia,serif; font-size:18px; margin-bottom:24px; }
+.section { margin-bottom:24px; }
+.section-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-4); margin-bottom:8px; }
+.stat-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.stat-label { color:var(--text-3); }
+.stat-value { font-family:'JetBrains Mono',monospace; }
+.main { grid-area:main; padding:24px; overflow-y:auto; }
+.page-title { font-family:'Charter',Georgia,serif; font-size:24px; font-weight:400; margin-bottom:8px; }
+.page-subtitle { color:var(--text-3); font-size:13px; margin-bottom:24px; }
+.tabs { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:24px; }
+.tab { padding:8px 16px; font-size:13px; color:var(--text-3); cursor:pointer; border-bottom:2px solid transparent; }
+.tab.active { color:var(--text-1); border-bottom-color:var(--accent); }
+.graph-container { background:var(--bg-1); border:1px solid var(--border); border-radius:12px; height:500px; position:relative; overflow:hidden; }
+.graph-canvas { width:100%; height:100%; position:relative; }
+.node { position:absolute; background:var(--bg-2); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:11px; cursor:pointer; min-width:80px; }
+.node:hover { border-color:var(--accent); background:var(--bg-3); }
+.node.decision { border-left:3px solid var(--accent); }
+.node.entity { border-left:3px solid var(--ok); }
+.node.skill { border-left:3px solid var(--warn); }
+.node-name { font-weight:500; }
+.node-type { font-size:9px; color:var(--text-4); text-transform:uppercase; margin-top:2px; }
+.controls { position:absolute; bottom:16px; right:16px; display:flex; gap:4px; }
+.btn-ctrl { background:var(--bg-2); border:1px solid var(--border); color:var(--text-2); width:32px; height:32px; border-radius:6px; cursor:pointer; }
+.search-box { position:absolute; top:16px; left:16px; right:80px; background:var(--bg-2); border:1px solid var(--border); border-radius:6px; padding:6px 12px; display:flex; align-items:center; gap:8px; }
+.search-box input { background:transparent; border:none; color:var(--text-1); flex:1; outline:none; font-size:12px; }
+.right { grid-area:right; background:var(--bg-1); border-left:1px solid var(--border); padding:16px; overflow-y:auto; }
+.entity-detail { background:var(--bg-2); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:12px; }
+.entity-detail h3 { font-family:'Charter',Georgia,serif; font-size:16px; font-weight:400; margin-bottom:8px; }
+.entity-detail .meta { font-size:11px; color:var(--text-4); margin-bottom:12px; }
+.entity-detail .field { padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.entity-detail .field-label { color:var(--text-3); font-size:10px; text-transform:uppercase; }
+.status { grid-area:status; background:var(--bg-1); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:16px; font-size:11px; color:var(--text-3); }
+.dot { width:5px; height:5px; border-radius:50%; background:var(--ok); display:inline-block; margin-right:4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">Osquestador</div>
+    <div class="section">
+      <div class="section-title">Estado</div>
+      <div class="stat-row"><span class="stat-label">Graphiti</span><span class="stat-value" style="color:var(--ok)">● Online</span></div>
+      <div class="stat-row"><span class="stat-label">Neo4j</span><span class="stat-value" style="color:var(--ok)">● Online</span></div>
+      <div class="stat-row"><span class="stat-label">FalkorDB</span><span class="stat-value" style="color:var(--ok)">● Online</span></div>
+      <div class="stat-row"><span class="stat-label">Embeddings</span><span class="stat-value">384-dim</span></div>
+      <div class="stat-row"><span class="stat-label">Modo</span><span class="stat-value">Self-hosted</span></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Estadísticas</div>
+      <div class="stat-row"><span class="stat-label">Entidades</span><span class="stat-value">2,847</span></div>
+      <div class="stat-row"><span class="stat-label">Relaciones</span><span class="stat-value">8,124</span></div>
+      <div class="stat-row"><span class="stat-label">Episodios</span><span class="stat-value">452</span></div>
+      <div class="stat-row"><span class="stat-label">Decisiones</span><span class="stat-value">37</span></div>
+      <div class="stat-row"><span class="stat-label">Skills</span><span class="stat-value">52</span></div>
+      <div class="stat-row"><span class="stat-label">Tags únicos</span><span class="stat-value">12</span></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Memory Tiers</div>
+      <div class="stat-row"><span class="stat-label">HOT (RAM)</span><span class="stat-value">342 KB</span></div>
+      <div class="stat-row"><span class="stat-label">WARM (SQLite)</span><span class="stat-value">42 MB</span></div>
+      <div class="stat-row"><span class="stat-label">COLD (Graphiti)</span><span class="stat-value">8.2 GB</span></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Benchmarks</div>
+      <div class="stat-row"><span class="stat-label">LOCOMO</span><span class="stat-value">92.5%</span></div>
+      <div class="stat-row"><span class="stat-label">LongMemEval</span><span class="stat-value">94.4%</span></div>
+      <div class="stat-row"><span class="stat-label">p50 latency</span><span class="stat-value">180ms</span></div>
+      <div class="stat-row"><span class="stat-label">p99 latency</span><span class="stat-value">420ms</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h1 class="page-title">Memoria</h1>
+    <p class="page-subtitle">Grafo de conocimiento temporal — 2,847 entidades, 8,124 relaciones, modo bi-temporal</p>
+    
+    <div class="tabs">
+      <div class="tab active">Grafo</div>
+      <div class="tab">Línea de tiempo</div>
+      <div class="tab">Entidades</div>
+      <div class="tab">Episodios</div>
+      <div class="tab">Búsqueda</div>
+    </div>
+
+    <div class="graph-container">
+      <div class="search-box">
+        <span style="color:var(--text-4)">⌕</span>
+        <input type="text" placeholder="Buscar en el grafo... ej. D37, MCP, Graphiti..." />
+      </div>
+      <div class="graph-canvas">
+        <!-- Nodes positioned absolutely for demo -->
+        <div class="node decision" style="left: 25%; top: 15%;">
+          <div class="node-name">D37: MCP-Graphiti</div>
+          <div class="node-type">Decision</div>
+        </div>
+        <div class="node decision" style="left: 50%; top: 10%;">
+          <div class="node-name">D34: Production</div>
+          <div class="node-type">Decision</div>
+        </div>
+        <div class="node decision" style="left: 70%; top: 30%;">
+          <div class="node-name">D35: Hybrid Memory</div>
+          <div class="node-type">Decision</div>
+        </div>
+        <div class="node entity" style="left: 15%; top: 45%;">
+          <div class="node-name">FalkorDB</div>
+          <div class="node-type">Component</div>
+        </div>
+        <div class="node entity" style="left: 38%; top: 50%;">
+          <div class="node-name">Neo4j 5.26</div>
+          <div class="node-type">Component</div>
+        </div>
+        <div class="node entity" style="left: 60%; top: 55%;">
+          <div class="node-name">Graphiti MCP</div>
+          <div class="node-type">Server</div>
+        </div>
+        <div class="node entity" style="left: 82%; top: 60%;">
+          <div class="node-name">FastAPI wrapper</div>
+          <div class="node-type">Service</div>
+        </div>
+        <div class="node skill" style="left: 30%; top: 75%;">
+          <div class="node-name">input-block-reader</div>
+          <div class="node-type">Skill · 100 uses</div>
+        </div>
+        <div class="node skill" style="left: 55%; top: 80%;">
+          <div class="node-name">memory-distill</div>
+          <div class="node-type">Skill · 47 uses</div>
+        </div>
+        <div class="node entity" style="left: 78%; top: 15%;">
+          <div class="node-name">SEMAPHORE_LIMIT=5</div>
+          <div class="node-type">Config</div>
+        </div>
+
+        <!-- Lines connecting nodes (decorative) -->
+        <svg style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; opacity:0.3;">
+          <line x1="25%" y1="18%" x2="50%" y2="13%" stroke="#3b82f6" stroke-width="1"/>
+          <line x1="50%" y1="13%" x2="70%" y2="33%" stroke="#3b82f6" stroke-width="1"/>
+          <line x1="25%" y1="18%" x2="15%" y2="48%" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="70%" y1="33%" x2="60%" y2="58%" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="60%" y1="58%" x2="82%" y2="63%" stroke="#9ca3af" stroke-width="1"/>
+          <line x1="38%" y1="53%" x2="30%" y2="78%" stroke="#9ca3af" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="controls">
+        <button class="btn-ctrl" title="Zoom in">+</button>
+        <button class="btn-ctrl" title="Zoom out">−</button>
+        <button class="btn-ctrl" title="Fit">⊡</button>
+        <button class="btn-ctrl" title="Refresh">↻</button>
+      </div>
+    </div>
+  </main>
+
+  <aside class="right">
+    <div class="entity-detail">
+      <h3 class="serif">D37: MCP-Graphiti Integration</h3>
+      <div class="meta">Decisión · 2026-07-18 · Creada por Max</div>
+      <div class="field">
+        <div class="field-label">Descripción</div>
+        <div>3 transports MCP (stdio / SSE / HTTP), FastAPI decoupled wrapper, container único FalkorDB + Graphiti MCP</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Razón</div>
+        <div>Process isolation evita asyncio event loop conflicts. Microservice pattern permite independent scaling.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Refs</div>
+        <div class="mono" style="color:var(--accent); cursor:pointer">D34 · D35 · e8cdf8d · commit 13c6734</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Relaciones (4)</div>
+        <div style="color:var(--text-2)">→ FalkorDB · Neo4j · FastAPI wrapper · Graphiti MCP server</div>
+      </div>
+    </div>
+
+    <div class="entity-detail">
+      <h3 class="serif">Acciones rápidas</h3>
+      <div class="field" style="cursor:pointer; color:var(--accent)">↗ Abrir conversación original</div>
+      <div class="field" style="cursor:pointer; color:var(--accent)">↗ Ver en commit e8cdf8d</div>
+      <div class="field" style="cursor:pointer; color:var(--accent)">↗ Ejecutar /memory show D37</div>
+      <div class="field" style="cursor:pointer; color:var(--err)">× Eliminar (requiere confirmación)</div>
+    </div>
+  </aside>
+
+  <footer class="status">
+    <div><span class="dot"></span>Graphiti: 2,847 entities</div>
+    <div>Última actualización: <span class="mono">12s ago</span></div>
+    <div>Embeddings: <span class="mono">384-dim MiniLM-L6-v2</span></div>
+    <div style="flex:1"></div>
+    <div>v0.4.5 · Memoria</div>
+  </footer>
+</div>
+</body>
+</html>
