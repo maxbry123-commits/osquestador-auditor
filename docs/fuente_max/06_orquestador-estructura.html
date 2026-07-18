@@ -1,0 +1,7927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Curación del Orquestador</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-2: #14141c;
+    --bg-3: #1f1f2e;
+    --fg: #e8e8f0;
+    --fg-dim: #a0a0b8;
+    --accent: #7c5cff;
+    --accent-2: #00d4ff;
+    --accent-3: #ff5c8a;
+    --border: #2a2a3e;
+    --code-bg: #0d0d15;
+    --code-fg: #ff79c6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 20% 0%, #1a0d2e 0%, var(--bg) 50%),
+                radial-gradient(circle at 80% 100%, #002633 0%, var(--bg) 60%),
+                var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+  header.hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 40px;
+    margin-bottom: 50px;
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 44px;
+    line-height: 1.15;
+    margin: 0 0 18px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent-2) 60%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: var(--fg-dim);
+    font-size: 18px;
+    max-width: 720px;
+    margin: 0;
+  }
+  h2 {
+    font-size: 28px;
+    margin: 50px 0 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  h2::before {
+    content: "▸";
+    color: var(--accent-2);
+    margin-right: 12px;
+  }
+  h3 {
+    font-size: 22px;
+    margin: 32px 0 14px;
+    color: var(--accent-2);
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 18px;
+    margin: 24px 0 10px;
+    color: var(--accent-3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  h5, h6 {
+    font-size: 16px;
+    margin: 18px 0 8px;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  p {
+    margin: 14px 0;
+    color: var(--fg);
+  }
+  strong {
+    color: #fff;
+    font-weight: 700;
+  }
+  em {
+    color: var(--accent-3);
+    font-style: italic;
+  }
+  a {
+    color: var(--accent-2);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-2);
+  }
+  a:hover {
+    color: #fff;
+    border-bottom-style: solid;
+  }
+  ul, ol {
+    padding-left: 24px;
+    margin: 14px 0;
+  }
+  li {
+    margin: 8px 0;
+    color: var(--fg);
+  }
+  li::marker {
+    color: var(--accent);
+  }
+  blockquote {
+    margin: 24px 0;
+    padding: 16px 22px;
+    background: var(--bg-2);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    color: var(--fg-dim);
+    font-style: italic;
+  }
+  blockquote strong {
+    color: var(--accent-2);
+  }
+  code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.88em;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 26px;
+    overflow-x: auto;
+    margin: 22px 0;
+    box-shadow: 0 4px 20px rgba(124, 92, 255, 0.08);
+  }
+  pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #e8e8f0;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  }
+  pre code .lang-yaml,
+  pre code .lang-json,
+  pre code .lang-bash,
+  pre code .lang-text {
+    color: #e8e8f0;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+  /* tree-style code blocks (using pre) — keep code blocks looking like consoles */
+  pre {
+    background: linear-gradient(180deg, #0a0a14 0%, #0d0d18 100%);
+    color: #d8d8e8;
+  }
+  footer {
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  footer .pill {
+    display: inline-block;
+    margin: 0 6px;
+    padding: 3px 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+  /* responsive */
+  @media (max-width: 720px) {
+    .container { padding: 30px 18px; }
+    h1 { font-size: 32px; }
+    h2 { font-size: 22px; }
+    pre { padding: 14px 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="hero">
+    <span class="badge">Raíces Maestras • Fases • Checkpoints</span>
+    <h1>Curación del Orquestador</h1>
+    <p class="subtitle">Estructura completa de programación de un proyecto de web app y software del Orquestador de NCT Neuronas Code Turbo.</p>
+  </header>
+  <main>
+<h2>🌳 FASE 00 — RAÍZ MAESTRA 00</h2>
+<h1>NÚCLEO DEL PROYECTO, GOBERNANZA GLOBAL Y CONFIGURACIÓN DEL ORQUESTADOR</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Construir los cimientos del ecosistema antes de iniciar cualquier proyecto. Esta raíz define la constitución, las reglas, el estado global, la organización documental y la &quot;pizarra central&quot; del orquestador donde se representa el proyecto mediante mapas mentales, estados y relaciones.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Crear la base del proyecto.</p>
+<p>Definir las reglas globales.</p>
+<p>Crear el mapa maestro.</p>
+<p>Construir el sistema de estados.</p>
+<p>Preparar la estructura documental.</p>
+<p>Inicializar el orquestador.</p>
+<p>Crear la pizarra de planificación.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Multiagentes</p>
+<p>✅ Biblioteca</p>
+<p>✅ Todo el Proyecto</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Idea del usuario</li>
+<li>Objetivos</li>
+<li>Restricciones</li>
+<li>Preferencias</li>
+<li>Requisitos iniciales</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Proyecto inicializado</li>
+<li>Constitución</li>
+<li>Estados</li>
+<li>Mapa mental</li>
+<li>Registro maestro</li>
+<li>Configuración global</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 00.01 — Constitución del Proyecto</h1>
+<h2>Crear</h2>
+<ul>
+<li>Visión</li>
+<li>Misión</li>
+<li>Objetivos</li>
+<li>Alcance</li>
+<li>Principios</li>
+<li>Restricciones</li>
+<li>Reglas Globales</li>
+<li>Convenciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Constitución</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.02 — Arquitectura Documental</h1>
+<h2>Definir</h2>
+<ul>
+<li>Carpetas</li>
+<li>Archivos</li>
+<li>Bibliotecas</li>
+<li>Artefactos</li>
+<li>Dependencias</li>
+<li>Convenciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Organización</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.03 — Mapa Mental Maestro</h1>
+<h2>Construir</h2>
+<p>Mapa general del proyecto.</p>
+<p>Mapa por fases.</p>
+<p>Mapa de módulos.</p>
+<p>Mapa de dependencias.</p>
+<p>Mapa de agentes.</p>
+<p>Mapa de conocimientos.</p>
+<p>Mapa de procesos.</p>
+<p>Mapa de componentes.</p>
+<p>Mapa de arquitectura.</p>
+<p>Mapa de despliegue.</p>
+<p>Mapa de decisiones.</p>
+<p>Mapa del ciclo de vida.</p>
+<h2>Función</h2>
+<p>Servirá como la vista principal del orquestador.</p>
+<p>Toda decisión deberá reflejarse aquí.</p>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Mapa Mental</p>
+<p>➡️ Organización</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.04 — Pizarra Global (Crazy Wall)</h1>
+<h2>Construir</h2>
+<p>Una pizarra permanente donde el orquestador pueda colocar</p>
+<ul>
+<li>Ideas</li>
+<li>Objetivos</li>
+<li>Notas</li>
+<li>Bloqueos</li>
+<li>Riesgos</li>
+<li>Recordatorios</li>
+<li>Decisiones</li>
+<li>Dependencias</li>
+<li>Próximas tareas</li>
+<li>Diagramas rápidos</li>
+<li>Relaciones entre módulos</li>
+</ul>
+<h2>Función</h2>
+<p>Será el tablero visual permanente del proyecto.</p>
+<p>Todo el equipo de agentes podrá consultarlo.</p>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Nota</p>
+<p>➡️ Crazy Wall</p>
+<p>➡️ Agentes</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.05 — Sistema de Estados (state.json)</h1>
+<h2>Crear</h2>
+<p>Estado global.</p>
+<p>Estado por fase.</p>
+<p>Estado por módulo.</p>
+<p>Estado por agente.</p>
+<p>Estado por Workflow.</p>
+<p>Estado por Skill.</p>
+<p>Estado por Deploy.</p>
+<p>Estado por Validación.</p>
+<p>Estado por Memoria.</p>
+<h2>Archivos</h2>
+<ul>
+<li>state.json</li>
+<li>project_state.json</li>
+<li>workflow_state.json</li>
+<li>agent_state.json</li>
+<li>runtime_state.json</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proceso</p>
+<p>➡️ Estado</p>
+<p>➡️ Persistencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.06 — Registro Maestro</h1>
+<h2>Mantener</h2>
+<p>Inventario.</p>
+<p>Dependencias.</p>
+<p>Artefactos.</p>
+<p>Versiones.</p>
+<p>Relaciones.</p>
+<p>Historial.</p>
+<h2>Micro Diagrama</h2>
+<p>Activo</p>
+<p>➡️ Registro</p>
+<p>➡️ Consulta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.07 — Configuración Global</h1>
+<h2>Definir</h2>
+<p>Lenguajes.</p>
+<p>Frameworks.</p>
+<p>Repositorios.</p>
+<p>Modelos IA.</p>
+<p>APIs.</p>
+<p>Cloud.</p>
+<p>Bases de datos.</p>
+<p>Herramientas.</p>
+<p>MCP.</p>
+<p>Entornos.</p>
+<h2>Micro Diagrama</h2>
+<p>Configuración</p>
+<p>➡️ Inicialización</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.08 — Perfil del Proyecto</h1>
+<h2>Registrar</h2>
+<p>Nombre.</p>
+<p>Descripción.</p>
+<p>Objetivos.</p>
+<p>Arquitectura.</p>
+<p>Tecnologías.</p>
+<p>Equipo.</p>
+<p>Versiones.</p>
+<p>Licencia.</p>
+<p>Repositorio.</p>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Perfil</p>
+<p>➡️ Registro</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.09 — Inicialización del Orquestador</h1>
+<h2>Preparar</h2>
+<p>Router.</p>
+<p>Scheduler.</p>
+<p>Runtime.</p>
+<p>Memoria.</p>
+<p>Biblioteca.</p>
+<p>Agentes.</p>
+<p>Herramientas.</p>
+<p>Workflows.</p>
+<h2>Micro Diagrama</h2>
+<p>Configuración</p>
+<p>➡️ Inicialización</p>
+<p>➡️ Orquestador</p>
+<hr/>
+<h1>🌿 CHECKPOINT 00.10 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Constitución</li>
+<li>Reglas</li>
+<li>Registro Maestro</li>
+<li>Mapa Mental</li>
+<li>Crazy Wall</li>
+<li>state.json</li>
+<li>project_state.json</li>
+<li>workflow_state.json</li>
+<li>agent_state.json</li>
+<li>runtime_state.json</li>
+<li>Inventario</li>
+<li>Dependencias</li>
+<li>Perfil del Proyecto</li>
+<li>Configuración Global</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Debe decidir</p>
+<ul>
+<li>¿Cómo organizar el proyecto?</li>
+<li>¿Qué reglas aplicar?</li>
+<li>¿Qué estados crear?</li>
+<li>¿Qué información debe permanecer visible?</li>
+<li>¿Qué relaciones existen?</li>
+<li>¿Qué dependencias registrar?</li>
+<li>¿Cómo inicializar todo el ecosistema?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administrará</p>
+<ul>
+<li>Constitución</li>
+<li>Reglas</li>
+<li>Policies</li>
+<li>States</li>
+<li>Diagramas</li>
+<li>Mapas Mentales</li>
+<li>Crazy Wall</li>
+<li>Inventarios</li>
+<li>Registros</li>
+<li>Dependencias</li>
+<li>Configuraciones</li>
+<li>Checklists</li>
+<li>Plantillas Base</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Existe una constitución del proyecto.</li>
+<li>La estructura documental está creada.</li>
+<li>El mapa mental está disponible.</li>
+<li>La Crazy Wall contiene las primeras notas del proyecto.</li>
+<li>Todos los archivos <code>state.json</code> han sido inicializados.</li>
+<li>El registro maestro está creado.</li>
+<li>El orquestador puede comenzar la Fase 01.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Idea del Usuario</p>
+<p>➡️ Constitución</p>
+<p>➡️ Arquitectura Documental</p>
+<p>➡️ Mapa Mental Maestro</p>
+<p>➡️ Crazy Wall</p>
+<p>➡️ Sistema de Estados</p>
+<p>➡️ Registro Maestro</p>
+<p>➡️ Configuración Global</p>
+<p>➡️ Inicialización del Orquestador</p>
+<p>➡️ Proyecto Preparado</p>
+<p>➡️ 🌳 FASE 01 — DESCUBRIMIENTO DE LA IDEA</p>
+<h1>🌿 CHECKPOINT 00.11 — Captura Universal de Entradas del Usuario</h1>
+<h2>Objetivo</h2>
+<p>Toda información proporcionada por el usuario deberá conservarse.</p>
+<p>Ningún requisito, idea o decisión podrá perderse.</p>
+<hr/>
+<h2>Regla General</h2>
+<p>Cada mensaje recibido se procesará automáticamente.</p>
+<p>El orquestador deberá:</p>
+<ul>
+<li>Leer el mensaje completo.</li>
+<li>Mantener el texto original.</li>
+<li>Extraer información estructurada.</li>
+<li>Clasificarla.</li>
+<li>Guardarla.</li>
+<li>Relacionarla con el proyecto.</li>
+</ul>
+<p>Nunca deberá eliminar información del usuario.</p>
+<hr/>
+<h2>Archivos</h2>
+<p>/docs/notas-usuario/</p>
+<p>input-0001.md</p>
+<p>input-0002.md</p>
+<p>input-0003.md</p>
+<p>...</p>
+<hr/>
+<h2>Contenido del Markdown</h2>
+<p>Fecha</p>
+<p>Hora</p>
+<p>Proyecto</p>
+<p>Usuario</p>
+<p>Texto original</p>
+<p>Resumen</p>
+<p>Objetivos detectados</p>
+<p>Requisitos</p>
+<p>Restricciones</p>
+<p>Ideas</p>
+<p>Preguntas</p>
+<p>Acciones futuras</p>
+<p>Relaciones</p>
+<p>Estado</p>
+<p>Etiquetas</p>
+<p>Prioridad</p>
+<pre><code>Usuario (Texto Literal)
+
+↓
+
+Markdown
+
+↓
+
+Biblioteca</code></pre>
+<h1>🌿 CHECKPOINT 00.12 — Input Block (Texto Literal)</h1>
+<h2>Objetivo</h2>
+<p>Conservar literalmente todo lo escrito por el usuario.</p>
+<p>Nunca modificarlo.</p>
+<p>Nunca resumirlo.</p>
+<p>Nunca eliminar información.</p>
+<hr/>
+<h2>Estructura</h2>
+<pre><code class="lang-text">INPUT BLOCK
+
+Mensaje original
+
+Fecha
+
+Hora
+
+Hash
+
+Proyecto
+
+Autor
+
+Checkpoint relacionado</code></pre>
+<hr/>
+<h2>Función</h2>
+<p>Permitir reconstruir cualquier conversación.</p>
+<p>Servir como evidencia.</p>
+<p>Mantener trazabilidad completa.</p>
+<pre><code>Usuario
+
+↓
+
+INPUT BLOCK
+
+↓
+
+Archivo Permanente</code></pre>
+<h1>🌿 CHECKPOINT 00.13 — Perfil del Proyecto</h1>
+<h2>Crear</h2>
+<p>/proyecto/</p>
+<p>README.md</p>
+<p>VISION.md</p>
+<p>OBJETIVOS.md</p>
+<p>ALCANCE.md</p>
+<p>TECNOLOGIAS.md</p>
+<p>ROADMAP.md</p>
+<p>CHANGELOG.md</p>
+<p>LICENCIA.md</p>
+<p>AUTORES.md</p>
+<p>CONTACTO.md</p>
+<hr/>
+<h2>Función</h2>
+<p>Crear la identidad completa del proyecto.</p>
+<p>Servirá como punto de entrada para cualquier IA.</p>
+<pre><code>Proyecto
+
+↓
+
+Perfil
+
+↓
+
+README Principal</code></pre>
+<h1>🌿 CHECKPOINT 00.14 — Registro Maestro de Checkpoints</h1>
+<h2>Crear</h2>
+<p>/checkpoints/</p>
+<p>0001/</p>
+<p>0002/</p>
+<p>0003/</p>
+<p>...</p>
+<hr/>
+<h2>Cada carpeta contendrá</h2>
+<p>README.md</p>
+<p>checkpoint.json</p>
+<p>estado.json</p>
+<p>notas.md</p>
+<p>artefactos/</p>
+<p>diagramas/</p>
+<p>skills/</p>
+<p>protocolos/</p>
+<p>dsl/</p>
+<p>workflows/</p>
+<p>plantillas/</p>
+<p>codigo/</p>
+<p>validaciones/</p>
+<p>decisiones/</p>
+<p>referencias/</p>
+<p>dependencias/</p>
+<p>historial/</p>
+<hr/>
+<h2>Objetivo</h2>
+<p>Cada checkpoint será completamente independiente.</p>
+<p>Toda la información relacionada permanecerá agrupada.</p>
+<p>El orquestador podrá detenerse y continuar sin perder contexto.</p>
+<pre><code>Checkpoint
+
+↓
+
+Carpeta
+
+↓
+
+Documentación
+
+↓
+
+Estado
+
+↓
+
+Artefactos
+
+↓
+
+Historial</code></pre>
+<p>Estado</p>
+<p>Etiquetas</p>
+<p>Prioridad</p>
+<pre><code>Usuario (Texto Literal)
+
+↓
+
+Markdown
+
+↓
+
+Biblioteca</code></pre>
+<p>Markdown</p>
+<h1>🌿 CHECKPOINT 00.12 — Input Block (Texto Literal)</h1>
+<h2>Objetivo</h2>
+<p>Conservar literalmente todo lo escrito por el usuario.</p>
+<p>Nunca modificarlo.</p>
+<p>Nunca resumirlo.</p>
+<p>Nunca eliminar información.</p>
+<hr/>
+<h2>Estructura</h2>
+<pre><code class="lang-text">INPUT BLOCK
+
+Mensaje original
+
+Fecha
+
+Hora
+
+Hash
+
+Proyecto
+
+Autor
+
+Checkpoint relacionado</code></pre>
+<hr/>
+<h2>Función</h2>
+<p>Permitir reconstruir cualquier conversación.</p>
+<p>Servir como evidencia.</p>
+<p>Mantener trazabilidad completa.</p>
+<pre><code>Usuario
+
+↓
+
+INPUT BLOCK
+
+↓
+
+Archivo Permanente</code></pre>
+<p>Markdown</p>
+<h1>🌿 CHECKPOINT 00.13 — Perfil del Proyecto</h1>
+<h2>Crear</h2>
+<p>/proyecto/</p>
+<p>README.md</p>
+<p>VISION.md</p>
+<p>OBJETIVOS.md</p>
+<p>ALCANCE.md</p>
+<p>TECNOLOGIAS.md</p>
+<p>ROADMAP.md</p>
+<p>CHANGELOG.md</p>
+<p>LICENCIA.md</p>
+<p>AUTORES.md</p>
+<p>CONTACTO.md</p>
+<hr/>
+<h2>Función</h2>
+<p>Crear la identidad completa del proyecto.</p>
+<p>Servirá como punto de entrada para cualquier IA.</p>
+<pre><code>Proyecto
+
+↓
+
+Perfil
+
+↓
+
+README Principal</code></pre>
+<p>Markdown</p>
+<h1>🌿 CHECKPOINT 00.14 — Registro Maestro de Checkpoints</h1>
+<h2>Crear</h2>
+<p>/checkpoints/</p>
+<p>0001/</p>
+<p>0002/</p>
+<p>0003/</p>
+<p>...</p>
+<hr/>
+<h2>Cada carpeta contendrá</h2>
+<p>README.md</p>
+<p>checkpoint.json</p>
+<p>estado.json</p>
+<p>notas.md</p>
+<p>artefactos/</p>
+<p>diagramas/</p>
+<p>skills/</p>
+<p>protocolos/</p>
+<p>dsl/</p>
+<p>workflows/</p>
+<p>plantillas/</p>
+<p>codigo/</p>
+<p>validaciones/</p>
+<p>decisiones/</p>
+<h1>📜 LEY UNIVERSAL DE PERSISTENCIA DEL ORQUESTADOR</h1>
+<h2>Principio Fundamental</h2>
+<p>Ninguna información generada durante el ciclo de vida del proyecto podrá existir únicamente en memoria temporal.</p>
+<p>Toda información deberá persistirse automáticamente en la biblioteca documental del proyecto para garantizar continuidad, trazabilidad, auditoría, reutilización y recuperación del conocimiento.</p>
+<hr/>
+<h1>Objetivos</h1>
+<ul>
+<li>Evitar la pérdida de información.</li>
+<li>Mantener una memoria permanente del proyecto.</li>
+<li>Permitir que cualquier agente continúe el trabajo.</li>
+<li>Facilitar auditorías y revisiones.</li>
+<li>Construir una biblioteca de conocimiento reutilizable.</li>
+<li>Registrar la evolución completa del proyecto.</li>
+</ul>
+<hr/>
+<h1>Regla Universal</h1>
+<p>Cada vez que el orquestador reciba, genere, modifique o descubra información, deberá clasificarla y almacenarla automáticamente en uno o más archivos del proyecto.</p>
+<p>Ningún dato importante podrá descartarse.</p>
+<p>Toda información deberá poder recuperarse posteriormente.</p>
+<hr/>
+<h1>Información que DEBE persistirse</h1>
+<h2>Entradas del usuario</h2>
+<ul>
+<li>Ideas</li>
+<li>Solicitudes</li>
+<li>Requisitos</li>
+<li>Objetivos</li>
+<li>Restricciones</li>
+<li>Conversaciones</li>
+<li>Correcciones</li>
+<li>Feedback</li>
+<li>Decisiones</li>
+</ul>
+<hr/>
+<h2>Información generada por el orquestador</h2>
+<ul>
+<li>Arquitecturas</li>
+<li>Diseños</li>
+<li>Diagramas</li>
+<li>Planificaciones</li>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Código</li>
+<li>Configuraciones</li>
+<li>Estados</li>
+<li>Validaciones</li>
+<li>Resultados</li>
+<li>Informes</li>
+<li>Auditorías</li>
+</ul>
+<hr/>
+<h2>Información generada por los agentes</h2>
+<ul>
+<li>Tareas</li>
+<li>Reportes</li>
+<li>Decisiones</li>
+<li>Logs</li>
+<li>Errores</li>
+<li>Soluciones</li>
+<li>Mejoras</li>
+<li>Métricas</li>
+<li>Versiones</li>
+</ul>
+<hr/>
+<h2>Información técnica</h2>
+<ul>
+<li>Dependencias</li>
+<li>APIs</li>
+<li>MCP</li>
+<li>Frameworks</li>
+<li>Librerías</li>
+<li>Infraestructura</li>
+<li>Deploy</li>
+<li>Seguridad</li>
+<li>Testing</li>
+</ul>
+<hr/>
+<h1>Persistencia obligatoria</h1>
+<p>Toda información deberá almacenarse utilizando uno o varios de los siguientes formatos:</p>
+<ul>
+<li>Markdown (.md)</li>
+<li>JSON (.json)</li>
+<li>YAML (.yaml)</li>
+<li>Código fuente</li>
+<li>Diagramas</li>
+<li>Documentación</li>
+<li>Configuraciones</li>
+</ul>
+<hr/>
+<h1>Reglas de almacenamiento</h1>
+<p>Cada documento deberá contener como mínimo:</p>
+<ul>
+<li>Identificador único</li>
+<li>Fecha</li>
+<li>Hora</li>
+<li>Autor</li>
+<li>Agente responsable</li>
+<li>Proyecto</li>
+<li>Fase</li>
+<li>Checkpoint</li>
+<li>Estado</li>
+<li>Versión</li>
+<li>Dependencias</li>
+<li>Relaciones</li>
+<li>Historial</li>
+</ul>
+<hr/>
+<h1>Trazabilidad</h1>
+<p>Todo documento deberá indicar:</p>
+<ul>
+<li>De dónde proviene.</li>
+<li>Qué información utiliza.</li>
+<li>Qué documentos genera.</li>
+<li>Qué documentos modifica.</li>
+<li>Qué documentos dependen de él.</li>
+</ul>
+<hr/>
+<h1>Continuidad</h1>
+<p>El proyecto deberá poder detenerse y reanudarse en cualquier momento sin pérdida de información.</p>
+<p>Un nuevo agente deberá poder continuar el trabajo utilizando únicamente la documentación persistida.</p>
+<hr/>
+<h1>Biblioteca de Conocimiento</h1>
+<p>Toda información persistida pasará automáticamente a formar parte de la biblioteca de conocimiento del proyecto.</p>
+<p>Siempre que sea posible deberá reutilizarse antes de generar contenido nuevo.</p>
+<hr/>
+<h1>Recuperación</h1>
+<p>El orquestador deberá ser capaz de:</p>
+<ul>
+<li>Buscar información.</li>
+<li>Localizar documentos relacionados.</li>
+<li>Reconstruir decisiones.</li>
+<li>Recuperar estados anteriores.</li>
+<li>Restaurar versiones.</li>
+<li>Reanudar procesos.</li>
+</ul>
+<hr/>
+<h1>Auditoría</h1>
+<p>Toda modificación deberá quedar registrada.</p>
+<p>Nunca deberán eliminarse registros históricos.</p>
+<p>Toda actualización generará una nueva versión.</p>
+<hr/>
+<h1>Versionado</h1>
+<p>Todo cambio importante deberá:</p>
+<ul>
+<li>Incrementar la versión.</li>
+<li>Registrar el motivo.</li>
+<li>Registrar el autor.</li>
+<li>Registrar la fecha.</li>
+<li>Mantener historial.</li>
+</ul>
+<hr/>
+<h1>Principio de No Pérdida</h1>
+<p>Toda idea, conversación, decisión, requisito, estado, diseño, documento, código, resultado o conocimiento generado durante el proyecto constituye un activo del ecosistema.</p>
+<p>Por lo tanto:</p>
+<ul>
+<li>No podrá eliminarse sin autorización explícita.</li>
+<li>No podrá sobrescribirse sin conservar el historial.</li>
+<li>No podrá permanecer únicamente en memoria temporal.</li>
+<li>Deberá quedar disponible para futuras consultas, reutilización, auditoría y evolución del proyecto.</li>
+</ul>
+<hr/>
+<h1>Ley Fundamental</h1>
+<blockquote><strong>Todo conocimiento generado por el ecosistema deberá transformarse en un activo persistente, versionado, trazable, reutilizable y recuperable, garantizando que el proyecto nunca pierda información y pueda continuar su evolución desde cualquier punto del ciclo de vida.</strong></blockquote>
+<p>🌳 RAÍZ MAESTRA 01 — IDEA DEL USUARIO, DESCUBRIMIENTO Y DEFINICIÓN DEL PROYECTO</p>
+<blockquote><strong>Propósito de la Raíz</strong>  Convertir una idea, necesidad o problema del usuario en una especificación inicial completamente definida que permita iniciar el análisis, la arquitectura y posteriormente la construcción del proyecto.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Esta es la primera fase del Orquestador.</p>
+<p>Su función es comprender completamente lo que desea el usuario antes de tomar cualquier decisión técnica.</p>
+<p>No debe programar.</p>
+<p>No debe elegir tecnologías de forma definitiva.</p>
+<p>Su misión es descubrir toda la información posible del proyecto.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Landing Page</p>
+<p>✅ Blog</p>
+<p>✅ Portal Web</p>
+<p>✅ Ecommerce</p>
+<p>✅ Dashboard</p>
+<p>✅ Sistema Web</p>
+<p>✅ SaaS</p>
+<p>✅ CRM</p>
+<p>✅ ERP</p>
+<p>✅ API</p>
+<p>✅ Microservicios</p>
+<p>✅ Aplicaciones Android</p>
+<p>✅ Aplicaciones iOS</p>
+<p>✅ Aplicaciones Multiplataforma</p>
+<p>✅ Software Windows</p>
+<p>✅ Software Linux</p>
+<p>✅ Software macOS</p>
+<p>✅ Software Empresarial</p>
+<p>✅ Automatizaciones</p>
+<p>✅ Inteligencia Artificial</p>
+<p>✅ Agentes IA</p>
+<p>✅ MCP</p>
+<p>✅ Bots</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<p>La información puede provenir de:</p>
+<ul>
+<li>Conversación</li>
+<li>Chat</li>
+<li>Audio</li>
+<li>Imagen</li>
+<li>Video</li>
+<li>OCR</li>
+<li>Documento</li>
+<li>PDF</li>
+<li>Word</li>
+<li>Excel</li>
+<li>Markdown</li>
+<li>GitHub</li>
+<li>Repositorio existente</li>
+<li>Código existente</li>
+<li>Boceto</li>
+<li>Wireframe</li>
+<li>Mockup</li>
+<li>Figma</li>
+<li>Idea escrita</li>
+<li>Lista de requisitos</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<p>Al finalizar esta raíz debe existir:</p>
+<ul>
+<li>Idea completamente entendida</li>
+<li>Objetivos definidos</li>
+<li>Alcance del proyecto</li>
+<li>Tipo de proyecto identificado</li>
+<li>Usuarios identificados</li>
+<li>Restricciones conocidas</li>
+<li>Funcionalidades iniciales</li>
+<li>Riesgos detectados</li>
+<li>Documento de descubrimiento</li>
+<li>Información suficiente para iniciar Arquitectura</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 01.01 — Captura de la Idea</h1>
+<h2>Objetivo</h2>
+<p>Registrar exactamente la necesidad del usuario sin modificar su intención.</p>
+<h2>Información que debe capturar</h2>
+<ul>
+<li>Idea principal</li>
+<li>Problema</li>
+<li>Necesidad</li>
+<li>Objetivo</li>
+<li>Resultado esperado</li>
+<li>Motivación</li>
+<li>Contexto</li>
+<li>Prioridad</li>
+</ul>
+<h2>Herramientas que puede utilizar</h2>
+<ul>
+<li>Conversación</li>
+<li>Voz</li>
+<li>OCR</li>
+<li>Imagen</li>
+<li>Video</li>
+<li>Formularios</li>
+<li>Documentos</li>
+<li>Markdown</li>
+<li>PDF</li>
+</ul>
+<h2>Aplica a</h2>
+<p>🌐 Web</p>
+<p>📱 Apps</p>
+<p>💻 Software</p>
+<p>☁️ SaaS</p>
+<p>🤖 IA</p>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Idea</p>
+<p>➡️ Captura</p>
+<p>➡️ Registro</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.02 — Comprensión del Problema</h1>
+<h2>Objetivo</h2>
+<p>Comprender el verdadero problema que el usuario desea resolver.</p>
+<h2>Analizar</h2>
+<ul>
+<li>Qué ocurre</li>
+<li>Por qué ocurre</li>
+<li>A quién afecta</li>
+<li>Cómo se resuelve actualmente</li>
+<li>Qué espera mejorar</li>
+</ul>
+<h2>Técnicas posibles</h2>
+<ul>
+<li>Preguntas</li>
+<li>Entrevistas</li>
+<li>Análisis documental</li>
+<li>Investigación del dominio</li>
+<li>Comparación con proyectos similares</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Problema</p>
+<p>➡️ Investigación</p>
+<p>➡️ Comprensión</p>
+<p>➡️ Definición</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.03 — Clasificación del Proyecto</h1>
+<h2>Objetivo</h2>
+<p>Identificar exactamente qué tipo de solución debe construirse.</p>
+<h2>Puede ser</h2>
+<h3>Web</h3>
+<ul>
+<li>Landing Page</li>
+<li>Sitio Web</li>
+<li>Portal</li>
+<li>Dashboard</li>
+<li>Ecommerce</li>
+<li>Marketplace</li>
+<li>Blog</li>
+<li>CMS</li>
+<li>Plataforma Web</li>
+</ul>
+<h3>App</h3>
+<ul>
+<li>Android</li>
+<li>iOS</li>
+<li>Flutter</li>
+<li>React Native</li>
+<li>Kotlin</li>
+<li>Swift</li>
+<li>MAUI</li>
+</ul>
+<h3>Software</h3>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+<li>Electron</li>
+<li>Tauri</li>
+<li>Qt</li>
+</ul>
+<h3>SaaS</h3>
+<ul>
+<li>CRM</li>
+<li>ERP</li>
+<li>Facturación</li>
+<li>Inventario</li>
+<li>Recursos Humanos</li>
+<li>Gestión Empresarial</li>
+</ul>
+<h3>IA</h3>
+<ul>
+<li>Agente</li>
+<li>Chatbot</li>
+<li>MCP</li>
+<li>Automatización</li>
+<li>Asistente</li>
+<li>Workflow IA</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Clasificar</p>
+<p>➡️ Tipo de Proyecto</p>
+<p>➡️ Categoría</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.04 — Objetivos</h1>
+<h2>Definir</h2>
+<ul>
+<li>Objetivo principal</li>
+<li>Objetivos secundarios</li>
+<li>Beneficios</li>
+<li>Valor para el usuario</li>
+<li>Resultado esperado</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Problema</p>
+<p>➡️ Objetivos</p>
+<p>➡️ Priorización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.05 — Usuarios</h1>
+<h2>Identificar</h2>
+<ul>
+<li>Cliente</li>
+<li>Usuario</li>
+<li>Administrador</li>
+<li>Supervisor</li>
+<li>Operador</li>
+<li>Invitado</li>
+<li>Sistema Externo</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuarios</p>
+<p>➡️ Roles</p>
+<p>➡️ Permisos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.06 — Funcionalidades</h1>
+<h2>Identificar</h2>
+<ul>
+<li>Funciones principales</li>
+<li>Funciones secundarias</li>
+<li>Funciones futuras</li>
+<li>Funciones opcionales</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Objetivos</p>
+<p>➡️ Funciones</p>
+<p>➡️ Priorización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.07 — Restricciones</h1>
+<h2>Detectar</h2>
+<ul>
+<li>Tiempo</li>
+<li>Presupuesto</li>
+<li>Equipo</li>
+<li>Infraestructura</li>
+<li>Compatibilidad</li>
+<li>Licencias</li>
+<li>Seguridad</li>
+<li>Regulaciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Restricciones</p>
+<p>➡️ Riesgos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.08 — Plataformas</h1>
+<h2>Determinar</h2>
+<h3>Web</h3>
+<ul>
+<li>Navegadores</li>
+<li>Responsive</li>
+<li>PWA</li>
+</ul>
+<h3>Mobile</h3>
+<ul>
+<li>Android</li>
+<li>iOS</li>
+<li>Tablets</li>
+</ul>
+<h3>Desktop</h3>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+</ul>
+<h3>Cloud</h3>
+<ul>
+<li>SaaS</li>
+<li>APIs</li>
+<li>Microservicios</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Plataformas</p>
+<p>➡️ Compatibilidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.09 — Tecnologías Candidatas</h1>
+<h2>Backend</h2>
+<ul>
+<li>Python</li>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Flask</li>
+<li>Node.js</li>
+<li>Express</li>
+<li>NestJS</li>
+<li>Java</li>
+<li>Spring Boot</li>
+<li>Kotlin</li>
+<li>Go</li>
+<li>Rust</li>
+<li>C#</li>
+<li>ASP.NET</li>
+<li>PHP</li>
+<li>Laravel</li>
+</ul>
+<h2>Frontend</h2>
+<ul>
+<li>HTML</li>
+<li>CSS</li>
+<li>JavaScript</li>
+<li>TypeScript</li>
+<li>React</li>
+<li>Vue</li>
+<li>Angular</li>
+<li>Svelte</li>
+<li>Next.js</li>
+<li>Nuxt</li>
+</ul>
+<h2>Mobile</h2>
+<ul>
+<li>Flutter</li>
+<li>React Native</li>
+<li>Kotlin</li>
+<li>Swift</li>
+<li>.NET MAUI</li>
+</ul>
+<h2>Desktop</h2>
+<ul>
+<li>Electron</li>
+<li>Tauri</li>
+<li>Qt</li>
+<li>Avalonia</li>
+<li>WPF</li>
+</ul>
+<h2>Base de Datos</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>MariaDB</li>
+<li>SQLite</li>
+<li>SQL Server</li>
+<li>MongoDB</li>
+<li>Redis</li>
+</ul>
+<h2>Cloud</h2>
+<ul>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>Cloudflare</li>
+<li>AWS</li>
+<li>Azure</li>
+<li>Google Cloud</li>
+</ul>
+<h2>Control de Versiones</h2>
+<ul>
+<li>Git</li>
+<li>GitHub</li>
+<li>GitLab</li>
+<li>Bitbucket</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Tecnologías</p>
+<p>➡️ Opciones</p>
+<p>➡️ Evaluación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 01.10 — Artefactos Generados</h1>
+<p>Esta raíz genera:</p>
+<ul>
+<li>Documento de Descubrimiento</li>
+<li>Documento de Objetivos</li>
+<li>Documento de Alcance</li>
+<li>Lista de Funcionalidades</li>
+<li>Lista de Restricciones</li>
+<li>Clasificación del Proyecto</li>
+<li>Lista de Plataformas</li>
+<li>Lista de Tecnologías Candidatas</li>
+<li>Riesgos Iniciales</li>
+<li>Roadmap Inicial</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz el Orquestador debe decidir:</p>
+<ul>
+<li>¿Qué quiere realmente el usuario?</li>
+<li>¿Cuál es el problema principal?</li>
+<li>¿Cuál es el objetivo del proyecto?</li>
+<li>¿Es Web?</li>
+<li>¿Es App?</li>
+<li>¿Es Software?</li>
+<li>¿Es SaaS?</li>
+<li>¿Es una combinación?</li>
+<li>¿Qué plataformas deben soportarse?</li>
+<li>¿Qué información aún falta?</li>
+<li>¿Puede pasar a Arquitectura?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente:</p>
+<ul>
+<li>Skills</li>
+<li>Plantillas</li>
+<li>Protocolos</li>
+<li>Workflows</li>
+<li>Contratos</li>
+<li>DSL</li>
+<li>Schemas</li>
+<li>Diagramas</li>
+<li>Casos de Uso</li>
+<li>Historias de Usuario</li>
+<li>Ejemplos</li>
+<li>Checklists</li>
+<li>Validaciones</li>
+<li>Buenas Prácticas</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La Raíz finaliza únicamente cuando:</p>
+<ul>
+<li>La idea está completamente comprendida.</li>
+<li>El problema está definido.</li>
+<li>El proyecto está clasificado.</li>
+<li>El alcance está documentado.</li>
+<li>Los usuarios están identificados.</li>
+<li>Las funcionalidades iniciales están registradas.</li>
+<li>Las restricciones están documentadas.</li>
+<li>Las plataformas objetivo están definidas.</li>
+<li>Existe una lista de tecnologías candidatas.</li>
+<li>El proyecto está listo para pasar a la siguiente Raíz.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL DE LA RAÍZ</h1>
+<p>Idea del Usuario</p>
+<p>➡️ Captura</p>
+<p>➡️ Comprensión</p>
+<p>➡️ Clasificación</p>
+<p>➡️ Objetivos</p>
+<p>➡️ Usuarios</p>
+<p>➡️ Funcionalidades</p>
+<p>➡️ Restricciones</p>
+<p>➡️ Plataformas</p>
+<p>➡️ Tecnologías Candidatas</p>
+<p>➡️ Documento de Descubrimiento</p>
+<p>➡️ 📐 RAÍZ MAESTRA 02 — ANÁLISIS Y REQUISITOS</p>
+<h1>🌳 RAÍZ MAESTRA 02 — ANÁLISIS Y DEFINICIÓN DE REQUISITOS</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Transformar la información obtenida durante el descubrimiento en requisitos completos, verificables y listos para iniciar el diseño de la arquitectura del sistema.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Analizar completamente el proyecto.</p>
+<p>Eliminar ambigüedades.</p>
+<p>Definir exactamente qué debe construir el sistema.</p>
+<p>Esta fase NO desarrolla código.</p>
+<p>Esta fase diseña la lógica del negocio.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicaciones Web</p>
+<p>✅ Aplicaciones Android</p>
+<p>✅ Aplicaciones iOS</p>
+<p>✅ Software Desktop</p>
+<p>✅ SaaS</p>
+<p>✅ ERP</p>
+<p>✅ CRM</p>
+<p>✅ APIs</p>
+<p>✅ Microservicios</p>
+<p>✅ IA</p>
+<p>✅ Automatizaciones</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<p>Provienen de la Raíz 01</p>
+<ul>
+<li>Documento de Descubrimiento</li>
+<li>Objetivos</li>
+<li>Restricciones</li>
+<li>Usuarios</li>
+<li>Funcionalidades Iniciales</li>
+<li>Plataformas</li>
+<li>Tecnologías candidatas</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<p>Al finalizar esta raíz deberá existir:</p>
+<ul>
+<li>Requisitos funcionales completos</li>
+<li>Requisitos no funcionales</li>
+<li>Casos de uso</li>
+<li>Historias de usuario</li>
+<li>Actores</li>
+<li>Flujos del negocio</li>
+<li>Reglas del negocio</li>
+<li>Priorización</li>
+<li>Roadmap funcional</li>
+<li>Documento listo para Arquitectura</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 02.01 — Identificación de Actores</h1>
+<h2>Objetivo</h2>
+<p>Identificar todos los participantes del sistema.</p>
+<h2>Puede incluir</h2>
+<ul>
+<li>Cliente</li>
+<li>Usuario Final</li>
+<li>Administrador</li>
+<li>Supervisor</li>
+<li>Operador</li>
+<li>Invitado</li>
+<li>API Externa</li>
+<li>Sistema Externo</li>
+<li>Agente IA</li>
+<li>Automatización</li>
+</ul>
+<h2>Técnicas</h2>
+<ul>
+<li>UML</li>
+<li>Casos de uso</li>
+<li>BPMN</li>
+<li>Entrevistas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Actores</p>
+<p>➡️ Roles</p>
+<p>➡️ Responsabilidades</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.02 — Requisitos Funcionales</h1>
+<h2>Objetivo</h2>
+<p>Definir exactamente lo que debe hacer el sistema.</p>
+<h2>Ejemplos</h2>
+<ul>
+<li>Crear usuarios</li>
+<li>Editar perfiles</li>
+<li>Eliminar registros</li>
+<li>Buscar información</li>
+<li>Generar reportes</li>
+<li>Procesar pagos</li>
+<li>Enviar notificaciones</li>
+<li>Gestionar archivos</li>
+</ul>
+<h2>Estándares</h2>
+<ul>
+<li>IEEE 29148</li>
+<li>User Stories</li>
+<li>Casos de Uso</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Necesidad</p>
+<p>➡️ Función</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.03 — Requisitos No Funcionales</h1>
+<h2>Objetivo</h2>
+<p>Definir cómo debe comportarse el sistema.</p>
+<h2>Analizar</h2>
+<ul>
+<li>Rendimiento</li>
+<li>Seguridad</li>
+<li>Escalabilidad</li>
+<li>Disponibilidad</li>
+<li>Accesibilidad</li>
+<li>Mantenibilidad</li>
+<li>Compatibilidad</li>
+<li>Internacionalización</li>
+<li>Tiempo de respuesta</li>
+<li>Consumo de recursos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Calidad</p>
+<p>➡️ Restricciones Técnicas</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.04 — Casos de Uso</h1>
+<h2>Objetivo</h2>
+<p>Definir cómo interactúan los actores con el sistema.</p>
+<h2>Herramientas</h2>
+<ul>
+<li>UML</li>
+<li>BPMN</li>
+<li>Diagramas</li>
+<li>Casos de Uso</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Actor</p>
+<p>➡️ Acción</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.05 — Historias de Usuario</h1>
+<h2>Objetivo</h2>
+<p>Especificar las necesidades desde la perspectiva del usuario.</p>
+<h2>Formato</h2>
+<p>Como...</p>
+<p>Quiero...</p>
+<p>Para...</p>
+<h2>Herramientas</h2>
+<ul>
+<li>Scrum</li>
+<li>Agile</li>
+<li>Kanban</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Necesidad</p>
+<p>➡️ Beneficio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.06 — Reglas del Negocio</h1>
+<h2>Objetivo</h2>
+<p>Definir todas las reglas que controlarán el sistema.</p>
+<h2>Ejemplos</h2>
+<ul>
+<li>Validaciones</li>
+<li>Límites</li>
+<li>Permisos</li>
+<li>Roles</li>
+<li>Estados</li>
+<li>Restricciones</li>
+<li>Políticas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Regla</p>
+<p>➡️ Validación</p>
+<p>➡️ Acción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.07 — Procesos del Negocio</h1>
+<h2>Objetivo</h2>
+<p>Documentar los procesos completos del proyecto.</p>
+<h2>Herramientas</h2>
+<ul>
+<li>BPMN</li>
+<li>Diagramas de flujo</li>
+<li>UML</li>
+<li>Event Storming</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Entrada</p>
+<p>➡️ Proceso</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.08 — Flujos del Usuario</h1>
+<h2>Objetivo</h2>
+<p>Modelar el recorrido del usuario.</p>
+<h2>Puede incluir</h2>
+<ul>
+<li>Login</li>
+<li>Registro</li>
+<li>Compra</li>
+<li>Pago</li>
+<li>Administración</li>
+<li>Configuración</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>User Flow</li>
+<li>Journey Map</li>
+<li>Wireflow</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Inicio</p>
+<p>➡️ Acción</p>
+<p>➡️ Decisión</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.09 — Priorización</h1>
+<h2>Objetivo</h2>
+<p>Determinar qué debe desarrollarse primero.</p>
+<h2>Técnicas</h2>
+<ul>
+<li>MoSCoW</li>
+<li>RICE</li>
+<li>WSJF</li>
+<li>Valor vs Esfuerzo</li>
+</ul>
+<h2>Clasificación</h2>
+<ul>
+<li>Crítico</li>
+<li>Alto</li>
+<li>Medio</li>
+<li>Bajo</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Lista</p>
+<p>➡️ Prioridad</p>
+<p>➡️ Roadmap</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.10 — Tecnologías y Metodologías de Análisis</h1>
+<h2>Modelado</h2>
+<ul>
+<li>UML</li>
+<li>BPMN</li>
+<li>C4</li>
+<li>Event Storming</li>
+<li>Domain Storytelling</li>
+</ul>
+<h2>Gestión</h2>
+<ul>
+<li>Scrum</li>
+<li>Kanban</li>
+<li>Lean</li>
+<li>SAFe</li>
+</ul>
+<h2>Documentación</h2>
+<ul>
+<li>Markdown</li>
+<li>Mermaid</li>
+<li>PlantUML</li>
+<li>Draw.io</li>
+</ul>
+<h2>Gestión de Proyectos</h2>
+<ul>
+<li>Jira</li>
+<li>Trello</li>
+<li>GitHub Projects</li>
+<li>Linear</li>
+<li>Azure DevOps</li>
+</ul>
+<h2>Colaboración</h2>
+<ul>
+<li>Notion</li>
+<li>Obsidian</li>
+<li>Confluence</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Herramientas</p>
+<p>➡️ Documentación</p>
+<p>➡️ Organización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 02.11 — Artefactos Generados</h1>
+<p>Esta raíz produce:</p>
+<ul>
+<li>Documento de Requisitos Funcionales</li>
+<li>Documento de Requisitos No Funcionales</li>
+<li>Casos de Uso</li>
+</ul>
+<h1>🌳 RAÍZ MAESTRA 03 — ARQUITECTURA DEL SISTEMA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Diseñar la estructura técnica completa del proyecto antes de escribir una sola línea de código. Esta fase define la organización del sistema, las tecnologías, los componentes, las comunicaciones, la infraestructura y las decisiones técnicas que servirán de base para todo el desarrollo.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Diseñar una arquitectura sólida, escalable, segura y mantenible.</p>
+<p>Definir cómo estará construido el proyecto.</p>
+<p>Seleccionar la arquitectura más adecuada según el tipo de aplicación.</p>
+<p>Esta fase NO desarrolla funcionalidades.</p>
+<p>Esta fase diseña el plano completo del sistema.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicaciones Web</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Aplicaciones Android</p>
+<p>✅ Aplicaciones iOS</p>
+<p>✅ Aplicaciones Multiplataforma</p>
+<p>✅ Software Windows</p>
+<p>✅ Software Linux</p>
+<p>✅ Software macOS</p>
+<p>✅ APIs</p>
+<p>✅ Microservicios</p>
+<p>✅ Sistemas Distribuidos</p>
+<p>✅ Inteligencia Artificial</p>
+<p>✅ Agentes IA</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<p>Provienen de la Raíz 02</p>
+<ul>
+<li>Documento de Requisitos</li>
+<li>Casos de Uso</li>
+<li>Historias de Usuario</li>
+<li>Reglas del Negocio</li>
+<li>Procesos</li>
+<li>Roadmap Funcional</li>
+<li>Restricciones Técnicas</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<p>Al finalizar esta raíz deberá existir:</p>
+<ul>
+<li>Arquitectura Global</li>
+<li>Arquitectura Backend</li>
+<li>Arquitectura Frontend</li>
+<li>Arquitectura Mobile</li>
+<li>Arquitectura Desktop</li>
+<li>Arquitectura SaaS</li>
+<li>Arquitectura Cloud</li>
+<li>Arquitectura de Datos</li>
+<li>Arquitectura de Seguridad</li>
+<li>Diagramas Arquitectónicos</li>
+<li>ADRs (Architecture Decision Records)</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 03.01 — Selección del Tipo de Arquitectura</h1>
+<h2>Objetivo</h2>
+<p>Seleccionar la arquitectura más adecuada.</p>
+<h2>Arquitecturas posibles</h2>
+<h3>Monolito</h3>
+<p>Uso</p>
+<ul>
+<li>MVP</li>
+<li>Sistemas pequeños</li>
+<li>Equipos pequeños</li>
+</ul>
+<h3>Monolito Modular</h3>
+<p>Uso</p>
+<ul>
+<li>Sistemas medianos</li>
+<li>SaaS</li>
+<li>ERP</li>
+<li>CRM</li>
+</ul>
+<h3>Microservicios</h3>
+<p>Uso</p>
+<ul>
+<li>Sistemas grandes</li>
+<li>Alta escalabilidad</li>
+<li>Equipos múltiples</li>
+</ul>
+<h3>Serverless</h3>
+<p>Uso</p>
+<ul>
+<li>APIs</li>
+<li>Eventos</li>
+<li>Automatizaciones</li>
+</ul>
+<h3>Event Driven</h3>
+<p>Uso</p>
+<ul>
+<li>Procesamiento de eventos</li>
+<li>IA</li>
+<li>Integraciones</li>
+</ul>
+<h3>Hexagonal</h3>
+<p>Uso</p>
+<ul>
+<li>Alta mantenibilidad</li>
+</ul>
+<h3>Clean Architecture</h3>
+<p>Uso</p>
+<ul>
+<li>Sistemas empresariales</li>
+</ul>
+<h3>DDD (Domain Driven Design)</h3>
+<p>Uso</p>
+<ul>
+<li>Dominios complejos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Arquitectura</p>
+<p>➡️ Selección</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.02 — Arquitectura Backend</h1>
+<h2>Tecnologías</h2>
+<h3>Python</h3>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Flask</li>
+</ul>
+<h3>Node.js</h3>
+<ul>
+<li>Express</li>
+<li>NestJS</li>
+</ul>
+<h3>Java</h3>
+<ul>
+<li>Spring Boot</li>
+</ul>
+<h3>Kotlin</h3>
+<ul>
+<li>Ktor</li>
+</ul>
+<h3>Go</h3>
+<ul>
+<li>Gin</li>
+<li>Fiber</li>
+</ul>
+<h3>Rust</h3>
+<ul>
+<li>Axum</li>
+<li>Actix</li>
+</ul>
+<h3>C#</h3>
+<ul>
+<li>ASP.NET Core</li>
+</ul>
+<h3>PHP</h3>
+<ul>
+<li>Laravel</li>
+</ul>
+<h2>Decisiones</h2>
+<ul>
+<li>API REST</li>
+<li>GraphQL</li>
+<li>gRPC</li>
+<li>WebSockets</li>
+<li>Eventos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Backend</p>
+<p>➡️ Framework</p>
+<p>➡️ Servicios</p>
+<p>➡️ APIs</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.03 — Arquitectura Frontend</h1>
+<h2>Tecnologías</h2>
+<h3>Web</h3>
+<ul>
+<li>HTML</li>
+<li>CSS</li>
+<li>JavaScript</li>
+<li>TypeScript</li>
+</ul>
+<h3>Frameworks</h3>
+<ul>
+<li>React</li>
+<li>Vue</li>
+<li>Angular</li>
+<li>Svelte</li>
+<li>Next.js</li>
+<li>Nuxt</li>
+<li>Astro</li>
+</ul>
+<h3>UI</h3>
+<ul>
+<li>Tailwind CSS</li>
+<li>Material UI</li>
+<li>Shadcn UI</li>
+<li>Bootstrap</li>
+<li>Chakra UI</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>UI</p>
+<p>➡️ Componentes</p>
+<p>➡️ Estado</p>
+<p>➡️ Renderizado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.04 — Arquitectura Mobile</h1>
+<h2>Android</h2>
+<ul>
+<li>Kotlin</li>
+<li>Jetpack Compose</li>
+</ul>
+<h2>iOS</h2>
+<ul>
+<li>Swift</li>
+<li>SwiftUI</li>
+</ul>
+<h2>Multiplataforma</h2>
+<ul>
+<li>Flutter</li>
+<li>React Native</li>
+<li>.NET MAUI</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Aplicación</p>
+<p>➡️ Framework</p>
+<p>➡️ Plataforma</p>
+<p>➡️ Arquitectura</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.05 — Arquitectura Desktop</h1>
+<h2>Frameworks</h2>
+<ul>
+<li>Electron</li>
+<li>Tauri</li>
+<li>Qt</li>
+<li>Avalonia</li>
+<li>JavaFX</li>
+<li>WPF</li>
+</ul>
+<h2>Sistemas</h2>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Desktop</p>
+<p>➡️ Framework</p>
+<p>➡️ Plataforma</p>
+<p>➡️ Compilación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.06 — Arquitectura SaaS</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Multi Tenant</li>
+<li>Organizaciones</li>
+<li>Suscripciones</li>
+<li>Facturación</li>
+<li>Licencias</li>
+<li>Roles</li>
+<li>Espacios de Trabajo</li>
+<li>Panel Administrativo</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cliente</p>
+<p>➡️ Tenant</p>
+<p>➡️ Organización</p>
+<p>➡️ Servicio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.07 — Arquitectura de Base de Datos</h1>
+<h2>SQL</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>MariaDB</li>
+<li>SQL Server</li>
+<li>SQLite</li>
+</ul>
+<h2>NoSQL</h2>
+<ul>
+<li>MongoDB</li>
+<li>Redis</li>
+<li>Elasticsearch</li>
+</ul>
+<h2>Diseño</h2>
+<ul>
+<li>ERD</li>
+<li>Relaciones</li>
+<li>Índices</li>
+<li>Particiones</li>
+<li>Replicación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Modelo</p>
+<p>➡️ Tablas</p>
+<p>➡️ Relaciones</p>
+<p>➡️ Optimización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.08 — Arquitectura Cloud</h1>
+<h2>Infraestructura</h2>
+<ul>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>Cloudflare</li>
+<li>AWS</li>
+<li>Azure</li>
+<li>Google Cloud</li>
+<li>VPS</li>
+<li>Edge Computing</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Aplicación</p>
+<p>➡️ Contenedores</p>
+<p>➡️ Cloud</p>
+<p>➡️ Producción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.09 — Arquitectura de Integraciones</h1>
+<h2>Integraciones</h2>
+<ul>
+<li>REST</li>
+<li>GraphQL</li>
+<li>Webhooks</li>
+<li>OAuth</li>
+<li>OpenID Connect</li>
+<li>LDAP</li>
+<li>SMTP</li>
+<li>WebSockets</li>
+<li>MQTT</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ API</p>
+<p>➡️ Integración</p>
+<p>➡️ Comunicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.10 — Arquitectura de Seguridad</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Autenticación</li>
+<li>Autorización</li>
+<li>JWT</li>
+<li>OAuth2</li>
+<li>MFA</li>
+<li>Gestión de Secretos</li>
+<li>Cifrado</li>
+<li>Auditoría</li>
+<li>Logs</li>
+<li>Zero Trust</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Autenticación</p>
+<p>➡️ Permisos</p>
+<p>➡️ Acceso</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.11 — Diagramas Arquitectónicos</h1>
+<h2>Diagramas</h2>
+<ul>
+<li>C4</li>
+<li>UML</li>
+<li>BPMN</li>
+<li>ERD</li>
+<li>Arquitectura Física</li>
+<li>Arquitectura Lógica</li>
+<li>Flujo de Datos</li>
+<li>Componentes</li>
+<li>Despliegue</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Mermaid</li>
+<li>PlantUML</li>
+<li>Draw.io</li>
+<li>Excalidraw</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Arquitectura</p>
+<p>➡️ Diagramas</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 03.12 — Artefactos Generados</h1>
+<p>Esta raíz genera:</p>
+<ul>
+<li>Arquitectura Global</li>
+<li>Arquitectura Backend</li>
+<li>Arquitectura Frontend</li>
+<li>Arquitectura Mobile</li>
+<li>Arquitectura Desktop</li>
+<li>Arquitectura SaaS</li>
+<li>Arquitectura Cloud</li>
+<li>Arquitectura de Datos</li>
+<li>Arquitectura de Seguridad</li>
+<li>ADRs</li>
+<li>Diagramas Técnicos</li>
+<li>Especificaciones Arquitectónicas</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz el Orquestador debe decidir:</p>
+<ul>
+<li>¿Qué arquitectura utilizar?</li>
+<li>¿Monolito o Microservicios?</li>
+<li>¿Qué tecnologías serán oficiales?</li>
+<li>¿Qué base de datos utilizar?</li>
+<li>¿Cómo se comunicarán los componentes?</li>
+<li>¿Qué arquitectura cloud utilizar?</li>
+<li>¿Qué estrategia de seguridad implementar?</li>
+<li>¿Qué patrones de diseño aplicar?</li>
+<li>¿Está listo el proyecto para comenzar el diseño técnico?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente:</p>
+<ul>
+<li>Skills</li>
+<li>Patrones de Arquitectura</li>
+<li>ADRs</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Schemas</li>
+<li>Plantillas</li>
+<li>Diagramas</li>
+<li>Checklists</li>
+<li>Ejemplos</li>
+<li>Workflows</li>
+<li>Protocolos</li>
+<li>Guías Técnicas</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza únicamente cuando:</p>
+<ul>
+<li>La arquitectura está completamente definida.</li>
+<li>Todas las decisiones técnicas están documentadas.</li>
+<li>Los diagramas están aprobados.</li>
+<li>La infraestructura está seleccionada.</li>
+<li>Las tecnologías oficiales están definidas.</li>
+<li>La estrategia de seguridad está establecida.</li>
+<li>Las integraciones están identificadas.</li>
+<li>El proyecto está preparado para pasar a la fase de Diseño.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL DE LA RAÍZ</h1>
+<p>Requisitos</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Arquitectura Global</p>
+<p>➡️ Backend</p>
+<p>➡️ Frontend</p>
+<p>➡️ Mobile</p>
+<p>➡️ Desktop</p>
+<p>➡️ SaaS</p>
+<p>➡️ Base de Datos</p>
+<p>➡️ Cloud</p>
+<p>➡️ Seguridad</p>
+<p>➡️ Diagramas</p>
+<p>➡️ ADRs</p>
+<p>➡️ 📐 RAÍZ MAESTRA 04 — DISEÑO DEL SISTEMA</p>
+<h1>🌳 RAÍZ MAESTRA 04 — DISEÑO DEL SISTEMA (UX · UI · TÉCNICO · DATOS · EXPERIENCIA)</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Convertir la arquitectura aprobada en un diseño completo listo para ser implementado. Esta fase define cómo será el sistema, cómo interactuará el usuario con él, cómo estarán organizados sus componentes y cómo se preparará el desarrollo.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Diseñar completamente el proyecto antes del desarrollo.</p>
+<p>Transformar la arquitectura en una especificación visual, técnica y funcional.</p>
+<p>Reducir errores durante la programación.</p>
+<p>Generar toda la documentación necesaria para que Backend, Frontend, Mobile y Desktop puedan desarrollarse sin ambigüedades.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicación Web</p>
+<p>✅ SaaS</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Flutter</p>
+<p>✅ React Native</p>
+<p>✅ Windows</p>
+<p>✅ Linux</p>
+<p>✅ macOS</p>
+<p>✅ APIs</p>
+<p>✅ Sistemas Empresariales</p>
+<p>✅ IA</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<p>Provienen de la Raíz 03</p>
+<ul>
+<li>Arquitectura Global</li>
+<li>ADR</li>
+<li>Diagramas</li>
+<li>Requisitos</li>
+<li>Casos de Uso</li>
+<li>Historias de Usuario</li>
+<li>Modelo de Datos Inicial</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<p>Al finalizar esta raíz deberá existir</p>
+<ul>
+<li>Diseño UX</li>
+<li>Diseño UI</li>
+<li>Design System</li>
+<li>Componentes</li>
+<li>Wireframes</li>
+<li>Mockups</li>
+<li>Prototipos</li>
+<li>Flujo de Navegación</li>
+<li>Diseño Responsive</li>
+<li>Diseño Mobile</li>
+<li>Diseño Desktop</li>
+<li>Modelo Visual</li>
+<li>Especificaciones Técnicas</li>
+<li>Guía para Desarrollo</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 04.01 — Experiencia de Usuario (UX)</h1>
+<h2>Objetivo</h2>
+<p>Diseñar la mejor experiencia posible para el usuario.</p>
+<h2>Actividades</h2>
+<ul>
+<li>Investigación UX</li>
+<li>Personas</li>
+<li>User Journey</li>
+<li>User Flow</li>
+<li>Arquitectura de Información</li>
+<li>Mapa del Sitio</li>
+<li>Navegación</li>
+<li>Accesibilidad</li>
+<li>Heurísticas</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Figma</li>
+<li>FigJam</li>
+<li>Miro</li>
+<li>Whimsical</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Necesidad</p>
+<p>➡️ Flujo</p>
+<p>➡️ Experiencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.02 — Diseño de Interfaz (UI)</h1>
+<h2>Objetivo</h2>
+<p>Diseñar toda la interfaz visual.</p>
+<h2>Diseñar</h2>
+<ul>
+<li>Botones</li>
+<li>Formularios</li>
+<li>Tablas</li>
+<li>Cards</li>
+<li>Modales</li>
+<li>Menús</li>
+<li>Paneles</li>
+<li>Dashboard</li>
+<li>Gráficas</li>
+<li>Iconografía</li>
+<li>Espaciados</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Figma</li>
+<li>Sketch</li>
+<li>Adobe XD</li>
+<li>Penpot</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Wireframe</p>
+<p>➡️ Diseño</p>
+<p>➡️ UI Final</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.03 — Design System</h1>
+<h2>Construir</h2>
+<ul>
+<li>Colores</li>
+<li>Tipografía</li>
+<li>Espaciado</li>
+<li>Grid</li>
+<li>Iconos</li>
+<li>Componentes</li>
+<li>Tokens</li>
+<li>Temas</li>
+<li>Dark Mode</li>
+<li>Light Mode</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>Material Design</li>
+<li>Fluent</li>
+<li>Human Interface</li>
+<li>Tailwind Design</li>
+<li>Bootstrap</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Principios</p>
+<p>➡️ Componentes</p>
+<p>➡️ Sistema Visual</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.04 — Componentes</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Navbar</li>
+<li>Sidebar</li>
+<li>Footer</li>
+<li>Cards</li>
+<li>Tablas</li>
+<li>Inputs</li>
+<li>Calendarios</li>
+<li>Listas</li>
+<li>Gráficos</li>
+<li>Widgets</li>
+</ul>
+<h2>Aplica</h2>
+<p>🌐</p>
+<p>📱</p>
+<p>💻</p>
+<p>☁️</p>
+<h2>Micro Diagrama</h2>
+<p>Diseño</p>
+<p>➡️ Componentes</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.05 — Navegación</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Menús</li>
+<li>Breadcrumbs</li>
+<li>Routing</li>
+<li>Navegación Mobile</li>
+<li>Navegación Desktop</li>
+<li>Navegación Responsive</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>React Router</li>
+<li>Vue Router</li>
+<li>Angular Router</li>
+<li>GoRouter</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Pantalla</p>
+<p>➡️ Navegación</p>
+<p>➡️ Destino</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.06 — Responsive y Adaptabilidad</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Desktop</li>
+<li>Laptop</li>
+<li>Tablet</li>
+<li>Android</li>
+<li>iPhone</li>
+<li>Pantallas Grandes</li>
+<li>Pantallas Pequeñas</li>
+</ul>
+<h2>Técnicas</h2>
+<ul>
+<li>Mobile First</li>
+<li>Responsive</li>
+<li>Adaptive</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Pantalla</p>
+<p>➡️ Adaptación</p>
+<p>➡️ Visualización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.07 — Arquitectura Frontend</h1>
+<h2>Definir</h2>
+<ul>
+<li>Componentes</li>
+<li>Estado</li>
+<li>Layout</li>
+<li>Hooks</li>
+<li>Servicios</li>
+<li>Stores</li>
+<li>Rutas</li>
+<li>APIs</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>React</li>
+<li>Vue</li>
+<li>Angular</li>
+<li>Svelte</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Componentes</p>
+<p>➡️ Estado</p>
+<p>➡️ Render</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.08 — Diseño Backend</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Endpoints</li>
+<li>Servicios</li>
+<li>Casos de Uso</li>
+<li>Controladores</li>
+<li>Middleware</li>
+<li>Validaciones</li>
+<li>DTO</li>
+<li>Repositorios</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>FastAPI</li>
+<li>NestJS</li>
+<li>Spring Boot</li>
+<li>ASP.NET</li>
+<li>Laravel</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Servicio</p>
+<p>➡️ API</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.09 — Diseño Base de Datos</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Tablas</li>
+<li>Relaciones</li>
+<li>Índices</li>
+<li>Restricciones</li>
+<li>Vistas</li>
+<li>Procedimientos</li>
+<li>Triggers</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>SQL Server</li>
+<li>MongoDB</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Entidad</p>
+<p>➡️ Relación</p>
+<p>➡️ Modelo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.10 — APIs e Integraciones</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>REST</li>
+<li>GraphQL</li>
+<li>WebSockets</li>
+<li>OAuth</li>
+<li>Webhooks</li>
+<li>MCP</li>
+<li>IA</li>
+<li>Servicios externos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cliente</p>
+<p>➡️ API</p>
+<p>➡️ Servicio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 04.11 — Tecnologías de Diseño</h1>
+<h2>UX</h2>
+<ul>
+<li>Figma</li>
+<li>Penpot</li>
+<li>Adobe XD</li>
+</ul>
+<h2>Diagramas</h2>
+<ul>
+<li>Mermaid</li>
+<li>PlantUML</li>
+<li>Draw.io</li>
+<li>Excalidraw</li>
+</ul>
+<h2>Frontend</h2>
+<ul>
+<li>React</li>
+<li>Vue</li>
+<li>Angular</li>
+<li>Tailwind</li>
+</ul>
+<h2>Backend</h2>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>NestJS</li>
+<li>Spring</li>
+</ul>
+<h2>Mobile</h2>
+<ul>
+<li>Flutter</li>
+<li>Kotlin</li>
+<li>Swift</li>
+</ul>
+<h2>Desktop</h2>
+<ul>
+<li>Electron</li>
+<li>Tauri</li>
+<li>Qt</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 04.12 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Design System</li>
+<li>Biblioteca de Componentes</li>
+<li>Wireframes</li>
+<li>Mockups</li>
+<li>Prototipos</li>
+<li>User Flow</li>
+<li>Sitemap</li>
+<li>Arquitectura Frontend</li>
+<li>Arquitectura Backend</li>
+<li>Modelo Visual</li>
+<li>Diseño Responsive</li>
+<li>Diseño Mobile</li>
+<li>Diseño Desktop</li>
+<li>Especificación de APIs</li>
+<li>Especificación Técnica</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Cómo será la experiencia del usuario?</li>
+<li>¿Qué componentes existirán?</li>
+<li>¿Qué Design System utilizar?</li>
+<li>¿Cómo será la navegación?</li>
+<li>¿Cómo se organizará el Frontend?</li>
+<li>¿Cómo se comunicará con Backend?</li>
+<li>¿Cómo se visualizarán los datos?</li>
+<li>¿Está listo el sistema para comenzar el desarrollo?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Design Systems</li>
+<li>Bibliotecas de Componentes</li>
+<li>Plantillas</li>
+<li>Workflows</li>
+<li>Patrones UI</li>
+<li>Patrones UX</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Schemas</li>
+<li>Diagramas</li>
+<li>Ejemplos</li>
+<li>Checklists</li>
+<li>Guías de Diseño</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Toda la experiencia de usuario está definida.</li>
+<li>Toda la interfaz está diseñada.</li>
+<li>El Design System está completo.</li>
+<li>Los componentes están documentados.</li>
+<li>El modelo de navegación está aprobado.</li>
+<li>Las APIs están especificadas.</li>
+<li>Backend y Frontend tienen especificaciones completas.</li>
+<li>El proyecto está listo para comenzar la implementación.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL DE LA RAÍZ</h1>
+<p>Arquitectura</p>
+<p>➡️ UX</p>
+<p>➡️ UI</p>
+<p>➡️ Design System</p>
+<p>➡️ Componentes</p>
+<p>➡️ Navegación</p>
+<p>➡️ Responsive</p>
+<p>➡️ Diseño Frontend</p>
+<p>➡️ Diseño Backend</p>
+<p>➡️ Modelo de Datos</p>
+<p>➡️ APIs</p>
+<p>➡️ Especificación Técnica</p>
+<p>➡️ 📐 RAÍZ MAESTRA 05 — IMPLEMENTACIÓN Y DESARROLLO DEL PROYECTO</p>
+<h1>🌳 RAÍZ MAESTRA 05 — IMPLEMENTACIÓN Y DESARROLLO DEL PROYECTO (PARTE 1/2)</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Construir el sistema completo a partir de la arquitectura y el diseño aprobados. Esta es la fase donde el Orquestador coordina la generación de código, la organización del proyecto y la implementación de todos los módulos.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Transformar el diseño técnico en software funcional.</p>
+<p>Construir todo el proyecto siguiendo las mejores prácticas.</p>
+<p>Generar código limpio, modular, reutilizable y escalable.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ SaaS</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Desktop</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ APIs</p>
+<p>✅ Microservicios</p>
+<p>✅ IA</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Arquitectura</li>
+<li>Diseño</li>
+<li>Modelos</li>
+<li>APIs</li>
+<li>Design System</li>
+<li>Base de Datos</li>
+<li>Diagramas</li>
+<li>Reglas del negocio</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Código fuente</li>
+<li>Proyecto compilable</li>
+<li>APIs funcionales</li>
+<li>Interfaces funcionales</li>
+<li>Base de datos implementada</li>
+<li>Servicios funcionando</li>
+<li>Integraciones listas</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 05.01 — Inicialización del Proyecto</h1>
+<h2>Objetivo</h2>
+<p>Crear la estructura base del proyecto.</p>
+<h2>Puede generar</h2>
+<ul>
+<li>Monorepo</li>
+<li>Multirepo</li>
+<li>Workspace</li>
+<li>Modular</li>
+<li>Microservicios</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Git</li>
+<li>GitHub</li>
+<li>GitLab</li>
+<li>Docker</li>
+<li>npm</li>
+<li>pnpm</li>
+<li>uv</li>
+<li>Maven</li>
+<li>Gradle</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Inicializar</p>
+<p>➡️ Configurar</p>
+<p>➡️ Estructura Base</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.02 — Organización del Código</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Carpetas</li>
+<li>Módulos</li>
+<li>Capas</li>
+<li>Dominios</li>
+<li>Librerías</li>
+<li>Shared</li>
+<li>Common</li>
+<li>Configuración</li>
+</ul>
+<h2>Patrones</h2>
+<ul>
+<li>Clean Architecture</li>
+<li>DDD</li>
+<li>Hexagonal</li>
+<li>MVC</li>
+<li>MVVM</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Organización</p>
+<p>➡️ Módulos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.03 — Desarrollo Backend</h1>
+<h2>Lenguajes</h2>
+<ul>
+<li>Python</li>
+<li>Java</li>
+<li>Kotlin</li>
+<li>Go</li>
+<li>Rust</li>
+<li>C#</li>
+<li>PHP</li>
+<li>Node.js</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Flask</li>
+<li>NestJS</li>
+<li>Express</li>
+<li>Spring Boot</li>
+<li>ASP.NET</li>
+<li>Laravel</li>
+<li>Ktor</li>
+<li>Fiber</li>
+</ul>
+<h2>Construir</h2>
+<ul>
+<li>APIs</li>
+<li>Servicios</li>
+<li>Controladores</li>
+<li>Middleware</li>
+<li>DTO</li>
+<li>Casos de Uso</li>
+<li>Repositorios</li>
+<li>Validaciones</li>
+<li>Autenticación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Modelo</p>
+<p>➡️ Servicio</p>
+<p>➡️ API</p>
+<p>➡️ Cliente</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.04 — Desarrollo Frontend</h1>
+<h2>Lenguajes</h2>
+<ul>
+<li>HTML</li>
+<li>CSS</li>
+<li>JavaScript</li>
+<li>TypeScript</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>React</li>
+<li>Vue</li>
+<li>Angular</li>
+<li>Svelte</li>
+<li>Next.js</li>
+<li>Nuxt</li>
+<li>Astro</li>
+</ul>
+<h2>Librerías</h2>
+<ul>
+<li>Tailwind</li>
+<li>Material UI</li>
+<li>Shadcn UI</li>
+<li>Chakra</li>
+<li>Bootstrap</li>
+</ul>
+<h2>Construir</h2>
+<ul>
+<li>Componentes</li>
+<li>Layout</li>
+<li>Estado</li>
+<li>Formularios</li>
+<li>Navegación</li>
+<li>Dashboards</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Diseño</p>
+<p>➡️ Componentes</p>
+<p>➡️ Pantallas</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.05 — Desarrollo Mobile</h1>
+<h2>Android</h2>
+<ul>
+<li>Kotlin</li>
+<li>Compose</li>
+</ul>
+<h2>iOS</h2>
+<ul>
+<li>Swift</li>
+<li>SwiftUI</li>
+</ul>
+<h2>Multiplataforma</h2>
+<ul>
+<li>Flutter</li>
+<li>React Native</li>
+<li>MAUI</li>
+</ul>
+<h2>Construir</h2>
+<ul>
+<li>Pantallas</li>
+<li>Navegación</li>
+<li>Estado</li>
+<li>Sincronización</li>
+<li>APIs</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Diseño</p>
+<p>➡️ Código</p>
+<p>➡️ App</p>
+<p>➡️ Compilación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.06 — Desarrollo Desktop</h1>
+<h2>Frameworks</h2>
+<ul>
+<li>Electron</li>
+<li>Tauri</li>
+<li>Qt</li>
+<li>Avalonia</li>
+<li>WPF</li>
+<li>JavaFX</li>
+</ul>
+<h2>Sistemas</h2>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+</ul>
+<h2>Construir</h2>
+<ul>
+<li>Ventanas</li>
+<li>Menús</li>
+<li>Archivos</li>
+<li>Configuración</li>
+<li>Actualizaciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Interfaz</p>
+<p>➡️ Funciones</p>
+<p>➡️ Software</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.07 — Base de Datos</h1>
+<h2>SQL</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>MariaDB</li>
+<li>SQLite</li>
+<li>SQL Server</li>
+</ul>
+<h2>NoSQL</h2>
+<ul>
+<li>MongoDB</li>
+<li>Redis</li>
+</ul>
+<h2>Construir</h2>
+<ul>
+<li>Tablas</li>
+<li>Relaciones</li>
+<li>Índices</li>
+<li>Migraciones</li>
+<li>Seeds</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Modelo</p>
+<p>➡️ Base de Datos</p>
+<p>➡️ Persistencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.08 — APIs</h1>
+<h2>Implementar</h2>
+<ul>
+<li>REST</li>
+<li>GraphQL</li>
+<li>gRPC</li>
+<li>WebSockets</li>
+<li>Webhooks</li>
+</ul>
+<h2>Documentación</h2>
+<ul>
+<li>OpenAPI</li>
+<li>Swagger</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cliente</p>
+<p>➡️ API</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.09 — Integraciones</h1>
+<h2>Integrar</h2>
+<ul>
+<li>OAuth</li>
+<li>Google</li>
+<li>Microsoft</li>
+<li>GitHub</li>
+<li>Stripe</li>
+<li>PayPal</li>
+<li>SMTP</li>
+<li>SMS</li>
+<li>Firebase</li>
+<li>MCP</li>
+<li>IA</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Integración</p>
+<p>➡️ Servicio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.10 — Artefactos Generados</h1>
+<ul>
+<li>Código Fuente</li>
+<li>Backend</li>
+<li>Frontend</li>
+<li>Mobile</li>
+<li>Desktop</li>
+<li>APIs</li>
+<li>Base de Datos</li>
+<li>Integraciones</li>
+<li>Proyecto Compilable</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Arquitectura</p>
+<p>➡️ Inicialización</p>
+<p>➡️ Backend</p>
+<p>➡️ Frontend</p>
+<p>➡️ Mobile</p>
+<p>➡️ Desktop</p>
+<p>➡️ Base de Datos</p>
+<p>➡️ APIs</p>
+<p>➡️ Integraciones</p>
+<p>➡️ Implementación Completa</p>
+<p>➡️ Continúa en PARTE 2</p>
+<h1>🌳 RAÍZ MAESTRA 05 — IMPLEMENTACIÓN Y DESARROLLO DEL PROYECTO (PARTE 2/2)</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Completar la implementación del software incorporando automatización, inteligencia artificial, observabilidad, documentación técnica, optimización y preparación para pruebas y despliegue.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Finalizar completamente el desarrollo del sistema.</p>
+<p>Integrar todos los módulos.</p>
+<p>Garantizar que el proyecto quede preparado para las fases de pruebas, seguridad y despliegue.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software Desktop</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ APIs</p>
+<p>✅ IA</p>
+<p>✅ Automatizaciones</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Backend implementado</li>
+<li>Frontend implementado</li>
+<li>Mobile implementado</li>
+<li>Desktop implementado</li>
+<li>Base de datos</li>
+<li>APIs</li>
+<li>Integraciones</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Proyecto completamente funcional</li>
+<li>Código documentado</li>
+<li>Módulos integrados</li>
+<li>Automatizaciones</li>
+<li>Sistema listo para pruebas</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 05.11 — Integración entre Módulos</h1>
+<h2>Objetivo</h2>
+<p>Conectar correctamente todos los componentes del proyecto.</p>
+<h2>Integraciones</h2>
+<ul>
+<li>Backend ↔ Frontend</li>
+<li>Backend ↔ Mobile</li>
+<li>Backend ↔ Desktop</li>
+<li>Backend ↔ Base de Datos</li>
+<li>Backend ↔ APIs externas</li>
+<li>Frontend ↔ APIs</li>
+<li>Mobile ↔ APIs</li>
+<li>Desktop ↔ APIs</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Módulos</p>
+<p>➡️ Integración</p>
+<p>➡️ Comunicación</p>
+<p>➡️ Sistema Unificado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.12 — Gestión del Estado y Configuración</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Variables de entorno</li>
+<li>Configuración por ambiente</li>
+<li>Configuración de aplicaciones</li>
+<li>Gestión de secretos</li>
+<li>Archivos de configuración</li>
+<li>Feature Flags</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>dotenv</li>
+<li>Vault</li>
+<li>Secrets Manager</li>
+<li>ConfigMaps</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Configuración</p>
+<p>➡️ Validación</p>
+<p>➡️ Inicialización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.13 — Automatización</h1>
+<h2>Automatizar</h2>
+<ul>
+<li>Scripts</li>
+<li>Build</li>
+<li>Compilación</li>
+<li>Generación de código</li>
+<li>Migraciones</li>
+<li>Seeds</li>
+<li>Tareas programadas</li>
+<li>Cron Jobs</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Bash</li>
+<li>PowerShell</li>
+<li>Python</li>
+<li>GitHub Actions</li>
+<li>Makefile</li>
+<li>Taskfile</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Tarea</p>
+<p>➡️ Automatización</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.14 — Inteligencia Artificial</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Agentes IA</li>
+<li>MCP</li>
+<li>LLM</li>
+<li>RAG</li>
+<li>Embeddings</li>
+<li>Memoria</li>
+<li>Herramientas</li>
+<li>Workflows</li>
+<li>Orquestadores</li>
+<li>Modelos Locales</li>
+<li>Modelos Cloud</li>
+</ul>
+<h2>Tecnologías</h2>
+<ul>
+<li>Python</li>
+<li>LangGraph</li>
+<li>LangChain</li>
+<li>LlamaIndex</li>
+<li>LiteLLM</li>
+<li>Ollama</li>
+<li>vLLM</li>
+<li>Transformers</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solicitud</p>
+<p>➡️ Agente</p>
+<p>➡️ Modelo</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.15 — Observabilidad</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Logs</li>
+<li>Métricas</li>
+<li>Trazas</li>
+<li>Alertas</li>
+<li>Auditoría</li>
+<li>Monitoreo</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Prometheus</li>
+<li>Grafana</li>
+<li>Loki</li>
+<li>OpenTelemetry</li>
+<li>Jaeger</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Monitoreo</p>
+<p>➡️ Métricas</p>
+<p>➡️ Alertas</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.16 — Optimización del Código</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Rendimiento</li>
+<li>Modularidad</li>
+<li>Complejidad</li>
+<li>Duplicación</li>
+<li>Consumo de memoria</li>
+<li>Consumo de CPU</li>
+<li>Consultas SQL</li>
+<li>APIs</li>
+</ul>
+<h2>Técnicas</h2>
+<ul>
+<li>Refactorización</li>
+<li>Lazy Loading</li>
+<li>Caché</li>
+<li>Optimización SQL</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Optimización</p>
+<p>➡️ Mejor Rendimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.17 — Documentación Técnica</h1>
+<h2>Generar</h2>
+<ul>
+<li>README</li>
+<li>Arquitectura</li>
+<li>APIs</li>
+<li>Instalación</li>
+<li>Configuración</li>
+<li>Manual Técnico</li>
+<li>Manual de Desarrollo</li>
+<li>Manual de Usuario</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Markdown</li>
+<li>MkDocs</li>
+<li>Docusaurus</li>
+<li>OpenAPI</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Documentación</p>
+<p>➡️ Publicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.18 — Control de Calidad del Código</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Estilo</li>
+<li>Convenciones</li>
+<li>Complejidad</li>
+<li>Cobertura</li>
+<li>Dependencias</li>
+<li>Vulnerabilidades</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>ESLint</li>
+<li>Ruff</li>
+<li>Black</li>
+<li>Prettier</li>
+<li>SonarQube</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Análisis</p>
+<p>➡️ Corrección</p>
+<hr/>
+<h1>🌿 CHECKPOINT 05.19 — Artefactos Generados</h1>
+<p>Esta raíz produce</p>
+<ul>
+<li>Código Fuente</li>
+<li>Backend</li>
+<li>Frontend</li>
+<li>Mobile</li>
+<li>Desktop</li>
+<li>APIs</li>
+<li>Base de Datos</li>
+<li>Automatizaciones</li>
+<li>Integraciones</li>
+<li>Documentación</li>
+<li>Scripts</li>
+<li>Configuración</li>
+<li>Proyecto Ejecutable</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Todos los módulos están integrados?</li>
+<li>¿La documentación está completa?</li>
+<li>¿Existen automatizaciones suficientes?</li>
+<li>¿Se requiere IA?</li>
+<li>¿El código cumple los estándares?</li>
+<li>¿El rendimiento es aceptable?</li>
+<li>¿El sistema está listo para pruebas?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Workflows</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Schemas</li>
+<li>Plantillas</li>
+<li>Scripts</li>
+<li>Guías de Integración</li>
+<li>Guías de Optimización</li>
+<li>Guías de IA</li>
+<li>Ejemplos</li>
+<li>Checklists</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Todos los módulos funcionan correctamente.</li>
+<li>Todas las integraciones están completas.</li>
+<li>La documentación está generada.</li>
+<li>El código cumple los estándares definidos.</li>
+<li>El proyecto compila correctamente.</li>
+<li>No existen errores críticos.</li>
+<li>El sistema está preparado para iniciar las pruebas.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Implementación</p>
+<p>➡️ Integración</p>
+<p>➡️ Configuración</p>
+<p>➡️ Automatización</p>
+<p>➡️ Inteligencia Artificial</p>
+<p>➡️ Observabilidad</p>
+<p>➡️ Optimización</p>
+<p>➡️ Documentación</p>
+<p>➡️ Control de Calidad</p>
+<p>➡️ Proyecto Funcional</p>
+<p>➡️ 🧪 RAÍZ MAESTRA 06 — PRUEBAS Y VALIDACIÓN</p>
+<h1>🌳 RAÍZ MAESTRA 06 — PRUEBAS, VALIDACIÓN Y ASEGURAMIENTO DE LA CALIDAD</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Verificar que todo el software desarrollado funciona correctamente, cumple los requisitos, mantiene un alto nivel de calidad y está preparado para ser utilizado en producción.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Detectar errores antes del despliegue.</p>
+<p>Garantizar estabilidad.</p>
+<p>Validar funcionalidad.</p>
+<p>Comprobar rendimiento.</p>
+<p>Asegurar calidad.</p>
+<p>Verificar compatibilidad.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Desktop</p>
+<p>✅ APIs</p>
+<p>✅ IA</p>
+<p>✅ Automatizaciones</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Código fuente</li>
+<li>Backend</li>
+<li>Frontend</li>
+<li>Mobile</li>
+<li>Desktop</li>
+<li>APIs</li>
+<li>Base de Datos</li>
+<li>Documentación</li>
+<li>Integraciones</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Software validado</li>
+<li>Reportes</li>
+<li>Cobertura</li>
+<li>Errores encontrados</li>
+<li>Errores corregidos</li>
+<li>Métricas</li>
+<li>Proyecto listo para Auditoría de Seguridad</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 06.01 — Validación del Proyecto</h1>
+<h2>Objetivo</h2>
+<p>Comprobar que todo el sistema puede ejecutarse correctamente.</p>
+<h2>Validar</h2>
+<ul>
+<li>Instalación</li>
+<li>Dependencias</li>
+<li>Configuración</li>
+<li>Compilación</li>
+<li>Ejecución</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Ejecutar</p>
+<p>➡️ Validar</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.02 — Pruebas Unitarias</h1>
+<h2>Objetivo</h2>
+<p>Validar cada función individualmente.</p>
+<h2>Frameworks</h2>
+<h3>Python</h3>
+<ul>
+<li>pytest</li>
+<li>unittest</li>
+</ul>
+<h3>JavaScript</h3>
+<ul>
+<li>Jest</li>
+<li>Vitest</li>
+</ul>
+<h3>Java</h3>
+<ul>
+<li>JUnit</li>
+</ul>
+<h3>C#</h3>
+<ul>
+<li>xUnit</li>
+<li>NUnit</li>
+</ul>
+<h3>Go</h3>
+<ul>
+<li>testing</li>
+</ul>
+<h3>Rust</h3>
+<ul>
+<li>cargo test</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Función</p>
+<p>➡️ Test</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.03 — Pruebas de Integración</h1>
+<h2>Validar</h2>
+<ul>
+<li>APIs</li>
+<li>Base de Datos</li>
+<li>Servicios</li>
+<li>Integraciones</li>
+<li>IA</li>
+<li>Caché</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>TestContainers</li>
+<li>Docker</li>
+<li>Postman</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Servicio</p>
+<p>➡️ Integración</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.04 — Pruebas End-to-End</h1>
+<h2>Validar</h2>
+<ul>
+<li>Flujo completo del usuario</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Playwright</li>
+<li>Cypress</li>
+<li>Selenium</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Flujo</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.05 — Pruebas Frontend</h1>
+<h2>Validar</h2>
+<ul>
+<li>Componentes</li>
+<li>Responsive</li>
+<li>Navegación</li>
+<li>Formularios</li>
+<li>Estado</li>
+<li>Accesibilidad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Pantalla</p>
+<p>➡️ Acción</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.06 — Pruebas Backend</h1>
+<h2>Validar</h2>
+<ul>
+<li>APIs</li>
+<li>Servicios</li>
+<li>Controladores</li>
+<li>Middleware</li>
+<li>Repositorios</li>
+<li>Seguridad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solicitud</p>
+<p>➡️ API</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.07 — Pruebas Mobile</h1>
+<h2>Validar</h2>
+<ul>
+<li>Android</li>
+<li>iOS</li>
+<li>Flutter</li>
+<li>React Native</li>
+</ul>
+<h2>Revisar</h2>
+<ul>
+<li>Rendimiento</li>
+<li>Gestos</li>
+<li>Navegación</li>
+<li>Sensores</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>App</p>
+<p>➡️ Dispositivo</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.08 — Pruebas Desktop</h1>
+<h2>Validar</h2>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+</ul>
+<h2>Revisar</h2>
+<ul>
+<li>Instalación</li>
+<li>Ventanas</li>
+<li>Archivos</li>
+<li>Rendimiento</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Software</p>
+<p>➡️ Sistema</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.09 — Rendimiento</h1>
+<h2>Evaluar</h2>
+<ul>
+<li>CPU</li>
+<li>RAM</li>
+<li>Disco</li>
+<li>Red</li>
+<li>Tiempo de respuesta</li>
+<li>Consultas SQL</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>k6</li>
+<li>JMeter</li>
+<li>Locust</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Carga</p>
+<p>➡️ Medición</p>
+<p>➡️ Optimización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.10 — Compatibilidad</h1>
+<h2>Validar</h2>
+<h3>Web</h3>
+<ul>
+<li>Chrome</li>
+<li>Firefox</li>
+<li>Edge</li>
+<li>Safari</li>
+</ul>
+<h3>Mobile</h3>
+<ul>
+<li>Android</li>
+<li>iPhone</li>
+<li>Tablets</li>
+</ul>
+<h3>Desktop</h3>
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>macOS</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Aplicación</p>
+<p>➡️ Plataforma</p>
+<p>➡️ Compatibilidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.11 — Calidad del Código</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Complejidad</li>
+<li>Cobertura</li>
+<li>Convenciones</li>
+<li>Dependencias</li>
+<li>Mantenibilidad</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>SonarQube</li>
+<li>ESLint</li>
+<li>Ruff</li>
+<li>Black</li>
+<li>Prettier</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Calidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.12 — Validación Funcional</h1>
+<h2>Comprobar</h2>
+<ul>
+<li>Todos los requisitos</li>
+<li>Casos de uso</li>
+<li>Historias de usuario</li>
+<li>Reglas del negocio</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Requisitos</p>
+<p>➡️ Validación</p>
+<p>➡️ Aprobación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.13 — IA y Automatizaciones</h1>
+<h2>Validar</h2>
+<ul>
+<li>Agentes</li>
+<li>RAG</li>
+<li>MCP</li>
+<li>Prompts</li>
+<li>Workflows</li>
+<li>Herramientas</li>
+<li>Memoria</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Agente</p>
+<p>➡️ Ejecución</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 06.14 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Reportes de Pruebas</li>
+<li>Cobertura</li>
+<li>Reporte de Calidad</li>
+<li>Reporte de Rendimiento</li>
+<li>Lista de Errores</li>
+<li>Lista de Correcciones</li>
+<li>Informe de Compatibilidad</li>
+<li>Proyecto Validado</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿El proyecto cumple los requisitos?</li>
+<li>¿Existen errores críticos?</li>
+<li>¿Es necesario volver al desarrollo?</li>
+<li>¿La cobertura es suficiente?</li>
+<li>¿El rendimiento es aceptable?</li>
+<li>¿Está listo para la auditoría de seguridad?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Suites de Pruebas</li>
+<li>Plantillas</li>
+<li>Protocolos</li>
+<li>Checklists</li>
+<li>DSL</li>
+<li>Schemas</li>
+<li>Casos de Prueba</li>
+<li>Guías de Calidad</li>
+<li>Workflows</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Todas las pruebas pasan correctamente.</li>
+<li>No existen errores críticos.</li>
+<li>El rendimiento es aceptable.</li>
+<li>La compatibilidad está validada.</li>
+<li>La cobertura cumple el estándar definido.</li>
+<li>Los requisitos están verificados.</li>
+<li>El proyecto está listo para Auditoría de Seguridad.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Proyecto</p>
+<p>➡️ Validación</p>
+<p>➡️ Pruebas Unitarias</p>
+<p>➡️ Integración</p>
+<p>➡️ End-to-End</p>
+<p>➡️ Frontend</p>
+<p>➡️ Backend</p>
+<p>➡️ Mobile</p>
+<p>➡️ Desktop</p>
+<p>➡️ Rendimiento</p>
+<p>➡️ Compatibilidad</p>
+<p>➡️ Calidad</p>
+<p>➡️ Validación Funcional</p>
+<p>➡️ Proyecto Validado</p>
+<p>➡️ 🔒 RAÍZ MAESTRA 07 — SEGURIDAD Y CIBERSEGURIDAD</p>
+<h1>🌳 RAÍZ MAESTRA 07 — SEGURIDAD, CIBERSEGURIDAD Y PROTECCIÓN DEL SISTEMA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Diseñar, implementar, verificar y mantener la seguridad integral del proyecto durante todo su ciclo de vida. Esta fase protege el software, los datos, la infraestructura, los usuarios y las comunicaciones antes del despliegue en producción.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Construir un sistema seguro.</p>
+<p>Reducir vulnerabilidades.</p>
+<p>Proteger la información.</p>
+<p>Cumplir estándares internacionales.</p>
+<p>Preparar el proyecto para producción.</p>
+<p>Implementar una estrategia de seguridad desde el código hasta la infraestructura.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicación Web</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Desktop</p>
+<p>✅ APIs</p>
+<p>✅ Microservicios</p>
+<p>✅ Cloud</p>
+<p>✅ IA</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Proyecto validado</li>
+<li>Código fuente</li>
+<li>Infraestructura</li>
+<li>APIs</li>
+<li>Base de datos</li>
+<li>Integraciones</li>
+<li>Configuración</li>
+<li>Documentación técnica</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Proyecto endurecido (Hardening)</li>
+<li>Auditoría de seguridad</li>
+<li>Gestión de secretos</li>
+<li>Autenticación implementada</li>
+<li>Autorización implementada</li>
+<li>Cifrado configurado</li>
+<li>Reporte de vulnerabilidades</li>
+<li>Proyecto listo para Deploy</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 07.01 — Arquitectura de Seguridad</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Modelo Zero Trust</li>
+<li>Defensa en profundidad</li>
+<li>Segmentación</li>
+<li>Capas de protección</li>
+<li>Seguridad por diseño (Security by Design)</li>
+<li>Privacidad por diseño (Privacy by Design)</li>
+</ul>
+<h2>Estándares</h2>
+<ul>
+<li>NIST</li>
+<li>ISO 27001</li>
+<li>CIS Controls</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Arquitectura</p>
+<p>➡️ Riesgos</p>
+<p>➡️ Controles</p>
+<p>➡️ Protección</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.02 — Gestión de Identidad y Acceso (IAM)</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Registro</li>
+<li>Inicio de sesión</li>
+<li>Roles</li>
+<li>Permisos</li>
+<li>RBAC</li>
+<li>ABAC</li>
+<li>MFA</li>
+<li>SSO</li>
+<li>Gestión de sesiones</li>
+</ul>
+<h2>Tecnologías</h2>
+<ul>
+<li>OAuth 2.1</li>
+<li>OpenID Connect</li>
+<li>JWT</li>
+<li>SAML</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Autenticación</p>
+<p>➡️ Autorización</p>
+<p>➡️ Acceso</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.03 — Protección de Datos</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Cifrado en tránsito</li>
+<li>Cifrado en reposo</li>
+<li>Hash de contraseñas</li>
+<li>Gestión de claves</li>
+<li>Firmas digitales</li>
+<li>Integridad de datos</li>
+</ul>
+<h2>Tecnologías</h2>
+<ul>
+<li>TLS</li>
+<li>AES-256</li>
+<li>Argon2</li>
+<li>bcrypt</li>
+<li>SHA-256 (cuando corresponda)</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Cifrado</p>
+<p>➡️ Almacenamiento Seguro</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.04 — Seguridad del Backend</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Validación de entradas</li>
+<li>Sanitización</li>
+<li>Protección SQL Injection</li>
+<li>Protección XSS</li>
+<li>Protección CSRF</li>
+<li>Protección SSRF</li>
+<li>Protección RCE</li>
+<li>Protección XXE</li>
+</ul>
+<h2>Frameworks</h2>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Spring</li>
+<li>NestJS</li>
+<li>ASP.NET</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solicitud</p>
+<p>➡️ Validación</p>
+<p>➡️ API Segura</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.05 — Seguridad del Frontend</h1>
+<h2>Implementar</h2>
+<ul>
+<li>CSP</li>
+<li>Sanitización</li>
+<li>Protección XSS</li>
+<li>Cookies seguras</li>
+<li>SameSite</li>
+<li>Protección Clickjacking</li>
+<li>Gestión segura del almacenamiento local</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Navegador</p>
+<p>➡️ Protección</p>
+<p>➡️ Interfaz Segura</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.06 — Seguridad de APIs</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Rate Limiting</li>
+<li>API Keys</li>
+<li>OAuth</li>
+<li>JWT</li>
+<li>Validación de esquemas</li>
+<li>Versionado</li>
+<li>Auditoría</li>
+<li>Límites de uso</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>OpenAPI</li>
+<li>Swagger</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cliente</p>
+<p>➡️ API</p>
+<p>➡️ Validación</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.07 — Seguridad de Infraestructura</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>VPS</li>
+<li>Cloud</li>
+<li>Firewall</li>
+<li>Reverse Proxy</li>
+<li>DNS</li>
+<li>CDN</li>
+<li>Redes privadas</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Cloudflare</li>
+<li>Nginx</li>
+<li>Traefik</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Servidor</p>
+<p>➡️ Firewall</p>
+<p>➡️ Protección</p>
+<p>➡️ Producción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.08 — Gestión de Secretos</h1>
+<h2>Proteger</h2>
+<ul>
+<li>Tokens</li>
+<li>API Keys</li>
+<li>Contraseñas</li>
+<li>Certificados</li>
+<li>Variables de entorno</li>
+<li>Claves privadas</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>HashiCorp Vault</li>
+<li>AWS Secrets Manager</li>
+<li>Azure Key Vault</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Secreto</p>
+<p>➡️ Almacenamiento</p>
+<p>➡️ Acceso Seguro</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.09 — Auditoría y Monitoreo</h1>
+<h2>Registrar</h2>
+<ul>
+<li>Logs</li>
+<li>Eventos</li>
+<li>Intentos de acceso</li>
+<li>Cambios críticos</li>
+<li>Auditoría</li>
+<li>Alertas</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>OpenTelemetry</li>
+<li>Grafana</li>
+<li>Loki</li>
+<li>SIEM</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Registro</p>
+<p>➡️ Análisis</p>
+<p>➡️ Alerta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.10 — Análisis de Vulnerabilidades</h1>
+<h2>Ejecutar</h2>
+<ul>
+<li>SAST</li>
+<li>DAST</li>
+<li>SCA</li>
+<li>Escaneo de dependencias</li>
+<li>Escaneo de contenedores</li>
+<li>Escaneo de secretos</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Trivy</li>
+<li>OWASP ZAP</li>
+<li>Semgrep</li>
+<li>SonarQube</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Escaneo</p>
+<p>➡️ Vulnerabilidades</p>
+<p>➡️ Corrección</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.11 — Cumplimiento y Normativas</h1>
+<h2>Validar</h2>
+<ul>
+<li>OWASP Top 10</li>
+<li>OWASP ASVS</li>
+<li>ISO 27001</li>
+<li>NIST</li>
+<li>GDPR</li>
+<li>SOC 2</li>
+<li>PCI DSS (si aplica)</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Cumplimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 07.12 — Artefactos Generados</h1>
+<p>Esta raíz produce</p>
+<ul>
+<li>Política de Seguridad</li>
+<li>Arquitectura de Seguridad</li>
+<li>Gestión de Secretos</li>
+<li>Configuración IAM</li>
+<li>Reportes de Vulnerabilidades</li>
+<li>Auditorías</li>
+<li>Hardening</li>
+<li>Configuración TLS</li>
+<li>Controles de Acceso</li>
+<li>Plan de Respuesta a Incidentes</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Existen vulnerabilidades críticas?</li>
+<li>¿Los datos están protegidos?</li>
+<li>¿La autenticación es suficiente?</li>
+<li>¿Las APIs cumplen las políticas?</li>
+<li>¿La infraestructura está endurecida?</li>
+<li>¿El proyecto cumple las normas de seguridad?</li>
+<li>¿Está listo para el despliegue?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Protocolos de Seguridad</li>
+<li>Plantillas</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Checklists</li>
+<li>Guías de Hardening</li>
+<li>Workflows</li>
+<li>Políticas</li>
+<li>Casos de Auditoría</li>
+<li>Ejemplos de Configuración</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>No existen vulnerabilidades críticas.</li>
+<li>Los secretos están protegidos.</li>
+<li>La autenticación y autorización funcionan correctamente.</li>
+<li>Las APIs están protegidas.</li>
+<li>La infraestructura está endurecida.</li>
+<li>Se cumplen los estándares definidos.</li>
+<li>El proyecto está listo para despliegue en producción.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Proyecto Validado</p>
+<p>➡️ Arquitectura de Seguridad</p>
+<p>➡️ IAM</p>
+<p>➡️ Protección de Datos</p>
+<p>➡️ Seguridad Backend</p>
+<p>➡️ Seguridad Frontend</p>
+<p>➡️ Seguridad APIs</p>
+<p>➡️ Infraestructura</p>
+<p>➡️ Gestión de Secretos</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Escaneo de Vulnerabilidades</p>
+<p>➡️ Cumplimiento</p>
+<p>➡️ Proyecto Seguro</p>
+<p>➡️ 🚀 RAÍZ MAESTRA 08 — DESPLIEGUE (DEPLOY) E INFRAESTRUCTURA</p>
+<h1>🌳 RAÍZ MAESTRA 08 — DESPLIEGUE (DEPLOY), INFRAESTRUCTURA Y ENTREGA CONTINUA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Preparar, desplegar, automatizar y operar la infraestructura necesaria para ejecutar el software en producción de forma segura, escalable, monitorizada y fácilmente mantenible.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Llevar el proyecto desde el entorno de desarrollo hasta producción.</p>
+<p>Automatizar completamente el proceso de despliegue.</p>
+<p>Garantizar alta disponibilidad.</p>
+<p>Facilitar futuras actualizaciones.</p>
+<p>Preparar la operación del sistema.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicación Web</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Desktop</p>
+<p>✅ APIs</p>
+<p>✅ IA</p>
+<p>✅ Microservicios</p>
+<p>✅ Kubernetes</p>
+<p>✅ Cloud</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Proyecto Validado</li>
+<li>Proyecto Seguro</li>
+<li>Código Fuente</li>
+<li>Dockerfiles</li>
+<li>Configuración</li>
+<li>Variables de Entorno</li>
+<li>Scripts</li>
+<li>Documentación</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Producción Operativa</li>
+<li>CI/CD funcionando</li>
+<li>Infraestructura desplegada</li>
+<li>Monitoreo activo</li>
+<li>Backup configurado</li>
+<li>Escalabilidad habilitada</li>
+<li>Plataforma lista para usuarios</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 08.01 — Preparación del Entorno</h1>
+<h2>Configurar</h2>
+<ul>
+<li>Desarrollo</li>
+<li>Testing</li>
+<li>QA</li>
+<li>Staging</li>
+<li>Producción</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Docker</li>
+<li>Docker Compose</li>
+<li>Dev Containers</li>
+<li>Nix</li>
+<li>Podman</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Entorno</p>
+<p>➡️ Configuración</p>
+<p>➡️ Listo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.02 — Contenedores</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Dockerfile</li>
+<li>Docker Compose</li>
+<li>Multi-stage Build</li>
+<li>Imágenes optimizadas</li>
+<li>Caché de capas</li>
+<li>Escaneo de imágenes</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Docker</li>
+<li>BuildKit</li>
+<li>Trivy</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Imagen</p>
+<p>➡️ Contenedor</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.03 — Orquestación</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Kubernetes</li>
+<li>Helm</li>
+<li>Kustomize</li>
+<li>Docker Swarm</li>
+<li>Nomad</li>
+</ul>
+<h2>Configurar</h2>
+<ul>
+<li>Pods</li>
+<li>Deployments</li>
+<li>Services</li>
+<li>Ingress</li>
+<li>ConfigMaps</li>
+<li>Secrets</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Contenedores</p>
+<p>➡️ Cluster</p>
+<p>➡️ Producción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.04 — CI/CD</h1>
+<h2>Automatizar</h2>
+<ul>
+<li>Build</li>
+<li>Test</li>
+<li>Lint</li>
+<li>Seguridad</li>
+<li>Deploy</li>
+<li>Versionado</li>
+<li>Releases</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>GitHub Actions</li>
+<li>GitLab CI</li>
+<li>Jenkins</li>
+<li>Azure DevOps</li>
+<li>CircleCI</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Commit</p>
+<p>➡️ Pipeline</p>
+<p>➡️ Validación</p>
+<p>➡️ Deploy</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.05 — GitOps</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Git como fuente de verdad</li>
+<li>Infraestructura declarativa</li>
+<li>Sincronización automática</li>
+<li>Control de versiones</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>ArgoCD</li>
+<li>FluxCD</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Repositorio</p>
+<p>➡️ GitOps</p>
+<p>➡️ Cluster</p>
+<p>➡️ Producción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.06 — Infraestructura Cloud</h1>
+<h2>Plataformas</h2>
+<ul>
+<li>AWS</li>
+<li>Azure</li>
+<li>Google Cloud</li>
+<li>Cloudflare</li>
+<li>DigitalOcean</li>
+<li>Hetzner</li>
+<li>Oracle Cloud</li>
+<li>VPS</li>
+</ul>
+<h2>Servicios</h2>
+<ul>
+<li>Compute</li>
+<li>Storage</li>
+<li>CDN</li>
+<li>DNS</li>
+<li>Balanceadores</li>
+<li>Objetos</li>
+<li>Funciones Serverless</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cloud</p>
+<p>➡️ Recursos</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.07 — Redes</h1>
+<h2>Configurar</h2>
+<ul>
+<li>DNS</li>
+<li>CDN</li>
+<li>Reverse Proxy</li>
+<li>Load Balancer</li>
+<li>Firewall</li>
+<li>SSL/TLS</li>
+<li>HTTP/3</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Cloudflare</li>
+<li>Nginx</li>
+<li>Traefik</li>
+<li>HAProxy</li>
+<li>Caddy</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Internet</p>
+<p>➡️ CDN</p>
+<p>➡️ Balanceador</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.08 — Escalabilidad</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Auto Scaling</li>
+<li>Horizontal Scaling</li>
+<li>Vertical Scaling</li>
+<li>Caché</li>
+<li>Replicación</li>
+<li>Alta Disponibilidad</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Kubernetes HPA</li>
+<li>Redis</li>
+<li>CDN</li>
+<li>Balanceadores</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuarios</p>
+<p>➡️ Escalado</p>
+<p>➡️ Recursos</p>
+<p>➡️ Servicio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.09 — Copias de Seguridad</h1>
+<h2>Configurar</h2>
+<ul>
+<li>Backup automático</li>
+<li>Snapshots</li>
+<li>Restauración</li>
+<li>Versionado</li>
+<li>Retención</li>
+</ul>
+<h2>Bases de Datos</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>MongoDB</li>
+<li>Redis</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Backup</p>
+<p>➡️ Restauración</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.10 — Recuperación ante Desastres</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Failover</li>
+<li>Disaster Recovery</li>
+<li>Alta Disponibilidad</li>
+<li>Replicación</li>
+<li>Plan de Continuidad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Fallo</p>
+<p>➡️ Recuperación</p>
+<p>➡️ Servicio Activo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.11 — Publicación</h1>
+<h2>Publicar</h2>
+<h3>Web</h3>
+<ul>
+<li>Dominio</li>
+<li>Hosting</li>
+<li>CDN</li>
+</ul>
+<h3>Mobile</h3>
+<ul>
+<li>Google Play</li>
+<li>App Store</li>
+</ul>
+<h3>Desktop</h3>
+<ul>
+<li>Instaladores</li>
+<li>Actualizaciones</li>
+</ul>
+<h3>APIs</h3>
+<ul>
+<li>Gateway</li>
+<li>Documentación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Publicación</p>
+<p>➡️ Usuarios</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.12 — Versionado</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Semantic Versioning</li>
+<li>Releases</li>
+<li>Tags</li>
+<li>Changelog</li>
+<li>Migraciones</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Git</li>
+<li>GitHub Releases</li>
+<li>GitLab Releases</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Versión</p>
+<p>➡️ Publicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 08.13 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Infraestructura</li>
+<li>Dockerfiles</li>
+<li>Kubernetes</li>
+<li>Helm Charts</li>
+<li>Pipelines CI/CD</li>
+<li>GitOps</li>
+<li>Scripts de Deploy</li>
+<li>Configuración Cloud</li>
+<li>Balanceadores</li>
+<li>Certificados</li>
+<li>Backups</li>
+<li>Estrategia de Recuperación</li>
+<li>Releases</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Dónde desplegar el proyecto?</li>
+<li>¿Qué proveedor Cloud utilizar?</li>
+<li>¿Qué estrategia de despliegue aplicar?</li>
+<li>¿Cómo escalar el sistema?</li>
+<li>¿Cómo proteger la infraestructura?</li>
+<li>¿Cómo automatizar el pipeline?</li>
+<li>¿Está listo para operación continua?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Workflows</li>
+<li>Playbooks</li>
+<li>Runbooks</li>
+<li>Plantillas</li>
+<li>Docker Templates</li>
+<li>Kubernetes Templates</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Checklists</li>
+<li>Guías de Deploy</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>La infraestructura está desplegada.</li>
+<li>El pipeline CI/CD funciona.</li>
+<li>El proyecto está publicado.</li>
+<li>Existen copias de seguridad.</li>
+<li>Existe recuperación ante desastres.</li>
+<li>El monitoreo está habilitado.</li>
+<li>El sistema puede recibir usuarios reales.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Proyecto Seguro</p>
+<p>➡️ Entornos</p>
+<p>➡️ Contenedores</p>
+<p>➡️ Kubernetes</p>
+<p>➡️ CI/CD</p>
+<p>➡️ GitOps</p>
+<p>➡️ Cloud</p>
+<p>➡️ Redes</p>
+<p>➡️ Escalabilidad</p>
+<p>➡️ Backups</p>
+<p>➡️ Recuperación</p>
+<p>➡️ Publicación</p>
+<p>➡️ Versionado</p>
+<p>➡️ Producción</p>
+<p>➡️ 📊 RAÍZ MAESTRA 09 — OPERACIÓN, MONITOREO Y MANTENIMIENTO</p>
+<h1>🌳 FASE 09 — RAÍZ MAESTRA 09</h1>
+<h1>OPERACIÓN, MONITOREO, OBSERVABILIDAD Y SOPORTE DEL SISTEMA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Mantener el sistema funcionando correctamente una vez entra en producción. Esta fase supervisa continuamente el estado del software, detecta problemas, analiza métricas, genera alertas y proporciona información para mejorar el proyecto de forma continua.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Garantizar la estabilidad del sistema.</p>
+<p>Detectar errores antes de que afecten al usuario.</p>
+<p>Analizar el comportamiento del software.</p>
+<p>Monitorear todos los componentes.</p>
+<p>Mantener la disponibilidad.</p>
+<p>Reducir tiempos de respuesta ante incidentes.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Página Web</p>
+<p>✅ Aplicación Web</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Android</p>
+<p>✅ iOS</p>
+<p>✅ Desktop</p>
+<p>✅ APIs</p>
+<p>✅ Microservicios</p>
+<p>✅ IA</p>
+<p>✅ Cloud</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Proyecto desplegado</li>
+<li>Infraestructura funcionando</li>
+<li>Usuarios activos</li>
+<li>APIs activas</li>
+<li>Base de datos</li>
+<li>Servicios</li>
+<li>Contenedores</li>
+<li>Clúster Kubernetes</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Dashboards</li>
+<li>Logs centralizados</li>
+<li>Métricas</li>
+<li>Alertas</li>
+<li>Reportes</li>
+<li>Estado de salud</li>
+<li>Auditorías operativas</li>
+<li>Base para mantenimiento</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 09.01 — Monitoreo General</h1>
+<h2>Objetivo</h2>
+<p>Supervisar continuamente todos los servicios.</p>
+<h2>Monitorear</h2>
+<ul>
+<li>Backend</li>
+<li>Frontend</li>
+<li>APIs</li>
+<li>Base de datos</li>
+<li>Mobile Backend</li>
+<li>Desktop Backend</li>
+<li>Microservicios</li>
+<li>IA</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Monitoreo</p>
+<p>➡️ Estado</p>
+<p>➡️ Dashboard</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.02 — Observabilidad</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Logs</li>
+<li>Métricas</li>
+<li>Trazas</li>
+<li>Eventos</li>
+<li>Auditorías</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>OpenTelemetry</li>
+<li>Grafana</li>
+<li>Prometheus</li>
+<li>Loki</li>
+<li>Jaeger</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Registro</p>
+<p>➡️ Observabilidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.03 — Gestión de Logs</h1>
+<h2>Registrar</h2>
+<ul>
+<li>Errores</li>
+<li>Advertencias</li>
+<li>Información</li>
+<li>Auditoría</li>
+<li>Eventos</li>
+<li>Accesos</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Loki</li>
+<li>Elasticsearch</li>
+<li>Graylog</li>
+<li>Fluent Bit</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Aplicación</p>
+<p>➡️ Log</p>
+<p>➡️ Centralización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.04 — Métricas</h1>
+<h2>Medir</h2>
+<ul>
+<li>CPU</li>
+<li>RAM</li>
+<li>Disco</li>
+<li>Latencia</li>
+<li>Throughput</li>
+<li>Errores</li>
+<li>Tiempo de respuesta</li>
+<li>Disponibilidad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Métricas</p>
+<p>➡️ Dashboard</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.05 — Alertas</h1>
+<h2>Configurar</h2>
+<ul>
+<li>Caída del sistema</li>
+<li>Alto consumo</li>
+<li>Fallos de API</li>
+<li>Errores críticos</li>
+<li>Fallos de seguridad</li>
+<li>Saturación</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Alertmanager</li>
+<li>Grafana Alerts</li>
+<li>PagerDuty</li>
+<li>Opsgenie</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Regla</p>
+<p>➡️ Alerta</p>
+<p>➡️ Operador</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.06 — Estado de Salud</h1>
+<h2>Verificar</h2>
+<ul>
+<li>Health Checks</li>
+<li>Readiness</li>
+<li>Liveness</li>
+<li>Dependencias</li>
+<li>APIs</li>
+<li>Base de datos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Servicio</p>
+<p>➡️ Health Check</p>
+<p>➡️ Estado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.07 — Gestión de Incidentes</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Detección</li>
+<li>Clasificación</li>
+<li>Priorización</li>
+<li>Resolución</li>
+<li>Postmortem</li>
+</ul>
+<h2>Metodologías</h2>
+<ul>
+<li>ITIL</li>
+<li>SRE</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Incidente</p>
+<p>➡️ Diagnóstico</p>
+<p>➡️ Solución</p>
+<p>➡️ Cierre</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.08 — SLA y SLO</h1>
+<h2>Definir</h2>
+<ul>
+<li>SLA</li>
+<li>SLO</li>
+<li>SLI</li>
+<li>Disponibilidad</li>
+<li>Tiempo máximo de recuperación</li>
+<li>Tiempo máximo de respuesta</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Servicio</p>
+<p>➡️ Medición</p>
+<p>➡️ Cumplimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.09 — Auditoría Operativa</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Infraestructura</li>
+<li>Configuración</li>
+<li>Usuarios</li>
+<li>Rendimiento</li>
+<li>Seguridad</li>
+<li>Disponibilidad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Informe</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.10 — Optimización Operativa</h1>
+<h2>Mejorar</h2>
+<ul>
+<li>Recursos</li>
+<li>Escalado</li>
+<li>Consultas</li>
+<li>Caché</li>
+<li>Balanceo</li>
+<li>Configuración</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Métricas</p>
+<p>➡️ Optimización</p>
+<p>➡️ Mejor Rendimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 09.11 — Herramientas Recomendadas</h1>
+<h2>Observabilidad</h2>
+<ul>
+<li>Grafana</li>
+<li>Prometheus</li>
+<li>OpenTelemetry</li>
+<li>Jaeger</li>
+<li>Loki</li>
+</ul>
+<h2>Logs</h2>
+<ul>
+<li>Elasticsearch</li>
+<li>Graylog</li>
+<li>Fluent Bit</li>
+</ul>
+<h2>Alertas</h2>
+<ul>
+<li>Alertmanager</li>
+<li>PagerDuty</li>
+<li>Opsgenie</li>
+</ul>
+<h2>Estado</h2>
+<ul>
+<li>Uptime Kuma</li>
+<li>Better Stack</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 09.12 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Dashboards</li>
+<li>Reportes</li>
+<li>Métricas</li>
+<li>Logs</li>
+<li>Alertas</li>
+<li>Auditorías</li>
+<li>Health Checks</li>
+<li>Estado Operativo</li>
+<li>Indicadores SLA</li>
+<li>Indicadores SLO</li>
+<li>Informes de Incidentes</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Todos los servicios funcionan?</li>
+<li>¿Existe alguna degradación?</li>
+<li>¿Debe escalar recursos?</li>
+<li>¿Debe reiniciar servicios?</li>
+<li>¿Debe abrir un incidente?</li>
+<li>¿Debe avisar al usuario?</li>
+<li>¿El sistema puede continuar operando?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Protocolos Operativos</li>
+<li>Playbooks</li>
+<li>Runbooks</li>
+<li>Checklists</li>
+<li>Plantillas</li>
+<li>Workflows</li>
+<li>DSL</li>
+<li>Schemas</li>
+<li>Guías SRE</li>
+<li>Guías de Observabilidad</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Todos los servicios están monitorizados.</li>
+<li>Existen dashboards operativos.</li>
+<li>Las alertas funcionan.</li>
+<li>Los logs están centralizados.</li>
+<li>Se monitorean métricas y trazas.</li>
+<li>Los incidentes tienen procedimientos definidos.</li>
+<li>El sistema está preparado para mantenimiento continuo.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Producción</p>
+<p>➡️ Monitoreo</p>
+<p>➡️ Logs</p>
+<p>➡️ Métricas</p>
+<p>➡️ Observabilidad</p>
+<p>➡️ Alertas</p>
+<p>➡️ Health Checks</p>
+<p>➡️ Gestión de Incidentes</p>
+<p>➡️ SLA / SLO</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Optimización Operativa</p>
+<p>➡️ Sistema Estable</p>
+<p>➡️ 🔧 FASE 10 — RAÍZ MAESTRA 10 — MANTENIMIENTO Y EVOLUCIÓN CONTINUA</p>
+<h1>🌳 FASE 10 — RAÍZ MAESTRA 10</h1>
+<h1>MANTENIMIENTO, EVOLUCIÓN CONTINUA Y GESTIÓN DEL CICLO DE VIDA DEL SOFTWARE</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Mantener el software actualizado, estable, optimizado y preparado para evolucionar durante años. Esta fase administra el ciclo de vida completo del proyecto después de entrar en producción.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Mantener el software saludable.</p>
+<p>Corregir errores.</p>
+<p>Implementar mejoras.</p>
+<p>Reducir deuda técnica.</p>
+<p>Actualizar tecnologías.</p>
+<p>Garantizar la evolución continua del proyecto.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ Aplicaciones</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ APIs</p>
+<p>✅ IA</p>
+<p>✅ Microservicios</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Sistema en producción</li>
+<li>Dashboards</li>
+<li>Logs</li>
+<li>Métricas</li>
+<li>Reportes</li>
+<li>Incidentes</li>
+<li>Feedback de usuarios</li>
+<li>Roadmap</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Nuevas versiones</li>
+<li>Correcciones</li>
+<li>Mejoras</li>
+<li>Optimizaciones</li>
+<li>Refactorizaciones</li>
+<li>Roadmap actualizado</li>
+<li>Software evolucionado</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 10.01 — Gestión del Ciclo de Vida</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Versiones</li>
+<li>Releases</li>
+<li>Roadmap</li>
+<li>Hotfixes</li>
+<li>Soporte</li>
+<li>Fin de vida (EOL)</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Software</p>
+<p>➡️ Evolución</p>
+<p>➡️ Nueva Versión</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.02 — Corrección de Errores</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Bugs</li>
+<li>Incidentes</li>
+<li>Regresiones</li>
+<li>Prioridades</li>
+<li>Validación</li>
+<li>Publicación</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Jira</li>
+<li>GitHub Issues</li>
+<li>Linear</li>
+<li>YouTrack</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Bug</p>
+<p>➡️ Diagnóstico</p>
+<p>➡️ Corrección</p>
+<p>➡️ Liberación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.03 — Gestión de Deuda Técnica</h1>
+<h2>Analizar</h2>
+<ul>
+<li>Código duplicado</li>
+<li>Arquitectura</li>
+<li>Dependencias</li>
+<li>Complejidad</li>
+<li>Acoplamiento</li>
+<li>Mantenibilidad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Refactorización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.04 — Refactorización</h1>
+<h2>Mejorar</h2>
+<ul>
+<li>Legibilidad</li>
+<li>Modularidad</li>
+<li>Rendimiento</li>
+<li>Reutilización</li>
+<li>Escalabilidad</li>
+</ul>
+<h2>Patrones</h2>
+<ul>
+<li>SOLID</li>
+<li>Clean Code</li>
+<li>DRY</li>
+<li>KISS</li>
+<li>YAGNI</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Refactor</p>
+<p>➡️ Código Mejorado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.05 — Gestión de Dependencias</h1>
+<h2>Actualizar</h2>
+<ul>
+<li>Frameworks</li>
+<li>Librerías</li>
+<li>SDK</li>
+<li>APIs</li>
+<li>Contenedores</li>
+<li>Runtime</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Renovate</li>
+<li>Dependabot</li>
+<li>npm audit</li>
+<li>uv</li>
+<li>pip-tools</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Dependencias</p>
+<p>➡️ Actualización</p>
+<p>➡️ Compatibilidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.06 — Optimización Continua</h1>
+<h2>Mejorar</h2>
+<ul>
+<li>CPU</li>
+<li>RAM</li>
+<li>Consultas SQL</li>
+<li>Caché</li>
+<li>APIs</li>
+<li>Renderizado</li>
+<li>Bundle</li>
+<li>Inicio de aplicación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Métricas</p>
+<p>➡️ Optimización</p>
+<p>➡️ Mejor Rendimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.07 — Gestión del Feedback</h1>
+<h2>Recopilar</h2>
+<ul>
+<li>Usuarios</li>
+<li>Clientes</li>
+<li>Soporte</li>
+<li>Analítica</li>
+<li>IA</li>
+<li>Comunidad</li>
+</ul>
+<h2>Transformar</h2>
+<ul>
+<li>Feedback</li>
+<li>Requisitos</li>
+<li>Mejoras</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Feedback</p>
+<p>➡️ Roadmap</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.08 — Gestión del Roadmap</h1>
+<h2>Organizar</h2>
+<ul>
+<li>Funciones nuevas</li>
+<li>Mejoras</li>
+<li>Prioridades</li>
+<li>Riesgos</li>
+<li>Versiones</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>Jira</li>
+<li>GitHub Projects</li>
+<li>Linear</li>
+<li>Trello</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Ideas</p>
+<p>➡️ Roadmap</p>
+<p>➡️ Desarrollo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.09 — Compatibilidad y Migraciones</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Migraciones de Base de Datos</li>
+<li>APIs</li>
+<li>Frameworks</li>
+<li>Sistemas Operativos</li>
+<li>Navegadores</li>
+<li>Versiones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Versión</p>
+<p>➡️ Migración</p>
+<p>➡️ Compatibilidad</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.10 — Automatización del Mantenimiento</h1>
+<h2>Automatizar</h2>
+<ul>
+<li>Actualizaciones</li>
+<li>Limpieza</li>
+<li>Optimización</li>
+<li>Copias</li>
+<li>Validaciones</li>
+<li>Auditorías</li>
+</ul>
+<h2>Herramientas</h2>
+<ul>
+<li>GitHub Actions</li>
+<li>Cron</li>
+<li>Bash</li>
+<li>Python</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Automatización</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.11 — Indicadores del Proyecto</h1>
+<h2>Medir</h2>
+<ul>
+<li>MTTR</li>
+<li>MTBF</li>
+<li>Lead Time</li>
+<li>Deployment Frequency</li>
+<li>Error Rate</li>
+<li>Disponibilidad</li>
+<li>Deuda Técnica</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Indicadores</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Mejora</p>
+<hr/>
+<h1>🌿 CHECKPOINT 10.12 — Artefactos Generados</h1>
+<p>Esta raíz produce</p>
+<ul>
+<li>Nuevas versiones</li>
+<li>Hotfixes</li>
+<li>Changelog</li>
+<li>Roadmap</li>
+<li>Plan de mantenimiento</li>
+<li>Refactorizaciones</li>
+<li>Informes de deuda técnica</li>
+<li>Migraciones</li>
+<li>Actualizaciones de dependencias</li>
+<li>Reportes de evolución</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Qué debe corregirse primero?</li>
+<li>¿Qué funcionalidades evolucionan?</li>
+<li>¿Qué dependencias deben actualizarse?</li>
+<li>¿Existe deuda técnica crítica?</li>
+<li>¿Debe programarse una nueva versión?</li>
+<li>¿Debe volver a fases anteriores?</li>
+<li>¿Está listo para incorporar nuevas capacidades?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills</li>
+<li>Guías de mantenimiento</li>
+<li>Protocolos</li>
+<li>Runbooks</li>
+<li>Playbooks</li>
+<li>Workflows</li>
+<li>DSL</li>
+<li>Contratos</li>
+<li>Checklists</li>
+<li>Plantillas</li>
+<li>Estrategias de migración</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>El software está actualizado.</li>
+<li>Los errores críticos fueron corregidos.</li>
+<li>La deuda técnica es aceptable.</li>
+<li>El roadmap está actualizado.</li>
+<li>Las dependencias están controladas.</li>
+<li>El sistema está preparado para incorporar nuevas capacidades.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Sistema en Producción</p>
+<p>➡️ Incidentes</p>
+<p>➡️ Corrección de Errores</p>
+<p>➡️ Refactorización</p>
+<p>➡️ Actualización de Dependencias</p>
+<p>➡️ Optimización</p>
+<p>➡️ Feedback</p>
+<p>➡️ Roadmap</p>
+<p>➡️ Nueva Versión</p>
+<p>➡️ Evolución Continua</p>
+<p>➡️ 🤖 FASE 11 — RAÍZ MAESTRA 11 — INTELIGENCIA ARTIFICIAL, AGENTES Y ORQUESTACIÓN COGNITIVA</p>
+<h1>🌳 FASE 11 — RAÍZ MAESTRA 11 (PARTE 1/3)</h1>
+<h1>INTELIGENCIA ARTIFICIAL, AGENTES Y ORQUESTACIÓN COGNITIVA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Construir el cerebro inteligente del sistema. Esta fase incorpora agentes, modelos de IA, planificación, memoria, herramientas, razonamiento y coordinación para que el software pueda tomar decisiones y ejecutar tareas complejas de forma autónoma.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Construir un orquestador inteligente.</p>
+<p>Coordinar múltiples agentes.</p>
+<p>Gestionar modelos de IA.</p>
+<p>Planificar tareas.</p>
+<p>Ejecutar herramientas.</p>
+<p>Mantener contexto.</p>
+<p>Aprender continuamente.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ APIs</p>
+<p>✅ IA Local</p>
+<p>✅ IA Cloud</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Proyecto funcionando</li>
+<li>APIs</li>
+<li>Modelos IA</li>
+<li>Herramientas</li>
+<li>Base de conocimiento</li>
+<li>Memorias</li>
+<li>Configuración</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Orquestador IA</li>
+<li>Agentes especializados</li>
+<li>Sistema multiagente</li>
+<li>Memorias</li>
+<li>Herramientas conectadas</li>
+<li>Planificador inteligente</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 11.01 — Arquitectura del Orquestador</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Orquestador Principal</li>
+<li>Coordinador</li>
+<li>Scheduler</li>
+<li>Router</li>
+<li>Runtime</li>
+<li>Gestor de tareas</li>
+<li>Gestor de contexto</li>
+<li>Gestor de memoria</li>
+<li>Gestor de herramientas</li>
+</ul>
+<h2>Arquitecturas</h2>
+<ul>
+<li>Centralizada</li>
+<li>Distribuida</li>
+<li>Jerárquica</li>
+<li>Híbrida</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Orquestador</p>
+<p>➡️ Agentes</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.02 — Modelos de Inteligencia Artificial</h1>
+<h2>Integrar</h2>
+<ul>
+<li>LLM Cloud</li>
+<li>LLM Local</li>
+<li>Modelos multimodales</li>
+<li>Modelos especializados</li>
+<li>Modelos de visión</li>
+<li>Modelos de voz</li>
+<li>Modelos de código</li>
+</ul>
+<h2>Compatibilidad</h2>
+<ul>
+<li>OpenAI</li>
+<li>Anthropic</li>
+<li>Google</li>
+<li>Qwen</li>
+<li>DeepSeek</li>
+<li>Mistral</li>
+<li>Llama</li>
+<li>Gemma</li>
+<li>Minimax</li>
+<li>Kimi</li>
+<li>Otros compatibles</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solicitud</p>
+<p>➡️ Router</p>
+<p>➡️ Modelo</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.03 — Gestión de Agentes</h1>
+<h2>Tipos</h2>
+<ul>
+<li>Agente Principal</li>
+<li>Supervisor</li>
+<li>Arquitecto</li>
+<li>Programador</li>
+<li>Investigador</li>
+<li>Analista</li>
+<li>Diseñador</li>
+<li>Auditor</li>
+<li>Revisor</li>
+<li>Tester</li>
+<li>DevOps</li>
+<li>Seguridad</li>
+<li>Documentación</li>
+</ul>
+<h2>Capacidades</h2>
+<ul>
+<li>Especialización</li>
+<li>Comunicación</li>
+<li>Delegación</li>
+<li>Cooperación</li>
+<li>Autoevaluación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Orquestador</p>
+<p>➡️ Delegación</p>
+<p>➡️ Agente Especializado</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.04 — Subagentes</h1>
+<h2>Crear</h2>
+<ul>
+<li>Subagentes temporales</li>
+<li>Subagentes permanentes</li>
+<li>Equipos dinámicos</li>
+<li>Equipos especializados</li>
+<li>Equipos paralelos</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Dividir tareas</li>
+<li>Resolver problemas</li>
+<li>Ejecutar procesos</li>
+<li>Compartir resultados</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Agente</p>
+<p>➡️ Subagentes</p>
+<p>➡️ Trabajo Paralelo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.05 — Comunicación entre Agentes</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Mensajes</li>
+<li>Eventos</li>
+<li>Colas</li>
+<li>Protocolos</li>
+<li>Handshake</li>
+<li>Confirmaciones</li>
+<li>Reintentos</li>
+<li>Timeouts</li>
+</ul>
+<h2>Tecnologías</h2>
+<ul>
+<li>MCP</li>
+<li>Event Bus</li>
+<li>RabbitMQ</li>
+<li>NATS</li>
+<li>Redis Streams</li>
+<li>Kafka</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Agente A</p>
+<p>➡️ Mensaje</p>
+<p>➡️ Agente B</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.06 — Planificación Inteligente</h1>
+<h2>Funciones</h2>
+<ul>
+<li>Descomponer objetivos</li>
+<li>Priorizar tareas</li>
+<li>Reordenar pasos</li>
+<li>Detectar bloqueos</li>
+<li>Replanificar</li>
+<li>Optimizar ejecución</li>
+</ul>
+<h2>Estrategias</h2>
+<ul>
+<li>Task Graph</li>
+<li>DAG</li>
+<li>Árbol de tareas</li>
+<li>Plan jerárquico</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Objetivo</p>
+<p>➡️ Plan</p>
+<p>➡️ Subtareas</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.07 — Gestión del Contexto</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Contexto activo</li>
+<li>Contexto histórico</li>
+<li>Contexto compartido</li>
+<li>Contexto temporal</li>
+<li>Contexto persistente</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Resumir</li>
+<li>Expandir</li>
+<li>Recuperar</li>
+<li>Fusionar</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Información</p>
+<p>➡️ Contexto</p>
+<p>➡️ Agente</p>
+<p>➡️ Acción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.08 — Gestión de Herramientas</h1>
+<h2>Conectar</h2>
+<ul>
+<li>MCP</li>
+<li>APIs</li>
+<li>CLI</li>
+<li>Python</li>
+<li>Git</li>
+<li>Docker</li>
+<li>Navegador</li>
+<li>Base de datos</li>
+<li>OCR</li>
+<li>Buscadores</li>
+<li>Repositorios</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Ejecutar</li>
+<li>Validar</li>
+<li>Registrar</li>
+<li>Recuperar errores</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Agente</p>
+<p>➡️ Herramienta</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Debe decidir</p>
+<ul>
+<li>¿Qué agente ejecutar?</li>
+<li>¿Qué modelo utilizar?</li>
+<li>¿Cuántos agentes crear?</li>
+<li>¿Qué herramientas necesita?</li>
+<li>¿Qué tareas pueden ejecutarse en paralelo?</li>
+<li>¿Qué contexto compartir?</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Usuario</p>
+<p>➡️ Orquestador</p>
+<p>➡️ Router</p>
+<p>➡️ Planificador</p>
+<p>➡️ Agentes</p>
+<p>➡️ Subagentes</p>
+<p>➡️ Herramientas</p>
+<p>➡️ Contexto</p>
+<p>➡️ Resultado</p>
+<p>➡️ 🔜 PARTE 2/3 — MEMORIA, RAG, SKILLS, DSL, WORKFLOWS Y CAPACIDADES</p>
+<h1>🌳 FASE 11 — RAÍZ MAESTRA 11 (PARTE 2/3)</h1>
+<h1>MEMORIA, CONOCIMIENTO, RAG, SKILLS, DSL Y CAPACIDADES DEL ORQUESTADOR</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Dotar al orquestador de una memoria estructurada y una biblioteca de conocimiento reutilizable para que pueda aprender, recordar, reutilizar experiencias y ejecutar tareas complejas mediante componentes especializados.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Construir el conocimiento permanente del sistema.</p>
+<p>Permitir aprendizaje continuo.</p>
+<p>Evitar repetir trabajo.</p>
+<p>Aumentar precisión.</p>
+<p>Reutilizar soluciones.</p>
+<p>Gestionar capacidades dinámicas.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ IA</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Información del usuario</li>
+<li>Historial</li>
+<li>Documentación</li>
+<li>Código</li>
+<li>APIs</li>
+<li>Repositorios</li>
+<li>Conversaciones</li>
+<li>Herramientas</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Memoria estructurada</li>
+<li>Biblioteca de conocimiento</li>
+<li>Skills reutilizables</li>
+<li>Base RAG</li>
+<li>DSL ejecutables</li>
+<li>Capacidades inteligentes</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 11.09 — Arquitectura de Memoria</h1>
+<h2>Tipos de memoria</h2>
+<ul>
+<li>Memoria inmediata</li>
+<li>Memoria de trabajo</li>
+<li>Memoria temporal</li>
+<li>Memoria permanente</li>
+<li>Memoria episódica</li>
+<li>Memoria semántica</li>
+<li>Memoria procedimental</li>
+<li>Memoria del proyecto</li>
+<li>Memoria del usuario</li>
+<li>Memoria compartida entre agentes</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Guardar</li>
+<li>Recuperar</li>
+<li>Indexar</li>
+<li>Versionar</li>
+<li>Compactar</li>
+<li>Resumir</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Información</p>
+<p>➡️ Memoria</p>
+<p>➡️ Recuperación</p>
+<p>➡️ Agente</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.10 — Sistema RAG</h1>
+<h2>Componentes</h2>
+<ul>
+<li>Ingesta</li>
+<li>Chunking</li>
+<li>Embeddings</li>
+<li>Indexación</li>
+<li>Recuperación</li>
+<li>Ranking</li>
+<li>Re-ranking</li>
+<li>Contexto</li>
+<li>Respuesta</li>
+</ul>
+<h2>Bases Vectoriales</h2>
+<ul>
+<li>Qdrant</li>
+<li>Milvus</li>
+<li>Weaviate</li>
+<li>Chroma</li>
+<li>pgvector</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Documento</p>
+<p>➡️ Embeddings</p>
+<p>➡️ Vector DB</p>
+<p>➡️ Recuperación</p>
+<p>➡️ IA</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.11 — Biblioteca de Skills</h1>
+<h2>Tipos</h2>
+<ul>
+<li>Skills de programación</li>
+<li>Skills de arquitectura</li>
+<li>Skills de seguridad</li>
+<li>Skills DevOps</li>
+<li>Skills IA</li>
+<li>Skills UX/UI</li>
+<li>Skills Backend</li>
+<li>Skills Frontend</li>
+<li>Skills Mobile</li>
+<li>Skills Desktop</li>
+<li>Skills Testing</li>
+<li>Skills Bases de Datos</li>
+<li>Skills Cloud</li>
+</ul>
+<h2>Cada Skill debe contener</h2>
+<ul>
+<li>Objetivo</li>
+<li>Alcance</li>
+<li>Requisitos</li>
+<li>Entradas</li>
+<li>Salidas</li>
+<li>Flujo</li>
+<li>Código</li>
+<li>Buenas prácticas</li>
+<li>Antipatrones</li>
+<li>Ejemplos</li>
+<li>Casos límite</li>
+<li>Validaciones</li>
+<li>Checklist</li>
+<li>Referencias</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solicitud</p>
+<p>➡️ Buscar Skill</p>
+<p>➡️ Ejecutar</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.12 — Biblioteca de Protocolos</h1>
+<h2>Contendrá</h2>
+<ul>
+<li>Protocolos IA</li>
+<li>Protocolos de Seguridad</li>
+<li>Protocolos DevOps</li>
+<li>Protocolos MCP</li>
+<li>Protocolos de Comunicación</li>
+<li>Protocolos de Validación</li>
+<li>Protocolos de Recuperación</li>
+<li>Protocolos de Emergencia</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Protocolo</p>
+<p>➡️ Acción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.13 — Biblioteca DSL</h1>
+<h2>Construir</h2>
+<ul>
+<li>DSL de Workflows</li>
+<li>DSL de Agentes</li>
+<li>DSL de Validación</li>
+<li>DSL de Deploy</li>
+<li>DSL de Seguridad</li>
+<li>DSL de Automatización</li>
+<li>DSL de Testing</li>
+<li>DSL de Memoria</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Declarar</li>
+<li>Validar</li>
+<li>Ejecutar</li>
+<li>Versionar</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>DSL</p>
+<p>➡️ Parser</p>
+<p>➡️ Motor</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.14 — Biblioteca de Workflows</h1>
+<h2>Tipos</h2>
+<ul>
+<li>Desarrollo</li>
+<li>Investigación</li>
+<li>Testing</li>
+<li>Arquitectura</li>
+<li>Refactorización</li>
+<li>Deploy</li>
+<li>Auditoría</li>
+<li>Documentación</li>
+<li>Seguridad</li>
+<li>IA</li>
+</ul>
+<h2>Componentes</h2>
+<ul>
+<li>Entradas</li>
+<li>Salidas</li>
+<li>Dependencias</li>
+<li>Validaciones</li>
+<li>Errores</li>
+<li>Recuperación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Workflow</p>
+<p>➡️ Pasos</p>
+<p>➡️ Resultado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.15 — Biblioteca de Plantillas</h1>
+<h2>Plantillas para</h2>
+<ul>
+<li>Backend</li>
+<li>Frontend</li>
+<li>APIs</li>
+<li>SaaS</li>
+<li>Mobile</li>
+<li>Desktop</li>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>GitHub Actions</li>
+<li>MCP</li>
+<li>Agentes</li>
+<li>Bases de Datos</li>
+<li>Microservicios</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Plantilla</p>
+<p>➡️ Personalización</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.16 — Biblioteca de Patrones</h1>
+<h2>Contendrá</h2>
+<ul>
+<li>Patrones Arquitectónicos</li>
+<li>Patrones de Diseño</li>
+<li>Patrones UI</li>
+<li>Patrones Backend</li>
+<li>Patrones Cloud</li>
+<li>Patrones IA</li>
+<li>Patrones de Seguridad</li>
+<li>Patrones de Integración</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Problema</p>
+<p>➡️ Patrón</p>
+<p>➡️ Solución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.17 — Motor de Capacidades</h1>
+<h2>Gestiona</h2>
+<ul>
+<li>Skills</li>
+<li>Herramientas</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plugins</li>
+<li>MCP</li>
+<li>Extensiones</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Instalar</li>
+<li>Activar</li>
+<li>Desactivar</li>
+<li>Actualizar</li>
+<li>Versionar</li>
+<li>Auditar</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Capacidad</p>
+<p>➡️ Registro</p>
+<p>➡️ Activación</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Debe decidir</p>
+<ul>
+<li>¿Qué conocimiento reutilizar?</li>
+<li>¿Qué Skill cargar?</li>
+<li>¿Qué Workflow ejecutar?</li>
+<li>¿Qué memoria consultar?</li>
+<li>¿Qué DSL interpretar?</li>
+<li>¿Qué protocolo aplicar?</li>
+<li>¿Qué capacidades activar?</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Solicitud</p>
+<p>➡️ Memoria</p>
+<p>➡️ RAG</p>
+<p>➡️ Biblioteca</p>
+<p>➡️ Skills</p>
+<p>➡️ Protocolos</p>
+<p>➡️ DSL</p>
+<p>➡️ Workflows</p>
+<p>➡️ Capacidades</p>
+<p>➡️ Ejecución</p>
+<p>➡️ 🔜 PARTE 3/3 — RAZONAMIENTO, AUTOEVALUACIÓN, LOOPS, APRENDIZAJE Y AUTOEVOLUCIÓN</p>
+<h1>🌳 FASE 11 — RAÍZ MAESTRA 11 (PARTE 3/3)</h1>
+<h1>RAZONAMIENTO, AUTOEVALUACIÓN, AUTOAPRENDIZAJE Y AUTOEVOLUCIÓN DEL ORQUESTADOR</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Construir el sistema cognitivo del orquestador. Esta capa gobierna cómo piensa, analiza, planifica, se autocorrige, aprende y mejora continuamente, convirtiéndose en el núcleo inteligente que coordina todo el ecosistema.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Desarrollar un sistema capaz de:</p>
+<ul>
+<li>Razonar antes de actuar.</li>
+<li>Analizar múltiples soluciones.</li>
+<li>Detectar errores propios.</li>
+<li>Aprender de cada ejecución.</li>
+<li>Mejorar automáticamente.</li>
+<li>Evolucionar con el tiempo.</li>
+<li>Optimizar el uso de recursos.</li>
+</ul>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ IA</p>
+<p>✅ Multiagentes</p>
+<p>✅ Orquestadores</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Objetivos del usuario</li>
+<li>Estado del proyecto</li>
+<li>Memoria</li>
+<li>Workflows</li>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Resultados anteriores</li>
+<li>Métricas</li>
+<li>Feedback</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Plan optimizado</li>
+<li>Decisiones justificadas</li>
+<li>Aprendizaje persistente</li>
+<li>Mejoras automáticas</li>
+<li>Estrategias refinadas</li>
+<li>Sistema autoevolucionado</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 11.18 — Motor de Razonamiento</h1>
+<h2>Funciones</h2>
+<ul>
+<li>Comprender objetivos</li>
+<li>Descomponer problemas</li>
+<li>Priorizar tareas</li>
+<li>Comparar alternativas</li>
+<li>Seleccionar estrategias</li>
+<li>Justificar decisiones</li>
+</ul>
+<h2>Modos</h2>
+<ul>
+<li>Rápido</li>
+<li>Balanceado</li>
+<li>Profundo</li>
+<li>Experto</li>
+<li>Investigación</li>
+<li>Arquitectura</li>
+<li>Programación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Problema</p>
+<p>➡️ Análisis</p>
+<p>➡️ Estrategias</p>
+<p>➡️ Decisión</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.19 — Planificación Inteligente</h1>
+<h2>Capacidades</h2>
+<ul>
+<li>Plan jerárquico</li>
+<li>Árbol de tareas</li>
+<li>DAG</li>
+<li>Dependencias</li>
+<li>Paralelización</li>
+<li>Replanificación</li>
+<li>Priorización dinámica</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Objetivo</p>
+<p>➡️ Plan</p>
+<p>➡️ Subtareas</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.20 — Autoevaluación</h1>
+<h2>Evaluar</h2>
+<ul>
+<li>Calidad</li>
+<li>Precisión</li>
+<li>Cobertura</li>
+<li>Riesgos</li>
+<li>Coherencia</li>
+<li>Cumplimiento de objetivos</li>
+</ul>
+<h2>Generar</h2>
+<ul>
+<li>Puntuación</li>
+<li>Informe</li>
+<li>Recomendaciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Resultado</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Corrección</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.21 — Reflexión y Autocrítica</h1>
+<h2>Analizar</h2>
+<ul>
+<li>Errores propios</li>
+<li>Suposiciones</li>
+<li>Inconsistencias</li>
+<li>Soluciones descartadas</li>
+<li>Riesgos futuros</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Reflexionar</li>
+<li>Replantear</li>
+<li>Refinar</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Respuesta</p>
+<p>➡️ Reflexión</p>
+<p>➡️ Mejora</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.22 — Refutación y Simulación</h1>
+<h2>Ejecutar</h2>
+<ul>
+<li>Simulación de escenarios</li>
+<li>Comparación de soluciones</li>
+<li>Refutación de hipótesis</li>
+<li>Análisis de impacto</li>
+<li>Evaluación de riesgos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Solución A</p>
+<p>➡️ Simulación</p>
+<p>➡️ Comparación</p>
+<p>➡️ Mejor opción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.23 — Aprendizaje Continuo</h1>
+<h2>Aprender de</h2>
+<ul>
+<li>Ejecuciones</li>
+<li>Errores</li>
+<li>Éxitos</li>
+<li>Feedback</li>
+<li>Usuarios</li>
+<li>Métricas</li>
+<li>Auditorías</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Extraer patrones</li>
+<li>Consolidar conocimiento</li>
+<li>Actualizar memoria</li>
+<li>Mejorar estrategias</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Experiencia</p>
+<p>➡️ Aprendizaje</p>
+<p>➡️ Memoria</p>
+<p>➡️ Mejora</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.24 — Autooptimización</h1>
+<h2>Optimizar</h2>
+<ul>
+<li>Workflows</li>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>Consumo de tokens</li>
+<li>Consumo de CPU</li>
+<li>Tiempo de respuesta</li>
+<li>Costes de ejecución</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Optimización</p>
+<p>➡️ Mayor eficiencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.25 — Gobernador Cognitivo</h1>
+<h2>Coordinar</h2>
+<ul>
+<li>Prioridades</li>
+<li>Recursos</li>
+<li>Agentes</li>
+<li>Memorias</li>
+<li>Herramientas</li>
+<li>Workflows</li>
+<li>Modelos IA</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Resolver conflictos</li>
+<li>Balancear carga</li>
+<li>Tomar decisiones globales</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Gobernador</p>
+<p>➡️ Coordinación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.26 — Autoevolución</h1>
+<h2>Evolucionar</h2>
+<ul>
+<li>Nuevas Skills</li>
+<li>Nuevos Workflows</li>
+<li>Nuevos Protocolos</li>
+<li>Nuevas Plantillas</li>
+<li>Nuevos Agentes</li>
+<li>Nuevas Estrategias</li>
+</ul>
+<h2>Reglas</h2>
+<ul>
+<li>Nunca modificar componentes críticos sin validación.</li>
+<li>Versionar todos los cambios.</li>
+<li>Mantener historial completo.</li>
+<li>Permitir reversión (rollback).</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Conocimiento</p>
+<p>➡️ Evolución</p>
+<p>➡️ Nueva Versión</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.27 — Gobernanza de Decisiones</h1>
+<h2>Registrar</h2>
+<ul>
+<li>Qué decisión se tomó.</li>
+<li>Por qué se tomó.</li>
+<li>Qué alternativas existían.</li>
+<li>Qué riesgos fueron aceptados.</li>
+<li>Qué evidencia la respalda.</li>
+</ul>
+<h2>Artefactos</h2>
+<ul>
+<li>ADR</li>
+<li>Decision Log</li>
+<li>Registro histórico</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Decisión</p>
+<p>➡️ Registro</p>
+<p>➡️ Auditoría</p>
+<hr/>
+<h1>🌿 CHECKPOINT 11.28 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Planes inteligentes</li>
+<li>Árboles de decisión</li>
+<li>Estrategias</li>
+<li>Evaluaciones</li>
+<li>Informes de calidad</li>
+<li>Simulaciones</li>
+<li>Historial de decisiones</li>
+<li>Memoria consolidada</li>
+<li>Reglas de aprendizaje</li>
+<li>Versiones evolucionadas</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Cuál es la mejor estrategia?</li>
+<li>¿Debe replantear el plan?</li>
+<li>¿Qué conocimientos reutilizar?</li>
+<li>¿Debe crear una nueva Skill?</li>
+<li>¿Debe actualizar un Workflow?</li>
+<li>¿Qué modelo IA es el más adecuado?</li>
+<li>¿Cómo mejorar la siguiente ejecución?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz podrá generar posteriormente</p>
+<ul>
+<li>Skills cognitivas</li>
+<li>Protocolos de razonamiento</li>
+<li>DSL de planificación</li>
+<li>Workflows adaptativos</li>
+<li>Árboles de decisión</li>
+<li>Reglas de aprendizaje</li>
+<li>Motores de evaluación</li>
+<li>Políticas de evolución</li>
+<li>Checklists de calidad</li>
+<li>Plantillas cognitivas</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>El orquestador puede planificar de forma autónoma.</li>
+<li>Evalúa y mejora sus propios resultados.</li>
+<li>Aprende de cada ejecución.</li>
+<li>Mantiene trazabilidad de decisiones.</li>
+<li>Optimiza recursos automáticamente.</li>
+<li>Puede evolucionar su biblioteca de conocimiento de forma controlada.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Objetivo</p>
+<p>➡️ Razonamiento</p>
+<p>➡️ Planificación</p>
+<p>➡️ Ejecución</p>
+<p>➡️ Autoevaluación</p>
+<p>➡️ Reflexión</p>
+<p>➡️ Simulación</p>
+<p>➡️ Aprendizaje</p>
+<p>➡️ Autooptimización</p>
+<p>➡️ Gobernanza</p>
+<p>➡️ Autoevolución</p>
+<p>➡️ Sistema Cognitivo</p>
+<p>➡️ 📚 FASE 12 — RAÍZ MAESTRA 12 — BIBLIOTECA DE CONOCIMIENTO Y ACTIVOS REUTILIZABLES</p>
+<h1>🌳 FASE 12 — RAÍZ MAESTRA 12</h1>
+<h1>BIBLIOTECA DE CONOCIMIENTO Y ACTIVOS REUTILIZABLES</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Construir una biblioteca centralizada de conocimiento técnico reutilizable que permita al orquestador, a los agentes y a los desarrolladores crear software de forma consistente, reutilizando componentes, documentación, patrones y recursos previamente validados.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Construir una biblioteca organizada.</p>
+<p>Centralizar el conocimiento.</p>
+<p>Evitar duplicación.</p>
+<p>Estandarizar el desarrollo.</p>
+<p>Facilitar la reutilización.</p>
+<p>Reducir tiempos de construcción.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Cloud</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Patrones</li>
+<li>Código</li>
+<li>Documentación</li>
+<li>ADR</li>
+<li>Repositorios</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Biblioteca estructurada</li>
+<li>Activos reutilizables</li>
+<li>Catálogo de conocimiento</li>
+<li>Recursos indexados</li>
+<li>Versiones controladas</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 12.01 — Biblioteca de Skills</h1>
+<h2>Organizar</h2>
+<ul>
+<li>Skills Backend</li>
+<li>Skills Frontend</li>
+<li>Skills Mobile</li>
+<li>Skills Desktop</li>
+<li>Skills IA</li>
+<li>Skills DevOps</li>
+<li>Skills Cloud</li>
+<li>Skills Seguridad</li>
+<li>Skills Testing</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Skill</p>
+<p>➡️ Clasificación</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.02 — Biblioteca de Protocolos</h1>
+<h2>Organizar</h2>
+<ul>
+<li>Protocolos técnicos</li>
+<li>Protocolos IA</li>
+<li>Protocolos DevOps</li>
+<li>Protocolos Seguridad</li>
+<li>Protocolos MCP</li>
+<li>Protocolos Operativos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Protocolo</p>
+<p>➡️ Catálogo</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.03 — Biblioteca DSL</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>DSL Arquitectura</li>
+<li>DSL Automatización</li>
+<li>DSL Testing</li>
+<li>DSL Agentes</li>
+<li>DSL Workflows</li>
+<li>DSL Deploy</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>DSL</p>
+<p>➡️ Registro</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.04 — Biblioteca de Workflows</h1>
+<h2>Clasificar</h2>
+<ul>
+<li>Desarrollo</li>
+<li>Arquitectura</li>
+<li>Investigación</li>
+<li>Seguridad</li>
+<li>QA</li>
+<li>DevOps</li>
+<li>IA</li>
+<li>Documentación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Workflow</p>
+<p>➡️ Biblioteca</p>
+<p>➡️ Reutilización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.05 — Biblioteca de Plantillas</h1>
+<h2>Contener</h2>
+<ul>
+<li>Plantillas Backend</li>
+<li>Frontend</li>
+<li>APIs</li>
+<li>SaaS</li>
+<li>Mobile</li>
+<li>Desktop</li>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>MCP</li>
+<li>GitHub Actions</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Plantilla</p>
+<p>➡️ Catálogo</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.06 — Biblioteca de Patrones</h1>
+<h2>Incluir</h2>
+<ul>
+<li>Patrones Arquitectónicos</li>
+<li>Patrones Backend</li>
+<li>Patrones Frontend</li>
+<li>Patrones Cloud</li>
+<li>Patrones UI</li>
+<li>Patrones IA</li>
+<li>Patrones de Seguridad</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Patrón</p>
+<p>➡️ Biblioteca</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.07 — Biblioteca de Componentes</h1>
+<h2>Componentes</h2>
+<ul>
+<li>Componentes UI</li>
+<li>Componentes Backend</li>
+<li>APIs reutilizables</li>
+<li>Widgets</li>
+<li>Librerías internas</li>
+<li>SDK</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Componente</p>
+<p>➡️ Registro</p>
+<p>➡️ Reutilización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.08 — Biblioteca de Documentación</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Manuales</li>
+<li>Guías</li>
+<li>Tutoriales</li>
+<li>Arquitectura</li>
+<li>API Docs</li>
+<li>Diagramas</li>
+<li>ADR</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Documento</p>
+<p>➡️ Biblioteca</p>
+<p>➡️ Consulta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.09 — Biblioteca de Código</h1>
+<h2>Almacenar</h2>
+<ul>
+<li>Snippets</li>
+<li>Funciones</li>
+<li>Módulos</li>
+<li>Clases</li>
+<li>Scripts</li>
+<li>Ejemplos</li>
+<li>Boilerplates</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Biblioteca</p>
+<p>➡️ Reutilización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 12.10 — Catálogo General</h1>
+<h2>Indexar</h2>
+<ul>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Plantillas</li>
+<li>Patrones</li>
+<li>Código</li>
+<li>Documentación</li>
+<li>Componentes</li>
+<li>Workflows</li>
+</ul>
+<h2>Funciones</h2>
+<ul>
+<li>Buscar</li>
+<li>Filtrar</li>
+<li>Versionar</li>
+<li>Relacionar</li>
+<li>Auditar</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Activo</p>
+<h1>🌳 FASE 13 — RAÍZ MAESTRA 13</h1>
+<h1>GOBERNANZA, ORQUESTACIÓN Y ADMINISTRACIÓN DEL ECOSISTEMA</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Establecer las reglas, políticas, procesos y mecanismos de coordinación que gobiernan todo el ecosistema del proyecto, garantizando consistencia, trazabilidad, control y cumplimiento durante todo el ciclo de vida del software.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Definir la gobernanza del sistema.</p>
+<p>Coordinar todos los procesos.</p>
+<p>Administrar políticas.</p>
+<p>Garantizar trazabilidad.</p>
+<p>Controlar dependencias.</p>
+<p>Gestionar el estado global.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Cloud</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Arquitectura</li>
+<li>Biblioteca de conocimiento</li>
+<li>Estado del proyecto</li>
+<li>Workflows</li>
+<li>Protocolos</li>
+<li>Políticas</li>
+<li>Reglas</li>
+<li>Configuraciones</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Estado global</li>
+<li>Registro de gobierno</li>
+<li>Políticas activas</li>
+<li>Dependencias controladas</li>
+<li>Auditoría completa</li>
+<li>Coordinación centralizada</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 13.01 — Constitución del Proyecto</h1>
+<h2>Definir</h2>
+<ul>
+<li>Principios</li>
+<li>Objetivos</li>
+<li>Restricciones</li>
+<li>Reglas generales</li>
+<li>Alcance</li>
+<li>Normas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Constitución</p>
+<p>➡️ Reglas</p>
+<p>➡️ Proyecto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.02 — Políticas</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Políticas de desarrollo</li>
+<li>Seguridad</li>
+<li>Calidad</li>
+<li>IA</li>
+<li>Versionado</li>
+<li>Publicación</li>
+<li>Accesos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Política</p>
+<p>➡️ Validación</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.03 — Gestión del Estado</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Estado del proyecto</li>
+<li>Estado de módulos</li>
+<li>Estado de tareas</li>
+<li>Estado de agentes</li>
+<li>Estado de despliegues</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Estado</p>
+<p>➡️ Actualización</p>
+<p>➡️ Registro</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.04 — Gestión de Dependencias</h1>
+<h2>Controlar</h2>
+<ul>
+<li>Dependencias técnicas</li>
+<li>Dependencias funcionales</li>
+<li>Dependencias entre módulos</li>
+<li>Dependencias entre agentes</li>
+<li>Dependencias externas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Dependencia</p>
+<p>➡️ Validación</p>
+<p>➡️ Control</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.05 — Registro Maestro</h1>
+<h2>Mantener</h2>
+<ul>
+<li>Inventario</li>
+<li>Activos</li>
+<li>Componentes</li>
+<li>Versiones</li>
+<li>Relaciones</li>
+<li>Historial</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Activo</p>
+<p>➡️ Registro</p>
+<p>➡️ Consulta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.06 — Coordinación del Ecosistema</h1>
+<h2>Coordinar</h2>
+<ul>
+<li>Procesos</li>
+<li>Agentes</li>
+<li>Workflows</li>
+<li>Bibliotecas</li>
+<li>Validaciones</li>
+<li>Despliegues</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proceso</p>
+<p>➡️ Coordinación</p>
+<p>➡️ Ejecución</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.07 — Gestión de Versiones</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Versiones</li>
+<li>Releases</li>
+<li>Etiquetas</li>
+<li>Compatibilidad</li>
+<li>Historial</li>
+<li>Rollback</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Versión</p>
+<p>➡️ Publicación</p>
+<p>➡️ Historial</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.08 — Auditoría de Gobierno</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Cumplimiento</li>
+<li>Políticas</li>
+<li>Protocolos</li>
+<li>Versiones</li>
+<li>Dependencias</li>
+<li>Estado</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Gobierno</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Informe</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.09 — Gestión de Cambios</h1>
+<h2>Controlar</h2>
+<ul>
+<li>Solicitudes</li>
+<li>Aprobaciones</li>
+<li>Implementaciones</li>
+<li>Validaciones</li>
+<li>Registro</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cambio</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Aplicación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 13.10 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Constitución</li>
+<li>Políticas</li>
+<li>Registro Maestro</li>
+<li>Estado Global</li>
+<li>Historial</li>
+<li>Inventario</li>
+<li>Auditorías</li>
+<li>Gestión de Cambios</li>
+<li>Dependencias</li>
+<li>Versionado</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Cumple las políticas?</li>
+<li>¿Puede ejecutarse este cambio?</li>
+<li>¿Existen conflictos?</li>
+<li>¿Qué dependencias están afectadas?</li>
+<li>¿Debe aprobarse una nueva versión?</li>
+<li>¿Debe registrarse una excepción?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Reglas</li>
+<li>Políticas</li>
+<li>Protocolos</li>
+<li>Contratos</li>
+<li>ADR</li>
+<li>Workflows</li>
+<li>Registros</li>
+<li>Inventarios</li>
+<li>Checklists</li>
+<li>Reportes</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Las políticas están definidas.</li>
+<li>El estado global está actualizado.</li>
+<li>Existe trazabilidad completa.</li>
+<li>Las dependencias están controladas.</li>
+<li>Los cambios están auditados.</li>
+<li>Todo el ecosistema está gobernado de forma consistente.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Constitución</p>
+<p>➡️ Políticas</p>
+<p>➡️ Estado</p>
+<p>➡️ Dependencias</p>
+<p>➡️ Registro Maestro</p>
+<p>➡️ Coordinación</p>
+<p>➡️ Versionado</p>
+<p>➡️ Auditoría</p>
+<p>➡️ Gestión de Cambios</p>
+<p>➡️ Ecosistema Gobernado</p>
+<p>➡️ 🌳 FASE 14 — RAÍZ MAESTRA 14 — AUTOEVALUACIÓN, MEJORA CONTINUA Y EVOLUCIÓN DEL PROYECTO</p>
+<h1>🌳 FASE 14 — RAÍZ MAESTRA 14</h1>
+<h1>AUTOEVALUACIÓN, MEJORA CONTINUA Y EVOLUCIÓN DEL PROYECTO</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Cerrar el ciclo de vida del proyecto mediante la evaluación continua de resultados, la identificación de oportunidades de mejora y la evolución controlada de todo el ecosistema para preparar una nueva iteración de desarrollo.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Evaluar el proyecto.</p>
+<p>Detectar oportunidades de mejora.</p>
+<p>Medir resultados.</p>
+<p>Optimizar procesos.</p>
+<p>Actualizar la biblioteca de conocimiento.</p>
+<p>Iniciar un nuevo ciclo de evolución.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Cloud</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Métricas</li>
+<li>Reportes</li>
+<li>Auditorías</li>
+<li>Feedback</li>
+<li>Logs</li>
+<li>Incidentes</li>
+<li>Resultados</li>
+<li>Biblioteca de conocimiento</li>
+<li>Estado del proyecto</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Plan de mejora</li>
+<li>Informe de evolución</li>
+<li>Lecciones aprendidas</li>
+<li>Biblioteca actualizada</li>
+<li>Roadmap revisado</li>
+<li>Nueva iteración del proyecto</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 14.01 — Evaluación Global</h1>
+<h2>Analizar</h2>
+<ul>
+<li>Objetivos alcanzados</li>
+<li>Requisitos cumplidos</li>
+<li>Calidad</li>
+<li>Rendimiento</li>
+<li>Seguridad</li>
+<li>Escalabilidad</li>
+<li>Costes</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Proyecto</p>
+<p>➡️ Evaluación</p>
+<p>➡️ Informe</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.02 — Métricas de Evolución</h1>
+<h2>Medir</h2>
+<ul>
+<li>Productividad</li>
+<li>Calidad</li>
+<li>Tiempo</li>
+<li>Coste</li>
+<li>Cobertura</li>
+<li>Rendimiento</li>
+<li>Disponibilidad</li>
+<li>Satisfacción del usuario</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Métricas</p>
+<p>➡️ Análisis</p>
+<p>➡️ Indicadores</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.03 — Lecciones Aprendidas</h1>
+<h2>Registrar</h2>
+<ul>
+<li>Éxitos</li>
+<li>Errores</li>
+<li>Riesgos</li>
+<li>Buenas prácticas</li>
+<li>Recomendaciones</li>
+<li>Casos de estudio</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Experiencia</p>
+<p>➡️ Lección</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.04 — Actualización del Conocimiento</h1>
+<h2>Actualizar</h2>
+<ul>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Patrones</li>
+<li>Documentación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Conocimiento</p>
+<p>➡️ Actualización</p>
+<p>➡️ Nueva Versión</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.05 — Optimización del Ecosistema</h1>
+<h2>Mejorar</h2>
+<ul>
+<li>Arquitectura</li>
+<li>Procesos</li>
+<li>Automatizaciones</li>
+<li>Infraestructura</li>
+<li>Herramientas</li>
+<li>Bibliotecas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Optimización</p>
+<p>➡️ Ecosistema Mejorado</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.06 — Revisión del Roadmap</h1>
+<h2>Revisar</h2>
+<ul>
+<li>Objetivos futuros</li>
+<li>Prioridades</li>
+<li>Funcionalidades</li>
+<li>Riesgos</li>
+<li>Recursos</li>
+<li>Cronograma</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Roadmap</p>
+<p>➡️ Revisión</p>
+<p>➡️ Plan</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.07 — Preparación de Nueva Iteración</h1>
+<h2>Preparar</h2>
+<ul>
+<li>Nuevo ciclo</li>
+<li>Nuevos requisitos</li>
+<li>Nuevas versiones</li>
+<li>Nuevos objetivos</li>
+<li>Nuevas prioridades</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cierre</p>
+<p>➡️ Nuevo Ciclo</p>
+<p>➡️ Inicio</p>
+<hr/>
+<h1>🌿 CHECKPOINT 14.08 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Informe Final</li>
+<li>Plan de Mejora</li>
+<li>Lecciones Aprendidas</li>
+<li>Biblioteca Actualizada</li>
+<li>Roadmap Revisado</li>
+<li>Indicadores</li>
+<li>Historial de Evolución</li>
+<li>Nueva Planificación</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Se cumplieron los objetivos?</li>
+<li>¿Qué debe mejorarse?</li>
+<li>¿Qué conocimiento debe conservarse?</li>
+<li>¿Qué procesos deben modificarse?</li>
+<li>¿Qué nuevas capacidades deben incorporarse?</li>
+<li>¿Cuándo iniciar una nueva iteración?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Informes</li>
+<li>Métricas</li>
+<li>Lecciones Aprendidas</li>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Patrones</li>
+<li>Roadmaps</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>El proyecto ha sido evaluado completamente.</li>
+<li>Las mejoras están identificadas.</li>
+<li>El conocimiento se ha actualizado.</li>
+<li>El roadmap está revisado.</li>
+<li>Existe un plan claro para la siguiente iteración.</li>
+<li>El ecosistema queda preparado para comenzar un nuevo ciclo de desarrollo.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Proyecto Finalizado</p>
+<p>➡️ Evaluación Global</p>
+<p>➡️ Métricas</p>
+<p>➡️ Lecciones Aprendidas</p>
+<p>➡️ Actualización del Conocimiento</p>
+<p>➡️ Optimización</p>
+<p>➡️ Revisión del Roadmap</p>
+<p>➡️ Nueva Iteración</p>
+<p>➡️ Inicio del Siguiente Ciclo</p>
+<p>────────────────────────────────────────────────────────</p>
+<p>FIN DEL MAPA MAESTRO       DEL CICLO COMPLETO DE DESARROLLO DE SOFTWARE</p>
+<p>Idea del Usuario</p>
+<p>➡️ Análisis</p>
+<p>➡️ Arquitectura</p>
+<p>➡️ Diseño</p>
+<p>➡️ Desarrollo</p>
+<p>➡️ Validación</p>
+<p>➡️ Seguridad</p>
+<p>➡️ Deploy</p>
+<p>➡️ Operación</p>
+<p>➡️ Mantenimiento</p>
+<p>➡️ IA y Orquestación</p>
+<p>➡️ Biblioteca de Conocimiento</p>
+<p>➡️ Gobernanza</p>
+<p>➡️ Mejora Continua</p>
+<p>➡️ Nuevo Ciclo</p>
+<p>∞ (Proceso Iterativo)</p>
+<h1>🌳 FASE 15 — RAÍZ MAESTRA 15</h1>
+<h1>GESTIÓN DE PRODUCTO, ESTRATEGIA Y ROADMAP</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Definir la estrategia del producto antes y durante el desarrollo, asegurando que todas las decisiones técnicas estén alineadas con las necesidades del usuario, los objetivos del negocio y la evolución planificada del proyecto.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Construir la estrategia del producto.</p>
+<p>Definir la visión.</p>
+<p>Administrar el roadmap.</p>
+<p>Priorizar funcionalidades.</p>
+<p>Gestionar el ciclo de vida del producto.</p>
+<p>Mantener alineado el desarrollo con los objetivos.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Idea del usuario</li>
+<li>Necesidades del cliente</li>
+<li>Investigación</li>
+<li>Requisitos</li>
+<li>Feedback</li>
+<li>Análisis de mercado</li>
+<li>Competencia</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Product Vision</li>
+<li>Product Strategy</li>
+<li>Roadmap</li>
+<li>MVP</li>
+<li>Backlog</li>
+<li>Priorización</li>
+<li>Plan de Releases</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 15.01 — Visión del Producto</h1>
+<h2>Definir</h2>
+<ul>
+<li>Problema a resolver</li>
+<li>Público objetivo</li>
+<li>Valor diferencial</li>
+<li>Objetivos</li>
+<li>Alcance</li>
+<li>Propuesta de valor</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Visión</p>
+<p>➡️ Producto</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.02 — Estrategia del Producto</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Estrategia</li>
+<li>Posicionamiento</li>
+<li>Competencia</li>
+<li>Diferenciación</li>
+<li>Mercado</li>
+<li>Evolución</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Visión</p>
+<p>➡️ Estrategia</p>
+<p>➡️ Roadmap</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.03 — Roadmap</h1>
+<h2>Planificar</h2>
+<ul>
+<li>Versiones</li>
+<li>Releases</li>
+<li>Prioridades</li>
+<li>Objetivos</li>
+<li>Cronograma</li>
+<li>Dependencias</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Objetivos</p>
+<p>➡️ Roadmap</p>
+<p>➡️ Desarrollo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.04 — MVP</h1>
+<h2>Definir</h2>
+<ul>
+<li>Funciones mínimas</li>
+<li>Funciones futuras</li>
+<li>Riesgos</li>
+<li>Alcance</li>
+<li>Validación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ MVP</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.05 — Product Backlog</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Épicas</li>
+<li>Historias</li>
+<li>Tareas</li>
+<li>Bugs</li>
+<li>Mejoras</li>
+<li>Prioridades</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Backlog</p>
+<p>➡️ Priorización</p>
+<p>➡️ Sprint</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.06 — Gestión de Releases</h1>
+<h2>Organizar</h2>
+<ul>
+<li>Versiones</li>
+<li>Publicaciones</li>
+<li>Hotfix</li>
+<li>Release Notes</li>
+<li>Calendario</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Release</p>
+<p>➡️ Publicación</p>
+<p>➡️ Usuarios</p>
+<hr/>
+<h1>🌿 CHECKPOINT 15.07 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Product Vision</li>
+<li>Product Strategy</li>
+<li>MVP</li>
+<li>Roadmap</li>
+<li>Product Backlog</li>
+<li>Release Plan</li>
+<li>Product Canvas</li>
+<li>Cronograma</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Qué construir primero?</li>
+<li>¿Qué funcionalidades son críticas?</li>
+<li>¿Qué puede esperar?</li>
+<li>¿Qué versión debe liberarse?</li>
+<li>¿Cuál será el siguiente objetivo?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Roadmaps</li>
+<li>Canvas</li>
+<li>Historias de Usuario</li>
+<li>Épicas</li>
+<li>MVP</li>
+<li>Planes</li>
+<li>Estrategias</li>
+<li>Releases</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Existe una visión clara del producto.</li>
+<li>El roadmap está definido.</li>
+<li>El backlog está priorizado.</li>
+<li>El MVP está identificado.</li>
+<li>Las versiones futuras están planificadas.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Idea</p>
+<p>➡️ Visión</p>
+<p>➡️ Estrategia</p>
+<p>➡️ Roadmap</p>
+<p>➡️ MVP</p>
+<p>➡️ Backlog</p>
+<p>➡️ Releases</p>
+<p>➡️ 🌳 FASE 16 — RAÍZ MAESTRA 16 — INGENIERÍA DE DATOS Y PERSISTENCIA</p>
+<h1>🌳 FASE 16 — RAÍZ MAESTRA 16</h1>
+<h1>INGENIERÍA DE DATOS, PERSISTENCIA Y GESTIÓN DE LA INFORMACIÓN</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Diseñar, construir y administrar toda la infraestructura de datos del proyecto, garantizando almacenamiento, integridad, disponibilidad, rendimiento, seguridad y acceso eficiente a la información durante todo el ciclo de vida del software.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Diseñar la arquitectura de datos.</p>
+<p>Administrar la persistencia.</p>
+<p>Optimizar consultas.</p>
+<p>Garantizar la integridad.</p>
+<p>Gestionar el ciclo de vida de la información.</p>
+<p>Preparar la infraestructura para IA y analítica.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend (consumo de datos)</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Cloud</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Modelo de negocio</li>
+<li>Arquitectura</li>
+<li>Requisitos funcionales</li>
+<li>Requisitos no funcionales</li>
+<li>Datos del usuario</li>
+<li>APIs</li>
+<li>Integraciones</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Modelo de datos</li>
+<li>Bases de datos</li>
+<li>Esquemas</li>
+<li>Índices</li>
+<li>Cachés</li>
+<li>Pipelines de datos</li>
+<li>Estrategia de persistencia</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 16.01 — Modelado de Datos</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Modelo conceptual</li>
+<li>Modelo lógico</li>
+<li>Modelo físico</li>
+<li>Relaciones</li>
+<li>Cardinalidad</li>
+<li>Restricciones</li>
+<li>Normalización</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Requisitos</p>
+<p>➡️ Modelo</p>
+<p>➡️ Base de Datos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.02 — Bases de Datos</h1>
+<h2>Seleccionar</h2>
+<ul>
+<li>PostgreSQL</li>
+<li>MySQL</li>
+<li>SQLite</li>
+<li>MongoDB</li>
+<li>Redis</li>
+<li>Elasticsearch</li>
+<li>Vector Database</li>
+<li>Object Storage</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Base de Datos</p>
+<p>➡️ Persistencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.03 — Persistencia</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>CRUD</li>
+<li>Repositorios</li>
+<li>ORM</li>
+<li>Migraciones</li>
+<li>Transacciones</li>
+<li>Versionado de esquemas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Aplicación</p>
+<p>➡️ Persistencia</p>
+<p>➡️ Datos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.04 — Optimización</h1>
+<h2>Implementar</h2>
+<ul>
+<li>Índices</li>
+<li>Caché</li>
+<li>Particionado</li>
+<li>Replicación</li>
+<li>Compresión</li>
+<li>Optimización de consultas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Consulta</p>
+<p>➡️ Optimización</p>
+<p>➡️ Respuesta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.05 — Integración de Datos</h1>
+<h2>Conectar</h2>
+<ul>
+<li>APIs</li>
+<li>ETL</li>
+<li>ELT</li>
+<li>Streaming</li>
+<li>Colas</li>
+<li>Eventos</li>
+<li>Sincronización</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Origen</p>
+<p>➡️ Transformación</p>
+<p>➡️ Destino</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.06 — Seguridad de Datos</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Cifrado</li>
+<li>Backups</li>
+<li>Recuperación</li>
+<li>Auditoría</li>
+<li>Control de acceso</li>
+<li>Retención</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Protección</p>
+<p>➡️ Recuperación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.07 — Datos para IA</h1>
+<h2>Preparar</h2>
+<ul>
+<li>Embeddings</li>
+<li>Vector Store</li>
+<li>Dataset</li>
+<li>Memoria</li>
+<li>Índices semánticos</li>
+<li>RAG</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Información</p>
+<p>➡️ Vectorización</p>
+<p>➡️ IA</p>
+<hr/>
+<h1>🌿 CHECKPOINT 16.08 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Modelo de Datos</li>
+<li>Esquemas</li>
+<li>Migraciones</li>
+<li>Diccionario de Datos</li>
+<li>Pipelines</li>
+<li>Backups</li>
+<li>Índices</li>
+<li>Catálogo de Datos</li>
+<li>Estrategia de Persistencia</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Qué tipo de base de datos utilizar?</li>
+<li>¿Cómo persistir cada tipo de información?</li>
+<li>¿Qué estrategia de caché aplicar?</li>
+<li>¿Qué datos deben versionarse?</li>
+<li>¿Qué datos deben conservarse?</li>
+<li>¿Cómo optimizar el rendimiento?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Modelos de Datos</li>
+<li>Bases de Datos</li>
+<li>ETL</li>
+<li>ELT</li>
+<li>Caché</li>
+<li>RAG</li>
+<li>Embeddings</li>
+<li>Diccionarios de Datos</li>
+<li>Migraciones</li>
+<li>Políticas de Persistencia</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>El modelo de datos está definido.</li>
+<li>La estrategia de persistencia está implementada.</li>
+<li>La seguridad de los datos está garantizada.</li>
+<li>Los pipelines funcionan correctamente.</li>
+<li>Los datos están preparados para consumo por aplicaciones e IA.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Requisitos</p>
+<p>➡️ Modelado de Datos</p>
+<p>➡️ Bases de Datos</p>
+<p>➡️ Persistencia</p>
+<p>➡️ Optimización</p>
+<p>➡️ Integración</p>
+<p>➡️ Seguridad</p>
+<p>➡️ Datos para IA</p>
+<p>➡️ Información Disponible</p>
+<p>➡️ 🌳 FASE 17 — RAÍZ MAESTRA 17 — UX RESEARCH Y EXPERIENCIA DE USUARIO</p>
+<h1>🌳 FASE 17 — RAÍZ MAESTRA 17</h1>
+<h1>UX RESEARCH, EXPERIENCIA DE USUARIO Y DISEÑO CENTRADO EN EL USUARIO</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Comprender profundamente a los usuarios para diseñar experiencias intuitivas, accesibles y eficientes en aplicaciones Web, Apps, Software y SaaS, validando continuamente que el producto resuelva problemas reales.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Investigar a los usuarios.</p>
+<p>Comprender sus necesidades.</p>
+<p>Diseñar experiencias intuitivas.</p>
+<p>Validar la usabilidad.</p>
+<p>Optimizar la interacción.</p>
+<p>Mejorar continuamente la experiencia del usuario.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Idea del usuario</li>
+<li>Objetivos del producto</li>
+<li>Requisitos</li>
+<li>Feedback</li>
+<li>Métricas</li>
+<li>Investigación de mercado</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Personas</li>
+<li>User Journey</li>
+<li>User Flow</li>
+<li>Wireframes</li>
+<li>Mockups</li>
+<li>Prototipos</li>
+<li>Diseño UX validado</li>
+<li>Informe de usabilidad</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 17.01 — Investigación de Usuarios</h1>
+<h2>Analizar</h2>
+<ul>
+<li>Usuarios</li>
+<li>Segmentos</li>
+<li>Necesidades</li>
+<li>Problemas</li>
+<li>Objetivos</li>
+<li>Comportamiento</li>
+<li>Contexto de uso</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuarios</p>
+<p>➡️ Investigación</p>
+<p>➡️ Hallazgos</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.02 — Personas</h1>
+<h2>Crear</h2>
+<ul>
+<li>Perfil</li>
+<li>Objetivos</li>
+<li>Necesidades</li>
+<li>Motivaciones</li>
+<li>Frustraciones</li>
+<li>Casos de uso</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Persona</p>
+<p>➡️ Diseño</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.03 — Customer Journey</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Descubrimiento</li>
+<li>Registro</li>
+<li>Uso</li>
+<li>Conversión</li>
+<li>Fidelización</li>
+<li>Soporte</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuario</p>
+<p>➡️ Journey</p>
+<p>➡️ Experiencia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.04 — User Flow</h1>
+<h2>Definir</h2>
+<ul>
+<li>Navegación</li>
+<li>Pantallas</li>
+<li>Procesos</li>
+<li>Decisiones</li>
+<li>Flujos</li>
+<li>Validaciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Inicio</p>
+<p>➡️ Flujo</p>
+<p>➡️ Objetivo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.05 — Wireframes</h1>
+<h2>Diseñar</h2>
+<ul>
+<li>Layout</li>
+<li>Navegación</li>
+<li>Componentes</li>
+<li>Jerarquía</li>
+<li>Contenido</li>
+<li>Interacciones</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Idea</p>
+<p>➡️ Wireframe</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.06 — Prototipos</h1>
+<h2>Construir</h2>
+<ul>
+<li>Baja fidelidad</li>
+<li>Media fidelidad</li>
+<li>Alta fidelidad</li>
+<li>Interacciones</li>
+<li>Animaciones</li>
+<li>Navegación</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Wireframe</p>
+<p>➡️ Prototipo</p>
+<p>➡️ Pruebas</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.07 — Usabilidad</h1>
+<h2>Evaluar</h2>
+<ul>
+<li>Facilidad de uso</li>
+<li>Comprensión</li>
+<li>Accesibilidad</li>
+<li>Rendimiento</li>
+<li>Consistencia</li>
+<li>Tiempo de aprendizaje</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Prototipo</p>
+<p>➡️ Pruebas</p>
+<p>➡️ Mejoras</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.08 — Accesibilidad</h1>
+<h2>Validar</h2>
+<ul>
+<li>WCAG</li>
+<li>Contraste</li>
+<li>Navegación por teclado</li>
+<li>Lectores de pantalla</li>
+<li>Idiomas</li>
+<li>Inclusión</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Interfaz</p>
+<p>➡️ Accesibilidad</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 17.09 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Personas</li>
+<li>User Journey</li>
+<li>User Flow</li>
+<li>Wireframes</li>
+<li>Mockups</li>
+<li>Prototipos</li>
+<li>Sistema UX</li>
+<li>Reportes</li>
+<li>Estudios de usuarios</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿La interfaz es comprensible?</li>
+<li>¿El flujo es intuitivo?</li>
+<li>¿Qué necesita realmente el usuario?</li>
+<li>¿Dónde existen fricciones?</li>
+<li>¿Qué debe simplificarse?</li>
+<li>¿Qué mejoras aumentarán la experiencia?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Personas</li>
+<li>UX Research</li>
+<li>User Journey</li>
+<li>User Flow</li>
+<li>Wireframes</li>
+<li>Prototipos</li>
+<li>Guías UX</li>
+<li>Accesibilidad</li>
+<li>Pruebas de Usabilidad</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Los usuarios han sido investigados.</li>
+<li>La experiencia está validada.</li>
+<li>Los flujos son intuitivos.</li>
+<li>La interfaz cumple criterios de accesibilidad.</li>
+<li>El producto ofrece una experiencia consistente.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Investigación</p>
+<p>➡️ Personas</p>
+<p>➡️ Journey</p>
+<p>➡️ User Flow</p>
+<p>➡️ Wireframes</p>
+<p>➡️ Prototipos</p>
+<p>➡️ Usabilidad</p>
+<p>➡️ Accesibilidad</p>
+<p>➡️ UX Validada</p>
+<p>➡️ 🌳 FASE 18 — RAÍZ MAESTRA 18 — DOCUMENTACIÓN TÉCNICA Y GESTIÓN DEL CONOCIMIENTO</p>
+<h1>🌳 FASE 18 — RAÍZ MAESTRA 18</h1>
+<h1>DOCUMENTACIÓN TÉCNICA, GESTIÓN DEL CONOCIMIENTO Y MEMORIA DEL PROYECTO</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Crear, organizar, mantener y versionar toda la documentación técnica del proyecto para que cualquier desarrollador, agente o IA pueda comprender, continuar, auditar y evolucionar el sistema sin perder conocimiento.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Centralizar toda la documentación.</p>
+<p>Mantener la memoria técnica.</p>
+<p>Versionar el conocimiento.</p>
+<p>Facilitar la colaboración.</p>
+<p>Evitar la pérdida de información.</p>
+<p>Construir una biblioteca documental reutilizable.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Arquitectura</li>
+<li>Código</li>
+<li>Diagramas</li>
+<li>Workflows</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Skills</li>
+<li>Cambios</li>
+<li>Versiones</li>
+<li>Decisiones</li>
+<li>Checkpoints</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Documentación Técnica</li>
+<li>Wiki del Proyecto</li>
+<li>Manuales</li>
+<li>API Docs</li>
+<li>Diagramas</li>
+<li>Guías</li>
+<li>Biblioteca Documental</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 18.01 — Arquitectura Documentada</h1>
+<h2>Documentar</h2>
+<ul>
+<li>Arquitectura General</li>
+<li>Arquitectura Backend</li>
+<li>Arquitectura Frontend</li>
+<li>Arquitectura Mobile</li>
+<li>Arquitectura Cloud</li>
+<li>Arquitectura IA</li>
+<li>Diagramas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Arquitectura</p>
+<p>➡️ Documentación</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.02 — Manuales Técnicos</h1>
+<h2>Crear</h2>
+<ul>
+<li>Manual del Proyecto</li>
+<li>Manual Backend</li>
+<li>Manual Frontend</li>
+<li>Manual Mobile</li>
+<li>Manual DevOps</li>
+<li>Manual IA</li>
+<li>Manual Administrador</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Manual</p>
+<p>➡️ Consulta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.03 — Documentación de APIs</h1>
+<h2>Registrar</h2>
+<ul>
+<li>REST</li>
+<li>GraphQL</li>
+<li>WebSocket</li>
+<li>MCP</li>
+<li>SDK</li>
+<li>Endpoints</li>
+<li>Ejemplos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>API</p>
+<p>➡️ Documentación</p>
+<p>➡️ Consumo</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.04 — Diagramas</h1>
+<h2>Generar</h2>
+<ul>
+<li>Flujo</li>
+<li>Arquitectura</li>
+<li>Secuencia</li>
+<li>Estados</li>
+<li>Dependencias</li>
+<li>Componentes</li>
+<li>Infraestructura</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Diagramas</p>
+<p>➡️ Comprensión</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.05 — Gestión del Conocimiento</h1>
+<h2>Organizar</h2>
+<ul>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Patrones</li>
+<li>Checklists</li>
+<li>Referencias</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Conocimiento</p>
+<p>➡️ Organización</p>
+<p>➡️ Biblioteca</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.06 — Historial del Proyecto</h1>
+<h2>Registrar</h2>
+<ul>
+<li>Cambios</li>
+<li>Versiones</li>
+<li>Releases</li>
+<li>ADR</li>
+<li>Decisiones</li>
+<li>Incidentes</li>
+<li>Mejoras</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Cambio</p>
+<p>➡️ Historial</p>
+<p>➡️ Auditoría</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.07 — Wiki Técnica</h1>
+<h2>Construir</h2>
+<ul>
+<li>Índices</li>
+<li>Navegación</li>
+<li>Búsquedas</li>
+<li>Categorías</li>
+<li>Referencias cruzadas</li>
+<li>Glosario</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Documentación</p>
+<p>➡️ Wiki</p>
+<p>➡️ Consulta</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.08 — Base de Conocimiento</h1>
+<h2>Mantener</h2>
+<ul>
+<li>Preguntas Frecuentes</li>
+<li>Casos de Uso</li>
+<li>Buenas Prácticas</li>
+<li>Errores Comunes</li>
+<li>Soluciones</li>
+<li>Ejemplos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Experiencia</p>
+<p>➡️ Conocimiento</p>
+<p>➡️ Reutilización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 18.09 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Wiki</li>
+<li>Manuales</li>
+<li>API Docs</li>
+<li>Diagramas</li>
+<li>Base de Conocimiento</li>
+<li>Historial</li>
+<li>Guías Técnicas</li>
+<li>Documentación Versionada</li>
+<li>Índices</li>
+<li>Referencias Cruzadas</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Qué documentación falta?</li>
+<li>¿Qué documento debe actualizarse?</li>
+<li>¿Qué conocimiento debe preservarse?</li>
+<li>¿Qué diagramas deben generarse?</li>
+<li>¿Qué documentación necesita versionado?</li>
+<li>¿Qué referencias deben relacionarse?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Documentación</li>
+<li>Wiki</li>
+<li>Manuales</li>
+<li>Diagramas</li>
+<li>ADR</li>
+<li>API Docs</li>
+<li>Guías</li>
+<li>Skills</li>
+<li>Protocolos</li>
+<li>DSL</li>
+<li>Workflows</li>
+<li>Plantillas</li>
+<li>Historial</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Toda la arquitectura está documentada.</li>
+<li>Existe una Wiki navegable.</li>
+<li>Los manuales están completos.</li>
+<li>Las APIs están documentadas.</li>
+<li>El historial del proyecto está actualizado.</li>
+<li>El conocimiento puede ser reutilizado por cualquier agente o desarrollador.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Arquitectura</p>
+<p>➡️ Manuales</p>
+<p>➡️ APIs</p>
+<p>➡️ Diagramas</p>
+<p>➡️ Gestión del Conocimiento</p>
+<p>➡️ Historial</p>
+<p>➡️ Wiki</p>
+<p>➡️ Base de Conocimiento</p>
+<p>➡️ Documentación Completa</p>
+<p>➡️ 🌳 FASE 19 — RAÍZ MAESTRA 19 — AUTOMATIZACIÓN AVANZADA Y DEVSECOPS</p>
+<h1>🌳 FASE 19 — RAÍZ MAESTRA 19</h1>
+<h1>AUTOMATIZACIÓN AVANZADA, DEVSECOPS Y OPERACIONES CONTINUAS</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Automatizar completamente el ciclo de construcción, validación, seguridad, despliegue y operación del proyecto mediante pipelines inteligentes, integración continua, entrega continua y políticas de seguridad incorporadas desde el desarrollo.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Automatizar el desarrollo.</p>
+<p>Automatizar las pruebas.</p>
+<p>Automatizar la seguridad.</p>
+<p>Automatizar el despliegue.</p>
+<p>Reducir errores manuales.</p>
+<p>Mantener un flujo continuo de entrega.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ Cloud</p>
+<p>✅ IA</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Código fuente</li>
+<li>Repositorios</li>
+<li>Infraestructura</li>
+<li>Configuraciones</li>
+<li>Secretos</li>
+<li>Contenedores</li>
+<li>Workflows</li>
+<li>Políticas de seguridad</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Pipeline CI/CD</li>
+<li>Infraestructura automatizada</li>
+<li>Despliegues automáticos</li>
+<li>Validaciones automáticas</li>
+<li>Reportes</li>
+<li>Auditorías</li>
+<li>Releases</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 19.01 — Integración Continua (CI)</h1>
+<h2>Automatizar</h2>
+<ul>
+<li>Compilación</li>
+<li>Análisis estático</li>
+<li>Linting</li>
+<li>Testing</li>
+<li>Validaciones</li>
+<li>Empaquetado</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ CI</p>
+<p>➡️ Build</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.02 — Entrega Continua (CD)</h1>
+<h2>Automatizar</h2>
+<ul>
+<li>Releases</li>
+<li>Deploy</li>
+<li>Versiones</li>
+<li>Rollback</li>
+<li>Promoción entre entornos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Build</p>
+<p>➡️ Deploy</p>
+<p>➡️ Producción</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.03 — Infraestructura como Código</h1>
+<h2>Gestionar</h2>
+<ul>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>Terraform</li>
+<li>Cloudflare</li>
+<li>Redes</li>
+<li>Balanceadores</li>
+<li>Almacenamiento</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Infraestructura</p>
+<p>➡️ Código</p>
+<p>➡️ Provisionamiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.04 — Gestión de Secretos</h1>
+<h2>Administrar</h2>
+<ul>
+<li>API Keys</li>
+<li>Tokens</li>
+<li>Certificados</li>
+<li>Variables de entorno</li>
+<li>Credenciales</li>
+<li>Rotación de claves</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Secretos</p>
+<p>➡️ Protección</p>
+<p>➡️ Uso Seguro</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.05 — DevSecOps</h1>
+<h2>Integrar</h2>
+<ul>
+<li>Escaneo de vulnerabilidades</li>
+<li>Dependencias</li>
+<li>Contenedores</li>
+<li>Código</li>
+<li>Licencias</li>
+<li>Cumplimiento</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Código</p>
+<p>➡️ Seguridad</p>
+<p>➡️ Validación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.06 — Automatización Operativa</h1>
+<h2>Ejecutar</h2>
+<ul>
+<li>Backups</li>
+<li>Limpieza</li>
+<li>Sincronización</li>
+<li>Escalado</li>
+<li>Recuperación</li>
+<li>Tareas programadas</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Evento</p>
+<p>➡️ Automatización</p>
+<p>➡️ Operación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.07 — Observabilidad Automatizada</h1>
+<h2>Supervisar</h2>
+<ul>
+<li>Logs</li>
+<li>Métricas</li>
+<li>Alertas</li>
+<li>Trazas</li>
+<li>Disponibilidad</li>
+<li>Rendimiento</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Monitoreo</p>
+<p>➡️ Alertas</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.08 — Gestión de Entornos</h1>
+<h2>Administrar</h2>
+<ul>
+<li>Desarrollo</li>
+<li>Testing</li>
+<li>QA</li>
+<li>Staging</li>
+<li>Producción</li>
+<li>Laboratorios</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Entorno</p>
+<p>➡️ Configuración</p>
+<p>➡️ Despliegue</p>
+<hr/>
+<h1>🌿 CHECKPOINT 19.09 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Pipelines CI/CD</li>
+<li>Scripts</li>
+<li>Infraestructura como Código</li>
+<li>Configuraciones</li>
+<li>Automatizaciones</li>
+<li>Auditorías</li>
+<li>Reportes</li>
+<li>Releases</li>
+<li>Backups</li>
+<li>Procedimientos Operativos</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Puede iniciarse el pipeline?</li>
+<li>¿Las pruebas fueron exitosas?</li>
+<li>¿Existe una vulnerabilidad crítica?</li>
+<li>¿Debe realizarse el despliegue?</li>
+<li>¿Debe ejecutarse un rollback?</li>
+<li>¿Qué automatizaciones deben activarse?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Pipelines</li>
+<li>Docker</li>
+<li>Kubernetes</li>
+<li>Terraform</li>
+<li>GitHub Actions</li>
+<li>Cloudflare</li>
+<li>DevSecOps</li>
+<li>Scripts</li>
+<li>Secretos</li>
+<li>Automatizaciones</li>
+<li>Procedimientos</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Los pipelines están automatizados.</li>
+<li>La infraestructura puede desplegarse automáticamente.</li>
+<li>La seguridad está integrada en el ciclo de desarrollo.</li>
+<li>Existen mecanismos de recuperación.</li>
+<li>El sistema puede operar con mínima intervención manual.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Código</p>
+<p>➡️ Integración Continua</p>
+<p>➡️ Validaciones</p>
+<p>➡️ Infraestructura como Código</p>
+<p>➡️ DevSecOps</p>
+<p>➡️ Despliegue Continuo</p>
+<p>➡️ Automatización</p>
+<p>➡️ Observabilidad</p>
+<p>➡️ Operación Continua</p>
+<p>➡️ 🌳 FASE 20 — RAÍZ MAESTRA 20 — ANALÍTICA, TELEMETRÍA E INTELIGENCIA DEL NEGOCIO</p>
+<h1>🌳 FASE 20 — RAÍZ MAESTRA 20</h1>
+<h1>ANALÍTICA, TELEMETRÍA, INTELIGENCIA DEL NEGOCIO Y EVOLUCIÓN DEL PRODUCTO</h1>
+<blockquote><strong>Propósito de la Raíz</strong>  Medir, analizar y comprender todo el funcionamiento del ecosistema para transformar datos en decisiones inteligentes. Esta fase permite que el producto evolucione continuamente utilizando métricas, telemetría, analítica avanzada, inteligencia artificial y retroalimentación de usuarios.</blockquote>
+<hr/>
+<h1>🎯 Objetivo</h1>
+<p>Medir el comportamiento del sistema.</p>
+<p>Analizar el uso del producto.</p>
+<p>Monitorear indicadores.</p>
+<p>Optimizar el rendimiento.</p>
+<p>Detectar oportunidades de mejora.</p>
+<p>Guiar la evolución del producto mediante datos.</p>
+<hr/>
+<h1>🌎 Aplica a</h1>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<p>✅ Backend</p>
+<p>✅ Frontend</p>
+<p>✅ Mobile</p>
+<p>✅ Desktop</p>
+<p>✅ IA</p>
+<p>✅ Multiagentes</p>
+<hr/>
+<h1>📥 Entradas</h1>
+<ul>
+<li>Eventos</li>
+<li>Logs</li>
+<li>Métricas</li>
+<li>Telemetría</li>
+<li>Feedback</li>
+<li>Errores</li>
+<li>KPIs</li>
+<li>Uso del sistema</li>
+<li>Datos de negocio</li>
+<li>Auditorías</li>
+</ul>
+<hr/>
+<h1>📤 Salidas</h1>
+<ul>
+<li>Dashboards</li>
+<li>KPIs</li>
+<li>Reportes</li>
+<li>Alertas</li>
+<li>Predicciones</li>
+<li>Recomendaciones</li>
+<li>Modelos analíticos</li>
+<li>Planes de mejora</li>
+</ul>
+<hr/>
+<h1>🌿 CHECKPOINT 20.01 — Telemetría</h1>
+<h2>Capturar</h2>
+<ul>
+<li>Eventos</li>
+<li>Acciones del usuario</li>
+<li>Tiempo de respuesta</li>
+<li>Consumo de recursos</li>
+<li>Latencia</li>
+<li>Disponibilidad</li>
+<li>Errores</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Eventos</p>
+<p>➡️ Telemetría</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.02 — Métricas</h1>
+<h2>Medir</h2>
+<ul>
+<li>CPU</li>
+<li>Memoria</li>
+<li>Red</li>
+<li>Base de Datos</li>
+<li>APIs</li>
+<li>Frontend</li>
+<li>Backend</li>
+<li>IA</li>
+<li>Costos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Sistema</p>
+<p>➡️ Métricas</p>
+<p>➡️ Dashboard</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.03 — KPIs</h1>
+<h2>Definir</h2>
+<ul>
+<li>Rendimiento</li>
+<li>Disponibilidad</li>
+<li>Calidad</li>
+<li>Conversión</li>
+<li>Retención</li>
+<li>Satisfacción</li>
+<li>Productividad</li>
+<li>Costos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ KPIs</p>
+<p>➡️ Evaluación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.04 — Analítica</h1>
+<h2>Analizar</h2>
+<ul>
+<li>Tendencias</li>
+<li>Patrones</li>
+<li>Comportamiento</li>
+<li>Rendimiento</li>
+<li>Uso de funcionalidades</li>
+<li>Cuellos de botella</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Datos</p>
+<p>➡️ Analítica</p>
+<p>➡️ Conocimiento</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.05 — Inteligencia del Negocio</h1>
+<h2>Evaluar</h2>
+<ul>
+<li>Valor del producto</li>
+<li>ROI</li>
+<li>Costos</li>
+<li>Crecimiento</li>
+<li>Adopción</li>
+<li>Mercado</li>
+<li>Competencia</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Negocio</p>
+<p>➡️ Inteligencia</p>
+<p>➡️ Estrategia</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.06 — Analítica Predictiva</h1>
+<h2>Predecir</h2>
+<ul>
+<li>Demanda</li>
+<li>Riesgos</li>
+<li>Fallos</li>
+<li>Escalabilidad</li>
+<li>Consumo</li>
+<li>Crecimiento</li>
+<li>Necesidades futuras</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Histórico</p>
+<p>➡️ Predicción</p>
+<p>➡️ Planificación</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.07 — Retroalimentación Continua</h1>
+<h2>Integrar</h2>
+<ul>
+<li>Opiniones</li>
+<li>Encuestas</li>
+<li>Tickets</li>
+<li>Comentarios</li>
+<li>Valoraciones</li>
+<li>Auditorías</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Usuarios</p>
+<p>➡️ Feedback</p>
+<p>➡️ Mejoras</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.08 — Mejora Basada en Datos</h1>
+<h2>Optimizar</h2>
+<ul>
+<li>Producto</li>
+<li>Arquitectura</li>
+<li>UX</li>
+<li>Backend</li>
+<li>Frontend</li>
+<li>Infraestructura</li>
+<li>IA</li>
+<li>Costos</li>
+</ul>
+<h2>Micro Diagrama</h2>
+<p>Métricas</p>
+<p>➡️ Decisiones</p>
+<p>➡️ Optimización</p>
+<hr/>
+<h1>🌿 CHECKPOINT 20.09 — Artefactos Generados</h1>
+<p>Esta raíz genera</p>
+<ul>
+<li>Dashboards</li>
+<li>KPIs</li>
+<li>Reportes</li>
+<li>Alertas</li>
+<li>Modelos Analíticos</li>
+<li>Informes Ejecutivos</li>
+<li>Predicciones</li>
+<li>Recomendaciones</li>
+<li>Planes de Optimización</li>
+<li>Métricas Históricas</li>
+</ul>
+<hr/>
+<h1>🧠 Decisiones del Orquestador</h1>
+<p>Durante esta raíz debe decidir</p>
+<ul>
+<li>¿Qué indicadores muestran problemas?</li>
+<li>¿Qué módulos requieren optimización?</li>
+<li>¿Qué funcionalidades tienen mayor valor?</li>
+<li>¿Qué tendencias justifican cambios?</li>
+<li>¿Qué mejoras deben priorizarse?</li>
+<li>¿Qué decisiones estratégicas deben proponerse?</li>
+</ul>
+<hr/>
+<h1>📚 Tipos de Conocimiento Asociados</h1>
+<p>Esta raíz administra</p>
+<ul>
+<li>Telemetría</li>
+<li>KPIs</li>
+<li>Dashboards</li>
+<li>BI</li>
+<li>Analítica</li>
+<li>Predicciones</li>
+<li>Reportes</li>
+<li>Métricas</li>
+<li>Inteligencia del Negocio</li>
+<li>Optimización Continua</li>
+</ul>
+<hr/>
+<h1>✅ Criterios de Finalización</h1>
+<p>La raíz finaliza cuando</p>
+<ul>
+<li>Toda la telemetría está disponible.</li>
+<li>Los KPIs son medibles.</li>
+<li>Existen dashboards operativos.</li>
+<li>El sistema genera recomendaciones basadas en datos.</li>
+<li>La evolución del producto está guiada por evidencia.</li>
+<li>El ciclo de mejora continua queda cerrado.</li>
+</ul>
+<hr/>
+<h1>🔄 DIAGRAMA GENERAL</h1>
+<p>Sistema</p>
+<p>➡️ Telemetría</p>
+<p>➡️ Métricas</p>
+<p>➡️ KPIs</p>
+<p>➡️ Analítica</p>
+<p>➡️ Inteligencia del Negocio</p>
+<p>➡️ Predicción</p>
+<p>➡️ Feedback</p>
+<p>➡️ Optimización</p>
+<p>➡️ Evolución Continua</p>
+<p>➡️ 🚀 NUEVO CICLO DEL PROYECTO</p>
+<hr/>
+<h1>🏁 FINAL DEL MAPA MAESTRO</h1>
+<p>Con esta fase se completa el ciclo integral del proyecto:</p>
+<ul>
+<li>🌳 FASE 00 — Núcleo del Proyecto</li>
+<li>🌳 FASE 01–20 — Ciclo completo de desarrollo</li>
+<li>📚 Biblioteca de conocimiento</li>
+<li>🤖 Orquestador inteligente</li>
+<li>🧠 Sistema cognitivo</li>
+<li>📖 Memoria persistente</li>
+<li>📊 Analítica y mejora continua</li>
+</ul>
+<p>El resultado es un mapa maestro que puede servir como la guía principal del orquestador para gestionar el desarrollo de aplicaciones web, móviles, software de escritorio y plataformas SaaS desde la idea inicial hasta su evolución continua.</p>
+  </main>
+  <footer>
+    <span class="pill">Orquestador</span>
+    <span class="pill">Raíces Maestras</span>
+    <span class="pill">Fases</span>
+  </footer>
+</div>
+</body>
+</html>

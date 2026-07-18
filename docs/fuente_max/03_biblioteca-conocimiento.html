@@ -1,0 +1,6376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Biblioteca Universal de Conocimiento</title>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg-2: #14141c;
+    --bg-3: #1f1f2e;
+    --fg: #e8e8f0;
+    --fg-dim: #a0a0b8;
+    --accent: #7c5cff;
+    --accent-2: #00d4ff;
+    --accent-3: #ff5c8a;
+    --border: #2a2a3e;
+    --code-bg: #0d0d15;
+    --code-fg: #ff79c6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(circle at 20% 0%, #1a0d2e 0%, var(--bg) 50%),
+                radial-gradient(circle at 80% 100%, #002633 0%, var(--bg) 60%),
+                var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px;
+  }
+  header.hero {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 40px;
+    margin-bottom: 50px;
+    position: relative;
+  }
+  .badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 44px;
+    line-height: 1.15;
+    margin: 0 0 18px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent-2) 60%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    color: var(--fg-dim);
+    font-size: 18px;
+    max-width: 720px;
+    margin: 0;
+  }
+  h2 {
+    font-size: 28px;
+    margin: 50px 0 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  h2::before {
+    content: "▸";
+    color: var(--accent-2);
+    margin-right: 12px;
+  }
+  h3 {
+    font-size: 22px;
+    margin: 32px 0 14px;
+    color: var(--accent-2);
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 18px;
+    margin: 24px 0 10px;
+    color: var(--accent-3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  h5, h6 {
+    font-size: 16px;
+    margin: 18px 0 8px;
+    color: var(--fg);
+    font-weight: 600;
+  }
+  p {
+    margin: 14px 0;
+    color: var(--fg);
+  }
+  strong {
+    color: #fff;
+    font-weight: 700;
+  }
+  em {
+    color: var(--accent-3);
+    font-style: italic;
+  }
+  a {
+    color: var(--accent-2);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent-2);
+  }
+  a:hover {
+    color: #fff;
+    border-bottom-style: solid;
+  }
+  ul, ol {
+    padding-left: 24px;
+    margin: 14px 0;
+  }
+  li {
+    margin: 8px 0;
+    color: var(--fg);
+  }
+  li::marker {
+    color: var(--accent);
+  }
+  blockquote {
+    margin: 24px 0;
+    padding: 16px 22px;
+    background: var(--bg-2);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    color: var(--fg-dim);
+    font-style: italic;
+  }
+  blockquote strong {
+    color: var(--accent-2);
+  }
+  code {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+    font-size: 0.88em;
+    border: 1px solid var(--border);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 26px;
+    overflow-x: auto;
+    margin: 22px 0;
+    box-shadow: 0 4px 20px rgba(124, 92, 255, 0.08);
+  }
+  pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #e8e8f0;
+    font-size: 14px;
+    line-height: 1.6;
+    font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  }
+  pre code .lang-yaml,
+  pre code .lang-json,
+  pre code .lang-bash,
+  pre code .lang-text {
+    color: #e8e8f0;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+  /* tree-style code blocks (using pre) — keep code blocks looking like consoles */
+  pre {
+    background: linear-gradient(180deg, #0a0a14 0%, #0d0d18 100%);
+    color: #d8d8e8;
+  }
+  footer {
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 13px;
+  }
+  footer .pill {
+    display: inline-block;
+    margin: 0 6px;
+    padding: 3px 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+  /* responsive */
+  @media (max-width: 720px) {
+    .container { padding: 30px 18px; }
+    h1 { font-size: 32px; }
+    h2 { font-size: 22px; }
+    pre { padding: 14px 16px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="hero">
+    <span class="badge">Skills • Playbooks • Recipes</span>
+    <h1>Biblioteca Universal de Conocimiento</h1>
+    <p class="subtitle">Sistema central de activos de conocimiento para el orquestador: skills, playbooks, recipes, templates, blueprints, best practices, anti-patterns y más.</p>
+  </header>
+  <main>
+<h1>📚 BIBLIOTECA UNIVERSAL DE CONOCIMIENTO DEL ORQUESTADOR</h1>
+<h2>README PRINCIPAL</h2>
+<h2>1. ¿Qué es esta biblioteca?</h2>
+<p>La Biblioteca Universal de Conocimiento es el sistema central donde el orquestador almacena, organiza, valida, versiona y reutiliza todos los activos de conocimiento necesarios para construir, mantener y evolucionar proyectos de software.</p>
+<p>Su función es transformar conocimiento técnico disperso en componentes reutilizables que puedan ser utilizados por agentes de IA, desarrolladores y sistemas automáticos.</p>
+<p>La biblioteca no es un simple repositorio de documentos.</p>
+<p>Es un sistema inteligente de capacidades.</p>
+<p>Cada elemento almacenado debe poder:</p>
+<ul>
+<li>Ser encontrado.</li>
+<li>Ser comprendido.</li>
+<li>Ser validado.</li>
+<li>Ser ejecutado.</li>
+<li>Ser combinado con otros conocimientos.</li>
+<li>Ser actualizado.</li>
+<li>Ser auditado.</li>
+</ul>
+<hr/>
+<h1>2. ¿Por qué existe?</h1>
+<p>Un proyecto moderno de software requiere miles de decisiones técnicas:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Lenguajes.</li>
+<li>Frameworks.</li>
+<li>Seguridad.</li>
+<li>Bases de datos.</li>
+<li>Infraestructura.</li>
+<li>Diseño.</li>
+<li>Testing.</li>
+<li>IA.</li>
+<li>DevOps.</li>
+<li>Operación.</li>
+</ul>
+<p>Sin una biblioteca organizada, cada agente debe volver a investigar y crear soluciones desde cero.</p>
+<p>La biblioteca evita la repetición de trabajo creando una memoria técnica permanente del ecosistema.</p>
+<hr/>
+<h1>3. Relación con las Fases Maestras del Proyecto</h1>
+<p>La biblioteca está conectada con todas las raíces del proyecto.</p>
+<p>Cada fase tiene una zona de conocimiento especializada.</p>
+<p>Ejemplo:</p>
+<p>FASE 03 Arquitectura del Sistema</p>
+<p>↓</p>
+<p>Consulta</p>
+<p>↓</p>
+<p>Biblioteca Arquitectura</p>
+<p>↓</p>
+<p>Skills:</p>
+<p>Clean Architecture</p>
+<p>Microservicios</p>
+<p>Event Driven</p>
+<p>Patrones</p>
+<hr/>
+<p>FASE 05 Desarrollo e Implementación</p>
+<p>↓</p>
+<p>Consulta</p>
+<p>↓</p>
+<p>Biblioteca Desarrollo</p>
+<p>↓</p>
+<p>Skills:</p>
+<p>Python</p>
+<p>TypeScript</p>
+<p>React</p>
+<p>FastAPI</p>
+<p>Java</p>
+<p>Rust</p>
+<hr/>
+<p>FASE 07 Seguridad</p>
+<p>↓</p>
+<p>Consulta</p>
+<p>↓</p>
+<p>Biblioteca Seguridad</p>
+<p>↓</p>
+<p>Skills:</p>
+<p>OWASP</p>
+<p>Cifrado</p>
+<p>Auditoría</p>
+<p>Pentesting</p>
+<hr/>
+<p>FASE 08 DevOps</p>
+<p>↓</p>
+<p>Consulta</p>
+<p>↓</p>
+<p>Biblioteca Infraestructura</p>
+<p>↓</p>
+<p>Skills:</p>
+<p>Docker</p>
+<p>Kubernetes</p>
+<p>Terraform</p>
+<p>CI/CD</p>
+<hr/>
+<h1>4. Arquitectura de la Biblioteca</h1>
+<p>📚 BIBLIOTECA-CONOCIMIENTO</p>
+<p>│ ├── 📘 Skills │ ├── 📚 Playbooks │ ├── 🍳 Recipes │ ├── 📑 Templates │ ├── 🏗️ Boilerplates │ ├── 🧩 Blueprints │ ├── 💡 Best Practices │ ├── ⚠️ Anti-Patterns │ ├── 📂 Ejemplos │ ├── 🧪 Laboratorios │ ├── 📖 Guías │ ├── 🔧 Herramientas │ ├── 📊 Benchmarks │ ├── 🧠 Memoria │ └── 🔍 Investigación</p>
+<hr/>
+<h1>5. Cómo utilizan la biblioteca los agentes</h1>
+<p>Los agentes nunca deben crear soluciones desde cero si existe conocimiento disponible.</p>
+<p>Proceso:</p>
+<p>Necesidad</p>
+<p>↓</p>
+<p>Buscar conocimiento</p>
+<p>↓</p>
+<p>Evaluar calidad</p>
+<p>↓</p>
+<p>Seleccionar activo</p>
+<p>↓</p>
+<p>Adaptar al proyecto</p>
+<p>↓</p>
+<p>Ejecutar</p>
+<p>↓</p>
+<p>Validar</p>
+<p>↓</p>
+<p>Actualizar biblioteca</p>
+<hr/>
+<h1>6. Uso por tipo de agente</h1>
+<h2>Arquitecto IA</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Arquitecturas.</li>
+<li>Patrones.</li>
+<li>Blueprints.</li>
+<li>ADR.</li>
+<li>Guías técnicas.</li>
+</ul>
+<hr/>
+<h2>Agente Backend</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Skills de lenguaje.</li>
+<li>Frameworks.</li>
+<li>Bases de datos.</li>
+<li>APIs.</li>
+<li>Seguridad.</li>
+</ul>
+<hr/>
+<h2>Agente Frontend</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Componentes.</li>
+<li>Design Systems.</li>
+<li>UX.</li>
+<li>Templates.</li>
+<li>Frameworks.</li>
+</ul>
+<hr/>
+<h2>Agente DevOps</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Docker.</li>
+<li>Kubernetes.</li>
+<li>Pipelines.</li>
+<li>Infraestructura.</li>
+</ul>
+<hr/>
+<h2>Agente Testing</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Casos de prueba.</li>
+<li>Checklists.</li>
+<li>Automatización.</li>
+<li>Benchmarks.</li>
+</ul>
+<hr/>
+<h2>Agente Seguridad</h2>
+<p>Utiliza:</p>
+<ul>
+<li>Políticas.</li>
+<li>Vulnerabilidades conocidas.</li>
+<li>Estándares.</li>
+</ul>
+<hr/>
+<h1>7. Reglas de uso</h1>
+<h2>Regla 1</h2>
+<p>Todo conocimiento nuevo debe registrarse.</p>
+<hr/>
+<h2>Regla 2</h2>
+<p>Todo conocimiento debe tener versión.</p>
+<hr/>
+<h2>Regla 3</h2>
+<p>Todo conocimiento debe tener fuente y autor.</p>
+<hr/>
+<h2>Regla 4</h2>
+<p>Todo conocimiento debe ser validado antes de producción.</p>
+<hr/>
+<h2>Regla 5</h2>
+<p>Los agentes deben reutilizar antes de crear.</p>
+<hr/>
+<h1>8. Ciclo de vida del conocimiento</h1>
+<p>Descubrimiento</p>
+<p>↓</p>
+<p>Creación</p>
+<p>↓</p>
+<p>Validación</p>
+<p>↓</p>
+<p>Registro</p>
+<p>↓</p>
+<p>Uso</p>
+<p>↓</p>
+<p>Evaluación</p>
+<p>↓</p>
+<p>Mejora</p>
+<p>↓</p>
+<p>Nueva versión</p>
+<hr/>
+<h1>9. Integración con el Orquestador</h1>
+<p>El orquestador funciona como administrador de conocimiento.</p>
+<p>Sus funciones:</p>
+<ul>
+<li>Buscar activos.</li>
+<li>Seleccionar recursos.</li>
+<li>Recomendar conocimiento.</li>
+<li>Crear nuevos activos.</li>
+<li>Actualizar versiones.</li>
+<li>Eliminar duplicados.</li>
+<li>Detectar conocimiento faltante.</li>
+</ul>
+<hr/>
+<h1>10. Estado del conocimiento</h1>
+<p>Cada activo debe tener:</p>
+<p>CREADO</p>
+<p>↓</p>
+<p>VALIDANDO</p>
+<p>↓</p>
+<p>APROBADO</p>
+<p>↓</p>
+<p>PRODUCCIÓN</p>
+<p>↓</p>
+<p>DEPRECADO</p>
+<p>↓</p>
+<p>ARCHIVADO</p>
+<hr/>
+<h1>11. Formato JSON GLOBAL DE LA BIBLIOTECA</h1>
+<pre><code class="lang-json">{
+  &quot;biblioteca&quot;: {
+    &quot;nombre&quot;: &quot;Biblioteca Universal de Conocimiento&quot;,
+    &quot;version&quot;: &quot;1.0&quot;,
+
+    &quot;objetivo&quot;: &quot;Gestionar conocimiento reutilizable para agentes y orquestador&quot;,
+
+    &quot;activos&quot;: [
+      {
+        &quot;tipo&quot;: &quot;skill&quot;,
+        &quot;categoria&quot;: &quot;backend&quot;,
+        &quot;lenguaje&quot;: &quot;Python&quot;,
+        &quot;nivel&quot;: &quot;experto&quot;,
+        &quot;estado&quot;: &quot;aprobado&quot;
+      }
+    ],
+
+    &quot;integracion_fases&quot;: {
+      &quot;fase_03&quot;: &quot;arquitectura&quot;,
+      &quot;fase_05&quot;: &quot;desarrollo&quot;,
+      &quot;fase_07&quot;: &quot;seguridad&quot;,
+      &quot;fase_08&quot;: &quot;devops&quot;
+    },
+
+    &quot;reglas&quot;: {
+      &quot;versionado&quot;: true,
+      &quot;auditoria&quot;: true,
+      &quot;validacion&quot;: true,
+      &quot;trazabilidad&quot;: true
+    }
+  }
+}
+
+
+---
+
+12. Principio Fundamental
+
+&gt; La Biblioteca Universal de Conocimiento convierte la experiencia técnica del proyecto en activos reutilizables, permitiendo que cada agente y el orquestador mejoren continuamente sus capacidades mediante conocimiento validado, organizado y evolutivo.
+
+
+
+Proyecto
+
+↓
+
+Fases
+
+↓
+
+Biblioteca
+
+↓
+
+Conocimiento
+
+↓
+
+Agentes
+
+↓
+
+Ejecución
+
+↓
+
+Aprendizaje
+
+↓
+
+Evolución
+
+# 📘 SISTEMA DE ACTIVOS DE CONOCIMIENTO
+# TIPO 01 — SKILL
+
+## Propósito
+
+Una Skill es una unidad de conocimiento técnico especializada que permite a un modelo IA, agente u orquestador ejecutar una capacidad concreta con calidad profesional.
+
+Una Skill NO debe ser un fragmento pequeño de información.
+
+Debe ser un paquete completo de conocimiento reutilizable, validado, versionado y auditable.
+
+---
+
+# 🌳 RAÍZ DE SKILL
+</code></pre>
+<p>📘 SKILLS</p>
+<p>├── backend/ ├── frontend/ ├── mobile/ ├── desktop/ ├── saas/ ├── databases/ ├── cloud/ ├── devops/ ├── security/ ├── testing/ ├── ai-machine-learning/ ├── data-engineering/ └── architecture/</p>
+<pre><code>
+---
+
+# 🧩 SUBMÓDULOS POR LENGUAJE DE PROGRAMACIÓN
+
+Cada categoría debe dividirse por lenguaje.
+
+---
+
+# Backend
+
+## Python
+</code></pre>
+<p>skills/backend/python/</p>
+<p>├── python-core ├── fastapi ├── django ├── flask ├── asyncio ├── pydantic ├── sqlalchemy ├── testing └── security</p>
+<pre><code>
+Uso:
+
+- APIs
+- Microservicios
+- Automatización
+- IA Backend
+- SaaS
+
+---
+
+## JavaScript / TypeScript
+</code></pre>
+<p>skills/backend/javascript/</p>
+<p>├── nodejs ├── express ├── nestjs ├── deno ├── bun └── testing</p>
+<pre><code>
+Uso:
+
+- Backend web
+- APIs
+- Servicios distribuidos
+
+---
+
+## Java
+</code></pre>
+<p>skills/backend/java/</p>
+<p>├── spring ├── spring-boot ├── jakarta ├── hibernate └── enterprise-patterns</p>
+<pre><code>
+Uso:
+
+- Sistemas empresariales
+- Backend escalable
+
+---
+
+## C#
+</code></pre>
+<p>skills/backend/csharp/</p>
+<p>├── dotnet ├── aspnet ├── entity-framework └── enterprise</p>
+<pre><code>
+Uso:
+
+- Software empresarial
+- APIs
+- Cloud
+
+---
+
+## Go
+</code></pre>
+<p>skills/backend/go/</p>
+<p>├── gin ├── fiber ├── grpc └── concurrency</p>
+<pre><code>
+Uso:
+
+- Sistemas rápidos
+- Infraestructura
+- Cloud
+
+---
+
+## Rust
+</code></pre>
+<p>skills/backend/rust/</p>
+<p>├── tokio ├── actix ├── axum └── systems-programming</p>
+<pre><code>
+Uso:
+
+- Alto rendimiento
+- Sistemas críticos
+
+---
+
+## PHP
+</code></pre>
+<p>skills/backend/php/</p>
+<p>├── laravel ├── symfony └── api-development</p>
+<pre><code>
+Uso:
+
+- Web
+- SaaS
+
+---
+
+# Frontend
+
+## JavaScript / TypeScript
+</code></pre>
+<p>skills/frontend/javascript/</p>
+<p>├── react ├── nextjs ├── vue ├── angular ├── svelte └── state-management</p>
+<pre><code>
+Uso:
+
+- Aplicaciones web
+- Interfaces SaaS
+
+---
+
+## HTML
+</code></pre>
+<p>skills/frontend/html/</p>
+<p>├── semantic-html ├── accessibility └── seo</p>
+<pre><code>
+---
+
+## CSS
+</code></pre>
+<p>skills/frontend/css/</p>
+<p>├── responsive-design ├── animations ├── tailwind ├── css-architecture └── design-system</p>
+<pre><code>
+---
+
+# Mobile
+
+## Kotlin
+</code></pre>
+<p>skills/mobile/kotlin/</p>
+<p>├── android ├── compose └── architecture</p>
+<pre><code>
+---
+
+## Swift
+</code></pre>
+<p>skills/mobile/swift/</p>
+<p>├── ios ├── swiftui └── architecture</p>
+<pre><code>
+---
+
+## Dart
+</code></pre>
+<p>skills/mobile/dart/</p>
+<p>├── flutter └── mobile-patterns</p>
+<pre><code>
+---
+
+# Desktop
+
+## C++
+</code></pre>
+<p>skills/desktop/cpp/</p>
+<p>├── qt ├── performance └── systems</p>
+<pre><code>
+---
+
+## C#
+</code></pre>
+<p>skills/desktop/csharp/</p>
+<p>├── wpf ├── maui └── desktop-apps</p>
+<pre><code>
+---
+
+# Bases de Datos
+</code></pre>
+<p>skills/database/</p>
+<p>├── PostgreSQL ├── MySQL ├── MongoDB ├── Redis ├── Elasticsearch ├── Vector Database └── Data Warehouse</p>
+<pre><code>
+---
+
+# IA y Machine Learning
+</code></pre>
+<p>skills/ai/</p>
+<p>├── Python ├── PyTorch ├── TensorFlow ├── LangChain ├── RAG ├── Agents └── LLM Engineering</p>
+<pre><code>
+---
+
+# DevOps / Cloud
+</code></pre>
+<p>skills/devops/</p>
+<p>├── Docker ├── Kubernetes ├── Terraform ├── Linux ├── CI/CD ├── AWS ├── Azure ├── Google Cloud └── Cloudflare</p>
+<pre><code>
+---
+
+# NIVELES DE SKILL
+
+## Nivel 1 — Básico
+
+Conceptos fundamentales.
+
+---
+
+## Nivel 2 — Intermedio
+
+Uso profesional.
+
+---
+
+## Nivel 3 — Avanzado
+
+Arquitectura real.
+
+Debe incluir:
+
+- Diseño
+- Seguridad
+- Optimización
+- Testing
+- Escalabilidad
+
+---
+
+## Nivel 4 — Experto
+
+Debe incluir:
+
+- Patrones avanzados
+- Casos empresariales
+- Trade-offs
+- Rendimiento
+
+---
+
+## Nivel 5 — Arquitecto
+
+Debe incluir:
+
+- Diseño completo de sistemas
+- Decisiones técnicas
+- Estrategia
+- Gobierno
+
+---
+
+# ESTRUCTURA INTERNA DE CADA SKILL
+</code></pre>
+<p>SKILL-NOMBRE/</p>
+<p>├── metadata.yaml ├── README.md ├── objetivo.md ├── arquitectura.md ├── requisitos.md ├── instalacion.md ├── configuracion/ ├── codigo/ ├── ejemplos/ ├── tests/ ├── seguridad/ ├── rendimiento/ ├── errores-comunes/ ├── buenas-practicas/ ├── anti-patrones/ ├── referencias/ ├── versiones/ └── changelog.md</p>
+<pre><code>
+---
+
+# METADATOS OBLIGATORIOS
+</code></pre>
+<p>id: nombre: tipo: skill</p>
+<p>categoria: subcategoria:</p>
+<p>lenguajes:</p>
+<ul>
+<li>Python</li>
+<li>TypeScript</li>
+</ul>
+<p>frameworks:</p>
+<ul>
+<li>FastAPI</li>
+</ul>
+<p>nivel:</p>
+<ul>
+<li>avanzado</li>
+</ul>
+<p>version:</p>
+<p>autor:</p>
+<p>agente_creador:</p>
+<p>modelo_creador:</p>
+<p>fecha_creacion:</p>
+<p>hora_creacion:</p>
+<p>ultima_validacion:</p>
+<p>fuente:</p>
+<p>licencia:</p>
+<p>estado:</p>
+<p>compatibilidad:</p>
+<p>dependencias:</p>
+<pre><code>
+---
+
+# REQUISITOS DE CALIDAD
+
+Una Skill aceptada debe tener:
+
+✅ Fuente confiable
+
+✅ Código funcional
+
+✅ Ejemplos completos
+
+✅ Casos reales
+
+✅ Seguridad revisada
+
+✅ Pruebas
+
+✅ Documentación
+
+✅ Versionado
+
+✅ Auditoría
+
+✅ Fecha de validación
+
+---
+
+# VALIDACIÓN DEL ORQUESTADOR
+
+Antes de usar una Skill:
+</code></pre>
+<p>Skill encontrada</p>
+<p>↓</p>
+<p>Validar versión</p>
+<p>↓</p>
+<p>Validar calidad</p>
+<p>↓</p>
+<p>Validar compatibilidad</p>
+<p>↓</p>
+<p>Cargar conocimiento</p>
+<p>↓</p>
+<p>Ejecutar</p>
+<pre><code>
+---
+
+# ARTEFACTOS QUE GENERA
+
+Una Skill puede generar:
+
+- Código
+- Arquitecturas
+- Componentes
+- Configuraciones
+- Tests
+- Documentación
+- Nuevas Skills
+
+---
+
+# OBJETIVO FINAL
+
+Crear una biblioteca donde cada Skill sea una capacidad profesional reutilizable:
+
+Usuario
+
+↓
+
+Orquestador
+
+↓
+
+Selecciona Skill
+
+↓
+
+Carga conocimiento
+
+↓
+
+Ejecuta tarea
+
+↓
+
+Valida resultado
+
+↓
+
+Mejora Skill</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 02 — PLAYBOOK</h1>
+<h2>Propósito</h2>
+<p>Un Playbook es un activo de conocimiento operativo que define cómo ejecutar un proceso completo de ingeniería, desde el inicio hasta el resultado final.</p>
+<p>Un Playbook no contiene solamente información técnica.</p>
+<p>Es una guía ejecutable que combina:</p>
+<ul>
+<li>Objetivos.</li>
+<li>Fases.</li>
+<li>Roles.</li>
+<li>Agentes.</li>
+<li>Skills necesarias.</li>
+<li>Herramientas.</li>
+<li>Decisiones.</li>
+<li>Validaciones.</li>
+<li>Resultados esperados.</li>
+</ul>
+<p>Su función es permitir que el orquestador pueda repetir procesos complejos de forma consistente.</p>
+<hr/>
+<h1>🌳 RAÍZ DE PLAYBOOK</h1>
+<pre><code>📚 PLAYBOOKS
+
+├── desarrollo-software/
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── saas/
+├── inteligencia-artificial/
+├── devops/
+├── seguridad/
+├── testing/
+├── migraciones/
+├── mantenimiento/
+└── operaciones/</code></pre>
+<hr/>
+<h1>TIPOS DE PLAYBOOK</h1>
+<h2>🏗️ Desarrollo de Software</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear aplicación web completa.</li>
+<li>Crear aplicación móvil.</li>
+<li>Crear SaaS.</li>
+<li>Crear API.</li>
+<li>Crear sistema empresarial.</li>
+</ul>
+<hr/>
+<h2>🏛️ Arquitectura</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Diseñar arquitectura distribuida.</li>
+<li>Diseñar microservicios.</li>
+<li>Diseñar sistemas escalables.</li>
+</ul>
+<hr/>
+<h2>🤖 Inteligencia Artificial</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear agente IA.</li>
+<li>Crear sistema RAG.</li>
+<li>Crear orquestador multiagente.</li>
+</ul>
+<hr/>
+<h2>🚀 DevOps</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Preparar infraestructura.</li>
+<li>Crear pipeline CI/CD.</li>
+<li>Desplegar producción.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR ÁREA</h1>
+<h1>Backend</h1>
+<pre><code>playbooks/backend/
+
+├── crear-api-rest
+├── crear-microservicio
+├── arquitectura-backend
+├── seguridad-api
+├── escalabilidad
+└── optimizacion</code></pre>
+<p>Lenguajes:</p>
+<pre><code>Python
+
+├── FastAPI
+├── Django
+└── Flask
+
+
+JavaScript / TypeScript
+
+├── Node.js
+├── Express
+└── NestJS
+
+
+Java
+
+├── Spring
+└── Spring Boot
+
+
+C#
+
+├── .NET
+└── ASP.NET
+
+
+Go
+
+├── Gin
+└── Fiber
+
+
+Rust
+
+├── Axum
+└── Actix
+
+
+PHP
+
+├── Laravel
+└── Symfony</code></pre>
+<hr/>
+<h1>Frontend</h1>
+<pre><code>playbooks/frontend/
+
+├── crear-web-app
+├── crear-dashboard
+├── crear-saas-ui
+├── diseño-componentes
+└── optimizacion</code></pre>
+<p>Lenguajes:</p>
+<pre><code>HTML
+
+CSS
+
+JavaScript
+
+TypeScript
+
+React
+
+Next.js
+
+Vue
+
+Angular
+
+Svelte</code></pre>
+<hr/>
+<h1>Mobile</h1>
+<pre><code>playbooks/mobile/
+
+├── crear-app-ios
+├── crear-app-android
+├── crear-app-multiplataforma
+└── publicar-aplicacion</code></pre>
+<p>Lenguajes:</p>
+<pre><code>Kotlin
+
+Swift
+
+Dart / Flutter
+
+Java Android
+
+React Native</code></pre>
+<hr/>
+<h1>Desktop</h1>
+<pre><code>playbooks/desktop/
+
+├── crear-software-escritorio
+├── arquitectura-desktop
+└── empaquetado</code></pre>
+<p>Lenguajes:</p>
+<pre><code>C++
+
+C#
+
+Java
+
+Python
+
+Electron</code></pre>
+<hr/>
+<h1>SaaS</h1>
+<pre><code>playbooks/saas/
+
+├── arquitectura-saas
+├── multi-tenancy
+├── pagos
+├── usuarios
+├── escalabilidad
+└── observabilidad</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE CADA PLAYBOOK</h1>
+<pre><code>PLAYBOOK-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── objetivo.md
+├── alcance.md
+├── requisitos.md
+├── arquitectura/
+├── fases/
+├── pasos/
+├── agentes/
+├── skills-requeridas/
+├── herramientas/
+├── decisiones/
+├── validaciones/
+├── ejemplos/
+├── resultados/
+├── versiones/
+└── changelog.md</code></pre>
+<hr/>
+<h1>ESTRUCTURA DE EJECUCIÓN</h1>
+<p>Cada Playbook debe contener:</p>
+<pre><code>Inicio
+
+↓
+
+Análisis
+
+↓
+
+Planificación
+
+↓
+
+Selección de Skills
+
+↓
+
+Asignación de Agentes
+
+↓
+
+Ejecución
+
+↓
+
+Validación
+
+↓
+
+Entrega
+
+↓
+
+Aprendizaje</code></pre>
+<hr/>
+<h1>NIVELES DE PLAYBOOK</h1>
+<h2>Nivel 1 — Básico</h2>
+<p>Procesos simples.</p>
+<p>Ejemplo:</p>
+<p>Crear una página web básica.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Código.</li>
+<li>Testing.</li>
+<li>Deploy.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Incluye:</p>
+<ul>
+<li>Múltiples tecnologías.</li>
+<li>Seguridad.</li>
+<li>Escalabilidad.</li>
+<li>Automatización.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Sistemas empresariales.</li>
+<li>Arquitecturas distribuidas.</li>
+<li>Optimización avanzada.</li>
+<li>Gobierno técnico.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Arquitecto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Diseño completo del ecosistema.</li>
+<li>Decisiones estratégicas.</li>
+<li>Multiagentes.</li>
+<li>Evolución continua.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  playbook
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+fases_relacionadas:
+
+skills_requeridas:
+
+lenguajes:
+
+frameworks:
+
+herramientas:
+
+dependencias:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Un Playbook aprobado debe tener:</p>
+<p>✅ Objetivo claro</p>
+<p>✅ Entrada definida</p>
+<p>✅ Salida definida</p>
+<p>✅ Pasos ordenados</p>
+<p>✅ Roles asignados</p>
+<p>✅ Skills necesarias</p>
+<p>✅ Herramientas necesarias</p>
+<p>✅ Código o ejemplos cuando aplique</p>
+<p>✅ Validaciones</p>
+<p>✅ Manejo de errores</p>
+<p>✅ Seguridad</p>
+<p>✅ Versionado</p>
+<p>✅ Auditoría</p>
+<hr/>
+<h1>REGISTRO DE AUDITORÍA</h1>
+<p>Cada ejecución debe guardar:</p>
+<pre><code>PLAYBOOK EJECUTADO:
+
+Nombre:
+
+Versión:
+
+Agente:
+
+Modelo:
+
+Fecha:
+
+Hora:
+
+Proyecto:
+
+Resultado:
+
+Errores:
+
+Mejoras detectadas:</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Usa:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Patrones.</li>
+<li>Decisiones.</li>
+</ul>
+<hr/>
+<h2>Backend Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Desarrollo.</li>
+<li>APIs.</li>
+<li>Bases de datos.</li>
+</ul>
+<hr/>
+<h2>Frontend Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>UI.</li>
+<li>Componentes.</li>
+<li>Experiencia.</li>
+</ul>
+<hr/>
+<h2>DevOps Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Infraestructura.</li>
+<li>Deploy.</li>
+<li>Automatización.</li>
+</ul>
+<hr/>
+<h2>Testing Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Validaciones.</li>
+<li>Pruebas.</li>
+<li>Calidad.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES MAESTRAS</h1>
+<p>Ejemplo:</p>
+<pre><code>FASE 01
+Idea
+
+↓
+
+Playbook:
+Análisis de producto
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Playbook:
+Diseño arquitectura SaaS
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Playbook:
+Construcción aplicación completa
+
+
+FASE 06
+Testing
+
+↓
+
+Playbook:
+Validación profesional
+
+
+FASE 08
+Deploy
+
+↓
+
+Playbook:
+Producción Cloud</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Creación
+
+↓
+
+Validación
+
+↓
+
+Aprobación
+
+↓
+
+Uso
+
+↓
+
+Medición
+
+↓
+
+Mejora
+
+↓
+
+Nueva versión</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Playbook puede generar:</p>
+<ul>
+<li>Proyectos completos.</li>
+<li>Planes de ejecución.</li>
+<li>Asignación de agentes.</li>
+<li>Flujos de trabajo.</li>
+<li>Documentación.</li>
+<li>Código.</li>
+<li>Reportes.</li>
+<li>Nuevas Skills.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una biblioteca de procesos repetibles donde el orquestador pueda ejecutar proyectos complejos siguiendo métodos probados.</p>
+<pre><code>Usuario
+
+↓
+
+Objetivo
+
+↓
+
+Seleccionar Playbook
+
+↓
+
+Cargar Skills
+
+↓
+
+Asignar Agentes
+
+↓
+
+Ejecutar
+
+↓
+
+Validar
+
+↓
+
+Aprender
+
+↓
+
+Mejorar Playbook</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 03 — 🍳 RECIPE</h1>
+<h2>Propósito</h2>
+<p>Una Recipe (receta técnica) es un activo de conocimiento diseñado para resolver una tarea concreta mediante una secuencia corta, clara y reutilizable de pasos técnicos.</p>
+<p>Una Recipe se encuentra entre una Skill y un Playbook:</p>
+<ul>
+<li>Una Skill enseña una capacidad.</li>
+<li>Un Playbook ejecuta un proceso completo.</li>
+<li>Una Recipe resuelve una implementación específica.</li>
+</ul>
+<p>Ejemplo:</p>
+<p>Skill: &quot;Conocimiento avanzado de autenticación JWT&quot;</p>
+<p>Recipe: &quot;Implementar autenticación JWT con FastAPI + PostgreSQL + React&quot;</p>
+<p>Playbook: &quot;Construir sistema completo SaaS con usuarios, pagos, seguridad y despliegue&quot;</p>
+<hr/>
+<h1>🌳 RAÍZ DE RECIPES</h1>
+<pre><code>🍳 RECIPES
+
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── databases/
+├── cloud/
+├── security/
+├── ai/
+├── automation/
+├── testing/
+└── integration/</code></pre>
+<hr/>
+<h1>TIPOS DE RECIPES</h1>
+<h2>Backend</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear API REST.</li>
+<li>Crear autenticación.</li>
+<li>Crear sistema de permisos.</li>
+<li>Conectar base de datos.</li>
+<li>Crear sistema de colas.</li>
+<li>Implementar caché.</li>
+<li>Crear microservicio.</li>
+</ul>
+<hr/>
+<h2>Frontend</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear formulario avanzado.</li>
+<li>Crear dashboard.</li>
+<li>Crear sistema de componentes.</li>
+<li>Crear diseño responsive.</li>
+<li>Integrar API.</li>
+<li>Crear autenticación visual.</li>
+</ul>
+<hr/>
+<h2>Mobile</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear pantalla.</li>
+<li>Implementar navegación.</li>
+<li>Crear notificaciones.</li>
+<li>Integrar cámara.</li>
+<li>Publicar aplicación.</li>
+</ul>
+<hr/>
+<h2>SaaS</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear usuarios.</li>
+<li>Crear multi-tenancy.</li>
+<li>Integrar pagos.</li>
+<li>Crear planes.</li>
+<li>Crear panel administrativo.</li>
+</ul>
+<hr/>
+<h2>Inteligencia Artificial</h2>
+<p>Ejemplos:</p>
+<ul>
+<li>Crear agente IA.</li>
+<li>Implementar RAG.</li>
+<li>Crear embeddings.</li>
+<li>Conectar modelo.</li>
+<li>Crear herramienta MCP.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR LENGUAJE</h1>
+<h1>Python</h1>
+<pre><code>recipes/python/
+
+├── api
+├── automation
+├── ai
+├── data
+├── backend
+└── security</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Flask</li>
+<li>PyTorch</li>
+<li>LangChain</li>
+<li>Pydantic</li>
+<li>SQLAlchemy</li>
+</ul>
+<hr/>
+<h1>JavaScript / TypeScript</h1>
+<pre><code>recipes/javascript/
+
+├── frontend
+├── backend
+├── fullstack
+└── automation</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>React</li>
+<li>Next.js</li>
+<li>Node.js</li>
+<li>Express</li>
+<li>NestJS</li>
+<li>Vue</li>
+<li>Angular</li>
+</ul>
+<hr/>
+<h1>Java</h1>
+<pre><code>recipes/java/
+
+├── spring
+├── api
+├── enterprise
+└── android</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>Spring Boot</li>
+<li>Hibernate</li>
+<li>Jakarta</li>
+</ul>
+<hr/>
+<h1>C#</h1>
+<pre><code>recipes/csharp/
+
+├── dotnet
+├── web-api
+├── desktop
+└── cloud</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>.NET</li>
+<li>ASP.NET</li>
+<li>MAUI</li>
+</ul>
+<hr/>
+<h1>Go</h1>
+<pre><code>recipes/go/
+
+├── api
+├── microservices
+├── cloud
+└── concurrency</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>Gin</li>
+<li>Fiber</li>
+<li>gRPC</li>
+</ul>
+<hr/>
+<h1>Rust</h1>
+<pre><code>recipes/rust/
+
+├── backend
+├── systems
+├── performance
+└── security</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>Tokio</li>
+<li>Axum</li>
+<li>Actix</li>
+</ul>
+<hr/>
+<h1>PHP</h1>
+<pre><code>recipes/php/
+
+├── web
+├── api
+└── ecommerce</code></pre>
+<p>Tecnologías:</p>
+<ul>
+<li>Laravel</li>
+<li>Symfony</li>
+</ul>
+<hr/>
+<h1>Mobile</h1>
+<p>Lenguajes:</p>
+<pre><code>Kotlin
+
+Swift
+
+Dart / Flutter
+
+Java Android
+
+React Native</code></pre>
+<hr/>
+<h1>Cloud / DevOps</h1>
+<p>Recipes:</p>
+<pre><code>docker-container
+
+kubernetes-deploy
+
+ci-cd-pipeline
+
+cloud-storage
+
+monitoring</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UNA RECIPE</h1>
+<pre><code>RECIPE-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── objetivo.md
+├── requisitos.md
+├── arquitectura.md
+├── pasos.md
+├── codigo/
+├── configuracion/
+├── comandos/
+├── pruebas/
+├── errores-comunes/
+├── seguridad/
+├── optimizacion/
+├── ejemplos/
+├── referencias/
+└── changelog.md</code></pre>
+<hr/>
+<h1>FORMATO DE UNA RECIPE</h1>
+<p>Cada Recipe debe contener:</p>
+<pre><code>Nombre
+
+↓
+
+Problema que resuelve
+
+↓
+
+Cuándo usarla
+
+↓
+
+Cuándo NO usarla
+
+↓
+
+Requisitos
+
+↓
+
+Dependencias
+
+↓
+
+Arquitectura
+
+↓
+
+Pasos de implementación
+
+↓
+
+Código
+
+↓
+
+Pruebas
+
+↓
+
+Validación
+
+↓
+
+Resultado esperado</code></pre>
+<hr/>
+<h1>NIVELES DE RECIPE</h1>
+<h2>Nivel 1 — Simple</h2>
+<p>Una tarea pequeña.</p>
+<p>Ejemplo:</p>
+<p>Crear endpoint básico.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Código.</li>
+<li>Configuración.</li>
+<li>Pruebas.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzada</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Seguridad.</li>
+<li>Optimización.</li>
+<li>Escalabilidad.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experta</h2>
+<p>Incluye:</p>
+<ul>
+<li>Casos reales.</li>
+<li>Diferentes tecnologías.</li>
+<li>Comparaciones.</li>
+<li>Trade-offs.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Arquitectónica</h2>
+<p>Incluye:</p>
+<ul>
+<li>Soluciones completas.</li>
+<li>Decisiones de diseño.</li>
+<li>Integración con sistemas grandes.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  recipe
+
+categoria:
+
+lenguaje:
+
+framework:
+
+nivel:
+
+version:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+skills_relacionadas:
+
+playbooks_relacionados:
+
+dependencias:
+
+estado:
+
+fuente:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Una Recipe aprobada debe tener:</p>
+<p>✅ Objetivo concreto</p>
+<p>✅ Pasos reproducibles</p>
+<p>✅ Código funcional</p>
+<p>✅ Dependencias claras</p>
+<p>✅ Ejemplos reales</p>
+<p>✅ Pruebas</p>
+<p>✅ Manejo de errores</p>
+<p>✅ Seguridad</p>
+<p>✅ Optimización</p>
+<p>✅ Compatibilidad declarada</p>
+<p>✅ Auditoría</p>
+<hr/>
+<h1>VALIDACIÓN DEL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Buscar Recipe
+
+↓
+
+Verificar versión
+
+↓
+
+Comprobar dependencias
+
+↓
+
+Evaluar compatibilidad
+
+↓
+
+Ejecutar
+
+↓
+
+Probar resultado
+
+↓
+
+Registrar aprendizaje</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Backend Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>APIs.</li>
+<li>Bases de datos.</li>
+<li>Servicios.</li>
+</ul>
+<h2>Frontend Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Componentes.</li>
+<li>Interfaces.</li>
+<li>Integraciones.</li>
+</ul>
+<h2>DevOps Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Instalación.</li>
+<li>Deploy.</li>
+<li>Automatización.</li>
+</ul>
+<h2>Security Agent</h2>
+<p>Usa:</p>
+<ul>
+<li>Configuraciones seguras.</li>
+<li>Validaciones.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 03
+Arquitectura
+
+↓
+
+Recipes:
+Diseñar arquitectura
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Recipes:
+Implementar funcionalidades
+
+
+FASE 06
+Testing
+
+↓
+
+Recipes:
+Crear pruebas
+
+
+FASE 08
+Deploy
+
+↓
+
+Recipes:
+Publicar sistema</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Creación
+
+↓
+
+Prueba
+
+↓
+
+Validación
+
+↓
+
+Registro
+
+↓
+
+Uso
+
+↓
+
+Optimización
+
+↓
+
+Nueva versión</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Una Recipe puede generar:</p>
+<ul>
+<li>Código funcional.</li>
+<li>Configuraciones.</li>
+<li>Scripts.</li>
+<li>Componentes.</li>
+<li>Pruebas.</li>
+<li>Documentación.</li>
+<li>Nuevas Skills.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una colección de soluciones técnicas comprobadas que permitan al orquestador implementar funcionalidades rápidamente usando conocimiento validado.</p>
+<pre><code>Necesidad
+
+↓
+
+Buscar Recipe
+
+↓
+
+Adaptar
+
+↓
+
+Ejecutar
+
+↓
+
+Validar
+
+↓
+
+Guardar mejora</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 04 — 📑 TEMPLATE</h1>
+<h2>Propósito</h2>
+<p>Un Template (plantilla) es un activo de conocimiento diseñado para proporcionar una estructura base reutilizable que permite crear rápidamente nuevos componentes, documentos, proyectos, configuraciones o sistemas manteniendo estándares definidos.</p>
+<p>Un Template evita empezar desde cero.</p>
+<p>Su función es entregar una base organizada que los agentes puedan completar, adaptar y evolucionar.</p>
+<hr/>
+<h1>Diferencia entre Template y otros activos</h1>
+<pre><code>Skill
+
+↓
+
+Enseña cómo hacer algo
+
+
+Recipe
+
+↓
+
+Explica cómo implementar algo concreto
+
+
+Template
+
+↓
+
+Entrega una estructura lista para completar
+
+
+Boilerplate
+
+↓
+
+Entrega código funcional inicial
+
+
+Blueprint
+
+↓
+
+Entrega diseño completo de un sistema</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE TEMPLATES</h1>
+<pre><code>📑 TEMPLATES
+
+├── proyectos/
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── saas/
+├── bases-datos/
+├── api/
+├── documentacion/
+├── seguridad/
+├── testing/
+├── devops/
+├── ia/
+└── agentes/</code></pre>
+<hr/>
+<h1>TIPOS DE TEMPLATE</h1>
+<h1>🏗️ Templates de Proyecto</h1>
+<p>Usados para iniciar proyectos completos.</p>
+<p>Ejemplos:</p>
+<ul>
+<li>Aplicación Web.</li>
+<li>Aplicación móvil.</li>
+<li>SaaS.</li>
+<li>Software empresarial.</li>
+<li>Plataforma IA.</li>
+</ul>
+<hr/>
+<h1>🏛️ Templates de Arquitectura</h1>
+<p>Estructuras para diseñar sistemas.</p>
+<p>Ejemplos:</p>
+<ul>
+<li>Clean Architecture.</li>
+<li>Microservicios.</li>
+<li>Monolito modular.</li>
+<li>Event Driven.</li>
+<li>Hexagonal.</li>
+</ul>
+<hr/>
+<h1>⚙️ Templates Backend</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>API REST.</li>
+<li>API GraphQL.</li>
+<li>Servicio backend.</li>
+<li>Microservicio.</li>
+<li>Sistema autenticación.</li>
+</ul>
+<hr/>
+<h1>🎨 Templates Frontend</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Dashboard.</li>
+<li>Landing page.</li>
+<li>SaaS UI.</li>
+<li>Design System.</li>
+<li>Component Library.</li>
+</ul>
+<hr/>
+<h1>📱 Templates Mobile</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Aplicación Android.</li>
+<li>Aplicación iOS.</li>
+<li>Flutter App.</li>
+<li>React Native App.</li>
+</ul>
+<hr/>
+<h1>☁️ Templates SaaS</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Multi-tenancy.</li>
+<li>Usuarios.</li>
+<li>Roles.</li>
+<li>Suscripciones.</li>
+<li>Pagos.</li>
+<li>Panel administrativo.</li>
+</ul>
+<hr/>
+<h1>🤖 Templates IA</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Agente IA.</li>
+<li>Sistema RAG.</li>
+<li>Orquestador.</li>
+<li>Herramienta MCP.</li>
+<li>Memoria IA.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR LENGUAJE</h1>
+<h1>Python</h1>
+<pre><code>templates/python/
+
+├── fastapi-project
+├── django-project
+├── ai-agent
+├── automation
+└── data-pipeline</code></pre>
+<p>Uso:</p>
+<ul>
+<li>Backend.</li>
+<li>IA.</li>
+<li>Automatización.</li>
+<li>Datos.</li>
+</ul>
+<hr/>
+<h1>JavaScript / TypeScript</h1>
+<pre><code>templates/javascript/
+
+├── react-app
+├── nextjs-app
+├── node-api
+├── nest-api
+└── fullstack</code></pre>
+<p>Uso:</p>
+<ul>
+<li>Web.</li>
+<li>SaaS.</li>
+<li>Backend.</li>
+<li>Frontend.</li>
+</ul>
+<hr/>
+<h1>Java</h1>
+<pre><code>templates/java/
+
+├── spring-api
+├── enterprise-app
+└── android</code></pre>
+<hr/>
+<h1>C#</h1>
+<pre><code>templates/csharp/
+
+├── aspnet-api
+├── blazor-app
+├── desktop
+└── maui</code></pre>
+<hr/>
+<h1>Go</h1>
+<pre><code>templates/go/
+
+├── api-service
+├── microservice
+└── cloud-service</code></pre>
+<hr/>
+<h1>Rust</h1>
+<pre><code>templates/rust/
+
+├── backend-service
+├── cli-tool
+└── systems</code></pre>
+<hr/>
+<h1>PHP</h1>
+<pre><code>templates/php/
+
+├── laravel-app
+├── symfony-api
+└── cms</code></pre>
+<hr/>
+<h1>Mobile</h1>
+<pre><code>templates/mobile/
+
+├── Kotlin Android
+
+├── Swift iOS
+
+├── Flutter
+
+└── React Native</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN TEMPLATE</h1>
+<pre><code>TEMPLATE-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── estructura/
+├── archivos-base/
+├── codigo-inicial/
+├── configuracion/
+├── variables/
+├── instrucciones/
+├── ejemplos/
+├── validacion/
+├── versiones/
+└── changelog.md</code></pre>
+<hr/>
+<h1>COMPONENTES OBLIGATORIOS</h1>
+<p>Cada Template debe definir:</p>
+<h2>1. Propósito</h2>
+<p>Qué problema resuelve.</p>
+<hr/>
+<h2>2. Estructura</h2>
+<p>Qué carpetas y archivos crea.</p>
+<hr/>
+<h2>3. Variables configurables</h2>
+<p>Ejemplo:</p>
+<pre><code>nombre_proyecto
+
+base_datos
+
+framework
+
+cloud_provider
+
+idioma</code></pre>
+<hr/>
+<h2>4. Dependencias</h2>
+<p>Debe declarar:</p>
+<ul>
+<li>Librerías.</li>
+<li>Frameworks.</li>
+<li>Herramientas.</li>
+<li>Versiones.</li>
+</ul>
+<hr/>
+<h2>5. Resultado esperado</h2>
+<p>Debe indicar qué produce.</p>
+<p>Ejemplo:</p>
+<pre><code>Proyecto funcional
+
+↓
+
+Código generado
+
+↓
+
+Listo para desarrollo</code></pre>
+<hr/>
+<h1>NIVELES DE TEMPLATE</h1>
+<h2>Nivel 1 — Básico</h2>
+<p>Estructura simple.</p>
+<p>Ejemplo:</p>
+<p>Página HTML.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Código inicial.</li>
+<li>Configuración.</li>
+<li>Documentación.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Seguridad.</li>
+<li>Testing.</li>
+<li>CI/CD.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Sistemas empresariales.</li>
+<li>Escalabilidad.</li>
+<li>Automatización.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Arquitectónico</h2>
+<p>Incluye:</p>
+<ul>
+<li>Ecosistema completo.</li>
+<li>Multiagentes.</li>
+<li>Gobierno.</li>
+<li>Evolución.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  template
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+lenguajes:
+
+frameworks:
+
+dependencias:
+
+archivos_generados:
+
+compatibilidad:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Un Template aprobado debe tener:</p>
+<p>✅ Estructura clara</p>
+<p>✅ Código válido</p>
+<p>✅ Variables documentadas</p>
+<p>✅ Compatibilidad definida</p>
+<p>✅ Versionado</p>
+<p>✅ Ejemplos</p>
+<p>✅ Validación automática</p>
+<p>✅ Seguridad básica</p>
+<p>✅ Documentación</p>
+<hr/>
+<h1>USO DEL TEMPLATE POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Solicitud usuario
+
+↓
+
+Identificar necesidad
+
+↓
+
+Buscar Template
+
+↓
+
+Seleccionar versión
+
+↓
+
+Configurar variables
+
+↓
+
+Generar estructura
+
+↓
+
+Asignar agentes
+
+↓
+
+Validar resultado</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Usa:</p>
+<ul>
+<li>Templates de arquitectura.</li>
+</ul>
+<h2>Backend</h2>
+<p>Usa:</p>
+<ul>
+<li>Templates API.</li>
+</ul>
+<h2>Frontend</h2>
+<p>Usa:</p>
+<ul>
+<li>Templates UI.</li>
+</ul>
+<h2>DevOps</h2>
+<p>Usa:</p>
+<ul>
+<li>Templates infraestructura.</li>
+</ul>
+<h2>IA</h2>
+<p>Usa:</p>
+<ul>
+<li>Templates agentes y memoria.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 02
+Análisis
+
+↓
+
+Template requisitos
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Template arquitectura
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Template proyecto
+
+
+FASE 08
+Deploy
+
+↓
+
+Template infraestructura</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Crear
+
+↓
+
+Probar
+
+↓
+
+Validar
+
+↓
+
+Publicar
+
+↓
+
+Usar
+
+↓
+
+Mejorar
+
+↓
+
+Versionar</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Template puede generar:</p>
+<ul>
+<li>Carpetas.</li>
+<li>Archivos.</li>
+<li>Código base.</li>
+<li>Configuraciones.</li>
+<li>Documentación.</li>
+<li>Proyectos iniciales.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear estructuras inteligentes reutilizables que permitan al orquestador iniciar proyectos profesionales con estándares definidos.</p>
+<pre><code>Idea
+
+↓
+
+Template adecuado
+
+↓
+
+Proyecto generado
+
+↓
+
+Agentes trabajan
+
+↓
+
+Sistema validado
+
+↓
+
+Nueva versión</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 05 — 🏗️ BOILERPLATE</h1>
+<h2>Propósito</h2>
+<p>Un Boilerplate es un activo de conocimiento que contiene una base de proyecto funcional, ejecutable y preparada para ser extendida.</p>
+<p>A diferencia de un Template, que define una estructura, un Boilerplate incluye código real, configuraciones y componentes iniciales funcionando.</p>
+<p>Su objetivo es reducir drásticamente el tiempo de creación de nuevos proyectos mediante una base profesional validada.</p>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Enseña una capacidad
+
+
+Recipe
+
+↓
+
+Explica una solución concreta
+
+
+Template
+
+↓
+
+Entrega una estructura base
+
+
+Boilerplate
+
+↓
+
+Entrega un proyecto funcional inicial
+
+
+Blueprint
+
+↓
+
+Entrega el diseño completo del sistema</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE BOILERPLATES</h1>
+<pre><code>🏗️ BOILERPLATES
+
+├── web/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── saas/
+├── ai/
+├── api/
+├── ecommerce/
+├── enterprise/
+├── devops/
+├── cloud/
+└── fullstack/</code></pre>
+<hr/>
+<h1>TIPOS DE BOILERPLATE</h1>
+<h1>🌐 Web Applications</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Landing page profesional.</li>
+<li>Dashboard.</li>
+<li>Portal web.</li>
+<li>Aplicación completa.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Frontend.</li>
+<li>Backend.</li>
+<li>Base de datos.</li>
+<li>Autenticación.</li>
+<li>Deploy.</li>
+</ul>
+<hr/>
+<h1>⚙️ Backend</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>API REST.</li>
+<li>API GraphQL.</li>
+<li>Microservicio.</li>
+<li>Backend SaaS.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Código funcional.</li>
+<li>Configuración.</li>
+<li>Seguridad.</li>
+<li>Tests.</li>
+<li>Documentación.</li>
+</ul>
+<hr/>
+<h1>🎨 Frontend</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>React App.</li>
+<li>Next.js App.</li>
+<li>Vue Application.</li>
+<li>Angular Application.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Componentes.</li>
+<li>Routing.</li>
+<li>Estado.</li>
+<li>Diseño.</li>
+<li>Integraciones.</li>
+</ul>
+<hr/>
+<h1>📱 Mobile</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Android App.</li>
+<li>iOS App.</li>
+<li>Flutter App.</li>
+<li>React Native App.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Navegación.</li>
+<li>Pantallas.</li>
+<li>Servicios.</li>
+<li>Configuración producción.</li>
+</ul>
+<hr/>
+<h1>🏢 Software Empresarial</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>ERP.</li>
+<li>CRM.</li>
+<li>Sistemas internos.</li>
+<li>Plataformas administrativas.</li>
+</ul>
+<hr/>
+<h1>🚀 SaaS</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>SaaS Starter.</li>
+<li>Multi-tenant SaaS.</li>
+<li>Plataforma con usuarios y pagos.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Registro.</li>
+<li>Login.</li>
+<li>Roles.</li>
+<li>Suscripciones.</li>
+<li>Panel usuario.</li>
+<li>Panel administrador.</li>
+</ul>
+<hr/>
+<h1>🤖 IA</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Agente IA.</li>
+<li>Sistema RAG.</li>
+<li>Chatbot.</li>
+<li>Orquestador.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Modelos.</li>
+<li>Memoria.</li>
+<li>Herramientas.</li>
+<li>Prompts/configuración.</li>
+<li>Evaluación.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR LENGUAJE</h1>
+<h1>Python</h1>
+<pre><code>boilerplates/python/
+
+├── fastapi-production
+├── django-saas
+├── ai-agent
+├── data-platform
+└── automation-system</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>FastAPI</li>
+<li>Django</li>
+<li>Pydantic</li>
+<li>SQLAlchemy</li>
+<li>Pytest</li>
+</ul>
+<hr/>
+<h1>JavaScript / TypeScript</h1>
+<pre><code>boilerplates/javascript/
+
+├── nextjs-fullstack
+├── react-dashboard
+├── node-api
+├── nestjs-service
+└── enterprise-app</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>React</li>
+<li>Next.js</li>
+<li>Node.js</li>
+<li>TypeScript</li>
+</ul>
+<hr/>
+<h1>Java</h1>
+<pre><code>boilerplates/java/
+
+├── spring-api
+├── enterprise-platform
+└── android-app</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>Spring Boot</li>
+<li>Hibernate</li>
+<li>Maven/Gradle</li>
+</ul>
+<hr/>
+<h1>C#</h1>
+<pre><code>boilerplates/csharp/
+
+├── aspnet-platform
+├── enterprise-api
+├── desktop-app
+└── maui-mobile</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>.NET</li>
+<li>ASP.NET</li>
+<li>Entity Framework</li>
+</ul>
+<hr/>
+<h1>Go</h1>
+<pre><code>boilerplates/go/
+
+├── microservice
+├── api-platform
+└── cloud-native</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>Gin</li>
+<li>Fiber</li>
+<li>gRPC</li>
+</ul>
+<hr/>
+<h1>Rust</h1>
+<pre><code>boilerplates/rust/
+
+├── high-performance-api
+├── systems-tool
+└── secure-service</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>Tokio</li>
+<li>Axum</li>
+<li>Actix</li>
+</ul>
+<hr/>
+<h1>PHP</h1>
+<pre><code>boilerplates/php/
+
+├── laravel-saas
+├── ecommerce
+└── cms-platform</code></pre>
+<p>Incluye:</p>
+<ul>
+<li>Laravel</li>
+<li>Symfony</li>
+</ul>
+<hr/>
+<h1>Frontend</h1>
+<pre><code>boilerplates/frontend/
+
+├── React
+├── Vue
+├── Angular
+├── Svelte
+└── Next.js</code></pre>
+<hr/>
+<h1>Mobile</h1>
+<pre><code>boilerplates/mobile/
+
+├── Kotlin Android
+
+├── Swift iOS
+
+├── Flutter
+
+└── React Native</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN BOILERPLATE</h1>
+<pre><code>BOILERPLATE-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── src/
+├── backend/
+├── frontend/
+├── mobile/
+├── database/
+├── config/
+├── docker/
+├── tests/
+├── documentation/
+├── deployment/
+├── security/
+├── examples/
+├── scripts/
+├── versions/
+└── changelog.md</code></pre>
+<hr/>
+<h1>COMPONENTES OBLIGATORIOS</h1>
+<p>Cada Boilerplate debe incluir:</p>
+<h2>Código funcional</h2>
+<p>Debe poder ejecutarse.</p>
+<hr/>
+<h2>Configuración</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Variables de entorno.</li>
+<li>Dependencias.</li>
+<li>Servicios.</li>
+</ul>
+<hr/>
+<h2>Arquitectura</h2>
+<p>Debe explicar:</p>
+<ul>
+<li>Estructura.</li>
+<li>Flujo.</li>
+<li>Componentes.</li>
+</ul>
+<hr/>
+<h2>Seguridad</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Autenticación.</li>
+<li>Validaciones.</li>
+<li>Protección básica.</li>
+</ul>
+<hr/>
+<h2>Testing</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Tests unitarios.</li>
+<li>Tests integración.</li>
+</ul>
+<hr/>
+<h2>Documentación</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Instalación.</li>
+<li>Uso.</li>
+<li>Extensión.</li>
+</ul>
+<hr/>
+<h1>NIVELES DE BOILERPLATE</h1>
+<h2>Nivel 1 — Básico</h2>
+<p>Proyecto simple funcionando.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Tests.</li>
+<li>Configuración.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Incluye:</p>
+<ul>
+<li>Seguridad.</li>
+<li>CI/CD.</li>
+<li>Docker.</li>
+<li>Escalabilidad.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Alta disponibilidad.</li>
+<li>Microservicios.</li>
+<li>Observabilidad.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Plataforma</h2>
+<p>Incluye:</p>
+<ul>
+<li>Ecosistema completo.</li>
+<li>Multiagentes.</li>
+<li>Automatización.</li>
+<li>Evolución automática.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  boilerplate
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+lenguajes:
+
+frameworks:
+
+arquitectura:
+
+base_datos:
+
+infraestructura:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>CONTROL DE CALIDAD</h1>
+<p>Un Boilerplate aprobado debe tener:</p>
+<p>✅ Código ejecutable</p>
+<p>✅ Instalación probada</p>
+<p>✅ Dependencias verificadas</p>
+<p>✅ Seguridad revisada</p>
+<p>✅ Tests funcionando</p>
+<p>✅ Documentación completa</p>
+<p>✅ Versionado</p>
+<p>✅ Auditoría</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Solicitud usuario
+
+↓
+
+Analizar tipo de proyecto
+
+↓
+
+Buscar Boilerplate
+
+↓
+
+Seleccionar arquitectura
+
+↓
+
+Clonar base
+
+↓
+
+Personalizar
+
+↓
+
+Asignar agentes
+
+↓
+
+Construir
+
+↓
+
+Validar</code></pre>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 03
+Arquitectura
+
+↓
+
+Selecciona estructura
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Usa Boilerplate
+
+
+FASE 06
+Testing
+
+↓
+
+Valida código
+
+
+FASE 08
+Deploy
+
+↓
+
+Publica sistema</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Creación
+
+↓
+
+Prueba
+
+↓
+
+Validación
+
+↓
+
+Producción
+
+↓
+
+Uso
+
+↓
+
+Mejora
+
+↓
+
+Nueva versión</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Boilerplate puede generar:</p>
+<ul>
+<li>Proyecto inicial.</li>
+<li>Código base.</li>
+<li>Infraestructura.</li>
+<li>Documentación.</li>
+<li>Configuraciones.</li>
+<li>Pipelines.</li>
+<li>Nuevos componentes.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear bases profesionales listas para que los agentes puedan construir productos completos sin empezar desde cero.</p>
+<pre><code>Idea
+
+↓
+
+Seleccionar Boilerplate
+
+↓
+
+Personalizar
+
+↓
+
+Desarrollar
+
+↓
+
+Probar
+
+↓
+
+Desplegar
+
+↓
+
+Evolucionar</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 06 — 🧩 BLUEPRINT</h1>
+<h2>Propósito</h2>
+<p>Un Blueprint es un diseño maestro de un sistema antes de su construcción.</p>
+<p>Define la visión completa de cómo debe crearse un producto, aplicación, plataforma o infraestructura.</p>
+<p>Un Blueprint no es código terminado.</p>
+<p>Es el plano técnico que permite a los agentes, arquitectos y desarrolladores construir un sistema complejo siguiendo una arquitectura definida.</p>
+<p>Su función es reducir errores de diseño, anticipar problemas y establecer una ruta clara de implementación.</p>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Enseña una capacidad
+
+
+Recipe
+
+↓
+
+Resuelve una tarea específica
+
+
+Template
+
+↓
+
+Entrega una estructura base
+
+
+Boilerplate
+
+↓
+
+Entrega código inicial funcionando
+
+
+Blueprint
+
+↓
+
+Define el diseño completo del sistema</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE BLUEPRINTS</h1>
+<pre><code>🧩 BLUEPRINTS
+
+├── software/
+├── web/
+├── mobile/
+├── desktop/
+├── saas/
+├── enterprise/
+├── cloud/
+├── ai/
+├── data/
+├── security/
+├── infrastructure/
+└── multi-agent/</code></pre>
+<hr/>
+<h1>TIPOS DE BLUEPRINT</h1>
+<h1>🌐 Blueprint Web</h1>
+<p>Diseña:</p>
+<ul>
+<li>Aplicaciones web.</li>
+<li>Portales.</li>
+<li>Plataformas online.</li>
+<li>Sistemas SaaS.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Frontend.</li>
+<li>Backend.</li>
+<li>Base de datos.</li>
+<li>APIs.</li>
+<li>Seguridad.</li>
+<li>Deploy.</li>
+</ul>
+<hr/>
+<h1>📱 Blueprint Mobile</h1>
+<p>Diseña:</p>
+<ul>
+<li>Aplicaciones Android.</li>
+<li>Aplicaciones iOS.</li>
+<li>Aplicaciones multiplataforma.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura móvil.</li>
+<li>Navegación.</li>
+<li>Servicios.</li>
+<li>Almacenamiento.</li>
+<li>Publicación.</li>
+</ul>
+<hr/>
+<h1>🖥️ Blueprint Desktop</h1>
+<p>Diseña:</p>
+<ul>
+<li>Software empresarial.</li>
+<li>Herramientas profesionales.</li>
+<li>Aplicaciones locales.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Interfaces.</li>
+<li>Comunicación.</li>
+<li>Instalación.</li>
+</ul>
+<hr/>
+<h1>🚀 Blueprint SaaS</h1>
+<p>Diseña:</p>
+<ul>
+<li>Plataformas multiusuario.</li>
+<li>Sistemas con suscripción.</li>
+<li>Productos digitales.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Usuarios.</li>
+<li>Roles.</li>
+<li>Pagos.</li>
+<li>Multi-tenancy.</li>
+<li>Escalabilidad.</li>
+</ul>
+<hr/>
+<h1>🤖 Blueprint IA</h1>
+<p>Diseña:</p>
+<ul>
+<li>Agentes inteligentes.</li>
+<li>Sistemas RAG.</li>
+<li>Orquestadores.</li>
+<li>Automatizaciones.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Modelos.</li>
+<li>Memoria.</li>
+<li>Herramientas.</li>
+<li>Evaluación.</li>
+<li>Gobernanza.</li>
+</ul>
+<hr/>
+<h1>🏢 Blueprint Enterprise</h1>
+<p>Diseña:</p>
+<ul>
+<li>Sistemas empresariales.</li>
+<li>Plataformas críticas.</li>
+<li>Ecosistemas grandes.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Seguridad.</li>
+<li>Alta disponibilidad.</li>
+<li>Integraciones.</li>
+<li>Gobierno.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR DOMINIO</h1>
+<h2>Arquitectura</h2>
+<pre><code>blueprints/architecture/
+
+├── clean-architecture
+├── microservices
+├── event-driven
+├── hexagonal
+├── modular-monolith
+└── distributed-system</code></pre>
+<hr/>
+<h2>Backend</h2>
+<pre><code>blueprints/backend/
+
+├── api-platform
+├── service-oriented
+├── enterprise-backend
+└── high-performance</code></pre>
+<hr/>
+<h2>Frontend</h2>
+<pre><code>blueprints/frontend/
+
+├── design-system
+├── component-platform
+├── web-application
+└── dashboard-system</code></pre>
+<hr/>
+<h2>Datos</h2>
+<pre><code>blueprints/data/
+
+├── database-design
+├── data-lake
+├── analytics-platform
+└── vector-database</code></pre>
+<hr/>
+<h2>Cloud</h2>
+<pre><code>blueprints/cloud/
+
+├── aws
+├── azure
+├── google-cloud
+├── cloudflare
+└── hybrid-cloud</code></pre>
+<hr/>
+<h2>Multiagente</h2>
+<pre><code>blueprints/ai-agents/
+
+├── orchestrator
+├── agent-team
+├── memory-system
+├── tool-system
+└── evaluation-system</code></pre>
+<hr/>
+<h1>LENGUAJES APLICABLES</h1>
+<p>Un Blueprint debe declarar los lenguajes posibles.</p>
+<h2>Backend</h2>
+<pre><code>Python
+
+JavaScript / TypeScript
+
+Java
+
+C#
+
+Go
+
+Rust
+
+PHP
+
+Ruby
+
+Kotlin</code></pre>
+<hr/>
+<h2>Frontend</h2>
+<pre><code>HTML
+
+CSS
+
+JavaScript
+
+TypeScript
+
+React
+
+Vue
+
+Angular
+
+Svelte</code></pre>
+<hr/>
+<h2>Mobile</h2>
+<pre><code>Kotlin
+
+Swift
+
+Dart
+
+Java
+
+React Native</code></pre>
+<hr/>
+<h2>Sistemas</h2>
+<pre><code>C
+
+C++
+
+Rust
+
+Go</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN BLUEPRINT</h1>
+<pre><code>BLUEPRINT-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── vision.md
+├── objetivos.md
+├── requisitos/
+├── arquitectura/
+├── diagramas/
+├── componentes/
+├── tecnologias/
+├── decisiones/
+├── seguridad/
+├── datos/
+├── integraciones/
+├── agentes/
+├── fases/
+├── riesgos/
+├── costos/
+├── roadmap/
+├── validaciones/
+├── versiones/
+└── changelog.md</code></pre>
+<hr/>
+<h1>COMPONENTES OBLIGATORIOS</h1>
+<h2>1. Visión del sistema</h2>
+<p>Define:</p>
+<ul>
+<li>Qué se construye.</li>
+<li>Para quién.</li>
+<li>Qué problema resuelve.</li>
+</ul>
+<hr/>
+<h2>2. Arquitectura global</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Capas.</li>
+<li>Módulos.</li>
+<li>Comunicación.</li>
+<li>Dependencias.</li>
+</ul>
+<hr/>
+<h2>3. Componentes</h2>
+<p>Debe definir:</p>
+<ul>
+<li>Backend.</li>
+<li>Frontend.</li>
+<li>Datos.</li>
+<li>Infraestructura.</li>
+<li>Seguridad.</li>
+</ul>
+<hr/>
+<h2>4. Diagramas</h2>
+<p>Debe contener:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Flujo.</li>
+<li>Secuencia.</li>
+<li>Estados.</li>
+<li>Dependencias.</li>
+</ul>
+<hr/>
+<h2>5. Decisiones técnicas</h2>
+<p>Debe registrar:</p>
+<ul>
+<li>Alternativas.</li>
+<li>Motivos.</li>
+<li>Riesgos.</li>
+</ul>
+<hr/>
+<h1>NIVELES DE BLUEPRINT</h1>
+<h2>Nivel 1 — Simple</h2>
+<p>Diseño básico.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Componentes.</li>
+<li>Tecnologías.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Incluye:</p>
+<ul>
+<li>Escalabilidad.</li>
+<li>Seguridad.</li>
+<li>Integraciones.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Sistemas distribuidos.</li>
+<li>Alta disponibilidad.</li>
+<li>Optimización.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Arquitecto Supremo</h2>
+<p>Incluye:</p>
+<ul>
+<li>Ecosistema completo.</li>
+<li>Evolución.</li>
+<li>Gobierno.</li>
+<li>Multiagentes.</li>
+<li>Automatización.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  blueprint
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+arquitectura:
+
+dominios:
+
+lenguajes:
+
+frameworks:
+
+infraestructura:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+riesgos:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>CONTROL DE CALIDAD</h1>
+<p>Un Blueprint aprobado debe tener:</p>
+<p>✅ Objetivos definidos</p>
+<p>✅ Arquitectura completa</p>
+<p>✅ Diagramas</p>
+<p>✅ Tecnologías justificadas</p>
+<p>✅ Riesgos identificados</p>
+<p>✅ Seguridad considerada</p>
+<p>✅ Escalabilidad evaluada</p>
+<p>✅ Validación arquitectónica</p>
+<p>✅ Historial de cambios</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Nueva idea
+
+↓
+
+Analizar requisitos
+
+↓
+
+Seleccionar Blueprint
+
+↓
+
+Adaptar arquitectura
+
+↓
+
+Asignar agentes
+
+↓
+
+Crear plan
+
+↓
+
+Construir sistema
+
+↓
+
+Validar</code></pre>
+<hr/>
+<h1>RELACIÓN CON LAS FASES MAESTRAS</h1>
+<pre><code>FASE 01
+Idea
+
+↓
+
+Blueprint de producto
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Blueprint técnico
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Blueprint guía construcción
+
+
+FASE 08
+Deploy
+
+↓
+
+Blueprint infraestructura</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Diseñar
+
+↓
+
+Revisar
+
+↓
+
+Aprobar
+
+↓
+
+Construir
+
+↓
+
+Medir
+
+↓
+
+Actualizar
+
+↓
+
+Nueva versión</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Blueprint genera:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Diagramas.</li>
+<li>Planes técnicos.</li>
+<li>Decisiones.</li>
+<li>Roadmaps.</li>
+<li>Especificaciones.</li>
+<li>Guías para agentes.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear planos maestros que permitan al orquestador diseñar sistemas complejos antes de escribir código.</p>
+<pre><code>Idea
+
+↓
+
+Blueprint
+
+↓
+
+Arquitectura
+
+↓
+
+Agentes
+
+↓
+
+Código
+
+↓
+
+Producto
+
+↓
+
+Evolución</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 07 — 💡 BEST PRACTICES</h1>
+<h2>Propósito</h2>
+<p>Una Best Practice (buena práctica) es un activo de conocimiento que contiene estándares, reglas y métodos comprobados para construir software de alta calidad.</p>
+<p>Su objetivo es enseñar al orquestador y a los agentes <strong>cómo tomar mejores decisiones técnicas</strong>, evitando errores comunes y aumentando la calidad, seguridad, mantenimiento y escalabilidad del sistema.</p>
+<p>Una Best Practice no es una implementación concreta.</p>
+<p>Es una regla o principio que puede aplicarse en múltiples proyectos, lenguajes y arquitecturas.</p>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Capacidad técnica
+
+
+Recipe
+
+↓
+
+Implementación específica
+
+
+Template
+
+↓
+
+Estructura reutilizable
+
+
+Boilerplate
+
+↓
+
+Código inicial funcional
+
+
+Blueprint
+
+↓
+
+Diseño completo
+
+
+Best Practice
+
+↓
+
+Regla de calidad y decisión técnica</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE BEST PRACTICES</h1>
+<pre><code>💡 BEST-PRACTICES
+
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── bases-datos/
+├── seguridad/
+├── testing/
+├── devops/
+├── cloud/
+├── inteligencia-artificial/
+├── codigo/
+└── gestion-proyectos/</code></pre>
+<hr/>
+<h1>TIPOS DE BEST PRACTICES</h1>
+<h1>🏛️ Arquitectura</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Separación de responsabilidades.</li>
+<li>Arquitectura modular.</li>
+<li>Bajo acoplamiento.</li>
+<li>Alta cohesión.</li>
+<li>Diseño orientado a dominio.</li>
+<li>Documentación arquitectónica.</li>
+<li>Decisiones ADR.</li>
+</ul>
+<p>Aplica a:</p>
+<p>✅ Web</p>
+<p>✅ App</p>
+<p>✅ Software</p>
+<p>✅ SaaS</p>
+<hr/>
+<h1>⚙️ Backend</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Validación de entradas.</li>
+<li>Manejo correcto de errores.</li>
+<li>APIs versionadas.</li>
+<li>Seguridad por defecto.</li>
+<li>Logging estructurado.</li>
+<li>Código mantenible.</li>
+<li>Control de dependencias.</li>
+</ul>
+<p>Lenguajes:</p>
+<pre><code>Python
+
+JavaScript / TypeScript
+
+Java
+
+C#
+
+Go
+
+Rust
+
+PHP
+
+Ruby</code></pre>
+<hr/>
+<h1>🎨 Frontend</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Componentes reutilizables.</li>
+<li>Diseño responsive.</li>
+<li>Separación lógica/UI.</li>
+<li>Gestión correcta del estado.</li>
+<li>Optimización de rendimiento.</li>
+<li>Accesibilidad.</li>
+<li>Diseño consistente.</li>
+</ul>
+<p>Lenguajes:</p>
+<pre><code>HTML
+
+CSS
+
+JavaScript
+
+TypeScript
+
+React
+
+Vue
+
+Angular
+
+Svelte</code></pre>
+<hr/>
+<h1>📱 Mobile</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Arquitectura limpia.</li>
+<li>Manejo de ciclo de vida.</li>
+<li>Optimización batería.</li>
+<li>Seguridad local.</li>
+<li>Diseño adaptativo.</li>
+</ul>
+<p>Lenguajes:</p>
+<pre><code>Kotlin
+
+Swift
+
+Dart
+
+Java
+
+React Native</code></pre>
+<hr/>
+<h1>🗄️ Bases de Datos</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Modelado correcto.</li>
+<li>Normalización cuando aplica.</li>
+<li>Índices optimizados.</li>
+<li>Migraciones controladas.</li>
+<li>Backup.</li>
+<li>Seguridad de datos.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>PostgreSQL
+
+MySQL
+
+MongoDB
+
+Redis
+
+SQLite
+
+Vector Databases</code></pre>
+<hr/>
+<h1>🔐 Seguridad</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Principio de mínimo privilegio.</li>
+<li>Gestión segura de secretos.</li>
+<li>Cifrado.</li>
+<li>Auditorías.</li>
+<li>Validaciones.</li>
+<li>Protección contra ataques.</li>
+</ul>
+<p>Incluye:</p>
+<pre><code>OWASP
+
+OAuth
+
+JWT
+
+HTTPS
+
+Zero Trust</code></pre>
+<hr/>
+<h1>🧪 Testing</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Pruebas automatizadas.</li>
+<li>Cobertura adecuada.</li>
+<li>Tests desde el inicio.</li>
+<li>Integración continua.</li>
+<li>Pruebas de seguridad.</li>
+</ul>
+<p>Tipos:</p>
+<pre><code>Unit Testing
+
+Integration Testing
+
+End-to-End Testing
+
+Performance Testing
+
+Security Testing</code></pre>
+<hr/>
+<h1>☁️ DevOps / Cloud</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Infraestructura como código.</li>
+<li>Automatización.</li>
+<li>CI/CD.</li>
+<li>Contenedores.</li>
+<li>Observabilidad.</li>
+<li>Recuperación ante fallos.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>Docker
+
+Kubernetes
+
+GitHub Actions
+
+Terraform
+
+Cloudflare
+
+AWS
+
+Azure
+
+Google Cloud</code></pre>
+<hr/>
+<h1>🤖 Inteligencia Artificial</h1>
+<p>Buenas prácticas:</p>
+<ul>
+<li>Evaluación de modelos.</li>
+<li>Control de costos.</li>
+<li>Gestión de contexto.</li>
+<li>Memoria estructurada.</li>
+<li>Seguridad de agentes.</li>
+<li>Validación de resultados.</li>
+</ul>
+<p>Incluye:</p>
+<pre><code>RAG
+
+Agents
+
+MCP
+
+Vector Database
+
+Evaluation
+
+Guardrails</code></pre>
+<hr/>
+<h1>SUBMÓDULOS INTERNOS</h1>
+<pre><code>best-practices/
+
+├── principios/
+├── reglas/
+├── patrones/
+├── checklists/
+├── ejemplos/
+├── anti-ejemplos/
+├── decisiones/
+├── evaluaciones/
+└── auditorias/</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UNA BEST PRACTICE</h1>
+<pre><code>BEST-PRACTICE-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── objetivo.md
+├── problema.md
+├── regla.md
+├── contexto.md
+├── cuando-usar.md
+├── cuando-no-usar.md
+├── ejemplos/
+├── codigo-ejemplo/
+├── ventajas.md
+├── riesgos.md
+├── checklist.md
+├── validacion.md
+└── versiones.md</code></pre>
+<hr/>
+<h1>FORMATO DE UNA BEST PRACTICE</h1>
+<pre><code>Nombre
+
+↓
+
+Problema que resuelve
+
+↓
+
+Principio recomendado
+
+↓
+
+Contexto de uso
+
+↓
+
+Implementación correcta
+
+↓
+
+Ejemplo
+
+↓
+
+Errores frecuentes
+
+↓
+
+Validación</code></pre>
+<hr/>
+<h1>NIVELES DE BEST PRACTICES</h1>
+<h2>Nivel 1 — Básica</h2>
+<p>Reglas simples.</p>
+<p>Ejemplo:</p>
+<p>Nombrar variables correctamente.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Estándares.</li>
+<li>Ejemplos.</li>
+<li>Validaciones.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzada</h2>
+<p>Incluye:</p>
+<ul>
+<li>Arquitectura.</li>
+<li>Seguridad.</li>
+<li>Escalabilidad.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experta</h2>
+<p>Incluye:</p>
+<ul>
+<li>Sistemas grandes.</li>
+<li>Trade-offs.</li>
+<li>Casos reales.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Arquitecto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Gobierno técnico.</li>
+<li>Decisiones estratégicas.</li>
+<li>Evolución del sistema.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  best_practice
+
+categoria:
+
+dominio:
+
+nivel:
+
+version:
+
+lenguajes_aplicables:
+
+frameworks:
+
+problema_resuelto:
+
+regla_principal:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Una Best Practice aprobada debe tener:</p>
+<p>✅ Problema definido</p>
+<p>✅ Regla clara</p>
+<p>✅ Justificación técnica</p>
+<p>✅ Ejemplo correcto</p>
+<p>✅ Ejemplo incorrecto</p>
+<p>✅ Impacto medido</p>
+<p>✅ Compatibilidad declarada</p>
+<p>✅ Validación</p>
+<p>✅ Registro histórico</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Diseño del sistema
+
+↓
+
+Consultar Best Practices
+
+↓
+
+Evaluar decisiones
+
+↓
+
+Aplicar reglas
+
+↓
+
+Validar arquitectura/código
+
+↓
+
+Registrar aprendizaje</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Usa:</p>
+<ul>
+<li>Principios.</li>
+<li>Patrones.</li>
+<li>Decisiones.</li>
+</ul>
+<h2>Programador</h2>
+<p>Usa:</p>
+<ul>
+<li>Código limpio.</li>
+<li>Seguridad.</li>
+<li>Optimización.</li>
+</ul>
+<h2>Tester</h2>
+<p>Usa:</p>
+<ul>
+<li>Calidad.</li>
+<li>Validación.</li>
+</ul>
+<h2>DevOps</h2>
+<p>Usa:</p>
+<ul>
+<li>Operación.</li>
+<li>Automatización.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 02
+Análisis
+
+↓
+
+Buenas prácticas de requisitos
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Buenas prácticas arquitectónicas
+
+
+FASE 05
+Código
+
+↓
+
+Buenas prácticas programación
+
+
+FASE 06
+Testing
+
+↓
+
+Buenas prácticas calidad
+
+
+FASE 08
+Producción
+
+↓
+
+Buenas prácticas operación</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Crear
+
+↓
+
+Validar
+
+↓
+
+Aplicar
+
+↓
+
+Medir
+
+↓
+
+Actualizar
+
+↓
+
+Versionar</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Una Best Practice puede generar:</p>
+<ul>
+<li>Reglas.</li>
+<li>Checklists.</li>
+<li>Guías.</li>
+<li>Validadores.</li>
+<li>Estándares.</li>
+<li>Políticas técnicas.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una capa de inteligencia técnica que ayude al orquestador a construir sistemas con calidad profesional.</p>
+<pre><code>Decisión
+
+↓
+
+Consultar Best Practice
+
+↓
+
+Aplicar regla
+
+↓
+
+Validar resultado
+
+↓
+
+Mejorar conocimiento</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 08 — ⚠️ ANTI-PATTERNS</h1>
+<h2>Propósito</h2>
+<p>Un Anti-Pattern (anti patrón) es un activo de conocimiento que registra errores comunes, malas decisiones técnicas y formas incorrectas de construir sistemas.</p>
+<p>Su objetivo es enseñar al orquestador y a los agentes:</p>
+<ul>
+<li>Qué errores evitar.</li>
+<li>Por qué una solución falla.</li>
+<li>Qué riesgos produce.</li>
+<li>Qué alternativa correcta aplicar.</li>
+</ul>
+<p>Un Anti-Pattern no solo dice &quot;no hacerlo&quot;.</p>
+<p>Explica:</p>
+<ul>
+<li>La causa del problema.</li>
+<li>El impacto.</li>
+<li>Cómo detectarlo.</li>
+<li>Cómo corregirlo.</li>
+</ul>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Cómo hacer algo
+
+
+Best Practice
+
+↓
+
+Cómo hacerlo correctamente
+
+
+Anti-Pattern
+
+↓
+
+Cómo NO hacerlo y por qué
+
+
+Recipe
+
+↓
+
+Cómo implementar una solución
+
+
+Blueprint
+
+↓
+
+Cómo diseñar el sistema completo</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE ANTI-PATTERNS</h1>
+<pre><code>⚠️ ANTI-PATTERNS
+
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── bases-datos/
+├── seguridad/
+├── testing/
+├── devops/
+├── inteligencia-artificial/
+├── codigo/
+└── gestion-proyecto/</code></pre>
+<hr/>
+<h1>TIPOS DE ANTI-PATTERNS</h1>
+<h1>🏛️ Arquitectura</h1>
+<p>Errores:</p>
+<ul>
+<li>Monolito sin estructura.</li>
+<li>Dependencias circulares.</li>
+<li>Mezclar responsabilidades.</li>
+<li>Arquitectura sin documentación.</li>
+<li>Sobreingeniería.</li>
+<li>Falta de escalabilidad.</li>
+</ul>
+<p>Ejemplo:</p>
+<pre><code>Frontend
+
+↓
+
+Lógica de negocio
+
+↓
+
+Base de datos
+
+↓
+
+Todo mezclado</code></pre>
+<p>Problema:</p>
+<p>Difícil mantenimiento y evolución.</p>
+<hr/>
+<h1>⚙️ Backend</h1>
+<p>Errores:</p>
+<ul>
+<li>API sin validación.</li>
+<li>Código duplicado.</li>
+<li>Sin manejo de errores.</li>
+<li>Secretos dentro del código.</li>
+<li>Sin control de versiones.</li>
+<li>Falta de logs.</li>
+</ul>
+<p>Ejemplo incorrecto:</p>
+<pre><code>Código
+
+↓
+
+Base de datos directa
+
+↓
+
+Producción</code></pre>
+<p>Riesgo:</p>
+<ul>
+<li>Seguridad.</li>
+<li>Errores.</li>
+<li>Pérdida de datos.</li>
+</ul>
+<hr/>
+<h1>🎨 Frontend</h1>
+<p>Errores:</p>
+<ul>
+<li>Componentes gigantes.</li>
+<li>Estados descontrolados.</li>
+<li>Código repetido.</li>
+<li>Mala gestión de rendimiento.</li>
+<li>Sin accesibilidad.</li>
+</ul>
+<p>Ejemplo:</p>
+<pre><code>App completa
+
+↓
+
+Un solo componente
+
+↓
+
+Miles de líneas</code></pre>
+<p>Problema:</p>
+<p>Difícil modificar y probar.</p>
+<hr/>
+<h1>📱 Mobile</h1>
+<p>Errores:</p>
+<ul>
+<li>No controlar memoria.</li>
+<li>No optimizar recursos.</li>
+<li>Mala arquitectura.</li>
+<li>No manejar versiones.</li>
+</ul>
+<hr/>
+<h1>🗄️ Bases de datos</h1>
+<p>Errores:</p>
+<ul>
+<li>Sin índices.</li>
+<li>Consultas lentas.</li>
+<li>Mezclar lógica y datos.</li>
+<li>Sin backups.</li>
+<li>Diseño incorrecto.</li>
+</ul>
+<hr/>
+<h1>🔐 Seguridad</h1>
+<p>Errores:</p>
+<ul>
+<li>Contraseñas sin cifrar.</li>
+<li>Secretos públicos.</li>
+<li>Falta de autenticación.</li>
+<li>Permisos excesivos.</li>
+<li>No validar entradas.</li>
+</ul>
+<hr/>
+<h1>🧪 Testing</h1>
+<p>Errores:</p>
+<ul>
+<li>Probar solamente al final.</li>
+<li>Sin pruebas automáticas.</li>
+<li>Ignorar errores.</li>
+<li>No medir calidad.</li>
+</ul>
+<hr/>
+<h1>☁️ DevOps</h1>
+<p>Errores:</p>
+<ul>
+<li>Deploy manual.</li>
+<li>Sin monitoreo.</li>
+<li>Sin recuperación.</li>
+<li>Configuración diferente entre ambientes.</li>
+</ul>
+<hr/>
+<h1>🤖 Inteligencia Artificial</h1>
+<p>Errores:</p>
+<ul>
+<li>Usar IA sin evaluación.</li>
+<li>Memoria sin control.</li>
+<li>Contexto desorganizado.</li>
+<li>Agentes sin límites.</li>
+<li>Falta de validación.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS INTERNOS</h1>
+<pre><code>anti-patterns/
+
+├── errores/
+├── causas/
+├── consecuencias/
+├── deteccion/
+├── soluciones/
+├── ejemplos/
+├── comparaciones/
+├── reglas-prevencion/
+└── auditorias/</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN ANTI-PATTERN</h1>
+<pre><code>ANTI-PATTERN-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── problema.md
+├── contexto.md
+├── sintoma.md
+├── causa-raiz.md
+├── impacto.md
+├── ejemplo-malo/
+├── solucion-correcta/
+├── comparacion.md
+├── checklist-deteccion.md
+├── prevencion.md
+└── versiones.md</code></pre>
+<hr/>
+<h1>FORMATO DE UN ANTI-PATTERN</h1>
+<pre><code>Nombre del error
+
+↓
+
+Descripción
+
+↓
+
+Por qué ocurre
+
+↓
+
+Síntomas
+
+↓
+
+Impacto
+
+↓
+
+Ejemplo incorrecto
+
+↓
+
+Solución recomendada
+
+↓
+
+Regla preventiva</code></pre>
+<hr/>
+<h1>NIVELES DE ANTI-PATTERNS</h1>
+<h2>Nivel 1 — Básico</h2>
+<p>Errores comunes.</p>
+<p>Ejemplo:</p>
+<p>Código duplicado.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Errores de diseño y desarrollo.</p>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Errores arquitectónicos.</p>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Fallos en sistemas grandes.</p>
+<p>Ejemplo:</p>
+<p>Problemas de escalabilidad.</p>
+<hr/>
+<h2>Nivel 5 — Crítico</h2>
+<p>Errores que pueden causar:</p>
+<ul>
+<li>Pérdida de datos.</li>
+<li>Vulnerabilidades.</li>
+<li>Fallos completos del sistema.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  anti_pattern
+
+categoria:
+
+dominio:
+
+nivel_riesgo:
+
+version:
+
+descripcion:
+
+causa:
+
+impacto:
+
+solucion:
+
+lenguajes_afectados:
+
+frameworks_afectados:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Un Anti-Pattern aprobado debe tener:</p>
+<p>✅ Error claramente definido</p>
+<p>✅ Causa raíz</p>
+<p>✅ Ejemplo incorrecto</p>
+<p>✅ Consecuencias</p>
+<p>✅ Método de detección</p>
+<p>✅ Solución alternativa</p>
+<p>✅ Prevención</p>
+<p>✅ Validación</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Diseñar solución
+
+↓
+
+Consultar Anti-Patterns
+
+↓
+
+Detectar riesgos
+
+↓
+
+Comparar arquitectura
+
+↓
+
+Evitar errores
+
+↓
+
+Registrar decisión</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Detecta:</p>
+<ul>
+<li>Mal diseño.</li>
+<li>Riesgos estructurales.</li>
+</ul>
+<h2>Programador</h2>
+<p>Evita:</p>
+<ul>
+<li>Código problemático.</li>
+<li>Malas prácticas.</li>
+</ul>
+<h2>Tester</h2>
+<p>Busca:</p>
+<ul>
+<li>Fallos.</li>
+<li>Vulnerabilidades.</li>
+</ul>
+<h2>DevOps</h2>
+<p>Evita:</p>
+<ul>
+<li>Problemas operativos.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 02
+Análisis
+
+↓
+
+Detectar requisitos incorrectos
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Evitar errores de diseño
+
+
+FASE 05
+Programación
+
+↓
+
+Evitar código defectuoso
+
+
+FASE 06
+Testing
+
+↓
+
+Detectar problemas
+
+
+FASE 08
+Producción
+
+↓
+
+Evitar fallos operativos</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Detectar error
+
+↓
+
+Documentar
+
+↓
+
+Validar
+
+↓
+
+Convertir en conocimiento
+
+↓
+
+Prevenir futuro uso</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Anti-Pattern genera:</p>
+<ul>
+<li>Alertas.</li>
+<li>Reglas de validación.</li>
+<li>Checklists.</li>
+<li>Detectores automáticos.</li>
+<li>Mejoras de arquitectura.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear memoria negativa del sistema para que el orquestador aprenda no solo qué hacer, sino qué evitar.</p>
+<pre><code>Experiencia
+
+↓
+
+Error detectado
+
+↓
+
+Aprendizaje
+
+↓
+
+Regla preventiva
+
+↓
+
+Mejor sistema</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 09 — 📂 EJEMPLOS COMPLETOS</h1>
+<h2>Propósito</h2>
+<p>Un Ejemplo Completo es un activo de conocimiento que contiene una implementación de referencia completa de un sistema, aplicación o componente.</p>
+<p>Su función es permitir que los agentes y el orquestador estudien soluciones reales terminadas, comprendan cómo se conectan las diferentes partes y puedan reutilizar patrones comprobados.</p>
+<p>Un ejemplo completo no es solamente código.</p>
+<p>Debe incluir:</p>
+<ul>
+<li>Idea inicial.</li>
+<li>Requisitos.</li>
+<li>Arquitectura.</li>
+<li>Diseño.</li>
+<li>Código.</li>
+<li>Pruebas.</li>
+<li>Seguridad.</li>
+<li>Despliegue.</li>
+<li>Lecciones aprendidas.</li>
+</ul>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Conocimiento técnico
+
+
+Recipe
+
+↓
+
+Solución puntual
+
+
+Template
+
+↓
+
+Estructura base
+
+
+Boilerplate
+
+↓
+
+Código inicial
+
+
+Blueprint
+
+↓
+
+Diseño maestro
+
+
+Ejemplo Completo
+
+↓
+
+Sistema terminado de referencia</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE EJEMPLOS COMPLETOS</h1>
+<pre><code>📂 EJEMPLOS-COMPLETOS
+
+├── web/
+├── mobile/
+├── desktop/
+├── saas/
+├── backend/
+├── frontend/
+├── inteligencia-artificial/
+├── ecommerce/
+├── enterprise/
+├── cloud/
+├── seguridad/
+└── sistemas-distribuidos/</code></pre>
+<hr/>
+<h1>TIPOS DE EJEMPLOS COMPLETOS</h1>
+<h1>🌐 Aplicaciones Web</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Dashboard empresarial.</li>
+<li>Plataforma educativa.</li>
+<li>Red social.</li>
+<li>Sistema administrativo.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Frontend.</li>
+<li>Backend.</li>
+<li>Base de datos.</li>
+<li>API.</li>
+<li>Seguridad.</li>
+<li>Deploy.</li>
+</ul>
+<hr/>
+<h1>📱 Aplicaciones Móviles</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>App financiera.</li>
+<li>App de productividad.</li>
+<li>App de comercio.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Diseño UI.</li>
+<li>Código.</li>
+<li>Servicios.</li>
+<li>Publicación.</li>
+</ul>
+<hr/>
+<h1>🖥️ Software Desktop</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Herramienta profesional.</li>
+<li>Aplicación empresarial.</li>
+<li>Software especializado.</li>
+</ul>
+<hr/>
+<h1>🚀 SaaS</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Plataforma con usuarios.</li>
+<li>Sistema de suscripciones.</li>
+<li>Producto digital.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Multiusuario.</li>
+<li>Pagos.</li>
+<li>Roles.</li>
+<li>Panel administrativo.</li>
+<li>Escalabilidad.</li>
+</ul>
+<hr/>
+<h1>🤖 Inteligencia Artificial</h1>
+<p>Ejemplos:</p>
+<ul>
+<li>Agente IA.</li>
+<li>Sistema RAG.</li>
+<li>Orquestador.</li>
+<li>Automatización inteligente.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Modelo.</li>
+<li>Memoria.</li>
+<li>Herramientas.</li>
+<li>Evaluación.</li>
+<li>Seguridad.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS POR TECNOLOGÍA</h1>
+<h1>Python</h1>
+<pre><code>ejemplos/python/
+
+├── fastapi-platform
+├── django-system
+├── ai-agent
+├── data-system
+└── automation</code></pre>
+<hr/>
+<h1>JavaScript / TypeScript</h1>
+<pre><code>ejemplos/javascript/
+
+├── react-dashboard
+├── nextjs-saas
+├── node-platform
+└── fullstack-app</code></pre>
+<hr/>
+<h1>Java</h1>
+<pre><code>ejemplos/java/
+
+├── spring-enterprise
+├── android-app
+└── backend-system</code></pre>
+<hr/>
+<h1>C#</h1>
+<pre><code>ejemplos/csharp/
+
+├── aspnet-platform
+├── desktop-software
+└── enterprise-system</code></pre>
+<hr/>
+<h1>Go</h1>
+<pre><code>ejemplos/go/
+
+├── cloud-service
+├── microservice
+└── api-platform</code></pre>
+<hr/>
+<h1>Rust</h1>
+<pre><code>ejemplos/rust/
+
+├── secure-service
+├── high-performance
+└── systems-tool</code></pre>
+<hr/>
+<h1>PHP</h1>
+<pre><code>ejemplos/php/
+
+├── laravel-platform
+├── ecommerce
+└── web-system</code></pre>
+<hr/>
+<h1>Mobile</h1>
+<pre><code>ejemplos/mobile/
+
+├── Kotlin
+
+├── Swift
+
+├── Flutter
+
+└── React Native</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN EJEMPLO COMPLETO</h1>
+<pre><code>EJEMPLO-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── idea-original.md
+├── requisitos/
+├── arquitectura/
+├── diagramas/
+├── diseño-ui/
+├── backend/
+├── frontend/
+├── mobile/
+├── database/
+├── codigo/
+├── configuracion/
+├── seguridad/
+├── testing/
+├── deployment/
+├── metricas/
+├── problemas/
+├── soluciones/
+├── aprendizajes/
+└── versiones/</code></pre>
+<hr/>
+<h1>COMPONENTES OBLIGATORIOS</h1>
+<h2>1. Contexto del proyecto</h2>
+<p>Debe explicar:</p>
+<ul>
+<li>Qué problema resuelve.</li>
+<li>Usuario objetivo.</li>
+<li>Alcance.</li>
+</ul>
+<hr/>
+<h2>2. Requisitos</h2>
+<p>Debe contener:</p>
+<ul>
+<li>Funcionales.</li>
+<li>Técnicos.</li>
+<li>Seguridad.</li>
+<li>Rendimiento.</li>
+</ul>
+<hr/>
+<h2>3. Arquitectura</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Componentes.</li>
+<li>Comunicación.</li>
+<li>Tecnologías.</li>
+<li>Decisiones.</li>
+</ul>
+<hr/>
+<h2>4. Código</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Código funcional.</li>
+<li>Estructura real.</li>
+<li>Configuración.</li>
+</ul>
+<hr/>
+<h2>5. Pruebas</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Unitarias.</li>
+<li>Integración.</li>
+<li>Seguridad.</li>
+<li>Rendimiento.</li>
+</ul>
+<hr/>
+<h2>6. Operación</h2>
+<p>Debe incluir:</p>
+<ul>
+<li>Deploy.</li>
+<li>Monitoreo.</li>
+<li>Mantenimiento.</li>
+</ul>
+<hr/>
+<h1>NIVELES DE EJEMPLOS</h1>
+<h2>Nivel 1 — Componente</h2>
+<p>Ejemplo:</p>
+<p>Un módulo o función.</p>
+<hr/>
+<h2>Nivel 2 — Aplicación pequeña</h2>
+<p>Ejemplo:</p>
+<p>Página web funcional.</p>
+<hr/>
+<h2>Nivel 3 — Profesional</h2>
+<p>Ejemplo:</p>
+<p>Aplicación completa con backend.</p>
+<hr/>
+<h2>Nivel 4 — Empresarial</h2>
+<p>Ejemplo:</p>
+<p>Sistema escalable con múltiples servicios.</p>
+<hr/>
+<h2>Nivel 5 — Referencia Arquitectónica</h2>
+<p>Ejemplo:</p>
+<p>Plataforma completa usada como modelo para futuros proyectos.</p>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  ejemplo_completo
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+lenguajes:
+
+frameworks:
+
+arquitectura:
+
+funcionalidades:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+tecnologias:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Un Ejemplo Completo aprobado debe tener:</p>
+<p>✅ Proyecto funcional</p>
+<p>✅ Código verificable</p>
+<p>✅ Arquitectura documentada</p>
+<p>✅ Explicación paso a paso</p>
+<p>✅ Pruebas</p>
+<p>✅ Seguridad</p>
+<p>✅ Lecciones aprendidas</p>
+<p>✅ Versionado</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Nueva solicitud
+
+↓
+
+Buscar ejemplo similar
+
+↓
+
+Analizar arquitectura
+
+↓
+
+Extraer patrones
+
+↓
+
+Adaptar solución
+
+↓
+
+Crear nuevo proyecto
+
+↓
+
+Registrar aprendizaje</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Analiza:</p>
+<ul>
+<li>Diseño.</li>
+<li>Decisiones.</li>
+</ul>
+<h2>Programadores</h2>
+<p>Aprenden:</p>
+<ul>
+<li>Estructura.</li>
+<li>Código.</li>
+</ul>
+<h2>Tester</h2>
+<p>Aprende:</p>
+<ul>
+<li>Estrategias de prueba.</li>
+</ul>
+<h2>DevOps</h2>
+<p>Aprende:</p>
+<ul>
+<li>Despliegue.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 01
+Idea
+
+↓
+
+Comparar ejemplos similares
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Extraer diseños probados
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Reutilizar patrones
+
+
+FASE 06
+Testing
+
+↓
+
+Comparar calidad
+
+
+FASE 08
+Deploy
+
+↓
+
+Usar experiencias previas</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Crear proyecto
+
+↓
+
+Documentar
+
+↓
+
+Validar
+
+↓
+
+Publicar ejemplo
+
+↓
+
+Usar como referencia
+
+↓
+
+Actualizar</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Ejemplo Completo genera:</p>
+<ul>
+<li>Código.</li>
+<li>Arquitecturas.</li>
+<li>Patrones.</li>
+<li>Documentación.</li>
+<li>Métricas.</li>
+<li>Nuevas Skills.</li>
+<li>Nuevas Recipes.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una memoria práctica del sistema donde el orquestador pueda estudiar proyectos completos antes de construir nuevos.</p>
+<pre><code>Nuevo problema
+
+↓
+
+Buscar ejemplo
+
+↓
+
+Aprender estructura
+
+↓
+
+Adaptar
+
+↓
+
+Construir
+
+↓
+
+Mejorar biblioteca</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 10 — 🧪 LABORATORIO DE PRUEBAS</h1>
+<h2>Propósito</h2>
+<p>Un Laboratorio de Pruebas es un activo de conocimiento y validación que define entornos, métodos y procedimientos para comprobar que un sistema, componente, código o agente funciona correctamente antes de llegar a producción.</p>
+<p>Su función es crear un espacio seguro donde el orquestador pueda:</p>
+<ul>
+<li>Ejecutar pruebas.</li>
+<li>Detectar errores.</li>
+<li>Comparar resultados.</li>
+<li>Simular escenarios.</li>
+<li>Validar calidad.</li>
+<li>Mejorar soluciones.</li>
+</ul>
+<p>El laboratorio evita que código no probado llegue al sistema final.</p>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Conoce una capacidad
+
+
+Recipe
+
+↓
+
+Implementa una solución
+
+
+Best Practice
+
+↓
+
+Define calidad
+
+
+Anti-Pattern
+
+↓
+
+Evita errores
+
+
+Ejemplo Completo
+
+↓
+
+Muestra una solución terminada
+
+
+Laboratorio
+
+↓
+
+Comprueba que funciona</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE LABORATORIOS</h1>
+<pre><code>🧪 LABORATORIOS
+
+├── codigo/
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── seguridad/
+├── rendimiento/
+├── inteligencia-artificial/
+├── agentes/
+├── integracion/
+└── produccion-simulada/</code></pre>
+<hr/>
+<h1>TIPOS DE LABORATORIOS</h1>
+<h1>💻 Laboratorio de Código</h1>
+<p>Objetivo:</p>
+<p>Validar código antes de integración.</p>
+<p>Pruebas:</p>
+<ul>
+<li>Compilación.</li>
+<li>Ejecución.</li>
+<li>Errores.</li>
+<li>Calidad.</li>
+<li>Estilo.</li>
+</ul>
+<p>Aplica a:</p>
+<pre><code>Python
+
+JavaScript
+
+TypeScript
+
+Java
+
+C#
+
+Go
+
+Rust
+
+PHP
+
+C++
+
+C</code></pre>
+<hr/>
+<h1>⚙️ Laboratorio Backend</h1>
+<p>Valida:</p>
+<ul>
+<li>APIs.</li>
+<li>Servicios.</li>
+<li>Bases de datos.</li>
+<li>Seguridad.</li>
+<li>Rendimiento.</li>
+</ul>
+<p>Pruebas:</p>
+<pre><code>Endpoint
+
+↓
+
+Respuesta
+
+↓
+
+Validación
+
+↓
+
+Resultado</code></pre>
+<hr/>
+<h1>🎨 Laboratorio Frontend</h1>
+<p>Valida:</p>
+<ul>
+<li>Interfaces.</li>
+<li>Componentes.</li>
+<li>Navegación.</li>
+<li>Responsive.</li>
+<li>Accesibilidad.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>HTML
+
+CSS
+
+JavaScript
+
+TypeScript
+
+React
+
+Vue
+
+Angular
+
+Svelte</code></pre>
+<hr/>
+<h1>📱 Laboratorio Mobile</h1>
+<p>Valida:</p>
+<ul>
+<li>Aplicaciones Android.</li>
+<li>Aplicaciones iOS.</li>
+<li>Rendimiento.</li>
+<li>Compatibilidad.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>Kotlin
+
+Swift
+
+Flutter
+
+React Native</code></pre>
+<hr/>
+<h1>🏗️ Laboratorio de Arquitectura</h1>
+<p>Valida:</p>
+<ul>
+<li>Diseño del sistema.</li>
+<li>Dependencias.</li>
+<li>Escalabilidad.</li>
+<li>Decisiones técnicas.</li>
+</ul>
+<p>Incluye:</p>
+<ul>
+<li>Simulación.</li>
+<li>Revisión.</li>
+<li>Análisis de riesgos.</li>
+</ul>
+<hr/>
+<h1>🔐 Laboratorio de Seguridad</h1>
+<p>Valida:</p>
+<ul>
+<li>Vulnerabilidades.</li>
+<li>Permisos.</li>
+<li>Autenticación.</li>
+<li>Datos sensibles.</li>
+</ul>
+<p>Incluye:</p>
+<pre><code>Security Testing
+
+Pen Testing
+
+Auditoría
+
+Análisis de código</code></pre>
+<hr/>
+<h1>🚀 Laboratorio DevOps</h1>
+<p>Valida:</p>
+<ul>
+<li>Construcción.</li>
+<li>Deploy.</li>
+<li>Infraestructura.</li>
+<li>Recuperación.</li>
+</ul>
+<p>Incluye:</p>
+<pre><code>Docker
+
+CI/CD
+
+Cloud
+
+Monitoring</code></pre>
+<hr/>
+<h1>🤖 Laboratorio IA</h1>
+<p>Valida:</p>
+<ul>
+<li>Modelos.</li>
+<li>Agentes.</li>
+<li>Memoria.</li>
+<li>Herramientas.</li>
+</ul>
+<p>Pruebas:</p>
+<ul>
+<li>Calidad de respuesta.</li>
+<li>Consistencia.</li>
+<li>Costos.</li>
+<li>Tiempo.</li>
+<li>Seguridad.</li>
+</ul>
+<hr/>
+<h1>SUBMÓDULOS INTERNOS</h1>
+<pre><code>laboratorio/
+
+├── entornos/
+├── pruebas/
+├── simulaciones/
+├── benchmarks/
+├── resultados/
+├── reportes/
+├── errores/
+├── correcciones/
+├── metricas/
+└── auditorias/</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UN LABORATORIO</h1>
+<pre><code>LAB-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── objetivo.md
+├── entorno/
+├── configuracion/
+├── datos-prueba/
+├── escenarios/
+├── scripts/
+├── pruebas/
+├── resultados/
+├── errores/
+├── correcciones/
+├── metricas/
+├── reportes/
+└── versiones/</code></pre>
+<hr/>
+<h1>TIPOS DE PRUEBAS</h1>
+<h1>Unit Testing</h1>
+<p>Valida:</p>
+<ul>
+<li>Funciones.</li>
+<li>Clases.</li>
+<li>Componentes.</li>
+</ul>
+<hr/>
+<h1>Integration Testing</h1>
+<p>Valida:</p>
+<ul>
+<li>Servicios conectados.</li>
+<li>APIs.</li>
+<li>Bases de datos.</li>
+</ul>
+<hr/>
+<h1>End-to-End Testing</h1>
+<p>Valida:</p>
+<p>Sistema completo.</p>
+<p>Ejemplo:</p>
+<pre><code>Usuario
+
+↓
+
+Frontend
+
+↓
+
+Backend
+
+↓
+
+Base datos
+
+↓
+
+Resultado</code></pre>
+<hr/>
+<h1>Performance Testing</h1>
+<p>Mide:</p>
+<ul>
+<li>Velocidad.</li>
+<li>Carga.</li>
+<li>Uso de recursos.</li>
+</ul>
+<hr/>
+<h1>Security Testing</h1>
+<p>Mide:</p>
+<ul>
+<li>Riesgos.</li>
+<li>Vulnerabilidades.</li>
+<li>Protección.</li>
+</ul>
+<hr/>
+<h1>AI Evaluation Testing</h1>
+<p>Mide:</p>
+<ul>
+<li>Precisión.</li>
+<li>Calidad.</li>
+<li>Razonamiento.</li>
+<li>Consistencia.</li>
+</ul>
+<hr/>
+<h1>NIVELES DE LABORATORIO</h1>
+<h2>Nivel 1 — Básico</h2>
+<p>Pruebas simples.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Incluye:</p>
+<ul>
+<li>Automatización.</li>
+<li>Reportes.</li>
+</ul>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Incluye:</p>
+<ul>
+<li>Simulación.</li>
+<li>Benchmark.</li>
+<li>Seguridad.</li>
+</ul>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Incluye:</p>
+<ul>
+<li>Escenarios complejos.</li>
+<li>Carga alta.</li>
+<li>Fallos controlados.</li>
+</ul>
+<hr/>
+<h2>Nivel 5 — Autónomo</h2>
+<p>Incluye:</p>
+<ul>
+<li>Autoejecución.</li>
+<li>Autodetección.</li>
+<li>Autocorrección.</li>
+<li>Aprendizaje.</li>
+</ul>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  laboratorio
+
+categoria:
+
+objetivo:
+
+nivel:
+
+version:
+
+area_validacion:
+
+lenguajes:
+
+frameworks:
+
+herramientas:
+
+tipo_pruebas:
+
+metricas:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Un Laboratorio aprobado debe tener:</p>
+<p>✅ Objetivo definido</p>
+<p>✅ Entorno reproducible</p>
+<p>✅ Casos de prueba</p>
+<p>✅ Datos controlados</p>
+<p>✅ Métricas</p>
+<p>✅ Reportes</p>
+<p>✅ Registro de errores</p>
+<p>✅ Método de corrección</p>
+<p>✅ Historial</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Crear solución
+
+↓
+
+Enviar a laboratorio
+
+↓
+
+Ejecutar pruebas
+
+↓
+
+Analizar resultados
+
+↓
+
+Corregir
+
+↓
+
+Validar
+
+↓
+
+Aprobar</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Programador</h2>
+<p>Prueba:</p>
+<ul>
+<li>Código.</li>
+</ul>
+<h2>Arquitecto</h2>
+<p>Prueba:</p>
+<ul>
+<li>Diseño.</li>
+</ul>
+<h2>Tester</h2>
+<p>Controla:</p>
+<ul>
+<li>Calidad.</li>
+</ul>
+<h2>Seguridad</h2>
+<p>Busca:</p>
+<ul>
+<li>Vulnerabilidades.</li>
+</ul>
+<h2>Orquestador</h2>
+<p>Decide:</p>
+<ul>
+<li>Aprobar.</li>
+<li>Rechazar.</li>
+<li>Mejorar.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 03
+Arquitectura
+
+↓
+
+Simulación del diseño
+
+
+FASE 05
+Código
+
+↓
+
+Validación de implementación
+
+
+FASE 06
+Testing
+
+↓
+
+Pruebas completas
+
+
+FASE 08
+Deploy
+
+↓
+
+Validación producción</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Crear laboratorio
+
+↓
+
+Definir pruebas
+
+↓
+
+Ejecutar
+
+↓
+
+Medir
+
+↓
+
+Corregir
+
+↓
+
+Actualizar
+
+↓
+
+Reutilizar</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Un Laboratorio genera:</p>
+<ul>
+<li>Reportes.</li>
+<li>Métricas.</li>
+<li>Errores encontrados.</li>
+<li>Correcciones.</li>
+<li>Benchmarks.</li>
+<li>Mejoras de calidad.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una capa de validación donde cada conocimiento, código y sistema pueda probarse antes de ser aprobado por el orquestador.</p>
+<pre><code>Crear
+
+↓
+
+Probar
+
+↓
+
+Medir
+
+↓
+
+Corregir
+
+↓
+
+Validar
+
+↓
+
+Liberar</code></pre>
+<h1>📚 SISTEMA DE ACTIVOS DE CONOCIMIENTO</h1>
+<h1>TIPO 11 — 📖 GUÍA DE REFERENCIA</h1>
+<h2>Propósito</h2>
+<p>Una Guía de Referencia es un activo de conocimiento diseñado para almacenar información técnica completa, organizada y consultable que permite a agentes, modelos IA y humanos comprender, implementar y mantener sistemas.</p>
+<p>Su función es ser una fuente de consulta permanente.</p>
+<p>Una guía de referencia no ejecuta procesos como un Playbook ni entrega código inicial como un Boilerplate.</p>
+<p>Su objetivo es responder:</p>
+<ul>
+<li>Qué es una tecnología.</li>
+<li>Cómo funciona.</li>
+<li>Cuándo usarla.</li>
+<li>Cómo implementarla.</li>
+<li>Qué errores evitar.</li>
+<li>Cómo integrarla con otros componentes.</li>
+</ul>
+<hr/>
+<h1>Diferencia entre activos</h1>
+<pre><code>Skill
+
+↓
+
+Aprende una capacidad
+
+
+Recipe
+
+↓
+
+Ejecuta una solución concreta
+
+
+Template
+
+↓
+
+Entrega estructura reutilizable
+
+
+Boilerplate
+
+↓
+
+Entrega código inicial
+
+
+Blueprint
+
+↓
+
+Define arquitectura
+
+
+Best Practice
+
+↓
+
+Define reglas correctas
+
+
+Anti-Pattern
+
+↓
+
+Define errores a evitar
+
+
+Ejemplo Completo
+
+↓
+
+Muestra implementación real
+
+
+Laboratorio
+
+↓
+
+Valida funcionamiento
+
+
+Guía de Referencia
+
+↓
+
+Conserva conocimiento técnico profundo</code></pre>
+<hr/>
+<h1>🌳 RAÍZ DE GUÍAS DE REFERENCIA</h1>
+<pre><code>📖 GUIAS-REFERENCIA
+
+├── lenguajes/
+├── frameworks/
+├── arquitectura/
+├── backend/
+├── frontend/
+├── mobile/
+├── desktop/
+├── bases-datos/
+├── cloud/
+├── devops/
+├── seguridad/
+├── inteligencia-artificial/
+├── agentes/
+└── herramientas/</code></pre>
+<hr/>
+<h1>TIPOS DE GUÍAS</h1>
+<h1>💻 Guías de Lenguajes</h1>
+<p>Contienen:</p>
+<ul>
+<li>Sintaxis.</li>
+<li>Paradigmas.</li>
+<li>Buenas prácticas.</li>
+<li>Patrones.</li>
+<li>Ejemplos.</li>
+</ul>
+<p>Lenguajes:</p>
+<pre><code>Python
+
+JavaScript
+
+TypeScript
+
+Java
+
+C#
+
+Go
+
+Rust
+
+PHP
+
+C++
+
+C
+
+Kotlin
+
+Swift
+
+Dart</code></pre>
+<hr/>
+<h1>⚙️ Guías Backend</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Diseño API.</li>
+<li>Arquitectura.</li>
+<li>Bases de datos.</li>
+<li>Seguridad.</li>
+<li>Escalabilidad.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>FastAPI
+
+Django
+
+Node.js
+
+NestJS
+
+Spring Boot
+
+.NET
+
+Laravel
+
+Go Backend</code></pre>
+<hr/>
+<h1>🎨 Guías Frontend</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Componentes.</li>
+<li>Estado.</li>
+<li>Diseño.</li>
+<li>Rendimiento.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>HTML
+
+CSS
+
+JavaScript
+
+React
+
+Next.js
+
+Vue
+
+Angular
+
+Svelte</code></pre>
+<hr/>
+<h1>📱 Guías Mobile</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Arquitectura móvil.</li>
+<li>UI.</li>
+<li>Ciclo de vida.</li>
+<li>Publicación.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>Android
+
+Kotlin
+
+Java
+
+iOS
+
+Swift
+
+Flutter
+
+React Native</code></pre>
+<hr/>
+<h1>🏗️ Guías de Arquitectura</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Patrones.</li>
+<li>Decisiones.</li>
+<li>Escalabilidad.</li>
+<li>Diseño.</li>
+</ul>
+<p>Ejemplos:</p>
+<pre><code>Clean Architecture
+
+Hexagonal
+
+Microservicios
+
+Event Driven
+
+DDD
+
+Monolito Modular</code></pre>
+<hr/>
+<h1>🗄️ Guías de Datos</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Modelado.</li>
+<li>Consultas.</li>
+<li>Optimización.</li>
+<li>Seguridad.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>PostgreSQL
+
+MySQL
+
+MongoDB
+
+Redis
+
+SQLite
+
+Vector Database</code></pre>
+<hr/>
+<h1>☁️ Guías Cloud</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Infraestructura.</li>
+<li>Despliegue.</li>
+<li>Seguridad.</li>
+<li>Operación.</li>
+</ul>
+<p>Tecnologías:</p>
+<pre><code>Docker
+
+Kubernetes
+
+Cloudflare
+
+AWS
+
+Azure
+
+Google Cloud</code></pre>
+<hr/>
+<h1>🤖 Guías IA</h1>
+<p>Incluyen:</p>
+<ul>
+<li>Modelos.</li>
+<li>Agentes.</li>
+<li>Memoria.</li>
+<li>Evaluación.</li>
+</ul>
+<p>Temas:</p>
+<pre><code>LLM
+
+RAG
+
+MCP
+
+Embeddings
+
+Vector Search
+
+Multi-Agent Systems</code></pre>
+<hr/>
+<h1>SUBMÓDULOS INTERNOS</h1>
+<pre><code>guias/
+
+├── conceptos/
+├── arquitectura/
+├── instalacion/
+├── configuracion/
+├── ejemplos/
+├── comandos/
+├── errores/
+├── comparaciones/
+├── seguridad/
+├── optimizacion/
+└── referencias/</code></pre>
+<hr/>
+<h1>ESTRUCTURA INTERNA DE UNA GUÍA</h1>
+<pre><code>GUIA-NOMBRE/
+
+├── metadata.yaml
+├── README.md
+├── introduccion.md
+├── conceptos.md
+├── arquitectura.md
+├── instalacion.md
+├── configuracion.md
+├── ejemplos/
+├── codigo/
+├── comandos/
+├── integraciones/
+├── problemas-comunes/
+├── seguridad.md
+├── rendimiento.md
+├── checklist.md
+└── versiones.md</code></pre>
+<hr/>
+<h1>ESTRUCTURA DE CONTENIDO</h1>
+<p>Cada guía debe responder:</p>
+<h2>¿Qué es?</h2>
+<p>Descripción técnica.</p>
+<hr/>
+<h2>¿Cómo funciona?</h2>
+<p>Explicación interna.</p>
+<hr/>
+<h2>¿Cuándo usarlo?</h2>
+<p>Casos adecuados.</p>
+<hr/>
+<h2>¿Cuándo evitarlo?</h2>
+<p>Limitaciones.</p>
+<hr/>
+<h2>¿Cómo implementarlo?</h2>
+<p>Pasos técnicos.</p>
+<hr/>
+<h2>¿Cómo integrarlo?</h2>
+<p>Con otras tecnologías.</p>
+<hr/>
+<h2>¿Cómo optimizarlo?</h2>
+<p>Mejoras avanzadas.</p>
+<hr/>
+<h1>NIVELES DE GUÍA</h1>
+<h2>Nivel 1 — Introducción</h2>
+<p>Conceptos básicos.</p>
+<hr/>
+<h2>Nivel 2 — Profesional</h2>
+<p>Uso práctico.</p>
+<hr/>
+<h2>Nivel 3 — Avanzado</h2>
+<p>Arquitectura y optimización.</p>
+<hr/>
+<h2>Nivel 4 — Experto</h2>
+<p>Casos complejos.</p>
+<hr/>
+<h2>Nivel 5 — Maestro</h2>
+<p>Referencia completa para arquitectos y agentes expertos.</p>
+<hr/>
+<h1>METADATOS OBLIGATORIOS</h1>
+<pre><code class="lang-yaml">id:
+
+nombre:
+
+tipo:
+  guia_referencia
+
+categoria:
+
+tecnologia:
+
+nivel:
+
+version:
+
+lenguajes:
+
+frameworks:
+
+conceptos:
+
+autor:
+
+agente_creador:
+
+modelo_creador:
+
+fecha_creacion:
+
+hora_creacion:
+
+ultima_validacion:
+
+fuentes:
+
+estado:
+
+licencia:</code></pre>
+<hr/>
+<h1>REQUISITOS DE CALIDAD</h1>
+<p>Una Guía aprobada debe tener:</p>
+<p>✅ Información técnica correcta</p>
+<p>✅ Ejemplos funcionales</p>
+<p>✅ Versiones declaradas</p>
+<p>✅ Compatibilidad</p>
+<p>✅ Limitaciones</p>
+<p>✅ Buenas prácticas</p>
+<p>✅ Seguridad</p>
+<p>✅ Actualización periódica</p>
+<hr/>
+<h1>USO POR EL ORQUESTADOR</h1>
+<p>Proceso:</p>
+<pre><code>Necesidad técnica
+
+↓
+
+Buscar guía
+
+↓
+
+Extraer conocimiento
+
+↓
+
+Seleccionar solución
+
+↓
+
+Aplicar Skill/Recipe
+
+↓
+
+Validar resultado</code></pre>
+<hr/>
+<h1>USO POR AGENTES</h1>
+<h2>Arquitecto</h2>
+<p>Consulta:</p>
+<ul>
+<li>Patrones.</li>
+<li>Tecnologías.</li>
+<li>Decisiones.</li>
+</ul>
+<h2>Programador</h2>
+<p>Consulta:</p>
+<ul>
+<li>Implementación.</li>
+<li>Código.</li>
+</ul>
+<h2>Tester</h2>
+<p>Consulta:</p>
+<ul>
+<li>Validaciones.</li>
+</ul>
+<h2>DevOps</h2>
+<p>Consulta:</p>
+<ul>
+<li>Operación.</li>
+</ul>
+<hr/>
+<h1>RELACIÓN CON LAS FASES</h1>
+<pre><code>FASE 02
+Análisis
+
+↓
+
+Comprender tecnologías
+
+
+FASE 03
+Arquitectura
+
+↓
+
+Seleccionar soluciones
+
+
+FASE 05
+Desarrollo
+
+↓
+
+Implementar código
+
+
+FASE 06
+Testing
+
+↓
+
+Validar estándares
+
+
+FASE 08
+Deploy
+
+↓
+
+Operar sistemas</code></pre>
+<hr/>
+<h1>CICLO DE VIDA</h1>
+<pre><code>Crear
+
+↓
+
+Revisar
+
+↓
+
+Validar
+
+↓
+
+Publicar
+
+↓
+
+Usar
+
+↓
+
+Actualizar
+
+↓
+
+Versionar</code></pre>
+<hr/>
+<h1>ARTEFACTOS QUE GENERA</h1>
+<p>Una Guía de Referencia genera:</p>
+<ul>
+<li>Conocimiento técnico.</li>
+<li>Documentación.</li>
+<li>Ejemplos.</li>
+<li>Comparaciones.</li>
+<li>Reglas.</li>
+<li>Nuevas Skills.</li>
+</ul>
+<hr/>
+<h1>OBJETIVO FINAL</h1>
+<p>Crear una memoria técnica profunda que permita al orquestador y agentes consultar conocimiento especializado antes de tomar decisiones.</p>
+<pre><code>Pregunta técnica
+
+↓
+
+Consultar guía
+
+↓
+
+Obtener conocimiento
+
+↓
+
+Aplicar solución
+
+↓
+
+Aprender</code></pre>
+  </main>
+  <footer>
+    <span class="pill">Biblioteca</span>
+    <span class="pill">Conocimiento</span>
+    <span class="pill">Orquestador</span>
+  </footer>
+</div>
+</body>
+</html>
