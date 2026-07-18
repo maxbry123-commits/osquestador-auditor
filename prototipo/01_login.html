@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Login · Paso 1/9</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--anthropic-orange:#d4a574;--bg:#1a1a1a;--bg2:#232323;--border:#2e2e2e;--text:#e8e8e8;--text2:#9a9a9a;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.box{width:380px;padding:32px;background:var(--bg2);border:1px solid var(--border);border-radius:12px}
+.logo{font-size:14px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;margin-bottom:8px}
+h1{font-size:22px;font-weight:500;margin-bottom:24px}
+label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;margin-top:16px}
+input,select{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--anthropic-orange)}
+.btn{width:100%;padding:12px;background:var(--anthropic-orange);color:#1a1a1a;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;margin-top:24px}
+.btn:hover{opacity:0.9}
+.hint{font-size:11px;color:var(--text2);margin-top:8px;text-align:center}
+.tag{font-size:10px;color:var(--text2);text-align:center;margin-top:12px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">Osquestador · Paso 1/9</div>
+  <h1>🔐 Iniciar sesión</h1>
+
+  <label>GitHub Personal Access Token (scope: repo)</label>
+  <input type="password" placeholder="ghp_..." id="pat">
+
+  <label>Proyecto</label>
+  <select id="project">
+    <option>osquestador-auditor</option>
+    <option>osquestador-memoria</option>
+    <option>agentes</option>
+  </select>
+
+  <label>Modelo LLM por defecto</label>
+  <select id="model">
+    <option>Claude Sonnet 4.6 (Anthropic)</option>
+    <option>MiniMax-M3</option>
+    <option>DeepSeek V3.1</option>
+    <option>Gemini 2.5 Pro</option>
+    <option>gpt-oss-120b (Groq)</option>
+  </select>
+
+  <button class="btn" onclick="window.location='02_layout_base.html'">Entrar →</button>
+  <div class="hint">Token almacenado en /root/.osquestador/secrets/ (chmod 600)</div>
+  <div class="tag">PASO 1/9 — LOGIN</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Status bar 32px · Paso 7/9</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--anthropic-orange:#d4a574;--bg:#1a1a1a;--bg2:#232323;--border:#2e2e2e;--text:#e8e8e8;--text2:#9a9a9a;--green:#7ec699;--red:#c87e7e;--yellow:#e8d77c;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;height:100vh;display:flex;flex-direction:column}
+.content{flex:1;padding:30px;overflow-y:auto}
+.section{margin-bottom:20px}
+.label{font-size:11px;letter-spacing:1px;color:var(--anthropic-orange);text-transform:uppercase;margin-bottom:8px;font-weight:600}
+.item{font-size:11px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;margin-bottom:6px}
+.status{height:32px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:18px;font-size:10px;color:var(--text2);letter-spacing:0.5px;flex-shrink:0}
+.pill{display:flex;align-items:center;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%}
+.dot.green{background:var(--green)}
+.dot.yellow{background:var(--yellow)}
+.dot.red{background:var(--red)}
+.dot.orange{background:var(--anthropic-orange)}
+.value{color:var(--text);font-weight:500}
+.bar{height:3px;background:var(--bg);border-radius:2px;width:50px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:4px}
+.bar .fill{height:100%;background:var(--anthropic-orange)}
+.sep{color:var(--border)}
+.tag{font-size:10px;color:var(--text2);text-align:center;margin:8px;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="content">
+  <div class="section">
+    <div class="label">⚡ Status bar 32px — telemetría en vivo</div>
+    <div class="item">Tokens: <b>12.4k / 200k</b> · Latencia: <b>240ms</b> · Costo: <b>$0.0023</b></div>
+    <div class="item">SQLite WAL: <b>✓ activo</b> · FAISS: <b>12,480 vectores</b> · Neo4j: <b>5,231 nodos</b></div>
+    <div class="item">Backup último: <b>hace 3 min</b> · Watchdog: <b>✓ up 14d</b> · Cron: <b>2 jobs</b></div>
+    <div class="item">MCP servers: <b>3/3</b> · VPS: <b>95.111.232.89</b> · Disco: <b>42%</b> · RAM: <b>3.1/8GB</b></div>
+    <div class="item">Input-blocks verificados: <b>247</b> · Tasa hash-chain OK: <b>100%</b> · Append-only: <b>✓</b></div>
+  </div>
+</div>
+<footer class="status">
+  <div class="pill"><div class="dot green"></div>tokens <span class="value">12.4k</span></div>
+  <div class="bar"><div class="fill" style="width:6%"></div></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot green"></div>lat <span class="value">240ms</span></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot green"></div>SQLite <span class="value">✓</span></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot orange"></div>backup <span class="value">3min</span></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot green"></div>watchdog <span class="value">14d</span></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot green"></div>MCP <span class="value">3/3</span></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot yellow"></div>RAM <span class="value">3.1/8GB</span></div>
+  <div class="bar"><div class="fill" style="width:38%"></div></div>
+  <div class="sep">·</div>
+  <div class="pill"><div class="dot green"></div>🔒 <span class="value">247</span> input-blocks</div>
+</footer>
+<div class="tag">PASO 7/9 — STATUS BAR 32px</div>
+</body>
+</html>

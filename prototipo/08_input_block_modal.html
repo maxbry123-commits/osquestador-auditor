@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Modal input-block accesible · Paso 8/9</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--anthropic-orange:#d4a574;--bg:#1a1a1a;--bg2:#232323;--border:#2e2e2e;--text:#e8e8e8;--text2:#9a9a9a;--red:#c87e7e;--green:#7ec699;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center}
+.modal{width:560px;max-height:80vh;background:var(--bg2);border:1px solid var(--anthropic-orange);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(212,165,116,0.15)}
+.head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.head .lock{font-size:20px}
+.head h2{font-size:15px;font-weight:500;flex:1}
+.head .x{color:var(--text2);cursor:pointer;font-size:18px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.head .x:hover{background:var(--bg)}
+.body{padding:20px;overflow-y:auto;flex:1}
+.row{margin-bottom:14px}
+.row .label{font-size:10px;letter-spacing:1px;color:var(--anthropic-orange);text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.row .value{font-size:12px;padding:6px 10px;background:var(--bg);border-radius:4px;font-family:'SF Mono',monospace;color:var(--text)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tags .tag{font-size:10px;padding:3px 8px;background:var(--bg);border-radius:10px;color:var(--text2)}
+.content-box{font-size:12px;line-height:1.6;padding:12px;background:var(--bg);border-left:3px solid var(--anthropic-orange);border-radius:3px;color:var(--text);white-space:pre-wrap;font-family:'SF Mono',monospace;max-height:140px;overflow-y:auto}
+.foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.btn{padding:8px 16px;border-radius:5px;font-size:12px;cursor:pointer;border:none;font-weight:500}
+.btn.primary{background:var(--anthropic-orange);color:var(--bg)}
+.btn.primary:hover{opacity:0.9}
+.btn.ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn.danger{background:var(--red);color:#1a1a1a}
+.tag-bot{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text2);letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
+    <div class="head">
+      <span class="lock">🔒</span>
+      <h2 id="title">Input-block verificado · confirma antes de enviar</h2>
+      <span class="x" role="button" tabindex="0" aria-label="Cerrar">×</span>
+    </div>
+    <div class="body">
+      <div class="row">
+        <div class="label">block_id (SHA-256 truncado)</div>
+        <div class="value">a3f9c8e2b1d4f7e0c5a8b2d9e1f4c7a0</div>
+      </div>
+      <div class="row">
+        <div class="label">sentence_type</div>
+        <div class="value">INSTRUCCION</div>
+      </div>
+      <div class="row">
+        <div class="label">source</div>
+        <div class="value">user_input · canal: web · timestamp: 2026-07-18T03:44:16Z</div>
+      </div>
+      <div class="row">
+        <div class="label">tags (5)</div>
+        <div class="tags">
+          <div class="tag">decision</div>
+          <div class="tag">tech</div>
+          <div class="tag">urgent</div>
+          <div class="tag">front-end</div>
+          <div class="tag">osquestador</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">priority</div>
+        <div class="value">2 (high) · inferred from analysis</div>
+      </div>
+      <div class="row">
+        <div class="label">content (verbatim, 142 chars)</div>
+        <div class="content-box">necesito armar el panel del osquestador con 5 zonas fijas y la estética de las fotos de anthropic</div>
+      </div>
+      <div class="row">
+        <div class="label">integrity</div>
+        <div class="value" style="color:var(--green)">✓ SHA-256 verificado · append-only · no_update_inputs trigger</div>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn danger">✗ Descartar</button>
+      <button class="btn ghost">📝 Editar</button>
+      <button class="btn primary">✓ Confirmar y enviar</button>
+    </div>
+  </div>
+</div>
+<div class="tag-bot">PASO 8/9 — MODAL ACCESIBLE (role=dialog, aria-modal=true)</div>
+</body>
+</html>

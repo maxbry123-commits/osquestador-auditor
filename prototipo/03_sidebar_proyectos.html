@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Sidebar proyectos · Paso 3/9</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--anthropic-orange:#d4a574;--bg:#1a1a1a;--bg2:#232323;--border:#2e2e2e;--text:#e8e8e8;--text2:#9a9a9a;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;display:flex;height:100vh;overflow:hidden}
+.sidebar{width:280px;background:var(--bg2);border-right:1px solid var(--border);padding:16px;overflow-y:auto;flex-shrink:0}
+.section{margin-bottom:24px}
+.label{font-size:10px;letter-spacing:2px;color:var(--anthropic-orange);text-transform:uppercase;margin-bottom:10px;font-weight:600}
+.search{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;margin-bottom:8px}
+.item{font-size:13px;padding:6px 8px;border-radius:4px;cursor:pointer;display:flex;justify-content:space-between}
+.item:hover{background:var(--bg)}
+.item.active{background:var(--bg);color:var(--anthropic-orange)}
+.item .badge{font-size:10px;color:var(--text2);background:var(--bg);padding:1px 6px;border-radius:8px}
+.item .badge.on{background:var(--anthropic-orange);color:var(--bg);font-weight:600}
+.types-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.type{font-size:10px;padding:5px 8px;background:var(--bg);border-radius:3px;color:var(--text2);cursor:pointer;text-align:center}
+.type:hover{color:var(--anthropic-orange)}
+.tag{font-size:10px;color:var(--text2);text-align:center;margin-top:24px;letter-spacing:1px;padding-top:16px;border-top:1px solid var(--border)}
+.preview{flex:1;padding:30px;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="section">
+    <div class="label">▣ Proyectos</div>
+    <input class="search" placeholder="🔍 Buscar proyecto…">
+    <div class="item active">▣ osquestador-auditor <span class="badge on">52</span></div>
+    <div class="item">▣ osquestador-memoria <span class="badge">23</span></div>
+    <div class="item">▣ agentes <span class="badge">18</span></div>
+    <div class="item">▣ openclaw <span class="badge">5</span></div>
+  </div>
+
+  <div class="section">
+    <div class="label">⚡ 9 Tipos de Agentes</div>
+    <div class="types-grid">
+      <div class="type">researcher</div>
+      <div class="type">coder</div>
+      <div class="type">writer</div>
+      <div class="type">auditor</div>
+      <div class="type">orchestrator</div>
+      <div class="type">router</div>
+      <div class="type">memory</div>
+      <div class="type">watchdog</div>
+      <div class="type">translator</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="label">📊 Contador agentes</div>
+    <div style="font-size:11px;color:var(--text2);padding:4px 8px">
+      <span style="color:var(--anthropic-orange);font-size:18px;font-weight:600">52</span>
+      <span> / 100 activos</span>
+      <div style="height:4px;background:var(--bg);border-radius:2px;margin-top:6px;overflow:hidden">
+        <div style="height:100%;width:52%;background:var(--anthropic-orange)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="label">🏷 Tags activos (12)</div>
+    <div class="types-grid">
+      <div class="type">decision</div>
+      <div class="type">tech</div>
+      <div class="type">process</div>
+      <div class="type">urgent</div>
+      <div class="type">research</div>
+      <div class="type">audit</div>
+    </div>
+  </div>
+
+  <div class="tag">PASO 3/9 — SIDEBAR</div>
+</aside>
+<div class="preview">[El header y panel se llenan en pasos siguientes]</div>
+</body>
+</html>

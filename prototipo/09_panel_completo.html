@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — Panel completo integrado · Paso 9/9</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--anthropic-orange:#d4a574;--bg:#1a1a1a;--bg2:#232323;--border:#2e2e2e;--text:#e8e8e8;--text2:#9a9a9a;--user:#3a3024;--agent:#232323;--green:#7ec699;--red:#c87e7e;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;height:100vh;overflow:hidden;font-size:13px}
+.app{display:grid;grid-template-columns:280px 1fr 360px;grid-template-rows:60px auto 1fr 32px;grid-template-areas:"sidebar header header" "sidebar pinned pinned" "sidebar chat panel" "status status status";height:100vh;gap:0}
+
+.sidebar{grid-area:sidebar;background:var(--bg2);border-right:1px solid var(--border);padding:14px;overflow-y:auto}
+.header{grid-area:header;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+.pinned{grid-area:pinned;background:var(--bg2);border-bottom:1px solid var(--anthropic-orange);padding:8px 16px;display:flex;align-items:center;gap:10px;font-size:11px}
+.chat{grid-area:chat;background:var(--bg);overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.panel{grid-area:panel;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.status{grid-area:status;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:14px;font-size:10px;color:var(--text2)}
+
+.logo{font-size:13px;letter-spacing:2px;color:var(--anthropic-orange);font-weight:600}
+.proj{font-size:12px;color:var(--text2);padding:3px 8px;background:var(--bg);border-radius:3px}
+.model-select{padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;cursor:pointer;min-width:180px}
+.tabs{display:flex;gap:3px;flex:1;margin-left:20px}
+.tab{font-size:11px;padding:5px 10px;background:var(--bg);border-radius:3px 3px 0 0;cursor:pointer;color:var(--text2)}
+.tab.active{color:var(--anthropic-orange);border-top:1px solid var(--anthropic-orange);background:var(--bg)}
+.tab .x{font-size:9px;margin-left:4px}
+.tab.new{color:var(--anthropic-orange)}
+
+.slabel{font-size:9px;letter-spacing:2px;color:var(--anthropic-orange);text-transform:uppercase;margin:12px 0 6px;font-weight:600}
+.slabel:first-child{margin-top:0}
+.search{width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);font-size:11px;margin-bottom:6px}
+.item{font-size:12px;padding:5px 6px;border-radius:3px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.item:hover{background:var(--bg)}
+.item.active{background:var(--bg);color:var(--anthropic-orange)}
+.badge{font-size:9px;color:var(--text2);background:var(--bg);padding:1px 5px;border-radius:8px}
+.badge.on{background:var(--anthropic-orange);color:var(--bg);font-weight:600}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.tchip{font-size:9px;padding:3px 6px;background:var(--bg);border-radius:2px;color:var(--text2);cursor:pointer;text-align:center}
+.tchip:hover{color:var(--anthropic-orange)}
+.counter{font-size:11px;color:var(--text2);padding:4px 6px;background:var(--bg);border-radius:3px}
+.counter b{color:var(--anthropic-orange);font-size:14px;display:block}
+
+.pinned .lock{font-size:14px}
+.pinned .hash{font-family:'SF Mono',monospace;color:var(--anthropic-orange);font-weight:500}
+.pinned .tags{display:flex;gap:4px;margin-left:auto}
+.pinned .tag{font-size:9px;padding:1px 5px;background:var(--bg);border-radius:8px;color:var(--text2)}
+
+.bubble{max-width:80%;padding:10px 14px;border-radius:7px;font-size:12px;line-height:1.5}
+.bubble.user{background:var(--user);align-self:flex-end;border:1px solid var(--anthropic-orange);margin-left:auto}
+.bubble.agent{background:var(--agent);align-self:flex-start}
+.bubble .who{font-size:9px;color:var(--text2);margin-bottom:3px;letter-spacing:0.5px}
+.bubble.streaming::after{content:'▋';color:var(--anthropic-orange);animation:b 1s infinite}
+@keyframes b{0%,50%{opacity:1}51%,100%{opacity:0}}
+.composer{padding:10px 16px;background:var(--bg2);border-top:1px solid var(--border);display:flex;gap:8px}
+.input{flex:1;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px;font-family:inherit;resize:none;height:40px}
+.send{width:36px;height:36px;background:var(--anthropic-orange);border:none;border-radius:4px;color:var(--bg);font-size:16px;cursor:pointer}
+
+.ptabs{display:flex;border-bottom:1px solid var(--border)}
+.ptab{flex:1;padding:10px 2px;text-align:center;font-size:10px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent}
+.ptab.active{color:var(--anthropic-orange);border-bottom-color:var(--anthropic-orange)}
+.pbody{flex:1;overflow-y:auto;padding:12px}
+.plabel{font-size:9px;letter-spacing:1px;color:var(--anthropic-orange);text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.pitem{padding:6px 8px;background:var(--bg);border-radius:3px;margin-bottom:4px;font-size:11px;cursor:pointer}
+.pitem:hover{border-left:2px solid var(--anthropic-orange)}
+.pitem .t{color:var(--text);margin-bottom:2px}
+.pitem .m{font-size:9px;color:var(--text2)}
+.code{font-family:'SF Mono',monospace;font-size:9px;background:var(--bg);padding:1px 3px;border-radius:2px;color:var(--anthropic-orange)}
+
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px}
+.pill{display:flex;align-items:center;gap:3px}
+.tag-bot{font-size:9px;color:var(--text2);text-align:center;padding:6px;letter-spacing:1px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="sidebar">
+  <div class="slabel">▣ Proyectos</div>
+  <input class="search" placeholder="🔍 buscar…">
+  <div class="item active">▣ osquestador-auditor <span class="badge on">52</span></div>
+  <div class="item">▣ osquestador-memoria <span class="badge">23</span></div>
+  <div class="item">▣ agentes <span class="badge">18</span></div>
+  <div class="item">▣ openclaw <span class="badge">5</span></div>
+
+  <div class="slabel">⚡ 9 tipos agentes</div>
+  <div class="tgrid">
+    <div class="tchip">researcher</div><div class="tchip">coder</div>
+    <div class="tchip">writer</div><div class="tchip">auditor</div>
+    <div class="tchip">orchestrator</div><div class="tchip">router</div>
+    <div class="tchip">memory</div><div class="tchip">watchdog</div>
+    <div class="tchip">translator</div>
+  </div>
+
+  <div class="slabel">📊 agentes activos</div>
+  <div class="counter"><b>52 / 100</b><div style="height:3px;background:var(--bg);border-radius:2px;margin-top:3px;overflow:hidden"><div style="height:100%;width:52%;background:var(--anthropic-orange)"></div></div></div>
+
+  <div class="slabel">🏷 tags</div>
+  <div class="tgrid">
+    <div class="tchip">decision</div><div class="tchip">tech</div>
+    <div class="tchip">process</div><div class="tchip">urgent</div>
+    <div class="tchip">research</div><div class="tchip">audit</div>
+  </div>
+</aside>
+
+<header class="header">
+  <div class="logo">▣ OSQUESTADOR</div>
+  <div class="proj">osquestador-auditor</div>
+  <select class="model-select">
+    <option>Claude Sonnet 4.6 · 180ms</option>
+    <option>MiniMax-M3 · 220ms</option>
+    <option>DeepSeek V3.1 · 340ms</option>
+    <option>Gemini 2.5 Pro · 410ms</option>
+    <option>gpt-oss-120b · 95ms</option>
+  </select>
+  <div class="tabs">
+    <div class="tab active">Chat #1 <span class="x">×</span></div>
+    <div class="tab">Chat #2 <span class="x">×</span></div>
+    <div class="tab">Chat #3 <span class="x">×</span></div>
+    <div class="tab new">+ Nuevo</div>
+  </div>
+  <span class="dot"></span><span style="font-size:10px;color:var(--text2)">MCP 3/3</span>
+  <div style="width:26px;height:26px;border-radius:50%;background:var(--anthropic-orange);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-left:8px">M</div>
+</header>
+
+<div class="pinned">
+  <span class="lock">🔒</span>
+  <span>Input-block verificado</span>
+  <span class="hash">a3f9c8e2b1d4</span>
+  <span style="color:var(--text2)">·</span>
+  <span style="color:var(--text2)">verbatim preservado</span>
+  <div class="tags">
+    <div class="tag">decision</div>
+    <div class="tag">tech</div>
+    <div class="tag">urgent</div>
+  </div>
+</div>
+
+<main class="chat">
+  <div class="bubble user">
+    <div class="who">Max · 03:44 · input_block a3f9c8e2b1d4</div>
+    necesito armar el panel del osquestador con 5 zonas fijas y la estética de las fotos de anthropic
+  </div>
+  <div class="bubble agent">
+    <div class="who">Claude Sonnet 4.6 · kernel · 03:44</div>
+    5 zonas listas: Sidebar 280px + Header 60px + Chat central + Panel 360px + Status 32px. Estética Anthropic: dark mode + acento beige <span class="code">#d4a574</span>. ¿Continúo?
+  </div>
+  <div class="bubble user">
+    <div class="who">Max · 03:44</div>
+    si dale, arma los 9 htmls
+  </div>
+  <div class="bubble agent streaming">
+    <div class="who">Claude Sonnet 4.6 · 03:45</div>
+    Generando 9 HTMLs (login → layout → sidebar → header → chat → panel → status → modal → completo)…
+  </div>
+
+  <div class="composer">
+    <textarea class="input" placeholder="Escribe un input-block… (/ comandos)">perfecto, anota en github y confirma</textarea>
+    <button class="send">↑</button>
+  </div>
+</main>
+
+<aside class="panel">
+  <div class="ptabs">
+    <div class="ptab active">📚<br>Mem</div>
+    <div class="ptab">📄<br>Docs</div>
+    <div class="ptab">✓<br>Tareas</div>
+    <div class="ptab">⚡<br>Skills</div>
+    <div class="ptab">📜<br>Logs</div>
+  </div>
+  <div class="pbody">
+    <div class="plabel">Memoria tripartita</div>
+    <input class="search" placeholder="🔍 buscar…">
+    <div class="pitem"><div class="t">📝 D-23 decision (HOT)</div><div class="m">input-block · 2min</div></div>
+    <div class="pitem"><div class="t">🧠 Episodio Graphiti (WARM)</div><div class="m">user → "crear panel" · 384-dim</div></div>
+    <div class="pitem"><div class="t">🔗 Repo (COLD)</div><div class="m">commit <span class="code">5d7d685</span> · 12 files</div></div>
+    <div class="pitem"><div class="t">📂 vault/panel-final.md</div><div class="m">frontmatter [[input_block_id]]</div></div>
+    <div class="pitem"><div class="t">💬 Chat #1</div><div class="m">InMemoryChatMessageStore · 3 turns</div></div>
+
+    <div class="plabel" style="margin-top:14px">Filtros</div>
+    <div style="font-size:10px;padding:2px 0"><input type="checkbox" checked> solo verificados 🔒</div>
+    <div style="font-size:10px;padding:2px 0"><input type="checkbox" checked> sentence: INSTRUCCION</div>
+    <div style="font-size:10px;padding:2px 0"><input type="checkbox"> cross-project</div>
+  </div>
+  <div class="tag-bot">▣ OPENCLAW INTACTO · 9 PASOS ✓</div>
+</aside>
+
+<footer class="status">
+  <div class="pill"><span class="dot"></span>tokens <b style="color:var(--text);margin-left:2px">12.4k</b></div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>lat <b style="color:var(--text);margin-left:2px">240ms</b></div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>SQLite ✓</div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>backup 3min</div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>watchdog 14d</div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>MCP 3/3</div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill"><span class="dot"></span>RAM 3.1/8GB</div>
+  <span style="color:var(--border)">·</span>
+  <div class="pill">🔒 <b style="color:var(--text);margin-left:2px">247</b> input-blocks</div>
+</footer>
+
+</div>
+</body>
+</html>
