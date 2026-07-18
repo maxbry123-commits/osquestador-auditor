@@ -106,3 +106,17 @@
 - **TOTAL COMMITS:** 5
 - **HASHES VERIFICADOS:** SHA256 de cada archivo en HASHES.sha256
 - **PENDIENTE:** FASE 4 (diseño del panel con Max), FASE 5 (implementación), FASE 6 (deploy Pages), FASE 7 (deploy VPS), FASE 8 (E2E), FASE 9 (certificación)
+
+### [2026-07-18 00:43:00] ANÁLISIS: arquitectura de agentes persistentes (con Max)
+
+**Decisiones de diseño confirmadas con Max en sesión `418434919792827`:**
+
+1. **Repositorio de agentes:** los agentes viven en `maxbry123-commits/agentes` (separado del orquestador).
+2. **Sin UI:** todos los agentes del spec son backend puro (input JSON-RPC, output JSON, sin HTML/JS).
+3. **Persistencia real:** cada agente es un binario oficial (no wrapper mio) con memoria entre llamadas, tools reales, acceso filesystem real.
+4. **Comunicación:** el kernel no nombra plugins — `Registry` carga por `importlib`; el `AgentManager` despacha por `capability` con `fallback_chain` + `CircuitBreaker`.
+5. **API keys centralizadas:** un solo lugar en el VPS: `/root/.osquestador/secrets/` (chmod 600), un .env por proveedor.
+6. **Router único para todas las API:** los agentes NO consumen directo — pasan por un router que hace cola y solo invoca la API cuando la tarea lo necesita.
+7. **HF (HuggingFace) Space único como "realway" de cómputo:** todos los agentes comparten UNA HF Space donde procesan OCR, LLMs, embeddings. Es el gateway de cómputo del sistema.
+
+**Implicación:** el orquestador Fase 0 debe exponer el router y la HF como capabilities (`api_router`, `compute_gateway`), no como plugins hardcodeados.
