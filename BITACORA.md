@@ -120,3 +120,9 @@
 7. **HF (HuggingFace) Space único como "realway" de cómputo:** todos los agentes comparten UNA HF Space donde procesan OCR, LLMs, embeddings. Es el gateway de cómputo del sistema.
 
 **Implicación:** el orquestador Fase 0 debe exponer el router y la HF como capabilities (`api_router`, `compute_gateway`), no como plugins hardcodeados.
+
+### [2026-07-18 00:54:30] TAREA: 10 búsquedas sobre uso comunitario de Obsidian + Graphiti + agentes + AI como memoria y ventanas por proyecto
+
+**Contexto de Max:** investigar CÓMO los devs usan estos sistemas anclados a un agente/AI para no alucinar y manejar proyectos grandes en ventanas separadas.
+
+**Plan:** 10 búsquedas web en comunidad de devs, 1 por pasada, registrar fuentes + patrones de uso.
