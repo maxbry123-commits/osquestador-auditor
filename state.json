@@ -6,13 +6,13 @@
   "owner": "maxbry123-commits",
   "agent": "Mavis",
   "started_at": "2026-07-17T22:55:00Z",
-  "last_update": "2026-07-18T02:14:00Z",
+  "last_update": "2026-07-18T03:02:00Z",
   "current_phase": "FASE_4.5",
-  "current_node": "4.5.7-fase-4.5-fuente-de-verdad",
-  "current_task": "FASE 4.5 cerrada con fuente de verdad. Aprobado por Max. Listo para FASE 5 (programacion codigo real).",
-  "current_step": "esperando-luz-verde-para-fase-5",
+  "current_node": "4.5.8-panel-v2-input-block-reader",
+  "current_task": "Aprobado PARCIAL con correcciones. Max dio 10 reglas para rehacer el panel. Sigo input-block-reader para leer literal sus instrucciones antes de la proxima tarea.",
+  "current_step": "esperando-proxima-tarea-de-max",
   "current_worker": "Mavis",
-  "next_node": "FASE_5_programacion_codigo",
+  "next_node": "panel-v2-fusion-8-interfaces",
   "previous_node": "4.5.6-punto-4-v2",
   "node_status": "IN_PROGRESS",
   "certification_status": "PENDING",
@@ -52,7 +52,21 @@
       "total_busquedas": 62,
       "total_ideas": 70,
       "total_decisiones": 25,
-      "fuente_de_verdad": "FUENTE_DE_VERDAD_OSQUESTADOR.md"
+      "fuente_de_verdad": "FUENTE_DE_VERDAD_OSQUESTADOR.md",
+      "panel_estado": "DESAPROBADO_parcial_v1_REHACER_v2",
+      "reglas_panel_v2": [
+        "estudiar_codigo_fuente_8_interfaces",
+        "capturas_cada_interface",
+        "fusionar_todas_en_una",
+        "ventanas_bandeja_proyecto_anthropic",
+        "ventanas_archivos_ios_apple",
+        "docs_seleccionables_individual_grupo_folder",
+        "routing_agentes_chat",
+        "clasificar_70_ideas_25_decisiones_ui_vs_backend",
+        "resultado_binario_auto_run_sin_modificar",
+        "funciones_abiertas_para_agentes_internos",
+        "estetica_exacta_anthropic_fotos"
+      ]
     },
     "FASE_4_diseno": {
       "status": "PENDING"
