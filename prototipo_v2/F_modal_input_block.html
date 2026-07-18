@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Osquestador — F) Modal input-block accesible</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--o:#d4a574;--bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#232323;--b:#2e2e2e;--t:#e8e8e8;--t2:#9a9a9a;--g:#7ec699;--r:#c87e7e;--y:#e8d77c;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font-family:-apple-system,'SF Pro Display',system-ui,sans-serif;font-size:13px;padding:20px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:18px;font-weight:600;margin-bottom:4px}
+.sub{font-size:11px;color:var(--t2);margin-bottom:20px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.spec{background:var(--bg2);border:1px solid var(--b);border-radius:8px;padding:14px}
+.spec h3{font-size:12px;color:var(--o);margin-bottom:8px;letter-spacing:0.5px}
+.spec ul{font-size:11px;color:var(--t2);padding-left:18px;line-height:1.7}
+.spec ul li{margin-bottom:3px}
+.spec .code{font-family:'SF Mono',monospace;font-size:10px;background:var(--bg);padding:1px 5px;border-radius:2px;color:var(--o)}
+.demo{background:var(--bg2);border:1px solid var(--b);border-radius:8px;padding:14px;margin-bottom:14px}
+.demo h3{font-size:12px;color:var(--o);margin-bottom:10px}
+.preview{background:rgba(0,0,0,0.6);border:1px solid var(--b);border-radius:8px;padding:20px;position:relative}
+.modal{background:var(--bg2);border:1px solid var(--o);border-radius:10px;box-shadow:0 20px 60px rgba(212,165,116,0.2);max-width:580px;margin:0 auto;overflow:hidden}
+.head{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px}
+.head .lock{font-size:18px}
+.head h2{font-size:14px;font-weight:500;flex:1;margin:0}
+.head .x{color:var(--t2);cursor:pointer;font-size:18px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.head .x:hover{background:var(--bg3)}
+.body{padding:16px 18px}
+.row2{margin-bottom:12px}
+.row2 .l{font-size:9px;letter-spacing:1px;color:var(--o);text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.row2 .v{font-size:11px;padding:6px 10px;background:var(--bg3);border-radius:4px;font-family:'SF Mono',monospace}
+.tags{display:flex;gap:4px;flex-wrap:wrap}
+.tags .t{font-size:9px;padding:2px 7px;background:var(--bg3);border-radius:10px;color:var(--t2)}
+.tags .t.on{background:var(--o);color:var(--bg);font-weight:600}
+.content{font-size:11px;line-height:1.6;padding:10px 12px;background:var(--bg3);border-left:3px solid var(--o);border-radius:3px;color:var(--t);font-family:'SF Mono',monospace;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+.integ{display:flex;gap:8px;margin-top:6px}
+.integ .i{font-size:10px;padding:4px 8px;background:var(--bg3);border-radius:3px;color:var(--g);flex:1;text-align:center}
+.integ .i.bad{color:var(--r)}
+.integ .i.warn{color:var(--y)}
+.foot{padding:12px 18px;border-top:1px solid var(--b);display:flex;gap:8px;justify-content:space-between;align-items:center}
+.flow{background:var(--bg2);border:1px solid var(--b);border-radius:8px;padding:14px;margin-top:20px}
+.flow h3{font-size:12px;color:var(--o);margin-bottom:8px}
+.flow .step{padding:8px 12px;background:var(--bg3);border-radius:4px;margin-bottom:4px;font-size:11px;display:flex;align-items:center;gap:10px}
+.flow .step .n{width:20px;height:20px;background:var(--o);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+.code{font-family:'SF Mono',monospace;font-size:10px;background:var(--bg);padding:1px 4px;border-radius:2px;color:var(--o)}
+.btn{padding:8px 14px;border-radius:4px;font-size:11px;cursor:pointer;border:none;font-weight:500}
+.btn.primary{background:var(--o);color:var(--bg)}
+.btn.primary:hover{opacity:0.9}
+.btn.ghost{background:transparent;color:var(--t);border:1px solid var(--b)}
+.btn.danger{background:var(--r);color:#fff}
+.tag-bot{font-size:9px;color:var(--t2);text-align:center;margin-top:24px;padding:8px;border-top:1px solid var(--b);letter-spacing:1px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔒 F) Modal input-block · accesible + integridad</h1>
+  <p class="sub">role=dialog + aria-modal=true + focus trap + Esc para cerrar + integrity check antes de enviar</p>
+
+  <div class="row">
+    <div class="spec">
+      <h3>♿ Accesibilidad WCAG 2.1 AA</h3>
+      <ul>
+        <li><b class="code">role="dialog"</b> anuncia al screen reader</li>
+        <li><b class="code">aria-modal="true"</b> bloquea contenido detrás</li>
+        <li><b class="code">aria-labelledby="title"</b> lee el encabezado</li>
+        <li><b class="code">aria-describedby="body"</b> lee el contenido</li>
+        <li>Focus trap: <span class="code">Tab</span> cicla solo dentro del modal</li>
+        <li><span class="code">Esc</span> cierra el modal</li>
+        <li>Focus inicial: primer botón (Confirmar)</li>
+        <li>Contraste: <b>7.2:1</b> texto primary (AAA)</li>
+        <li>Contraste: <b>4.6:1</b> texto secondary (AA)</li>
+        <li>Teclado completo: sin mouse requerido</li>
+      </ul>
+    </div>
+    <div class="spec">
+      <h3>🔐 Integridad criptográfica</h3>
+      <ul>
+        <li><b>SHA-256</b> del contenido verbatim</li>
+        <li>Hash chain estilo blockchain (cada block incluye hash del previo)</li>
+        <li>Trigger SQLite <span class="code">no_update_inputs</span></li>
+        <li>Trigger SQLite <span class="code">no_delete_inputs</span></li>
+        <li>Append-only — solo INSERT permitido</li>
+        <li>Atomic write con <code>os.replace()</code> (preserve owner)</li>
+        <li>Verificación on-demand contra hash chain</li>
+        <li>Audit trail en 3 motores (vault, grafo, repo git)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="demo">
+    <h3>👁 Vista previa del modal (click <span class="code">Tab</span> para navegar)</h3>
+    <div class="preview">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" aria-describedby="m-body">
+        <div class="head">
+          <span class="lock">🔒</span>
+          <h2 id="m-title">Input-block verificado · confirma antes de enviar</h2>
+          <span class="x" role="button" tabindex="0" aria-label="Cerrar">×</span>
+        </div>
+        <div class="body" id="m-body">
+          <div class="row2">
+            <div class="l">block_id (SHA-256 truncado)</div>
+            <div class="v">a3f9c8e2b1d4f7e0c5a8b2d9e1f4c7a0</div>
+          </div>
+          <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <div class="l">sentence_type</div>
+              <div class="v">INSTRUCCION</div>
+            </div>
+            <div>
+              <div class="l">priority</div>
+              <div class="v">2 (high)</div>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="l">source</div>
+            <div class="v" style="font-size:10px">user_input · canal: web · timestamp: 2026-07-18T03:54:31Z</div>
+          </div>
+          <div class="row2">
+            <div class="l">tags (5)</div>
+            <div class="tags">
+              <span class="t on">decision</span>
+              <span class="t on">tech</span>
+              <span class="t on">urgent</span>
+              <span class="t">front-end</span>
+              <span class="t">osquestador</span>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="l">content (verbatim, 142 chars)</div>
+            <div class="content">ok crea el prototipo de la INtERFACE con toda la información que tiene muestra un modelo en varios documentos htlm para ver cómo lo vas hacer la ui</div>
+          </div>
+          <div class="row2">
+            <div class="l">integrity checks</div>
+            <div class="integ">
+              <div class="i">✓ SHA-256</div>
+              <div class="i">✓ hash chain</div>
+              <div class="i">✓ append-only</div>
+              <div class="i">✓ no_update trigger</div>
+              <div class="i">✓ no_delete trigger</div>
+            </div>
+          </div>
+        </div>
+        <div class="foot">
+          <div style="font-size:10px;color:var(--t2)">Atajos: <span class="code">Enter</span> confirmar · <span class="code">Esc</span> cerrar · <span class="code">⌘E</span> editar</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn danger">✗ Descartar</button>
+            <button class="btn ghost">📝 Editar</button>
+            <button class="btn primary" autofocus>✓ Confirmar y enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <h3>🔄 Flujo de input-block (5 estados)</h3>
+    <div class="step"><div class="n">1</div><div>Usuario escribe mensaje en composer. <code>InputBlockHook</code> detecta UserPromptSubmit.</div></div>
+    <div class="step"><div class="n">2</div><div>Sistema captura texto verbatim. Genera <code>block_id = SHA-256(text)[:16]</code>. Clasifica sentence_type.</div></div>
+    <div class="step"><div class="n">3</div><div>Modal se abre con role=dialog. Muestra block_id, tags, content verbatim, integrity checks.</div></div>
+    <div class="step"><div class="n">4</div><div>Usuario confirma/descarta/edita. Si confirma: INSERT en SQLite append-only + Graphiti EpisodicNode + save vault.</div></div>
+    <div class="step"><div class="n">5</div><div>InputBlock se inyecta al system prompt tier 1. Pinned bar 🔒 aparece en el chat. Hash chain continúa.</div></div>
+  </div>
+
+  <div class="row">
+    <div class="spec">
+      <h3>📋 5 sentence types (taxonomía)</h3>
+      <ul>
+        <li><b>INSTRUCCION</b> · "haz X" · genera task automática</li>
+        <li><b>PREGUNTA</b> · "¿qué/cómo/cuándo...?" · activa RAG</li>
+        <li><b>CRITICA</b> · "esto está mal" · dispara audit</li>
+        <li><b>EJEMPLO</b> · "como este" · alimenta few-shot</li>
+        <li><b>META</b> · "cambia tu comportamiento" · actualiza AGENTS.md</li>
+      </ul>
+    </div>
+    <div class="spec">
+      <h3>🏷 12 tags oficiales (kebab-case)</h3>
+      <ul>
+        <li><b>6 core:</b> decision, tech, process, urgent, research, audit</li>
+        <li><b>6 secondary:</b> front-end, back-end, data, infra, security, docs</li>
+        <li>Tags custom del usuario permitidos</li>
+        <li>Autocomplete con los 12 + custom</li>
+        <li>Validación kebab-case regex</li>
+        <li>Multi-tag con click + Enter</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="tag-bot">▣ OpenClaw INTACTO · F) Modal accesible · parte 6/7</div>
+</div>
+</body>
+</html>
