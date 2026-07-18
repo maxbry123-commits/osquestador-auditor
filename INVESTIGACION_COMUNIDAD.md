@@ -194,3 +194,139 @@ La comunidad converge en **5 patrones arquitectónicos**:
 ---
 
 **Próxima búsqueda:** profundizar en hot cache patterns, RAG chunking, RAG retrieval ranking, Graphiti session_id, Obsidian CLI para queries.
+
+---
+
+## Hallazgos de las búsquedas 5-10 (chunking, namespace, CLI, reranking, memory hierarchy, generative agents)
+
+### Patrón #11 — Contextual Retrieval (Anthropic)
+**Fuente:** anthropic.com/engineering/contextual-retrieval
+
+- **Contextual Embeddings + Contextual BM25**: prepend 50-100 tokens de contexto situacional a cada chunk antes de embeberlo.
+- Prompt: "dado el documento y este chunk, da contexto conciso para situarlo".
+- Prompt caching → 90% reducción de costo.
+- Reduce 49% fallos de retrieval con Contextual Embeddings, 67% combinado con BM25 reranking.
+
+**Aplicación al Osquestador:** el agente `persistir` (al ingestar) genera contexto por chunk antes de embeber — usando un modelo barato. Doble index: vector + BM25.
+
+### Patrón #12 — Multi-tenancy con `group_id` (Graphiti)
+**Fuente:** falkordb.com + getzep docs
+
+- Graphiti usa `group_id` para aislar memoria por proyecto/usuario/tenant a nivel de storage, NO en prompt.
+- FalkorDB: walkthrough con Claude Desktop + Graphiti MCP + FalkorDB, 2 conversaciones → 2 grafos aislados.
+- **Anti-data-leak**: si no podés aislar por storage, agent memory es "data leak waiting to happen".
+
+**Aplicación al Osquestador:** `group_id = "proyecto_<nombre>"` en cada `add_episode`. La memoria se consulta siempre con `group_id=proyecto_actual` — anti-alucinación estructural.
+
+### Patrón #13 — Obsidian CLI 1.12
+**Fuente:** obsidian.md/help/cli + pablo-mano/Obsidian-CLI-skill
+
+- CLI oficial: `obsidian daily`, `obsidian search query=X`, `obsidian create name=X template=Y`, `obsidian tasks`, `obsidian tags counts`, `obsidian dev:screenshot`, `obsidian eval code="..."` (JS en el contexto de Obsidian).
+- Conecta a una instancia corriendo de Obsidian (si no, la lanza).
+- Requiere Catalyst license (early access).
+- **Game-changer**: `obsidian eval` da acceso a `app.metadataCache`, `resolvedLinks`, plugin APIs — cosas que el filesystem solo no puede.
+
+**Aplicación al Osquestador:** si el user tiene Obsidian corriendo, podemos invocarlo via CLI para queries profundas al grafo. Si no, replicamos la query con nuestro propio `obsidian_graph_query` agent (Fase 1).
+
+### Patrón #14 — RAG Pipeline 2026 (consenso)
+**Fuente:** haystack.deepset.ai + stackai + callmissed.com
+
+- **Chunk size**: 512-1024 tokens con structure-aware split (markdown headings, function boundaries).
+- **Overlap**: 10-15% para no perder contexto en boundaries.
+- **Pipeline óptimo**:
+  1. Query rewrite (opcional, multi-turn)
+  2. Hybrid retrieval (dense top-50 + BM25 top-50, fused con RRF k=60)
+  3. Reranker (Cohere Rerank 3, Voyage, BGE-reranker-v2, cross-encoder) → top 5-8
+  4. Context builder con metadata + citations
+  5. LLM con structured output
+- **Cuándo NO usar reranker**: retrieval débil, chunks redundantes, cost/latency alta.
+
+**Aplicación al Osquestador:** el agente `haystack` implementa exactamente este pipeline — hybrid search + reranker opcional. Para Fase 0: solo FAISS + cosine. Para Fase 1: añadir BM25 + reranker.
+
+### Patrón #15 — Memory Hierarchy 3-Tier (HOT/WARM/COLD)
+**Fuente:** clawrxiv.io + onemancrew.dev + armalo.ai + LinkedIn
+
+- **HOT** = working context (L1 cache), < 500 tokens, sesión actual, in-memory.
+- **WARM** = stable facts (L2/L3 cache), 1000-3000 tokens, cross-session, vector DB.
+- **COLD** = permanent archive, summaries comprimidos, largo plazo.
+- Eviction: LRU + semantic priority.
+- Compression ratio: 10:1 (HOT→WARM) o 100:1 (WARM→COLD).
+- **Lossless pointers**: summary con pointer al full original en COLD — si confidence baja, reload.
+
+**Aplicación al Osquestador:** nuestro `~/.osquestador/memoria/` ya tiene 3 carpetas (episodica/semantica/procedimiento) que coinciden con este patrón. Añadimos un `indice/hot.md` por proyecto para HOT.
+
+### Patrón #16 — Generative Agents (Memory Stream + 3 scoring)
+**Fuente:** Park et al. 2023 (Stanford) + agentpatterns.ai + ranjankumar.in
+
+- **Memory Stream**: append-only de observaciones, con timestamp + subject-predicate-object + embedding + **poignancy score** (importance 1-10 LLM-assigned).
+- **Retrieval scoring**: `recency*0.5 + relevance*3 + importance*2`, top 30 → context.
+- **Reflection**: cuando cumulative importance cruza threshold → genera 5 higher-level insights.
+- **Planning**: daily → hourly → 5-15min actions, con reactive replanning.
+- **LEGOMem** (2024): procedural memory modular, split full-task + subtask, reutilizable cross-agent.
+
+**Aplicación al Osquestador:** el agente `persistir` anota poignancy score por doc. El agente `auditor` aplica el scoring triple. El agente `plandex` usa LEGOMem-style procedural memory.
+
+### Patrón #17 — Memory Unit estándar
+**Fuente:** ranjankumar.in (Building Agents That Remember)
+
+```python
+class MemoryUnit:
+    content: str
+    timestamp: datetime
+    importance: float  # 0-1
+    access_count: int
+    tags: List[str]
+    relationships: List[str]  # IDs de memorias relacionadas
+```
+
+**Aplicación al Osquestador:** nuestro schema SQLite `journal` + `kv` debería tener este shape mínimo.
+
+### Patrón #18 — Agentic Paging (Virtual Memory para LLM)
+**Fuente:** onemancrew.dev
+
+- LLM context window = L1 cache.
+- 4 tiers: L1 (in-process dict) → L2 (Redis) → L3 (ChromaDB) → L4 (disk).
+- **Page fault interrupt** = cuando el agente necesita algo que no está en L1, el pager lo busca en L2/L3/L4.
+- **Compression ratio target 10:1**.
+- **Attention-weighted eviction**: páginas citadas por el LLM en su última respuesta reciben boost de recency.
+- **Compact state transfer** entre agentes: NO dump full context, sino state object + pointers.
+
+**Aplicación al Osquestador:** nuestro `agent_context` ya carga lazy el vault del proyecto. Mejorar: serializar state object con pointers, no full context dump.
+
+### Patrón #19 — Tiered Memory in production (HWC)
+**Fuente:** armalo.ai
+
+- HOT = Redis (sub-10ms retrieval), 128K tokens default.
+- WARM = vector DB (Neon pgvector o pluggable), 50-200ms.
+- COLD = summaries comprimidos, retrieval lento.
+- Transición HOT→WARM con LLM distillation, ratio 100:1.
+- **Behavior signal extraction**: compromisos, learnings, failure modes.
+
+**Aplicación al Osquestador:** el agente `hermes` puede hacer la distillation HOT→WARM cada cierre de sesión. WARM = nuestro `~/.osquestador/memoria/semantica/`.
+
+---
+
+## Síntesis final (consolidada)
+
+**La comunidad converge en 7 patrones que el Osquestador debe implementar:**
+
+1. **Vault = filesystem** (markdown + frontmatter + wikilinks) accesible por AI.
+2. **AGENTS.md/CLAUDE.md** por proyecto como constitución.
+3. **Memory tripartita** (episódica/semántica/procedimiento) + tiers HOT/WARM/COLD.
+4. **Lazy loading por proyecto** (Graphiti `group_id` + namespaces + folders).
+5. **MCP server** expone el vault + memoria + state como tools navegables.
+6. **RAG con Contextual Retrieval** (Anthropic) + hybrid + reranker opcional.
+7. **Memory Stream con scoring triple** (recency + relevance + importance) + reflection automática.
+
+**El Osquestador NO inventa** — implementa estos patrones validados por la comunidad con sus propios componentes (no copiando código), basándose en:
+- `getzep/graphiti` (ya clonado) para la memoria grafo
+- `deepset-ai/haystack` (ya clonado) para RAG hybrid + rerank
+- `princeton-nlp/SWE-agent` para agent patterns
+- `plandex-ai/plandex` para procedural memory
+- 5 SKILL.md propios con las reglas y procedimientos
+
+---
+
+## Próximo paso del SHERIFF
+
+**FASE 4 — Diseño del panel con Max** (sin código todavía, solo arquitectura visual + conexión a los 7 patrones validados).
