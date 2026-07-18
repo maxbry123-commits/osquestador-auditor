@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAVES DE OPENCLAW - Max 2026-07-16</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "SF Pro Display", monospace;
+    padding: 24px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+    border-bottom: 3px solid #ff3b30;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  h2 {
+    color: #0a84ff;
+    font-size: 20px;
+    font-weight: 700;
+    margin-top: 36px;
+    margin-bottom: 12px;
+    border-left: 4px solid #0a84ff;
+    padding-left: 12px;
+    text-transform: uppercase;
+  }
+  h3 {
+    color: #ff3b30;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  h4 {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+  p, li { color: #fff; font-size: 14px; }
+  code, .token {
+    color: #fff;
+    background: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    display: block;
+    word-break: break-all;
+    white-space: pre-wrap;
+    margin: 6px 0;
+  }
+  .blue { color: #0a84ff; }
+  .red  { color: #ff3b30; font-weight: 700; }
+  .ok   { color: #30d158; font-weight: 700; }
+  .warn { color: #ff9f0a; font-weight: 700; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    background: #0a0a0a;
+  }
+  th {
+    background: #0a84ff;
+    color: #000;
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #1c1c1e;
+    font-size: 13px;
+    color: #fff;
+    word-break: break-all;
+  }
+  tr:nth-child(even) td { background: #0a0a0a; }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 4px; }
+  hr {
+    border: 0;
+    border-top: 1px solid #2c2c2e;
+    margin: 32px 0;
+  }
+  .box {
+    background: #0a0a0a;
+    border: 1px solid #0a84ff;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .boxred {
+    background: #1a0000;
+    border: 1px solid #ff3b30;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .big {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0a84ff;
+    text-align: center;
+    padding: 10px;
+    background: #000;
+    border: 2px dashed #0a84ff;
+    border-radius: 8px;
+    margin: 12px 0;
+  }
+  .small { font-size: 11px; color: #8e8e93; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .badge-ok   { background: #30d158; color: #000; }
+  .badge-pend { background: #ff9f0a; color: #000; }
+  .badge-fail { background: #ff3b30; color: #fff; }
+</style>
+</head>
+<body>
+
+<h1>🔐 CLAVES DE OPENCLAW — Max · 2026-07-16</h1>
+<p class="small">Documento generado por Mavis (M3). Sistema OpenClaw oficial :18789 — NO TOCADO. MD5 intacto: <code style="display:inline;padding:2px 6px">4930f0b28951e34dfcd03166a76207d9</code></p>
+
+<div class="big">
+  URL ACTIVA: https://type-basis-morning-movement.trycloudflare.com/?token=48c07d13a0bda3225d25988d8e8ef3def8f86b700a7372c1
+</div>
+
+<hr>
+
+<h2>🌐 1. URL y CREDENCIALES DE OPENCLAW</h2>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Tunnel actual (intenta persistir)</td><td><code>https://type-basis-morning-movement.trycloudflare.com</code></td></tr>
+  <tr><td>URL con token bypasea login</td><td><code>https://type-basis-morning-movement.trycloudflare.com/?token=48c07d13a0bda3225d25988d8e8ef3def8f86b700a7372c1</code></td></tr>
+  <tr><td>URL backup tracking</td><td><code>cat /root/.openclaw/current_tunnel_url.txt</code></td></tr>
+  <tr><td>Usuario (NO requerido)</td><td class="blue">vacío — token bypasea</td></tr>
+  <tr><td>Contraseña (NO requerida)</td><td class="blue">vacío — token bypasea</td></tr>
+  <tr><td>Token OpenClaw gateway</td><td class="red">48c07d13a0bda3225d25988d8e8ef3def8f86b700a7372c1</td></tr>
+  <tr><td>Cache local (browser)</td><td><code>localStorage["openclaw.control.settings.v1"]</code> con <code>{gatewayUrl, token}</code></td></tr>
+  <tr><td>Apunta a (interno)</td><td><code>http://127.0.0.1:18789</code> (openclaw oficial, NO TOCADO)</td></tr>
+  <tr><td>MD5 openclaw (control-ui/index.html)</td><td><code>4930f0b28951e34dfcd03166a76207d9</code> ✓ INTACTO</td></tr>
+  <tr><td>MD5 openclaw.json</td><td><code>1bc9458fd67710ddc3e0a284eb275964</code> ✓ INTACTO</td></tr>
+  <tr><td>MD5 models.json</td><td><code>0c043630556ed4ac9a71e22ff62ec534</code> ✓ INTACTO</td></tr>
+</table>
+
+<hr>
+
+<h2>🔑 2. API Y MCP DE OPENCLAW</h2>
+
+<h3>2.1 OpenClaw Gateway (oficial, puerto 18789)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Protocolo</td><td>WebSocket-only</td></tr>
+  <tr><td>URL local</td><td><code>http://127.0.0.1:18789</code></td></tr>
+  <tr><td>Auth header</td><td><code>Authorization: Bearer 48c07d13a0bda3225d25988d8e8ef3def8f86b700a7372c1</code></td></tr>
+  <tr><td>Token</td><td class="red">48c07d13a0bda3225d25988d8e8ef3def8f86b700a7372c1</td></tr>
+  <tr><td>Métodos del gateway</td><td>chat.send · models.list · sessions.list · config.get · agent.* · sessions.* · skills.* · cron.* · etc</td></tr>
+  <tr><td>Default model</td><td><code>minimax/MiniMax-M3</code></td></tr>
+</table>
+
+<h3>2.2 MCP Bridge (microservicio, puerto 18791)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Puerto</td><td><code>18791</code></td></tr>
+  <tr><td>Protocolo</td><td>HTTP REST → convierte a WebSocket hacia openclaw</td></tr>
+  <tr><td>Archivo</td><td><code>/root/.openclaw/mcp_bridge.py</code></td></tr>
+  <tr><td>Log</td><td><code>/var/log/mcp-bridge.log</code></td></tr>
+  <tr><td>Endpoints</td><td>GET <code>/mcp/health</code> · GET <code>/mcp/models</code> · GET <code>/mcp/sessions</code> · GET <code>/mcp/list</code> · POST <code>/mcp/anchor</code> · POST <code>/mcp/send</code> · POST <code>/mcp/skill</code></td></tr>
+</table>
+
+<h4>Ejemplos MCP Bridge:</h4>
+<code>curl http://127.0.0.1:18791/mcp/health</code>
+<code>curl -X POST -H "Content-Type: application/json" -d '{"kind":"document","title":"mi doc","content":"texto..."}' http://127.0.0.1:18791/mcp/anchor</code>
+<code>curl -X POST -H "Content-Type: application/json" -d '{"message":"hola","session":"agent:main:main"}' http://127.0.0.1:18791/mcp/send</code>
+
+<h3>2.3 Extras Gateway (panel paralelo, puerto 18790)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Puerto</td><td><code>18790</code></td></tr>
+  <tr><td>Archivo</td><td><code>/root/.openclaw/extras_gateway.py</code></td></tr>
+  <tr><td>Log</td><td><code>/var/log/extras-gateway.log</code></td></tr>
+  <tr><td>Rutas</td><td><code>/</code> · <code>/anchors</code> · <code>/tasks</code> · <code>/deploy</code> · <code>/system/info</code> · <code>/openclaw/*</code> (proxy a 18789)</td></tr>
+</table>
+
+<hr>
+
+<h2>🤖 3. LAS 5 API KEYS QUE USA OPENCLAW (en uso real ahora)</h2>
+
+<h3>3.1 NVIDIA NIM — Cuenta MAXBRY (maxbry123@gmail.com)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Provider name (openclaw)</td><td><code>nvidia-maxbry</code></td></tr>
+  <tr><td>Base URL</td><td><code>https://integrate.api.nvidia.com/v1</code></td></tr>
+  <tr><td>API type</td><td>openai-completions</td></tr>
+  <tr><td>API Key</td><td class="red">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</td></tr>
+  <tr><td>Email cuenta NVidia</td><td>maxbry123@gmail.com</td></tr>
+  <tr><td>Modelo</td><td><code>openai/gpt-oss-120b</code> → nombre "OSS GPT 120B (NVidia MAXBRY)"</td></tr>
+  <tr><td>Status</td><td class="ok">✅ FUNCIONA (probado con chat real)</td></tr>
+</table>
+
+<h3>3.2 NVIDIA NIM — Cuenta BRISEIDA (Planeta123usa@gmail.com)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Provider name (openclaw)</td><td><code>nvidia-briseida</code></td></tr>
+  <tr><td>Base URL</td><td><code>https://integrate.api.nvidia.com/v1</code></td></tr>
+  <tr><td>API Key</td><td class="red">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</td></tr>
+  <tr><td>Email cuenta NVidia</td><td>Planeta123usa@gmail.com</td></tr>
+  <tr><td>Modelo</td><td><code>openai/gpt-oss-120b</code> → nombre "OSS GPT 120B (NVidia Briseida)"</td></tr>
+  <tr><td>Status</td><td class="ok">✅ FUNCIONA (probado con chat real)</td></tr>
+</table>
+
+<h3>3.3 MiniMax — Subscription Key (sk-cp)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Provider name (openclaw)</td><td><code>minimax</code></td></tr>
+  <tr><td>Base URL</td><td><code>https://api.minimax.io/anthropic</code></td></tr>
+  <tr><td>API type</td><td>anthropic-messages</td></tr>
+  <tr><td>API Key (Subscription)</td><td class="red">sk-cp-6zT7aCAojlCzusi917gb1nM6fkwI4oH_KcXBcyWEQXWcsLWOZ2IRfMwKE7BM8AwaeEXFb1mIf-epuNyqBytY5S3gtQhvsPEekaqHPE1lUALFzy9UmwInCL4</td></tr>
+  <tr><td>Tipo</td><td>Clave de suscripción (Token Plan) — NO se puede usar para pago por uso</td></tr>
+  <tr><td>Modelos</td><td><code>MiniMax-M3</code> (default) · <code>MiniMax-M2.5</code></td></tr>
+  <tr><td>Status</td><td class="ok">✅ FUNCIONA (probado con chat real, M3 responde "Hola")</td></tr>
+  <tr><td>Sitio</td><td>https://platform.minimax.io/</td></tr>
+</table>
+
+<h3>3.4 Groq</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Provider name (openclaw)</td><td><code>groq</code></td></tr>
+  <tr><td>Base URL</td><td><code>https://api.groq.com/openai/v1</code></td></tr>
+  <tr><td>API Key</td><td class="red">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</td></tr>
+  <tr><td>Modelo</td><td><code>openai/gpt-oss-120b</code> → "OSS GPT 120B (Groq)"</td></tr>
+  <tr><td>Status</td><td class="ok">✅ FUNCIONA (probado vía HTTP con curl)</td></tr>
+  <tr><td>Sitio</td><td>https://console.groq.com/</td></tr>
+</table>
+
+<h3>3.5 Cerebras — OpenClaw (abc1tienda@gmail.com)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Provider name (openclaw)</td><td><code>cerebras</code></td></tr>
+  <tr><td>Base URL</td><td><code>https://api.cerebras.ai/v1</code></td></tr>
+  <tr><td>API Key</td><td class="red">csk-vjp8rfm6mkwvnd8dy6pfv3xtmw5kpnv2h3yj9j6prtxd2jc2</td></tr>
+  <tr><td>Email cuenta</td><td>abc1tienda@gmail.com</td></tr>
+  <tr><td>Modelo</td><td><code>gemma-4-31b</code> → "Gemma 4 (cerebras)"</td></tr>
+  <tr><td>Status</td><td class="ok">✅ FUNCIONA (probado vía HTTP con curl)</td></tr>
+  <tr><td>Sitio</td><td>https://cloud.cerebras.ai/</td></tr>
+</table>
+
+<hr>
+
+<h2>📦 4. RESUMEN: 6 MODELOS EN EL SELECTOR DE OPENCLAW</h2>
+<table>
+  <tr><th>#</th><th>Provider</th><th>Modelo</th><th>Display name</th><th>Status</th></tr>
+  <tr><td>1</td><td>cerebras</td><td><code>gemma-4-31b</code></td><td>Gemma 4 (cerebras)</td><td class="ok">✅</td></tr>
+  <tr><td>2</td><td>minimax</td><td><code>MiniMax-M3</code></td><td>MiniMax M3 (default)</td><td class="ok">✅</td></tr>
+  <tr><td>3</td><td>minimax</td><td><code>MiniMax-M2.5</code></td><td>MiniMax M2.5</td><td class="ok">✅</td></tr>
+  <tr><td>4</td><td>nvidia-maxbry</td><td><code>openai/gpt-oss-120b</code></td><td>OSS GPT 120B (NVidia MAXBRY)</td><td class="ok">✅</td></tr>
+  <tr><td>5</td><td>nvidia-briseida</td><td><code>openai/gpt-oss-120b</code></td><td>OSS GPT 120B (NVidia Briseida)</td><td class="ok">✅</td></tr>
+  <tr><td>6</td><td>groq</td><td><code>openai/gpt-oss-120b</code></td><td>OSS GPT 120B (Groq)</td><td class="ok">✅</td></tr>
+</table>
+
+<hr>
+
+<h2>🐙 5. TOKEN DE GITHUB</h2>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Usuario GitHub</td><td><code>maxbry123-commits</code></td></tr>
+  <tr><td>PAT (Personal Access Token)</td><td class="red">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</td></tr>
+  <tr><td>SSH deploy key (path)</td><td><code>/root/.ssh/github_deploy</code> (chmod 600, NO_PASSWORD)</td></tr>
+  <tr><td>Repo principal (privado)</td><td><code>https://github.com/maxbry123-commits/agentes</code></td></tr>
+  <tr><td>Repo target (paso 6)</td><td><code>https://github.com/maxbry123-commits/comand-Center</code></td></tr>
+  <tr><td>Email git</td><td>maxbry123@gmail.com</td></tr>
+</table>
+
+<h3>PATs pendientes (del tokens.json, aún no entregados):</h3>
+<ul>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_mavis</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_chat_sonnet</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_chat_opus</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_chat_fable</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_claude_code</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_mimo_code</li>
+  <li><span class="badge badge-pend">PENDIENTE</span> pat_openclaw</li>
+</ul>
+
+<h3>API keys runtime agents (NO son de openclaw, son de los otros 3 agentes):</h3>
+<table>
+  <tr><th>Agente</th><th>API Key</th><th>Provider</th><th>Status</th></tr>
+  <tr><td>claude-code</td><td><code>sk-api-GXuLw20QLfPRdiowU__fv0GPHR5oanf9fE88SQ6CcQj5WaYrLSfEXnCRA7YgRyxf2yeMOMdEh1Q4IWSF0zsQtilnTCQKstEZZ-3VzteBnqwESQoC_k9YKSs</code></td><td>anthropic (no anda)</td><td class="badge-fail badge">FAIL</td></tr>
+  <tr><td>mimo-code</td><td><code>sk-api-Sbd2LfQij76lVtp5RFuJISzSF26iHj529TTbB5CZHpv5WMo6AT0ReA65qYHWST5N5qFF9JaVGD7yBl6EE1kcTKsTVKeq5N6DTZFUI0ZFEPESINOUb5UHnVM</code></td><td>anthropic (no anda)</td><td class="badge-fail badge">FAIL</td></tr>
+  <tr><td>openclaw (runtime)</td><td><code>sk-api-F9DHX86wimVfguWc4U25oICl6ORQzNZxx5ZGF5Z83s7lbItRSqzRaNW4L-rOuVARIby-pwsl9RQzAHLLSmKpmK_M3psaFhdflFmBNkURumbBuH2yizqzyOY</code></td><td>MiniMax / Anthropic (rechazada)</td><td class="badge-fail badge">FAIL</td></tr>
+  <tr><td>fallback cerebras (claude-code)</td><td><code>csk-dmkymmcdhdhd54etmjh3vmvhxh84nj9pywk2ep9vphpemrw5</code></td><td>cerebras (sirve)</td><td class="ok">OK</td></tr>
+  <tr><td>fallback cerebras (mimo-code)</td><td><code>csk-pwpcpk8kv2pxttwvrjdvcj5m3vdp2wntx3dkvvnvpcdj26pk</code></td><td>cerebras</td><td class="ok">OK</td></tr>
+</table>
+
+<h3>Chat agents pendientes (del tokens.json):</h3>
+<ul>
+  <li><span class="badge badge-pend">PENDIENTE</span> chat-sonnet · <code>api_key: PENDIENTE_MAX</code></li>
+  <li><span class="badge badge-pend">PENDIENTE</span> chat-opus · <code>api_key: PENDIENTE_MAX</code></li>
+  <li><span class="badge badge-pend">PENDIENTE</span> chat-fable · <code>api_key: PENDIENTE_MAX</code></li>
+  <li><span class="badge badge-pend">PENDIENTE</span> m3_mavis · <code>api_key: PENDIENTE_MAX</code></li>
+</ul>
+
+<hr>
+
+<h2>☁️ 6. CLOUDFLARE (TUNNEL Y TOKENS)</h2>
+
+<h3>6.1 Cuenta Cloudflare</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Email</td><td><code>Abc1tienda@gmail.com</code></td></tr>
+  <tr><td>Account ID</td><td><code>8add38882c1b982e7d3c48d4d5ee70c6</code></td></tr>
+  <tr><td>Sitio dashboard</td><td><code>https://dash.cloudflare.com/</code></td></tr>
+</table>
+
+<h3>6.2 API Token activo</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Token activo</td><td class="red">cfat_6pZSRS9coEEt0KmR6uOEUVUZqSvazbTospgOkWLDf79ad0eb</td></tr>
+  <tr><td>Status</td><td class="ok">active</td></tr>
+  <tr><td>Permisos</td><td>Account: Tunnel:Edit, Tunnel:Read, DNS:Edit, Zone:Read</td></tr>
+</table>
+
+<h3>6.3 API Token revocado</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Token revocado</td><td><code>cfat_XH4HLnRlaAuaCkaxRtGfKJPw43KJgb01bbkazb0da78682f7</code></td></tr>
+  <tr><td>Status</td><td class="badge-fail badge">9109 Invalid (revocado)</td></tr>
+</table>
+
+<h3>6.4 Named Tunnel (creado via API, sin zona DNS asignada)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>ID</td><td><code>b3e0a431-ac6c-4313-b58d-582842237f48</code></td></tr>
+  <tr><td>Status</td><td>healthy (4 conexiones QUIC: fra19, fra08, fra20)</td></tr>
+  <tr><td>Hostname público</td><td class="red">NO ASIGNADO (no hay zona DNS configurada)</td></tr>
+  <tr><td>Archivo credenciales</td><td><code>/root/.cloudflared/b3e0a431-ac6c-4313-b58d-582842237f48.json</code> (chmod 600)</td></tr>
+</table>
+
+<h3>6.5 Quick Tunnel (el que SÍ está activo, rota cada restart)</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>URL actual</td><td class="blue">https://type-basis-morning-movement.trycloudflare.com</code></td></tr>
+  <tr><td>URLs anteriores vistas</td><td>lanka-breaks-collections-everybody.trycloudflare.com · demands-film-bearing-looksmart.trycloudflare.com · paperbacks-items-compute-min.trycloudflare.com · gcc-spell-examines-generators.trycloudflare.com · forge-novelty-wish-annie.trycloudflare.com</td></tr>
+  <tr><td>Apunta a</td><td><code>http://127.0.0.1:18789</code> (openclaw oficial)</td></tr>
+  <tr><td>Tracking</td><td><code>/root/.openclaw/current_tunnel_url.txt</code> (auto-actualizado)</td></tr>
+  <tr><td>Watchdog</td><td><code>/usr/local/bin/openclaw-watchdog.sh</code> (crontab cada 2 min)</td></tr>
+</table>
+
+<h3>6.6 Cloudflare Access (Zero Trust) — NO HABILITADO</h3>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Estado</td><td class="badge-fail badge">NO HABILITADO</td></tr>
+  <tr><td>Código de error</td><td>9999 "Access is not enabled"</td></tr>
+  <tr><td>Para habilitar</td><td>Ir manualmente a https://dash.cloudflare.com/ → Zero Trust → Enable Access</td></tr>
+  <tr><td>Credenciales planeadas (Max)</td><td>Email: Abc1tienda@gmail.com · Password: 779361793Max$</td></tr>
+</table>
+
+<hr>
+
+<h2>🖥️ 7. VPS</h2>
+<table>
+  <tr><th>Item</th><th>Valor</th></tr>
+  <tr><td>Host</td><td><code>95.111.232.89</code></td></tr>
+  <tr><td>Usuario SSH</td><td><code>root</code></td></tr>
+  <tr><td>Password SSH</td><td class="red">Navidad2026NCT</td></tr>
+  <tr><td>RAM</td><td>11 GB</td></tr>
+  <tr><td>CPU</td><td>2 vCPUs Xeon Platinum</td></tr>
+  <tr><td>Disco</td><td>28 GB</td></tr>
+  <tr><td>OS</td><td>Linux 6.8.0-134-generic (Ubuntu)</td></tr>
+  <tr><td>Hostname</td><td>vmi3428294</td></tr>
+  <tr><td>OpenClaw gateway</td><td><code>0.0.0.0:18789</code> (PID dinámico, openclaw-gateway)</td></tr>
+  <tr><td>MCP bridge</td><td><code>0.0.0.0:18791</code> (python3, mcp_bridge.py)</td></tr>
+  <tr><td>Extras panel</td><td><code>0.0.0.0:18790</code> (python3, extras_gateway.py)</td></tr>
+  <tr><td>Watchdog</td><td><code>/usr/local/bin/openclaw-watchdog.sh</code> (crontab */2)</td></tr>
+</table>
+
+<hr>
+
+<h2>📁 8. ARCHIVOS CLAVE DEL SISTEMA</h2>
+<table>
+  <tr><th>Path</th><th>Descripción</th><th>Permisos</th></tr>
+  <tr><td><code>/root/.openclaw/openclaw.json</code></td><td>Config principal openclaw (gateway, models, providers)</td><td>root:root 600</td></tr>
+  <tr><td><code>/root/.openclaw/agents/main/agent/models.json</code></td><td>Models merge del openclaw</td><td>root:root 600</td></tr>
+  <tr><td><code>/root/.openclaw/anchors/</code></td><td>Docs y skills anclados (chmod 600)</td><td>drwx------</td></tr>
+  <tr><td><code>/root/.openclaw/anchors/{documents,skills}/*.md</code></td><td>Archivos anclados individuales</td><td>600</td></tr>
+  <tr><td><code>/root/.openclaw/skills/*.md</code></td><td>Skills registrados via MCP</td><td>600</td></tr>
+  <tr><td><code>/root/.openclaw/extras_gateway.py</code></td><td>Panel iOS Extras (531 líneas)</td><td>+x</td></tr>
+  <tr><td><code>/root/.openclaw/mcp_bridge.py</code></td><td>MCP/API bridge hacia openclaw</td><td>+x</td></tr>
+  <tr><td><code>/root/.openclaw/current_tunnel_url.txt</code></td><td>URL activa del tunnel</td><td>600</td></tr>
+  <tr><td><code>/root/.openclaw/state/openclaw.sqlite</code></td><td>DB del gateway (WAL mode)</td><td>600</td></tr>
+  <tr><td><code>/root/.ssh/github_deploy</code></td><td>SSH key para github (maxbry123-commits)</td><td>600</td></tr>
+  <tr><td><code>/opt/nct/chat-app/api/secrets/tokens.json</code></td><td>Tokens de runtime agents (chmod 600)</td><td>600</td></tr>
+  <tr><td><code>/usr/lib/node_modules/openclaw/</code></td><td>Instalación oficial de openclaw (npm)</td><td>NO TOCAR</td></tr>
+  <tr><td><code>/usr/local/bin/openclaw-watchdog.sh</code></td><td>Watchdog: revisa gateway + tunnel cada 2 min</td><td>+x</td></tr>
+  <tr><td><code>/usr/local/bin/keep-quick-tunnel.sh</code></td><td>Watchdog legacy: relanza tunnel</td><td>+x</td></tr>
+  <tr><td><code>/var/log/openclaw-fresh.log</code></td><td>Log del gateway</td><td>644</td></tr>
+  <tr><td><code>/var/log/mcp-bridge.log</code></td><td>Log del MCP bridge</td><td>644</td></tr>
+  <tr><td><code>/var/log/extras-gateway.log</code></td><td>Log del extras panel</td><td>644</td></tr>
+  <tr><td><code>/var/log/quick-tunnel.log</code></td><td>Log del cloudflared</td><td>644</td></tr>
+</table>
+
+<hr>
+
+<h2>🛡️ 9. WATCHDOG Y SUPERVISION</h2>
+
+<h3>9.1 OpenClaw Watchdog (cada 2 min)</h3>
+<code># /usr/local/bin/openclaw-watchdog.sh
+# - curl health 18789
+# - pkill stale node 18789
+# - PRAGMA wal_checkpoint(TRUNCATE) en SQLite
+# - relanza gateway
+# - relanza tunnel
+# - extrae nueva URL y actualiza tracking</code>
+
+<h3>9.2 MCP bridge watchdog (manual, en watchdog principal)</h3>
+<code>curl health 18791 → si DOWN, pkill + relanza python3 mcp_bridge.py</code>
+
+<h3>9.3 Extras panel watchdog (manual, en watchdog principal)</h3>
+<code>curl health 18790 → si DOWN, pkill + relanza python3 extras_gateway.py</code>
+
+<hr>
+
+<h2>🔌 10. CONECTORES MCP IMPLEMENTADOS</h2>
+<table>
+  <tr><th>Endpoint</th><th>Método</th><th>Body</th><th>Descripción</th></tr>
+  <tr><td><code>/mcp/health</code></td><td>GET</td><td>—</td><td>Status del bridge + lista endpoints</td></tr>
+  <tr><td><code>/mcp/models</code></td><td>GET</td><td>—</td><td>Lista 6 modelos del openclaw</td></tr>
+  <tr><td><code>/mcp/sessions</code></td><td>GET</td><td>—</td><td>Lista sesiones del openclaw</td></tr>
+  <tr><td><code>/mcp/list</code></td><td>GET</td><td>—</td><td>Lista anchors (docs+skills)</td></tr>
+  <tr><td><code>/mcp/anchor</code></td><td>POST</td><td><code>{kind, title, content}</code></td><td>Ancla doc/skill → <code>/root/.openclaw/anchors/</code></td></tr>
+  <tr><td><code>/mcp/send</code></td><td>POST</td><td><code>{message, session?}</code></td><td>Envía mensaje al chat openclaw</td></tr>
+  <tr><td><code>/mcp/skill</code></td><td>POST</td><td><code>{name, content}</code></td><td>Registra skill en <code>/root/.openclaw/skills/</code></td></tr>
+</table>
+
+<hr>
+
+<h2>🔒 11. SEGURIDAD Y POLITICAS</h2>
+<ul>
+  <li><span class="blue">OpenClaw tokens</span>: 48c07d13... (gateway) + sk-cp-6zT7aCA... (MiniMax) — ambos válidos y NO TOCADOS</li>
+  <li><span class="blue">Tunnel</span>: solo expone 18789 (openclaw oficial) — 18790/18791 NO están en tunnel</li>
+  <li><span class="red">sshpass</span>: a veces se pierde en el sandbox local (se reinstala con apt-get)</li>
+  <li><span class="red">WAL lock openclaw</span>: si gateway muere mal, hace <code>PRAGMA wal_checkpoint(TRUNCATE)</code> en <code>/root/.openclaw/state/openclaw.sqlite</code></li>
+  <li><span class="warn">MD5 de openclaw</span>: monitorear que NO cambie</li>
+  <li><span class="warn">NUNCA</span> ejecutar <code>pkill -9 openclaw</code> sin relanzar inmediatamente</li>
+</ul>
+
+<hr>
+
+<h2>📊 12. ESTADO FINAL DEL SISTEMA</h2>
+<table>
+  <tr><th>Servicio</th><th>Puerto</th><th>Status</th></tr>
+  <tr><td>openclaw gateway oficial</td><td>18789</td><td class="ok">✅ 200 OK · MD5 intacto</td></tr>
+  <tr><td>extras panel (proxy + extras)</td><td>18790</td><td class="ok">✅ 200 OK</td></tr>
+  <tr><td>mcp bridge (rama API/MCP)</td><td>18791</td><td class="ok">✅ 200 OK · conectado a openclaw</td></tr>
+  <tr><td>cloudflared quick tunnel</td><td>—</td><td class="ok">✅ active (URL rota cada restart)</td></tr>
+  <tr><td>watchdog crontab</td><td>—</td><td class="ok">✅ cada 2 min</td></tr>
+</table>
+
+<hr>
+
+<p class="small">Documento generado por Mavis (M3) · 2026-07-16 · PIPELINE DSL DAG modo loops</p>
+<p class="small">OpenClaw oficial NO fue tocado en ningún momento (MD5 verificado: 4930f0b28951e34dfcd03166a76207d9)</p>
+
+</body>
+</html>

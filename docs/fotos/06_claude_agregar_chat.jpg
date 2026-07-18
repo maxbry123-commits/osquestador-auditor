@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>🔐 MAPA COMPLETO DE ACCESOS — VPS Orquestador Universal</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000000;
+    color: #ffffff;
+    font-family: 'Segoe UI', 'Roboto', sans-serif;
+    padding: 30px 20px;
+    line-height: 1.7;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 {
+    font-size: 2.6em;
+    text-align: center;
+    color: #ffffff;
+    border: 3px solid #ff2222;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 6px #ff0000, 0 0 20px #ff000088;
+    background: linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
+  }
+  h2 {
+    color: #4a9eff;
+    border-bottom: 2px solid #4a9eff;
+    padding-bottom: 12px;
+    margin: 40px 0 20px 0;
+    text-shadow: 0 0 8px #4a9eff66;
+  }
+  h2.rojo { color: #ff4444; border-bottom: 2px solid #ff2222; text-shadow: 0 0 8px #ff000066; }
+  h3 {
+    color: #ffffff;
+    background: linear-gradient(90deg, rgba(74,158,255,0.2) 0%, transparent 100%);
+    padding: 10px 18px;
+    border-left: 5px solid #4a9eff;
+    margin: 25px 0 12px 0;
+  }
+  h3.rojo { background: linear-gradient(90deg, rgba(255,34,34,0.2) 0%, transparent 100%); border-left: 5px solid #ff2222; }
+  h4 { color: #88c4ff; margin: 18px 0 8px 0; }
+  .caja {
+    background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+    border: 1px solid #4a9eff44;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 18px 0;
+  }
+  .caja.rojo { border: 1px solid #ff222244; }
+  .caja-clave {
+    background: linear-gradient(180deg, #1a0000 0%, #0a0000 100%);
+    border: 2px solid #ff2222;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 12px 0;
+    font-family: 'Courier New', monospace;
+    overflow-x: auto;
+  }
+  .caja-clave .label { color: #ff8888; font-weight: bold; display: block; margin: 4px 0; }
+  .caja-clave .valor {
+    color: #ffffff;
+    background: rgba(74,158,255,0.1);
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 6px 0;
+    word-break: break-all;
+    border: 1px solid #4a9eff44;
+  }
+  .caja-clave .desc { color: #88c4ff; font-style: italic; font-size: 0.9em; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; background: #050505; border: 1px solid #4a9eff44; }
+  th { background: linear-gradient(180deg, #1a1a2e 0%, #0a0a1e 100%); color: #4a9eff; padding: 14px; text-align: left; border: 1px solid #4a9eff44; }
+  th.rojo { color: #ff4444; background: linear-gradient(180deg, #2e0a0a 0%, #1e0000 100%); border: 1px solid #ff222244; }
+  td { padding: 11px 14px; border: 1px solid #222222; color: #ffffff; }
+  tr:nth-child(even) { background: #0a0a0a; }
+  tr:hover { background: #111122; }
+  code { background: #0a0a0a; color: #88c4ff; padding: 2px 8px; border-radius: 3px; font-family: 'Courier New', monospace; border: 1px solid #4a9eff33; }
+  pre { background: #000000; color: #ffffff; padding: 18px; border-radius: 6px; overflow-x: auto; border-left: 4px solid #4a9eff; margin: 12px 0; font-family: 'Courier New', monospace; font-size: 0.92em; }
+  pre.rojo { border-left: 4px solid #ff2222; }
+  pre .c-azul { color: #4a9eff; }
+  pre .c-rojo { color: #ff4444; }
+  pre .c-comentario { color: #888888; font-style: italic; }
+  .alerta { background: linear-gradient(90deg, #1a0000 0%, #0a0000 100%); border: 2px solid #ff2222; border-radius: 8px; padding: 18px; margin: 18px 0; color: #ffaaaa; }
+  .alerta strong { color: #ff4444; }
+  .alerta.azul { background: linear-gradient(90deg, #001020 0%, #000510 100%); border: 2px solid #4a9eff; color: #88c4ff; }
+  .alerta.azul strong { color: #4a9eff; }
+  .status-ok { color: #66ff66; background: #001a00; padding: 2px 8px; border-radius: 4px; border: 1px solid #66ff6644; }
+  .status-warn { color: #ffaa44; background: #1a0a00; padding: 2px 8px; border-radius: 4px; border: 1px solid #ffaa4444; }
+  .status-error { color: #ff4444; background: #1a0000; padding: 2px 8px; border-radius: 4px; border: 1px solid #ff222244; }
+  .endpoint {
+    background: linear-gradient(90deg, #0a0a14 0%, #000000 100%);
+    border-left: 4px solid #4a9eff;
+    padding: 12px 18px;
+    margin: 10px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  .metodo { color: #ff4444; font-weight: bold; background: #1a0000; padding: 3px 10px; border-radius: 4px; border: 1px solid #ff2222; font-size: 0.9em; }
+  .metodo.get { color: #4a9eff; background: #001020; border-color: #4a9eff; }
+  .ruta { color: #ffffff; font-family: 'Courier New', monospace; font-weight: bold; }
+  .descripcion { color: #cccccc; font-size: 0.92em; margin-top: 4px; }
+  hr { border: 0; border-top: 1px solid #333333; margin: 40px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+  @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; margin: 2px 4px 2px 0; }
+  .badge-azul { background: #001a3a; color: #4a9eff; border: 1px solid #4a9eff; }
+  .badge-rojo { background: #1a0000; color: #ff4444; border: 1px solid #ff2222; }
+  .badge-verde { background: #001a00; color: #66ff66; border: 1px solid #66ff66; }
+  .toc { background: #050505; border: 1px solid #4a9eff44; border-radius: 8px; padding: 20px; margin: 30px 0; }
+  .toc a { color: #4a9eff; text-decoration: none; display: block; padding: 4px 0; }
+  .toc a:hover { color: #ff8888; }
+  .timestamp { color: #ff8888; font-style: italic; text-align: center; margin-top: 60px; padding-top: 25px; border-top: 1px solid #ff222244; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔐 MAPA COMPLETO DE ACCESOS — VPS Orquestador Universal</h1>
+
+<div class="caja">
+<p><strong>VPS:</strong> Contabo Cloud (95.111.232.89)</p>
+<p><strong>Hostname:</strong> vmi3428294</p>
+<p><strong>OS:</strong> Ubuntu 24.04.4 LTS</p>
+<p><strong>Fecha auditoría:</strong> 2026-07-15 07:49 UTC</p>
+<p><strong>Estado:</strong> <span class="badge badge-verde">MODO MANTENIMIENTO</span> · Procesos críticos pausados · SSH accesible · 2.9GB RAM usado de 11GB</p>
+</div>
+
+<div class="toc">
+<h4 style="color:#4a9eff;">📑 ÍNDICE</h4>
+<a href="#identidad">1. Identidad del VPS</a>
+<a href="#credenciales">2. Credenciales SSH (3 usuarios)</a>
+<a href="#puertos">3. Puertos y servicios activos</a>
+<a href="#api-keys">4. API Keys del Orquestador</a>
+<a href="#cloudflare">5. Túnel Cloudflare</a>
+<a href="#firewall">6. Firewall y Seguridad</a>
+<a href="#rutas-acceso">7. Rutas de acceso completas (6 puentes)</a>
+<a href="#configuracion">8. Configuración SSH servidor</a>
+<a href="#procesos">9. Procesos activos y pausa</a>
+<a href="#recursos">10. Recursos actuales</a>
+<a href="#trazabilidad">11. Trazabilidad y comandos admin</a>
+</div>
+
+<h2 id="identidad" class="rojo">1. 🖥️ IDENTIDAD DEL VPS</h2>
+
+<div class="grid-2">
+<div class="caja">
+<h4 class="rojo">Red</h4>
+<p><strong>Hostname:</strong> <code>vmi3428294</code></p>
+<p><strong>IPv4 pública (WAN):</strong> <code class="rojo">95.111.232.89</code></p>
+<p><strong>IPv4 Docker bridge:</strong> <code>172.17.0.1</code></p>
+<p><strong>IPv6 pública:</strong> <code>2a02:c207:2342:8294::1</code></p>
+<p><strong>Subred:</strong> <code>95.111.224.0/20</code></p>
+</div>
+<div class="caja rojo">
+<h4 class="rojo">Sistema</h4>
+<p><strong>OS:</strong> <code>Ubuntu 24.04.4 LTS</code></p>
+<p><strong>Kernel:</strong> <code>6.8.0-134-generic</code></p>
+<p><strong>Python:</strong> <code>3.12.3</code></p>
+<p><strong>Docker:</strong> <code>29.1.3</code></p>
+<p><strong>Cloudflared:</strong> <code>2026.7.1</code></p>
+</div>
+</div>
+
+<h2 id="credenciales" class="rojo">2. 🔑 CREDENCIALES SSH</h2>
+
+<div class="alerta">
+<strong>⚠️ IMPORTANTE:</strong> Hay 3 usuarios SSH con sus respectivos niveles de privilegio. Las passwords fueron generadas en la sesión del 2026-07-15 a las 04:36 UTC.
+</div>
+
+<h3 class="rojo">2.1 👑 ROOT — Administrador supremo</h3>
+<div class="caja-clave">
+  <span class="label">▣ Host (SSH):</span>
+  <span class="valor">ssh root@95.111.232.89</span>
+  <span class="label">▣ Puerto:</span>
+  <span class="valor">22</span>
+  <span class="label">▣ Usuario:</span>
+  <span class="valor">root</span>
+  <span class="label">▣ Contraseña:</span>
+  <span class="valor">Navidad2026NCT</span>
+  <span class="label">▣ Privilegios:</span>
+  <span class="valor">TODOS (PermitRootLogin yes, sudo sin restricción)</span>
+  <div class="desc">⚠ SOLO PARA EMERGENCIAS. Para tareas administrativas usar orch-admin.</div>
+</div>
+
+<h3>2.2 👑 ORCH-ADMIN — Administrador del orquestador</h3>
+<div class="caja-clave">
+  <span class="label">▣ Host (SSH):</span>
+  <span class="valor">ssh orch-admin@95.111.232.89</span>
+  <span class="label">▣ Puerto:</span>
+  <span class="valor">22</span>
+  <span class="label">▣ Usuario:</span>
+  <span class="valor">orch-admin</span>
+  <span class="label">▣ Contraseña:</span>
+  <span class="valor">8dyW92FWY0m_hZzL#KnmwFmBi4Gsb^+P</span>
+  <span class="label">▣ UID:</span>
+  <span class="valor">1000</span>
+  <span class="label">▣ Privilegios:</span>
+  <span class="valor">sudo NOPASSWD:ALL (configurado en /etc/sudoers.d/orch-admin)</span>
+  <div class="desc">✓ RECOMENDADO para tareas administrativas. Reiniciar servicios, instalar paquetes, leer/escribir en /opt/orquestador-universal/.</div>
+</div>
+
+<h3>2.3 🤖 ORCH-AGENT — Workers / ejecución automatizada</h3>
+<div class="caja-clave">
+  <span class="label">▣ Host:</span>
+  <span class="valor">ssh orch-agent@95.111.232.89</span>
+  <span class="label">▣ Usuario:</span>
+  <span class="valor">orch-agent</span>
+  <span class="label">▣ Contraseña:</span>
+  <span class="valor">FkM8qM7ul%7UWWDE36n$4xQV^0Kx!=*d</span>
+  <span class="label">▣ UID:</span>
+  <span class="valor">1001</span>
+  <span class="label">▣ Privilegios:</span>
+  <span class="valor">SIN sudo</span>
+  <div class="desc">✓ Para agentes automatizados. Sin escalación de privilegios.</div>
+</div>
+
+<h3>2.4 💬 ORCH-CHAT — Conexión desde Mavis / chats</h3>
+<div class="caja-clave">
+  <span class="label">▣ Host:</span>
+  <span class="valor">ssh orch-chat@95.111.232.89</span>
+  <span class="label">▣ Usuario:</span>
+  <span class="valor">orch-chat</span>
+  <span class="label">▣ Contraseña:</span>
+  <span class="valor">zPjdM1Ogd33vEdf5NGPSE^D3bglX45vb</span>
+  <span class="label">▣ UID:</span>
+  <span class="valor">1002</span>
+  <span class="label">▣ Privilegios:</span>
+  <span class="valor">SIN sudo</span>
+  <div class="desc">✓ Para conexiones rápidas de Mavis M3, otros chats y agentes.</div>
+</div>
+
+<h2 id="puertos">3. 🌐 PUERTOS Y SERVICIOS ACTIVOS</h2>
+
+<table>
+  <tr><th>Puerto</th><th>Protocolo</th><th>Servicio</th><th>Estado</th><th>Proceso</th></tr>
+  <tr><td><code>22</code></td><td>TCP/SSH</td><td>OpenSSH Server</td><td><span class="status-ok">ABIERTO</span></td><td>sshd (PID 1047834)</td></tr>
+  <tr><td><code>53</code></td><td>TCP/UDP</td><td>DNS (systemd-resolved)</td><td><span class="status-ok">ABIERTO</span></td><td>systemd-resolve (650)</td></tr>
+  <tr><td><code>443</code></td><td>TCP/HTTPS</td><td>nginx</td><td><span class="status-ok">ABIERTO</span></td><td>nginx (×7 workers)</td></tr>
+  <tr><td><code>8080</code></td><td>TCP/HTTP</td><td>nginx</td><td><span class="status-ok">ABIERTO</span></td><td>nginx (×7 workers)</td></tr>
+  <tr><td><code>8443</code></td><td>TCP/HTTPS</td><td>nginx</td><td><span class="status-ok">ABIERTO</span></td><td>nginx (×7 workers)</td></tr>
+  <tr><td><code>9090</code></td><td>TCP/HTTP</td><td>ORQUESTADOR UNIVERSAL (muerto)</td><td><span class="status-error">CAÍDO</span></td><td>(conector_chat fue matado por OOM)</td></tr>
+  <tr><td><code>3212</code></td><td>TCP</td><td>next-server (v1)</td><td><span class="status-ok">ABIERTO</span></td><td>next-server (PID 2263)</td></tr>
+  <tr><td><code>4000</code></td><td>TCP</td><td>litellm</td><td><span class="status-ok">ABIERTO (local)</span></td><td>litellm (75820)</td></tr>
+  <tr><td><code>8000</code></td><td>TCP</td><td>uvicorn</td><td><span class="status-ok">ABIERTO (local)</span></td><td>uvicorn (75821)</td></tr>
+  <tr><td><code>8081</code></td><td>TCP</td><td>python3</td><td><span class="status-ok">ABIERTO (local)</span></td><td>python3 (1956969)</td></tr>
+  <tr><td><code>8082</code></td><td>TCP</td><td>python3</td><td><span class="status-ok">ABIERTO (local)</span></td><td>python3 (1956752)</td></tr>
+  <tr><td><code>8083</code></td><td>TCP</td><td>python3 (openclaw huérfano)</td><td><span class="status-ok">ABIERTO (local)</span></td><td>python3 (2001442)</td></tr>
+  <tr><td><code>7100</code></td><td>TCP</td><td>python3</td><td><span class="status-ok">ABIERTO</span></td><td>python3 (75826)</td></tr>
+  <tr><td><code>7200</code></td><td>TCP</td><td>python3</td><td><span class="status-ok">ABIERTO</span></td><td>python3 (75810)</td></tr>
+  <tr><td><code>18789</code></td><td>TCP</td><td>openclaw (gateway)</td><td><span class="status-ok">ABIERTO (pausado)</span></td><td>node (2138546)</td></tr>
+  <tr><td><code>18790</code></td><td>TCP</td><td>socat</td><td><span class="status-ok">ABIERTO</span></td><td>socat (778)</td></tr>
+  <tr><td><code>20241</code></td><td>TCP</td><td>cloudflared metrics</td><td><span class="status-ok">ABIERTO (local)</span></td><td>cloudflared (2128093)</td></tr>
+  <tr><td><code>46187</code></td><td>TCP</td><td>containerd</td><td><span class="status-ok">ABIERTO (local)</span></td><td>containerd (822)</td></tr>
+</table>
+
+<h2 id="api-keys" class="rojo">4. 🔐 API KEYS (en /opt/orquestador-universal/.env)</h2>
+
+<div class="alerta">
+<strong>📁 Archivo:</strong> <code>/opt/orquestador-universal/.env</code> · chmod 600 · owner: root:root
+</div>
+
+<div class="grid-2">
+<div class="caja-clave">
+  <span class="label">Mavis_API_KEY</span>
+  <span class="valor">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</span>
+  <span class="desc">Router priority 1 · <span class="status-error">Estado: ERROR</span></span>
+</div>
+<div class="caja-clave">
+  <span class="label">NVIDIA_API_KEY</span>
+  <span class="valor">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</span>
+  <span class="desc">Router priority 2 · <span class="status-error">Estado: ERROR</span></span>
+</div>
+<div class="caja-clave">
+  <span class="label">ANTHROPIC_API_KEY</span>
+  <span class="valor">sk-api-X5TD-0fT21tcWDUBcbwOvedTvG2xR7mHK5qcS-fOi8QA1pZNigdbUfG5AqSfNlRdH4tYGI0_s9GTnY80hoBsnPowh0rK51m-m8Vedv4nbwNnkxsi_XkGISU</span>
+  <span class="desc">Router priority 3 · <span class="status-error">Estado: ERROR</span></span>
+</div>
+<div class="caja-clave">
+  <span class="label">CEREBRAS_API_KEY</span>
+  <span class="valor">csk-vjp8rfm6mkwvnd8dy6pfv3xtmw5kpnv2h3yj9j6prtxd2jc2</span>
+  <span class="desc">Router priority 4 · <span class="status-error">Estado: ERROR</span></span>
+</div>
+</div>
+
+<p>Las 4 APIs externas fallan (keys inválidas o sin saldo). El router tiene un fallback local que genera respuestas útiles cuando todas fallan.</p>
+
+<h2 id="cloudflare">5. 🌍 TÚNEL CLOUDFLARE (HTTPS público)</h2>
+
+<div class="caja">
+<p><strong>URL pública:</strong></p>
+<pre>https://rings-implementation-shirt-adipex.trycloudflare.com</pre>
+<p><strong>Proceso:</strong> <code>cloudflared tunnel --url http://127.0.0.1:9090 --no-autoupdate</code> (PID 2128093, 34 min vivo)</p>
+<p><strong>Target:</strong> <code>http://127.0.0.1:9090</code> (orquestador, actualmente CAÍDO)</p>
+<p><strong>Estado:</strong> <span class="status-warn">Túnel vivo, back-end caído → 502 Bad Gateway</span></p>
+<p><strong>Region:</strong> London (lhr13)</p>
+<p><strong>Tipo:</strong> Quick Tunnel (gratis, sin auth Cloudflare)</p>
+</div>
+
+<div class="alerta azul">
+<strong>Para regenerar URL si se reinicia cloudflared:</strong>
+<pre>pkill -9 -f cloudflared
+sleep 2
+(setsid nohup cloudflared tunnel --url http://127.0.0.1:9090 --no-autoupdate < /dev/null > /tmp/cf.log 2>&1 &)
+sleep 10
+grep -oE "https://[a-z-]+\.trycloudflare\.com" /tmp/cf.log | tail -1</pre>
+</div>
+
+<h2 id="firewall" class="rojo">6. 🔥 FIREWALL Y SEGURIDAD</h2>
+
+<h3>6.1 UFW (Uncomplicated Firewall)</h3>
+<div class="caja">
+<p><strong>Estado:</strong> <code>Status: inactive</code></p>
+<p>UFW no bloquea nada. Se usa <code>iptables</code> directamente.</p>
+</div>
+
+<h3>6.2 iptables INPUT</h3>
+<div class="caja">
+<pre>Chain INPUT (policy ACCEPT)
+num  target     prot opt source               destination         
+1    ACCEPT     6    --  0.0.0.0/0            0.0.0.0/0            tcp dpt:9090</pre>
+<p>Solo el puerto 9090 está explícitamente abierto. SSH (22) permitido por la política ACCEPT por defecto.</p>
+</div>
+
+<h3>6.3 fail2ban</h3>
+<div class="alerta">
+<strong>Estado:</strong> ACTIVO
+<p><strong>Filter (sshd):</strong></p>
+<ul>
+  <li>Currently failed: <strong>11</strong></li>
+  <li>Total failed: <strong>11,325</strong></li>
+  <li>Currently banned: <strong>6 IPs</strong></li>
+  <li>Total banned: <strong>1,568</strong></li>
+</ul>
+<p><strong>IPs baneadas actualmente:</strong></p>
+<pre>220.80.223.144, 14.225.23.94, 141.11.32.54, 103.67.80.61, 8.210.89.241, 103.149.197.34</pre>
+<p>Si te banean, esperá 10 min o usa <code>fail2ban-client set sshd unbanip TU_IP</code> desde otro usuario.</p>
+</div>
+
+<h3>6.4 SSH server config</h3>
+<div class="caja">
+<pre>PermitRootLogin yes          # ⚠ root puede loguearse por SSH
+UsePAM yes                    # PAM habilitado
+PasswordAuthentication        # default (sí)
+PubkeyAuthentication          # default (sí)
+KbdInteractiveAuthentication no
+MaxAuthTries                  # default 6</pre>
+</div>
+
+<h3>6.5 Firewall externo de Contabo</h3>
+<div class="alerta">
+<strong>⚠️ Bloquea puertos personalizados (9090, etc.) desde Internet.</strong> Solución: usar Cloudflare Tunnel.
+</div>
+
+<h2 id="rutas-acceso" class="rojo">7. 🌉 RUTAS DE ACCESO COMPLETAS (6 PUENTES)</h2>
+
+<h3>Puente 1 — SSH directo (root)</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">ssh root@95.111.232.89</span>
+  <span class="label">Puerto:</span>
+  <span class="valor">22</span>
+  <span class="label">Auth:</span>
+  <span class="valor">password</span>
+  <div class="desc">✓ Funciona. Probado.</div>
+</div>
+
+<h3>Puente 2 — SSH (orch-admin) con sudo</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">ssh orch-admin@95.111.232.89</span>
+  <span class="label">Comando tras login:</span>
+  <span class="valor">sudo -i  (para volverse root)</span>
+  <div class="desc">✓ Recomendado para administración.</div>
+</div>
+
+<h3>Puente 3 — SSH (orch-chat) sin sudo</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">ssh orch-chat@95.111.232.89</span>
+  <div class="desc">✓ Probado. Funciona. Solo lectura.</div>
+</div>
+
+<h3>Puente 4 — HTTPS público (Cloudflare Tunnel)</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">https://rings-implementation-shirt-adipex.trycloudflare.com</span>
+  <span class="label">Estado actual:</span>
+  <span class="valor"><span class="status-error">502 Bad Gateway</span> (orquestador muerto)</span>
+  <div class="desc">⚠ Funciona el túnel, el back-end (9090) está caído.</div>
+</div>
+
+<h3>Puente 5 — HTTPS por nginx (puerto 443)</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">https://95.111.232.89/</span>
+  <span class="label">Bloqueado por:</span>
+  <span class="valor">Firewall externo de Contabo</span>
+  <div class="desc">⚠ Puerto 443 bloqueado por Contabo. No accesible desde fuera.</div>
+</div>
+
+<h3>Puente 6 — Túnel SSH reverso (para acceso futuro)</h3>
+<div class="caja-clave">
+  <span class="label">Ruta:</span>
+  <span class="valor">ssh -R 8080:localhost:9090 orch-admin@95.111.232.89</span>
+  <div class="desc">Si tenés una máquina externa, podés hacer túnel reverso desde el VPS a tu IP, exponiendo el 9090.</div>
+</div>
+
+<h3>Conectividad probada</h3>
+<table>
+  <tr><th>Ruta</th><th>Estado</th><th>Notas</th></tr>
+  <tr><td><code>ssh root@95.111.232.89</code></td><td><span class="status-ok">✓ FUNCIONA</span></td><td>Password: Navidad2026NCT</td></tr>
+  <tr><td><code>ssh orch-admin@95.111.232.89</code></td><td><span class="status-warn">⚠ NO PROBADO</span></td><td>Puede tener password distinta</td></tr>
+  <tr><td><code>ssh orch-agent@95.111.232.89</code></td><td><span class="status-warn">⚠ NO PROBADO</span></td><td>Puede tener password distinta</td></tr>
+  <tr><td><code>ssh orch-chat@95.111.232.89</code></td><td><span class="status-ok">✓ FUNCIONA</span></td><td>Password: zPjdM1Ogd33vEdf5NGPSE^D3bglX45vb</td></tr>
+  <tr><td>HTTP 95.111.232.89:9090</td><td><span class="status-error">✗ MUERTO</span></td><td>Orquestador matado por OOM</td></tr>
+  <tr><td>HTTPS trycloudflare.com</td><td><span class="status-error">✗ 502</span></td><td>Túnel OK, back-end muerto</td></tr>
+  <tr><td>HTTPS 95.111.232.89:443</td><td><span class="status-error">✗ FIREWALL</span></td><td>Contabo bloquea 443</td></tr>
+</table>
+
+<h2 id="configuracion">8. ⚙️ CONFIGURACIÓN SSH SERVIDOR</h2>
+
+<div class="caja">
+<h4>/etc/ssh/sshd_config (extracto)</h4>
+<pre>PermitRootLogin yes
+UsePAM yes
+KbdInteractiveAuthentication no</pre>
+</div>
+
+<div class="caja">
+<h4>/root/.ssh/</h4>
+<pre>authorized_keys   (0 bytes — sin claves autorizadas)
+config            (193 bytes — config de Mavis)
+github_deploy     (411 bytes — clave privada de Mavis para GitHub)
+github_deploy.pub (102 bytes — clave pública)
+known_hosts       (978 bytes — hosts conocidos)
+known_hosts.old   (142 bytes — backup)</pre>
+<p><strong>⚠️ NOTA:</strong> <code>authorized_keys</code> está vacío (0 bytes). El login con password es el único método activo para <code>root</code>. Para Mavis/agentes externos, se necesita configurar SSH key auth.</p>
+</div>
+
+<h2 id="procesos" class="rojo">9. 📊 PROCESOS ACTIVOS Y PAUSA</h2>
+
+<div class="alerta">
+<strong>ESTADO MODO MANTENIMIENTO:</strong> 6 procesos en estado T (pausados vía SIGSTOP).
+</div>
+
+<h3>Top 10 procesos por RAM</h3>
+<table>
+  <tr><th>PID</th><th>USER</th><th>%MEM</th><th>RSS (MB)</th><th>Comando</th></tr>
+  <tr><td>2180380</td><td>root</td><td>3.7%</td><td>461</td><td>openclaw</td></tr>
+  <tr><td>2138546</td><td>root</td><td>3.3%</td><td>415</td><td>node (pausado)</td></tr>
+  <tr><td>15612</td><td>root</td><td>2.8%</td><td>344</td><td>claude</td></tr>
+  <tr><td>15601</td><td>root</td><td>2.4%</td><td>305</td><td>claude</td></tr>
+  <tr><td>75820</td><td>root</td><td>2.4%</td><td>304</td><td>litellm</td></tr>
+  <tr><td>15621</td><td>root</td><td>1.8%</td><td>222</td><td>claude</td></tr>
+  <tr><td>12916</td><td>root</td><td>1.7%</td><td>212</td><td>claude</td></tr>
+  <tr><td>75821</td><td>root</td><td>0.8%</td><td>104</td><td>uvicorn</td></tr>
+  <tr><td>2263</td><td>root</td><td>0.8%</td><td>103</td><td>next-server (v1)</td></tr>
+  <tr><td>75827</td><td>root</td><td>0.4%</td><td>52</td><td>python3 (telegram-bot)</td></tr>
+</table>
+
+<h3>Procesos PAUSADOS (estado T)</h3>
+<table>
+  <tr><th>PID</th><th>STAT</th><th>Comando</th></tr>
+  <tr><td>74622</td><td>T</td><td>run_auto3.sh</td></tr>
+</table>
+<p><em>Nota: Los otros 5 que puse en STOP (openclaw, claude 12916, loop_mavis, auto_loop, python3 huérfano) fueron resumed por Max durante el modo mantenimiento de Mavis.</em></p>
+
+<h3>Cloudflared y watchdog</h3>
+<ul>
+  <li><strong>cloudflared</strong> PID 2128093 — vivo, 34 min, 31 MB</li>
+  <li><strong>dockerd</strong> PID 1143 — vivo, 0 containers</li>
+  <li><strong>fail2ban-server</strong> PID 75781 — vivo, 6 IPs baneadas</li>
+</ul>
+
+<h2 id="recursos">10. 📈 RECURSOS ACTUALES</h2>
+
+<table>
+  <tr><th>Recurso</th><th>Total</th><th>Usado</th><th>Libre</th><th>%</th></tr>
+  <tr><td>RAM</td><td>11 GB</td><td>2.9 GB</td><td>8.1 GB</td><td>26%</td></tr>
+  <tr><td>Disco /</td><td>193 GB</td><td>33 GB</td><td>160 GB</td><td>18%</td></tr>
+  <tr><td>Load avg</td><td colspan="4">0.80 (1min) / 0.91 (5min) / 0.97 (15min)</td></tr>
+  <tr><td>Uptime</td><td colspan="4">2 days, 3:58</td></tr>
+  <tr><td>Users</td><td colspan="4">7 logged in</td></tr>
+</table>
+
+<div class="alerta azul">
+<strong>✓ VPS estable.</strong> La pausa de agentes bajó la RAM de 8.5GB (cuando el orquestador se comía todo) a 2.9GB. Hay 8.1GB libres.
+</div>
+
+<h2 id="trazabilidad" class="rojo">11. 🔧 TRAZABILIDAD Y COMANDOS ADMIN</h2>
+
+<h3>11.1 Verificar estado del VPS</h3>
+<pre><span class="c-comentario"># Desde el workspace</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'uptime && free -h | head -2 && df -h / | tail -1'
+
+<span class="c-comentario"># Estado de procesos en pausa</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'ps -eo pid,stat,comm | grep "T "'
+
+<span class="c-comentario"># Ver logs del orquestador</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'tail -50 /tmp/orq.log'
+
+<span class="c-comentario"># Ver logs de cloudflare</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'tail -10 /tmp/cf.log'</pre>
+
+<h3>11.2 Resumir un proceso pausado (SIGCONT)</h3>
+<pre><span class="c-comentario"># Reanudar todos los procesos en T</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'for p in $(ps -eo pid,stat | awk "\$2 ~ /T/ {print \$1}"); do kill -CONT $p; done'
+
+<span class="c-comentario"># Reanudar uno específico (ej. openclaw)</span>
+<span class="c-azul">ssh</span> root@95.111.232.89 'kill -CONT 2138546'</pre>
+
+<h3>11.3 Reiniciar el orquestador</h3>
+<pre><span class="c-azul">ssh</span> root@95.111.232.89 'pkill -9 -f conector_chat; sleep 2; cd /opt/orquestador-universal && (setsid nohup bash -c "source .env && python3 -m orchestrator.conector_chat --port 9090 --host 0.0.0.0" < /dev/null > /tmp/orq.log 2>&1 &)'</pre>
+
+<h3>11.4 Reiniciar Cloudflare Tunnel</h3>
+<pre><span class="c-azul">ssh</span> root@95.111.232.89 'pkill -9 -f cloudflared; sleep 2; (setsid nohup cloudflared tunnel --url http://127.0.0.1:9090 --no-autoupdate < /dev/null > /tmp/cf.log 2>&1 &); sleep 10; grep -oE "https://[a-z-]+\.trycloudflare\.com" /tmp/cf.log | tail -1'</pre>
+
+<h3>11.5 Desbanear IP de fail2ban</h3>
+<pre><span class="c-azul">ssh</span> root@95.111.232.89 'fail2ban-client set sshd unbanip TU_IP'</pre>
+
+<h3>11.6 Configurar SSH key-based (recomendado)</h3>
+<pre><span class="c-comentario"># 1. Generar key en tu máquina local</span>
+ssh-keygen -t ed25519 -f ~/.ssh/vps_orquestador
+
+<span class="c-comentario"># 2. Copiar al VPS (reemplaza TU_KEY)</span>
+ssh-copy-id -i ~/.ssh/vps_orquestador.pub root@95.111.232.89
+
+<span class="c-comentario"># 3. Conectar sin password</span>
+ssh -i ~/.ssh/vps_orquestador root@95.111.232.89
+
+<span class="c-comentario"># 4. Deshabilitar password auth (más seguro)</span>
+ssh root@95.111.232.89 'sed -i "s/^#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config && systemctl reload sshd'</pre>
+
+<h3>11.7 Agregar swap al VPS (para evitar OOM)</h3>
+<pre><span class="c-azul">ssh</span> root@95.111.232.89 'fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile && echo "/swapfile none swap sw 0 0" >> /etc/fstab && free -h | head -2'</pre>
+
+<h2>12. 🔄 ESTADO DE MANTENIMIENTO</h2>
+
+<div class="alerta">
+<strong>FASE 1 (Pausa):</strong> ✅ COMPLETADA — procesos en SIGSTOP
+<strong>FASE 2 (Limpieza):</strong> ⚠️ PARCIAL — script ejecutado, 0 kills nuevos
+<strong>FASE 3 (Verificación):</strong> ✅ COMPLETADA
+<strong>FASE 4 (Estabilización):</strong> 🟡 EN CURSO
+<strong>FASE 5 (Espera):</strong> ⏸️ ACTIVA
+</div>
+
+<h3>Estado actual del VPS</h3>
+<ul>
+  <li><span class="status-ok">✓</span> SSH accesible (puerto 22)</li>
+  <li><span class="status-ok">✓</span> Cloudflare Tunnel vivo (502 porque back-end muerto)</li>
+  <li><span class="status-warn">⚠</span> Orquestador <strong>MUERTO</strong> (OOM killer, 4 veces en 15min)</li>
+  <li><span class="status-ok">✓</span> 8.1GB RAM libre</li>
+  <li><span class="status-ok">✓</span> 0 swap (recomendado agregar 4GB)</li>
+  <li><span class="status-error">✗</span> 11,325 intentos SSH fallidos históricos (bots)</li>
+  <li><span class="status-warn">⚠</span> fail2ban tiene 6 IPs baneadas (incluyendo posiblemente la tuya)</li>
+</ul>
+
+<div class="timestamp">
+<p>Documento generado el 2026-07-15 07:50 UTC</p>
+<p>Orquestador Universal v1.0 — UOOS 3.0.0 — Modo Mantenimiento</p>
+<p>Estado: <span class="status-ok">VPS ACCESIBLE</span> · SSH: <span class="status-ok">OK</span> · Orquestador: <span class="status-error">CAÍDO</span></p>
+</div>
+
+</div>
+</body>
+</html>

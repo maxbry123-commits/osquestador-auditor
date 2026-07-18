@@ -1,0 +1,150 @@
+## /root/.ssh/
+total 28
+drwx------  2 root root 4096 Jul  9 08:46 .
+drwx------ 16 root root 4096 Jul 13 08:50 ..
+-rw-------  1 root root    0 Jul 13 03:51 authorized_keys
+-rw-------  1 root root  193 Jul  9 10:14 config
+-rw-------  1 root root  411 Jul  9 07:20 github_deploy
+-rw-r--r--  1 root root  102 Jul  9 07:20 github_deploy.pub
+-rw-------  1 root root  978 Jul  9 08:45 known_hosts
+-rw-r--r--  1 root root  142 Jul  9 06:48 known_hosts.old
+
+## /home/*/.ssh/
+
+## CF URL
+https://rings-implementation-shirt-adipex.trycloudflare.com
+
+## CF PROCESS
+root     2128093       1  0 06:38 ?        00:00:34 cloudflared tunnel --url http://127.0.0.1:9090 --no-autoupdate
+
+## IP EXTERNA
+2a02:c207:2342:8294::1
+## IP LOCAL
+95.111.232.89 172.17.0.1 2a02:c207:2342:8294::1 
+
+## SSHD CONFIG
+PermitRootLogin yes
+UsePAM yes
+
+## FAIL2BAN
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:	11
+|  |- Total failed:	11325
+|  `- Journal matches:	_SYSTEMD_UNIT=sshd.service + _COMM=sshd
+`- Actions
+   |- Currently banned:	6
+   |- Total banned:	1568
+   `- Banned IP list:	220.80.223.144 14.225.23.94 141.11.32.54 103.67.80.61 8.210.89.241 103.149.197.34
+
+## /etc/cloudflared
+
+## SSH KEYS
+/usr/local/lib/python3.12/dist-packages/certifi/cacert.pem
+/usr/lib/python3/dist-packages/botocore/cacert.pem
+/usr/lib/python3/dist-packages/pip/_vendor/certifi/cacert.pem
+/usr/lib/python3/dist-packages/twisted/test/server.pem
+/usr/lib/python3/dist-packages/twisted/internet/test/fake_CAs/chain.pem
+/usr/lib/python3/dist-packages/twisted/internet/test/fake_CAs/thing2.pem
+/usr/lib/python3/dist-packages/twisted/internet/test/fake_CAs/thing1.pem
+/usr/lib/python3/dist-packages/twisted/internet/test/fake_CAs/thing2-duplicate.pem
+/usr/lib/python3/dist-packages/certifi/cacert.pem
+/usr/lib/ssl/cert.pem
+
+## /opt/orquestador-universal/.env
+export Mavis_API_KEY="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"
+export NVIDIA_API_KEY="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"
+export ANTHROPIC_API_KEY="sk-api-X5TD-0fT21tcWDUBcbwOvedTvG2xR7mHK5qcS-fOi8QA1pZNigdbUfG5AqSfNlRdH4tYGI0_s9GTnY80hoBsnPowh0rK51m-m8Vedv4nbwNnkxsi_XkGISU"
+export CEREBRAS_API_KEY="csk-vjp8rfm6mkwvnd8dy6pfv3xtmw5kpnv2h3yj9j6prtxd2jc2"
+
+## DOCKER
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+
+## RAM
+               total        used        free      shared  buff/cache   available
+Mem:            11Gi       2.9Gi       8.1Gi       1.2Mi       999Mi       8.7Gi
+
+## DISCO
+/dev/sda1       193G   33G  160G  18% /
+
+## TOP RAM
+    PID USER     %MEM   RSS COMMAND
+2180380 root      3.7 461600 openclaw
+2138546 root      3.3 415084 node
+  15612 root      2.8 344936 claude
+  15601 root      2.4 305352 claude
+  75820 root      2.4 304412 litellm
+  15621 root      1.8 222428 claude
+  12916 root      1.7 212460 claude
+  75821 root      0.8 104752 uvicorn
+   2263 root      0.8 103928 next-server (v1
+  75827 root      0.4 52704 python3
+  75781 root      0.4 49616 fail2ban-server
+   1143 root      0.3 39132 dockerd
+2128093 root      0.2 31908 cloudflared
+2180874 root      0.2 31852 node
+
+## PROCS T
+    PID STAT COMMAND
+  74622 T    run_auto3.sh
+
+## LOAD
+ 07:49:29 up 2 days,  3:58,  7 users,  load average: 0.80, 0.91, 0.97
+
+## IPTABLES
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+ACCEPT     6    --  0.0.0.0/0            0.0.0.0/0            tcp dpt:9090
+
+## UFW
+Status: inactive
+dialout:x:20:
+fax:x:21:
+voice:x:22:
+cdrom:x:24:
+floppy:x:25:
+tape:x:26:
+sudo:x:27:
+audio:x:29:
+dip:x:30:
+www-data:x:33:
+backup:x:34:
+operator:x:37:
+list:x:38:
+irc:x:39:
+src:x:40:
+shadow:x:42:
+utmp:x:43:
+video:x:44:
+sasl:x:45:
+plugdev:x:46:
+staff:x:50:
+games:x:60:
+users:x:100:
+nogroup:x:65534:
+systemd-journal:x:999:
+systemd-network:x:998:
+crontab:x:997:
+systemd-timesync:x:996:
+input:x:995:
+sgx:x:994:
+kvm:x:993:
+render:x:992:
+messagebus:x:101:
+syslog:x:102:
+systemd-resolve:x:991:
+uuidd:x:103:
+tss:x:104:
+lxd:x:105:
+_ssh:x:106:
+rdma:x:107:
+tcpdump:x:108:
+landscape:x:109:
+fwupd-refresh:x:990:
+polkitd:x:989:
+admin:x:110:
+netdev:x:111:
+docker:x:112:
+orch-admin:x:1000:
+orch-agent:x:1001:
+orch-chat:x:1002:

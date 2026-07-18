@@ -1,0 +1,105 @@
+# NCT Runtime — README ACTUALIZADO
+# v2.0 | 2026-07-13 | Reemplaza vps_README.md v1.0 (2026-07-10)
+
+**VPS:** 95.111.232.89 (`vmi3428294`, Ubuntu 24.04.4 LTS, Contabo)
+
+---
+
+## 1. AGENTES Y CLAUDE CODE — ESTADO ACTUAL
+
+| Agente/Instancia | Ventana tmux | Auth | Estado |
+|---|---|---|---|
+| Bash base | `work:0` | — | ✅ activa |
+| Claude Code (Anthropic real) | `work:1` (`cc-anthropic`) | oauth_token / firstParty | ✅ activa |
+| Sonnet 5 | `work:2` (`chat-sonnet`) | abc1tienda@gmail.com | ✅ logueada |
+| Opus 4.8 | `work:3` (`chat-opus`) | abc1tienda@gmail.com | ✅ logueada |
+| Fable 5 | `work:4` (`chat-fable`) | abc1tienda@gmail.com | ✅ logueada |
+| Cerebras (router local) | vía `cc-cerebras.sh` | N/A (router propio) | ✅ disponible, no en ventana fija |
+| OpenClaw | systemd | — | ✅ (instalación previa, ver v1.0) |
+| MiMo Code | puerto 4096 | — | ✅ (instalación previa, ver v1.0) |
+| LiteLLM (router Cerebras) | puerto 4000 | — | ✅ activo, aislado del settings principal |
+| Telegram Bot | systemd | — | ✅ (instalación previa) |
+
+**Scripts de arranque rápido** (en `/root/`, todos ejecutables):
+- `cc-sonnet.sh` → `claude --model claude-sonnet-5`
+- `cc-opus.sh` → `claude --model claude-opus-4-8`
+- `cc-fable.sh` → `claude --model claude-fable-5`
+- `cc-cerebras.sh` → exporta `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN` y arranca `claude` con router Cerebras
+
+**Backup de configuración:** `/root/.claude/settings.json.cerebras-backup` (config original con router Cerebras, por si se necesita revertir)
+
+---
+
+## 2. SISTEMA DE CONEXIÓN — CÓMO SE ACCEDE
+
+### 2.1 Vía VNC (acceso gráfico, el método que se usó para montar todo)
+- App usada: **VNC Viewer** (RealVNC), Android
+- Dirección de conexión: `13.140.133.248::63025` (⚠️ doble `:` — formato específico de esta app, con un solo `:` da timeout)
+- Contraseña VNC: ver documento de claves separado
+- Panel de administración VNC: Contabo → VPS → menú (⋮) → "Control VNC"
+
+### 2.2 Vía SSH (acceso de texto, usado por MiniMax)
+- Host: `95.111.232.89`
+- Usuario: `root`
+- Puerto: `22`
+- Contraseña: ver documento de claves separado (rotada 2026-07-13)
+
+### 2.3 Firewall (Contabo, capa de red)
+- Nombre: `Fw-maxbry`
+- Reglas activas: SSH-22 (ACCEPT, TCP, 0.0.0.0/0) + VNC-63025 (ACCEPT, TCP, 0.0.0.0/0) + Block all traffic (DROP, default)
+- Asignado a: `vmi3428294` ✅
+
+### 2.4 Multiplexor de sesión — tmux
+Todo el trabajo corre dentro de una sesión tmux llamada **`work`** — esto permite que las 5 instancias sigan vivas aunque se cierre el VNC o se caiga la conexión.
+```
+tmux attach -t work          # reconectar a la sesión
+tmux list-windows -t work    # ver las 5 ventanas
+tmux select-window -t work:N # saltar a la ventana N (0-4)
+```
+
+---
+
+## 3. METODOLOGÍA USADA PARA RESOLVER LA CONEXIÓN (aprendizajes)
+
+1. **VNC como puente único** — dado que el Director trabaja solo desde móvil (sin PC/Mac), la función "SSH directo desde Claude Code Desktop" no estaba disponible. Se usó VNC para entrar UNA vez y arrancar `tmux` + `claude`, luego el trabajo continuó vía terminal dentro de esa sesión persistente.
+2. **El teclado táctil del VNC no es confiable para símbolos especiales** — convierte `_` en `-` con frecuencia, y trunca `#` en comandos largos. Lección: para cualquier texto con símbolos especiales (contraseñas, tokens OAuth, comandos con guiones bajos), delegar el tecleo a un agente con acceso SSH directo (MiniMax) usando `tmux send-keys -l` (modo literal), en vez de teclear manualmente en el VNC.
+3. **Login OAuth de Claude Code** — cada modelo (Sonnet/Opus/Fable) requiere su propio `/login` con flujo OAuth independiente. Los códigos expiran en minutos — hay que generarlos y usarlos rápido, sin pausas largas entre pasos.
+4. **División de trabajo Director↔MiniMax** — la autorización OAuth (clic en "Autorizar") es un paso que SOLO el humano dueño de la cuenta puede hacer (por diseño de seguridad, no es delegable a ningún agente). Todo lo demás (pegar códigos, crear ventanas, editar configs) sí se delega a MiniMax vía SSH.
+5. **Router Cerebras vs Anthropic real** — el sistema ya traía Claude Code apuntando a un router local (LiteLLM→Cerebras) vía variables de entorno `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN`. Para usar modelos reales de Anthropic (Sonnet/Opus/Fable dentro del plan pagado), esas variables se debían quitar del entorno de esa sesión específica — se resolvió con scripts separados en vez de tocar la config global, así ambos caminos (Cerebras y Anthropic real) coexisten sin conflicto.
+6. **Plan vs API key** — confirmado con documentación oficial de Anthropic: el plan Pro/Max de chat y la API Console son productos de facturación SEPARADOS. Usar `ANTHROPIC_API_KEY` cobra aparte, por token; usar login OAuth normal usa el saldo del plan mensual ya pagado. Se decidió usar OAuth para las 3 instancias nuevas por esta razón.
+
+---
+
+## 4. BITÁCORA — HISTORIAL COMPLETO DE ESTA SESIÓN (2026-07-12/13)
+
+| Hora aprox. | Evento |
+|---|---|
+| Tarde | Intento de conexión directa VPS↔Claude Code app — bloqueado por clasificador de seguridad de Anthropic (exposición de endpoint RCE en repo público) |
+| Tarde | Se identifica causa raíz: repo público con credenciales hardcodeadas + endpoint sin auth |
+| Tarde | Decisión: usar VNC como puente en vez de exponer endpoint |
+| Tarde | VNC configurado, contraseña establecida, firewall creado y configurado (regla SSH+VNC) |
+| Tarde | Firewall asignado al VPS (paso que faltaba, causaba timeout) |
+| Tarde | Primer login VNC exitoso (formato `IP::puerto` con doble `:`) |
+| Tarde | Login root fallido 2× (contraseña vieja comprometida) → reset de credenciales vía Contabo → nueva contraseña `Navidad2026NCT` |
+| Tarde | Login root exitoso, confirmado Claude Code v2.1.205 ya instalado |
+| Tarde | Descubierto: Claude Code enrutado a Cerebras local, no Anthropic real |
+| Tarde/Noche | Se recupera contacto con MiniMax (ya tenía acceso previo al VPS, se le pasan credenciales nuevas) |
+| Noche | MiniMax arregla settings.json (retira router Cerebras del principal, preserva en backup), crea 4 scripts de arranque |
+| Noche | Se crean ventanas tmux 2/3/4 para Sonnet/Opus/Fable |
+| Noche | Descubierto: Opus y Fable nunca se habían "abierto" en la cuenta — el Director los activa desde la app móvil |
+| Noche | Múltiples intentos fallidos de login OAuth vía teclado VNC (errores "Invalid code" repetidos) |
+| Noche | Diagnóstico: teclado táctil corrompe símbolos `_` y `#` en textos largos |
+| Noche | Cambio de método: Director autoriza en navegador → pasa código a Fable → Fable se lo pasa a MiniMax → MiniMax pega con `tmux send-keys -l` |
+| Noche | Fable 5 logueado ✅ |
+| Noche | Opus 4.8 logueado ✅ |
+| Noche | Sonnet 5 logueado ✅ |
+| Noche | **Las 5 instancias operativas** — cierre de la operación de montaje |
+
+---
+
+```json
+{ "documento": "README_ACTUALIZADO", "version": "2.0", "fecha": "2026-07-13",
+  "reemplaza": "vps_README.md v1.0",
+  "instancias_activas": 5, "metodologia_documentada": true,
+  "bitacora_eventos": 18 }
+```
