@@ -291,11 +291,24 @@ FASE 4-9........ [TODAS PENDING]
   - Métricas éxito: cold start <200ms, search local <500ms, recall >85% test, cross-project isolation verified
   - Stack: SQLite FTS5 + FAISS + RRF + watchdog background + Haystack QueryExpander con M2.5
 
-- **4.5.2** [→] **Punto 2: Sistema de anclaje de skills en repo `memoria` con índice de clasificación tipo bibliotecario**
+- **4.5.2** [✓] **Punto 2: Sistema de anclaje de skills en repo `memoria` con índice de clasificación tipo bibliotecario** — COMPLETO + APROBADO por Max (2026-07-18 01:42)
+  - 10 búsquedas comunidad devs + 6 documentos de Max como fuente de verdad
+  - Archivos: `INVESTIGACION_COMUNIDAD_V2_PUNTO2.md` (22 KB) + `FASE_4_5_IDEA_SKILLS_MAX.md` (5.4 KB) + `HALLAZGOS_COMUNIDAD_DEVS.md` (19.2 KB) + `docs/fuente_max/*` (6 archivos, 501 KB)
+  - Commits: `a71dd5e` (anotación idea) + `f7a9877` (Punto 2) + `50f2afb` (docs Max) + `next` (consolidación comunidad)
+  - **Decisión de arquitectura FINAL (aprobada):**
+    - Repo `osquestador-memoria` con REGISTRY.yaml + indice/ + skills/<cat>/<id>/
+    - Skills Anthropic doble uso (.agents/skills/ estándar cross-client, 20+ tools compatibles)
+    - 90% código / 10% LLM (Compiled AI arxiv 2604.05150, SOURCE CODE AGENT 2508.02721)
+    - Multi-fuente: ClawHub + SkillsMP + OpenAgentSkill + GitHub + repo local Max
+    - Stack: SKILL.md + load-skill + agent-skills-cli + YAML + SQLite FTS5 + jsonschema
+    - 2 engines de Max validados: Acquisition + Distillation
+  - 10 patrones comunidad aplicados: Git-as-memory, Workspace-per-Tenant, HWC tiering, scratchpad, search on-connect, web search engines, hooks lifecycle, cold start, multi-marketplace skills, Compiled AI 90/10
+
+- **4.5.3** [→] **Punto 3: Osquestador informa al agente qué funciones tiene disponibles al conectarse (handshake protocol)**
   - Estado: EN PROGRESO (próximo)
   - Pendiente: 10 búsquedas + 1 aprobación
 
-- **4.5.3** [ ] **Punto 3: Osquestador informa al agente qué funciones tiene disponibles al conectarse**
+- **4.5.4** [ ] **Punto 4: Sistema push/ping + historial de chat + tags/etiquetas para búsqueda**
   - Estado: PENDIENTE
 
 - **4.5.4** [ ] **Punto 4: Sistema push/ping + historial de chat + tags/etiquetas para búsqueda**

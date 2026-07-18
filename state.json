@@ -6,14 +6,14 @@
   "owner": "maxbry123-commits",
   "agent": "Mavis",
   "started_at": "2026-07-17T22:55:00Z",
-  "last_update": "2026-07-18T01:22:00Z",
+  "last_update": "2026-07-18T01:42:00Z",
   "current_phase": "FASE_4.5",
-  "current_node": "4.5.2-punto-2-anclaje-skills",
-  "current_task": "Punto 2: 10 búsquedas sobre sistema de anclaje de skills + índice bibliotecario",
+  "current_node": "4.5.3-punto-3-capability-advertisement",
+  "current_task": "Punto 3: Osquestador informa al agente qué funciones tiene al conectarse (handshake protocol)",
   "current_step": "investigacion-pendiente",
   "current_worker": "Mavis",
-  "next_node": "4.5.3-punto-3-capability-advertisement",
-  "previous_node": "4.5.1-punto-1-memoria-extendida",
+  "next_node": "4.5.4-punto-4-push-ping-chat-tags",
+  "previous_node": "4.5.2-punto-2-anclaje-skills",
   "node_status": "IN_PROGRESS",
   "certification_status": "PENDING",
   "phases": {
@@ -249,14 +249,16 @@
     "regla": "prohibido modificar /opt/nct/agents/*, /opt/nct/secrets/, /opt/nct/keep/, /etc/systemd/system/openclaw*"
   },
   "metrics": {
-    "commits_total": 11,
-    "archivos_total": 32,
+    "commits_total": 14,
+    "archivos_total": 49,
+    "patrones_comunidad_aplicados": 10,
+    "patrones_comunidad_fuentes_total": 25,
     "investigaciones_completadas": 30,
     "skills_generadas": 5,
     "puntos_investigacion_comunitaria": {
       "punto_1_memoria_extendida": "APROBADO_POR_MAX_2026-07-18",
-      "punto_2_anclaje_skills": "EN_PROGRESO",
-      "punto_3_capability_advertisement": "PENDIENTE",
+      "punto_2_anclaje_skills": "APROBADO_POR_MAX_2026-07-18",
+      "punto_3_capability_advertisement": "EN_PROGRESO",
       "punto_4_push_ping_chat_tags": "PENDIENTE"
     },
     "pendientes": [

@@ -190,3 +190,37 @@
 4. SHERIFF v8.2 STRICT: NO_SKIP, NO_ASSUME, NO_FAKE_PASS — decisión basada en 15 búsquedas con fuentes oficiales, NO en suposición
 
 **Próximo paso:** Punto 2 — 10 búsquedas sobre sistema de anclaje de skills + índice bibliotecario.
+
+### [2026-07-18 01:42:00] ACCIÓN: FASE 4.5 — Hallazgos comunidad devs consolidados (25 búsquedas)
+
+**Trigger de Max:** "no me dijiste que conseguiste de la comunidad... que hace la comunidad de desarrolladores"
+
+**Acción:** Se creó `HALLAZGOS_COMUNIDAD_DEVS.md` (19.2 KB) consolidando SOLO los 10 patrones de la comunidad de devs (no la visión de Max), basados en 25 búsquedas:
+
+**Punto 1 — 15 búsquedas → 8 patrones:**
+1. Git como memoria (Letta, GitOfThoughts, mnem, GCC)
+2. Workspace-per-Tenant isolation (fast.io, Azure, zylos, Agent Sandbox)
+3. HWC memory tiering (clawrxiv, armalo, flumes, agenticskillset)
+4. Working memory scratchpad (Anthropic, Microsoft)
+5. Motor búsqueda on-connect (Vault Semantic, Obsidian Hybrid, Memori, mistaike, Atlan)
+6. Web search engines (Tavily, Exa, Perplexity benchmarks 2026)
+7. Hooks lifecycle (Gemini CLI, VSCode Copilot, Trigger.dev)
+8. Cold start mitigation (Ailore, Atlan, Memory Engine)
+
+**Punto 2 — 10 búsquedas → 6 hallazgos:**
+9. 5 marketplaces skills (ClawHub, SkillsMP, SkillHub, OpenAgentSkill, skillhu, load-skill, SkillRegistry, Skilldex)
+10. Anthropic Skills doble uso estándar 18 dic 2025
+11. Cross-client `.agents/skills/` convention
+12. Symlinks cross-platform (opensite-skills)
+13. Knowledge distillation (COLLEAGUE.SKILL, NotebookLM workflow)
+14. 90/10 código/LLM (Compiled AI, SOURCE CODE AGENT, Deterministic Scaffolding)
+
+**Confirmación de Max:** "ok incluyelo todo a la programación, anotas en github y válidas confirma"
+
+**Integración:**
+- `HALLAZGOS_COMUNIDAD_DEVS.md` creado
+- `state.json` actualizado: punto_2 = APROBADO, current_node = 4.5.3
+- `TASKS.md` (próximo commit) — punto 2 marcado APROBADO
+- Los 10 patrones son requirements para la programación de los 17+ módulos Python del Osquestador
+
+**Próximo paso:** Punto 3 — capability advertisement / handshake protocol.
