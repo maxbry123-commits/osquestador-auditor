@@ -84,3 +84,25 @@
 - [ ] FASE 2 — Completar DOC-GATE (6 docs obligatorios)
 - [ ] FASE 3 — Subir docs fuente al repo
 - [ ] FASE 4-9 según `TASKS.md`
+
+### [23:15:00] ACCIÓN: FASE 0 completada — 30+ sistemas investigados
+- **FUENTES RECOPILADAS:** 90+ (3 por sistema, regla SHERIFF cumplida)
+- **SISTEMAS INVESTIGADOS:** OpenClaw, Haystack, Plandex, SWE-agent, Repomix, Kanboard, Graphiti, LiteLLM, Tesseract, PaddleOCR, MCP, JSON-Agents/PAM, agent-registry, MOYA, Telegram API, Cloudflare Pages, Cloudflare Tunnel, DuckDNS, systemd, SQLite WAL, Circuit Breaker, JSON-RPC 2.0, jurigged, Dark mode UI, FAISS/Qdrant, Neo4j, MCP servers, Airflow/Prefect/Dagster, AdMem/Mem0, Firejail
+- **RESULTADO:** ✅ 9 repos upstream clonados + 5 escalados (no OSS) + 16 investigados por spec/docs
+- **EVIDENCIA:** `INVESTIGACION.md` (25 KB) con tabla fuente/resumen/hallazgo/aplicación por cada uno
+
+### [23:20:00] ACCIÓN: FASE 1 completada — 5 SKILL.md generadas
+- **SKILLS CREADAS:** SKILL_orquestador_kernel.md, SKILL_mcp_integration.md, SKILL_memoria_avanzada.md, SKILL_panel_ui.md, SKILL_evidence_collect.md + SKILLS.md índice
+- **MÉTODO:** cada skill = Objetivo + Contexto + Entradas + Procedimiento + Reglas + Restricciones + Ejemplos + Fuentes + Dependencias + Cuándo usar/no + Relación + Versión + Historial
+- **RESULTADO:** ✅ 6 archivos .md subidos
+
+### [23:25:00] ACCIÓN: FASE 2 completada — DOC-GATE PASS
+- **DOCS OBLIGATORIOS:** README ✅, TASKS ✅, INSTRUCCIONES ✅, BITACORA ✅, CHECKPOINTS ✅, state.json ✅, HISTORIAL_TAREAS ✅, INVESTIGACION ✅
+- **RESULTADO:** ✅ 8/8 docs generados
+
+### [23:30:00] ACCIÓN: FASE 3 en progreso — commit batch subido
+- **COMMIT:** `977f70a` con 12 archivos (INVESTIGACION + 5 SKILL + SKILLS + INSTRUCCIONES + CHECKPOINTS + state.json + HASHES actualizados)
+- **TOTAL ARCHIVOS EN REPO:** 29
+- **TOTAL COMMITS:** 5
+- **HASHES VERIFICADOS:** SHA256 de cada archivo en HASHES.sha256
+- **PENDIENTE:** FASE 4 (diseño del panel con Max), FASE 5 (implementación), FASE 6 (deploy Pages), FASE 7 (deploy VPS), FASE 8 (E2E), FASE 9 (certificación)
