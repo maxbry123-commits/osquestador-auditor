@@ -6,14 +6,14 @@
   "owner": "maxbry123-commits",
   "agent": "Mavis",
   "started_at": "2026-07-17T22:55:00Z",
-  "last_update": "2026-07-18T00:59:00Z",
-  "current_phase": "FASE_3",
-  "current_node": "3.6-integrar-comunidad",
-  "current_task": "Integrar 19 patrones de comunidad en SKILLS + state",
-  "current_step": "commit-pendiente",
+  "last_update": "2026-07-18T01:22:00Z",
+  "current_phase": "FASE_4.5",
+  "current_node": "4.5.2-punto-2-anclaje-skills",
+  "current_task": "Punto 2: 10 búsquedas sobre sistema de anclaje de skills + índice bibliotecario",
+  "current_step": "investigacion-pendiente",
   "current_worker": "Mavis",
-  "next_node": "FASE_4_diseno_panel",
-  "previous_node": "FASE_2_doc_gate",
+  "next_node": "4.5.3-punto-3-capability-advertisement",
+  "previous_node": "4.5.1-punto-1-memoria-extendida",
   "node_status": "IN_PROGRESS",
   "certification_status": "PENDING",
   "phases": {
@@ -37,10 +37,17 @@
       "duration_s": 300
     },
     "FASE_3_repositorio": {
-      "status": "IN_PROGRESS",
+      "status": "COMPLETADA",
       "checkpoint": "ckpt-f3-repo",
-      "commits": 4,
-      "archivos_subidos": 28
+      "commits": 11,
+      "archivos_subidos": 32
+    },
+    "FASE_4_5_investigacion_comunitaria_extendida": {
+      "status": "IN_PROGRESS",
+      "punto_1": "APROBADO_POR_MAX",
+      "punto_2": "EN_PROGRESO",
+      "punto_3": "PENDIENTE",
+      "punto_4": "PENDIENTE"
     },
     "FASE_4_diseno": {
       "status": "PENDING"
@@ -167,11 +174,69 @@
         "pipeline_etl_augi",
         "project_isolation_3_estrategias"
       ]
+    },
+    "punto_1_investigacion_comunitaria_aprobado": {
+      "status": "APROBADO_POR_MAX",
+      "fecha_aprobacion": "2026-07-18T01:19:00Z",
+      "max_confirmacion_literal": "apruebo todas tu busqueda y hallazgos para integración anota en github",
+      "busquedas_total": 15,
+      "archivos_generados": [
+        "INVESTIGACION_COMUNIDAD_V2_PUNTO1.md",
+        "INVESTIGACION_COMUNIDAD_V2_PUNTO1_APENDICE_SEARCH.md"
+      ],
+      "commits_punto1": ["1ecd437", "cb07bc9"],
+      "decision_arquitectura_aprobada": {
+        "workspace_aislado": "~/.osquestador/proyectos/<id>/ con vault/ db/ .env AGENTS.md .git/",
+        "repo_memoria_github": "osquestador-memoria monorepo con dirs/<project_id>/ (raíz memoria permanente)",
+        "storage_local": "SQLite FTS5 (BM25) + FAISS MiniLM-L6-v2 (384-dim) namespace por proyecto",
+        "memory_tiering": "HOT <500 tokens working / WARM 1-3K facts comprimidos / COLD repo GitHub summaries firmados",
+        "search_engines_3": [
+          "local_hybrid: BM25+FAISS+RRF sobre vault+memoria del proyecto",
+          "web_fallback: Tavily default, Exa para multi-hop, Perplexity cheap",
+          "memoria_historica: git log + WARM summaries (queries sobre ayer/antes/recuerdas)"
+        ],
+        "hooks_lifecycle_5": [
+          "SessionStart: pre-carga AGENTS.md + vault index + summaries (<200ms ready)",
+          "UserPromptSubmit: auto query expansion + hybrid search + inyecta top-5 al LLM",
+          "PreToolUse: valida project_id, rate limit, audit log",
+          "PostToolUse: index si es knowledge nuevo, WARM update si relevante",
+          "Stop: commit scratchpad al repo, redistribuir tiers si HOT>800 tokens"
+        ],
+        "tools_mcp_expuestas_al_agente": [
+          "memoria_commit / memoria_log / memoria_diff / memoria_blame / memoria_checkout / memoria_branch / memoria_merge",
+          "osquestador_search_hybrid / osquestador_search_keyword / osquestador_search_vector / osquestador_search_recent / osquestador_search_tags / osquestador_collections_list"
+        ],
+        "stack_tecnologico": {
+          "bm25": "SQLite FTS5 built-in zero deps",
+          "vector": "FAISS + sentence-transformers/all-MiniLM-L6-v2 offline gratis",
+          "fusion": "Reciprocal Rank Fusion (RRF) estándar 2026",
+          "reranker_opcional": "cross-encoder sentence-transformers (solo si budget)",
+          "query_expansion": "Haystack QueryExpander con M2.5 cerebras barato",
+          "web_default": "Tavily API 998ms $0.008/credit 93% SimpleQA",
+          "web_multihop": "Exa API 1.4-1.7s $5/1k búsquedas 81% WebWalker",
+          "background_indexing": "watchdog sobre vault/ async zero-blocking"
+        },
+        "metricas_exito": {
+          "cold_start_p95": "<200ms",
+          "search_local_p95": "<500ms",
+          "search_web_fallback_p95": "<2s",
+          "recall_hybrid_test": ">85% en 100 queries de Max",
+          "cross_project_isolation": "verificado con test E2E",
+          "web_fallback_hit_rate": "<10% de queries"
+        },
+        "riesgos_mitigados": [
+          "costo embeddings OpenAI -> default local MiniLM",
+          "background indexing CPU -> throttle 1 core + scheduled",
+          "FAISS namespace escala -> switch Qdrant cluster si >100 proyectos",
+          "rate limits Tavily/Exa -> cache local web results 24h",
+          "cold start vault gigante -> lazy load top-K + full index background"
+        ]
+      }
     }
   },
   "health": {
     "status": "alive",
-    "last_check": "2026-07-17T23:30:00Z",
+    "last_check": "2026-07-18T01:22:00Z",
     "openclaw_intacto": true,
     "vps_alcanzable": true,
     "github_alcanzable": true,
@@ -184,14 +249,21 @@
     "regla": "prohibido modificar /opt/nct/agents/*, /opt/nct/secrets/, /opt/nct/keep/, /etc/systemd/system/openclaw*"
   },
   "metrics": {
-    "commits_total": 4,
-    "archivos_total": 30,
+    "commits_total": 11,
+    "archivos_total": 32,
     "investigaciones_completadas": 30,
     "skills_generadas": 5,
+    "puntos_investigacion_comunitaria": {
+      "punto_1_memoria_extendida": "APROBADO_POR_MAX_2026-07-18",
+      "punto_2_anclaje_skills": "EN_PROGRESO",
+      "punto_3_capability_advertisement": "PENDIENTE",
+      "punto_4_push_ping_chat_tags": "PENDIENTE"
+    },
     "pendientes": [
-      "FASE_4-9"
+      "FASE_4-9",
+      "Punto 2/3/4 investigación comunitaria"
     ],
     "patrones_comunidad_validados": 19,
-    "fuentes_investigacion_total": 100
+    "fuentes_investigacion_total": 115
   }
 }

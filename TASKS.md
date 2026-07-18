@@ -272,6 +272,35 @@ FASE 4-9........ [TODAS PENDING]
 
 ---
 
-**Próximo nodo a ejecutar:** esperar confirmación de Max sobre el documento de tareas → arrancar FASE 0 nodo 0.1 (OpenClaw source).
+## ══ FASE 4.5 — INVESTIGACIÓN COMUNITARIA EXTENDIDA (4 puntos de Max, 2026-07-17) ══
 
-**Decime: ¿aprobás este TASKS.md así, o querés que ajuste algo antes de FASE 0?**
+> **Trigger:** Max pidió 4 puntos adicionales de investigación comunitaria después de la FASE 0-3 original. Cada punto = 10 búsquedas en comunidad devs + 1 anotación en GitHub + 1 aprobación de Max.
+
+- **4.5.1** [✓] **Punto 1: Memoria extendida con raíz GitHub + DB por proyecto** — COMPLETO + APROBADO por Max (2026-07-18 01:19)
+  - 10 búsquedas base + 5 búsquedas apéndice (motor búsqueda on-connect) = 15 búsquedas
+  - Archivos: `INVESTIGACION_COMUNIDAD_V2_PUNTO1.md` (15.9 KB) + `INVESTIGACION_COMUNIDAD_V2_PUNTO1_APENDICE_SEARCH.md` (20.3 KB)
+  - Commits: `1ecd437` (Punto 1) + `cb07bc9` (Apéndice Search)
+  - **Decisión de arquitectura FINAL (aprobada):**
+    - Workspace: `~/.osquestador/proyectos/<id>/` con vault/ db/ .env AGENTS.md .git/ (aislamiento total)
+    - Repo GitHub: `osquestador-memoria` monorepo con `dirs/<project_id>/` (raíz de memoria permanente)
+    - Storage: SQLite FTS5 (BM25) + FAISS MiniLM-L6-v2 (384-dim) namespace por proyecto
+    - Memory tiering: HOT <500 tokens working / WARM 1-3K facts comprimidos / COLD repo GitHub summaries firmados
+    - 3 search engines: local hybrid (BM25+FAISS+RRF) / web Tavily-Exa fallback / memoria histórica git
+    - 5 hooks nativos en kernel: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop
+    - Tools MCP: `memoria_commit/log/diff/blame/checkout/branch/merge` + `osquestador_search_hybrid/keyword/vector/recent/tags` + `osquestador_collections_list`
+  - Métricas éxito: cold start <200ms, search local <500ms, recall >85% test, cross-project isolation verified
+  - Stack: SQLite FTS5 + FAISS + RRF + watchdog background + Haystack QueryExpander con M2.5
+
+- **4.5.2** [→] **Punto 2: Sistema de anclaje de skills en repo `memoria` con índice de clasificación tipo bibliotecario**
+  - Estado: EN PROGRESO (próximo)
+  - Pendiente: 10 búsquedas + 1 aprobación
+
+- **4.5.3** [ ] **Punto 3: Osquestador informa al agente qué funciones tiene disponibles al conectarse**
+  - Estado: PENDIENTE
+
+- **4.5.4** [ ] **Punto 4: Sistema push/ping + historial de chat + tags/etiquetas para búsqueda**
+  - Estado: PENDIENTE
+
+---
+
+**Próximo nodo a ejecutar:** Punto 2 (sistema de anclaje de skills) → 10 búsquedas → GitHub → mostrar a Max para aprobación.

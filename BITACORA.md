@@ -138,3 +138,55 @@
   - `SKILL_evidence_collect.md` (memory unit + scoring)
 - Pendiente: actualizar `state.json` con `patrones_comunidad_validados: 19`.
 
+
+---
+
+## 2026-07-18 — Investigación comunitaria extendida (4 puntos de Max)
+
+### [2026-07-18 01:17:00] ACCIÓN: FASE 4.5 — Punto 1 (memoria extendida) — 10 búsquedas + 1 documento
+
+**Trigger de Max:** "Sistema de memoria extendida — Osquestador como raíz de memoria temporal/permanente con GitHub como fuente, base de datos separada por tarea/agente sin mezclar info"
+
+**Investigación:**
+- 10 búsquedas comunidad devs: working memory scratchpad, multi-tenant isolation, Git-as-agent-memory (GitOfThoughts/mnem/GCC/Letta Code), RLS PostgreSQL, HWC memory tiering
+- Fuentes principales: jatinbansal.com, fast.io, zylos.ai, arxiv 2606.14470, clawrxiv 2603.00037, dev.to/whoffagents
+- Hallazgo clave: Git es la mejor raíz de memoria permanente (Letta Code Context Repositories, GitOfThoughts, mnem, GCC) — cada thought = commit, scores = notes, outcomes = tags. Diff/blame/checkout gratis.
+
+**Decisión de arquitectura:**
+- Workspace aislado: `~/.osquestador/proyectos/<id>/` con vault/ db/ .env AGENTS.md .git/
+- Repo GitHub `osquestador-memoria` monorepo con `dirs/<project_id>/` (raíz memoria permanente)
+- Storage: SQLite FTS5 (BM25) + FAISS MiniLM-L6-v2 (384-dim) namespace por proyecto
+- Memory tiering: HOT <500 tokens / WARM 1-3K facts / COLD repo GitHub summaries
+- Aislamiento: Workspace-per-Tenant (directorio físico + namespace SQLite, no DB obligatoria)
+
+**Archivo:** `INVESTIGACION_COMUNIDAD_V2_PUNTO1.md` (15.9 KB, 179 inserciones)
+**Commit:** `1ecd437` — pusheado a `main`
+
+### [2026-07-18 01:19:00] ACCIÓN: FASE 4.5 — Punto 1 APÉNDICE (motor búsqueda on-connect) — 5 búsquedas + 1 documento
+
+**Trigger adicional de Max (en el mismo turno):** "añade en la busque si existe un motor de búsqueda que se activa cada vez que el agente conecatados al osquestador auditor o el chat conectado se active un motor de búsqueda en los documentos y en la memoria"
+
+**Investigación:**
+- 5 búsquedas adicionales: Tavily/Exa/Perplexity APIs, on-connect bootstrap (LikelyMalware Agent Brain, CtxVault, Memory Engine, mistaike), hooks lifecycle (Gemini CLI, VSCode Copilot, Trigger.dev), MCP search engines (Vault Semantic, Obsidian Hybrid, Reddit FAISS+FTS5), cold start + query expansion (Atlan, Azure, Ailore, Haystack)
+- Hallazgo clave: auto-activación del search engine al handshake es práctica estándar 2026 (Vault Semantic, Obsidian Hybrid Search, Memori SDK, mistaike Memory Vault, Azure Agentic Retrieval).
+
+**Decisión de arquitectura (extiende Punto 1):**
+- 3 search engines: local hybrid (BM25+FAISS+RRF) / web Tavily-Exa fallback / memoria histórica git
+- 5 hooks nativos en kernel: SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop
+- Stack: SQLite FTS5 + FAISS MiniLM-L6-v2 + RRF + watchdog background + Haystack QueryExpander con M2.5
+- Cold start <200ms via seed context strategy (patrón Ailore, Atlan, Memory Engine)
+
+**Archivo:** `INVESTIGACION_COMUNIDAD_V2_PUNTO1_APENDICE_SEARCH.md` (20.3 KB, 284 inserciones)
+**Commit:** `cb07bc9` — pusheado a `main`
+
+### [2026-07-18 01:21:00] ACCIÓN: FASE 4.5 — APROBACIÓN DE MAX sobre Punto 1 + Apéndice
+
+**Confirmación literal de Max:** "apruebo todas tu busqueda y hallazgos para integración anota en github"
+
+**Acciones ejecutadas por la aprobación:**
+1. `TASKS.md` actualizado — añadida sección `FASE 4.5 — INVESTIGACIÓN COMUNITARIA EXTENDIDA` con los 4 puntos, marcando `4.5.1` como [✓] COMPLETO + APROBADO
+2. `state.json` actualizado — `current_phase=FASE_4.5`, `current_node=4.5.2-punto-2-anclaje-skills`, `evidence.punto_1_investigacion_comunitaria_aprobado` con la decisión completa, `metrics.puntos_investigacion_comunitaria.punto_1=APROBADO_POR_MAX_2026-07-18`
+3. `BITACORA.md` (este archivo) — entrada de aprobación registrada
+4. SHERIFF v8.2 STRICT: NO_SKIP, NO_ASSUME, NO_FAKE_PASS — decisión basada en 15 búsquedas con fuentes oficiales, NO en suposición
+
+**Próximo paso:** Punto 2 — 10 búsquedas sobre sistema de anclaje de skills + índice bibliotecario.
