@@ -618,7 +618,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=os.environ.get("ALLOWED_ORIGINS", "https://blog-searches-diabetes-father.trycloudflare.com,http://localhost:8000,http://localhost:5173").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
