@@ -385,25 +385,25 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <span>Graphiti — Top Entities</span>
           <span class="count" style="background:var(--bg-3);color:var(--ok);font-size:9px;padding:1px 6px;border-radius:8px">Online</span>
         </div>
-        <div class="entity decision">
+        <div class="entity decision" data-sdk-method="Obsidian.vault_read" data-sdk="obsidian" title="obsidian.vault_read(path)">
           <div class="entity-name">D37: MCP-Graphiti</div>
-          <div class="entity-meta">2 días ago · 4 refs</div>
+          <div class="entity-meta">2 días ago · 4 refs · obsidian.vault_read</div>
         </div>
-        <div class="entity decision">
+        <div class="entity decision" data-sdk-method="LiteLLM.completion" data-sdk="litellm" title="litellm.completion(model, messages)">
           <div class="entity-name">D34: Graphiti Production</div>
-          <div class="entity-meta">2 días ago · 6 refs</div>
+          <div class="entity-meta">2 días ago · 6 refs · litellm.completion</div>
         </div>
-        <div class="entity decision">
+        <div class="entity decision" data-sdk-method="Hermes.think" data-sdk="hermes" title="hermes.run(thought, tools)">
           <div class="entity-name">D35: Memory Architecture</div>
-          <div class="entity-meta">2 días ago · 5 refs</div>
+          <div class="entity-meta">2 días ago · 5 refs · hermes.run</div>
         </div>
-        <div class="entity entity-type">
+        <div class="entity entity-type" data-sdk-method="Neo4j.execute_query" data-sdk="neo4j" title="neo4j.execute_query(cypher)">
           <div class="entity-name">FalkorDB Container</div>
-          <div class="entity-meta">1 semana ago</div>
+          <div class="entity-meta">1 semana ago · neo4j.execute_query</div>
         </div>
-        <div class="entity skill">
+        <div class="entity skill" data-sdk-method="MCPSDK.call_tool" data-sdk="mcp" title="mcp.call_tool(name, args)">
           <div class="entity-name">input-block-reader</div>
-          <div class="entity-meta">3 días ago · 100 uses</div>
+          <div class="entity-meta">3 días ago · 100 uses · mcp.call_tool</div>
         </div>
       </section>
       <section class="panel-section">
@@ -417,6 +417,39 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
         <div class="entity" style="border-left-color:var(--ok)">
           <div class="entity-name">Próxima acción</div>
           <div class="entity-meta">Deploy container FalkorDB + Graphiti MCP</div>
+        </div>
+      </section>
+
+      <section class="panel-section" aria-label="Generative UI">
+        <div class="panel-section-title">
+          <span>Generative UI</span>
+          <span class="badge">3</span>
+        </div>
+        <div class="entity" data-sdk-method="Graphiti.add_episode" data-sdk="graphiti" title="graphiti_core.add_episode(name, body, source_description)">
+          <div class="entity-name">Add episode</div>
+          <div class="entity-meta">graphiti_core.add_episode()</div>
+        </div>
+        <div class="entity" data-sdk-method="Haystack.write_documents" data-sdk="haystack" title="document_store.write_documents(docs)">
+          <div class="entity-name">Index doc</div>
+          <div class="entity-meta">document_store.write_documents()</div>
+        </div>
+        <div class="entity" data-sdk-method="Kanboard.create_task" data-sdk="kanboard" title="jsonrpc.create_task(project_id, title)">
+          <div class="entity-name">Create task</div>
+          <div class="entity-meta">jsonrpc.create_task()</div>
+        </div>
+      </section>
+
+      <section class="panel-section" aria-label="Hybrid Input">
+        <div class="panel-section-title">
+          <span>Hybrid Input</span>
+        </div>
+        <div class="entity" data-sdk-method="PaddleOCR.ocr" data-sdk="paddleocr" title="PaddleOCR.ocr(img_path)">
+          <div class="entity-name">Subir imagen → OCR</div>
+          <div class="entity-meta">PaddleOCR.ocr() / Baidu OCR</div>
+        </div>
+        <div class="entity" data-sdk-method="Plandex.create_plan" data-sdk="plandex" title="plandex create_plan + tell_agent">
+          <div class="entity-name">Texto → Plan</div>
+          <div class="entity-meta">plandex create_plan</div>
         </div>
       </section>
     </div>
