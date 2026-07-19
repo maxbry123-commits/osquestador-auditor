@@ -69,7 +69,8 @@ export function mountChat(main) {
         project_id: 'osquestador-auditor',
         stream: true
       }, (chunk) => {
-        if (chunk.delta?.text) {
+        // Anthropic SSE official spec: text_delta in content_block_delta
+        if (chunk.type === 'content_block_delta' && chunk.delta?.type === 'text_delta' && chunk.delta?.text) {
           assistantMsg.textContent += chunk.delta.text
           msgs.scrollTop = msgs.scrollHeight
         }

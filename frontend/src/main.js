@@ -10,6 +10,7 @@ import { renderTasks, mountTasks } from './views/tasks.js'
 import { renderConfig, mountConfig } from './views/config.js'
 import { renderPlugins, mountPlugins } from './views/plugins.js'
 import { renderMemory, mountMemory } from './views/memory.js'
+import { renderLogin, mountLogin } from './views/auth.js'
 import { api } from './lib/api.js'
 
 const app = document.getElementById('app')
@@ -21,6 +22,25 @@ const state = {
 }
 
 async function init() {
+  // Check auth first
+  let auth = null
+  try {
+    auth = await api('/api/auth/me')
+  } catch (e) { auth = { authenticated: false } }
+
+  if (!auth.authenticated) {
+    // Show login screen
+    app.innerHTML = `<main class="main" id="main"></main><div class="toast" id="toast"></div>`
+    const main = document.getElementById('main')
+    renderLogin(main)
+    mountLogin(main)
+    window.osquestador = {
+      showToast: (msg) => showToast(msg),
+      onLoginSuccess: () => init()  // re-init after login
+    }
+    return
+  }
+
   // Topbar + sidebar shell
   app.innerHTML = `
     <header class="topbar" id="topbar"></header>
@@ -78,10 +98,11 @@ async function init() {
     showToast: (msg) => showToast(msg),
     invoke: (plugin, method, params) => api(`/api/plugins/${plugin}/${method}`, 'POST', params),
     getState: () => state,
-    version: '1.0.0',
-    plugins: 13
+    version: '1.1.0',
+    plugins: 13,
+    user: auth.user
   }
-  console.log('%cOsquestador-Auditor v1.0 · 13 plugins', 'color:#FF6B6B;font-weight:bold;font-size:14px')
+  console.log('%cOsquestador-Auditor v1.1 · 13 plugins · auth OK', 'color:#FF6B6B;font-weight:bold;font-size:14px')
 }
 
 function openSidebar() {

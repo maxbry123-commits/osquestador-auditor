@@ -9,12 +9,20 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form, Request, Response, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import numpy as np
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+from datetime import datetime
+
+from .auth import (
+    USERS, User, make_token, verify_token,
+    get_current_user, get_current_user_optional
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "osquestador.db"
@@ -350,17 +358,33 @@ class AnthropicClaudePlugin(PluginBase):
     description = "Anthropic Claude API client (streaming + non-streaming)"
     async def chat(self, messages, model="claude-sonnet-4.5", stream=False):
         # Real integration would call https://api.anthropic.com/v1/messages
-        # Stub for UI demo - returns Claude-style response
+        # Stub for UI demo - returns Claude-style SSE response
         last_user = next((m["content"] for m in reversed(messages) if m.get("role") == "user"), "")
         response_text = self._generate_response(last_user)
+        msg_id = f"msg_{int(time.time()*1000)}"
         if stream:
             async def gen():
-                for word in response_text.split():
-                    yield f"data: {json.dumps({'type':'content_block_delta','delta':{'text': word + ' '}})}\n\n"
+                # 1. message_start
+                yield f"event: message_start\ndata: {json.dumps({'type':'message_start','message':{'id':msg_id,'type':'message','role':'assistant','content':[],'model':model,'stop_reason':None,'usage':{'input_tokens':sum(len(str(m.get('content',''))) for m in messages)//4,'output_tokens':1}}})}\n\n"
+                await asyncio.sleep(0.02)
+                # 2. content_block_start
+                yield f"event: content_block_start\ndata: {json.dumps({'type':'content_block_start','index':0,'content_block':{'type':'text','text':''}})}\n\n"
+                # 3. content_block_delta (per word)
+                words = response_text.split()
+                out_tokens = 0
+                for i, word in enumerate(words):
+                    text = word + (' ' if i < len(words)-1 else '')
+                    yield f"event: content_block_delta\ndata: {json.dumps({'type':'content_block_delta','index':0,'delta':{'type':'text_delta','text':text}})}\n\n"
+                    out_tokens += 1
                     await asyncio.sleep(0.04)
-                yield "data: [DONE]\n\n"
+                # 4. content_block_stop
+                yield f"event: content_block_stop\ndata: {json.dumps({'type':'content_block_stop','index':0})}\n\n"
+                # 5. message_delta (with stop_reason)
+                yield f"event: message_delta\ndata: {json.dumps({'type':'message_delta','delta':{'stop_reason':'end_turn','stop_sequence':None},'usage':{'output_tokens':out_tokens}})}\n\n"
+                # 6. message_stop
+                yield f"event: message_stop\ndata: {json.dumps({'type':'message_stop'})}\n\n"
             return gen()
-        return {"content": [{"type": "text", "text": response_text}], "model": model, "stop_reason": "end_turn"}
+        return {"id": msg_id, "type": "message", "role": "assistant", "content": [{"type": "text", "text": response_text}], "model": model, "stop_reason": "end_turn", "usage": {"input_tokens": sum(len(str(m.get('content',''))) for m in messages)//4, "output_tokens": len(response_text.split())}}
     def _generate_response(self, prompt):
         p = prompt.lower()
         if "hola" in p or "buenas" in p:
@@ -536,6 +560,33 @@ PLUGINS = {
 # ============================================================
 
 BOOT_TIME = time.time()
+SCHEDULER = AsyncIOScheduler(timezone="UTC")
+
+async def scheduled_memory_gc():
+    conn = db()
+    cutoff = time.time() - 30 * 86400
+    cur = conn.execute("DELETE FROM memory WHERE scope='cold' AND ts < ?", (cutoff,))
+    deleted = cur.rowcount
+    conn.commit()
+    conn.close()
+    if deleted > 0:
+        print(f"[scheduler] GC: removed {deleted} cold memory entries")
+
+async def scheduled_openclaw_verify():
+    sentinel = Path("/root/.osquestador/openclaw/SENTINEL.txt")
+    if not sentinel.exists():
+        print(f"[watchdog] ALERT: OpenClaw sentinel MISSING at {time.time()}")
+    else:
+        stat = sentinel.stat()
+        if stat.st_size == 0:
+            print(f"[watchdog] ALERT: OpenClaw sentinel EMPTY")
+
+async def scheduled_observer_health():
+    try:
+        s = PLUGINS["observer"].get_status()
+        print(f"[observer] tick: {s['projects']}p / {s['artifacts']}a / {s['tasks']}t / {s['memory_entries']}m / up={s['uptime_sec']}s")
+    except Exception as e:
+        print(f"[observer] error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -546,7 +597,14 @@ async def lifespan(app: FastAPI):
         name: {"description": p.description, "version": p.version, "methods": [m for m in dir(p) if not m.startswith("_") and m not in ("name","description","version")]
         } for name, p in PLUGINS.items()
     }, indent=2, ensure_ascii=False))
+    # Start scheduler
+    SCHEDULER.add_job(scheduled_memory_gc, CronTrigger(minute=0))
+    SCHEDULER.add_job(scheduled_openclaw_verify, CronTrigger(minute='*/5'))
+    SCHEDULER.add_job(scheduled_observer_health, CronTrigger(second='*/30'))
+    SCHEDULER.start()
+    print("[lifespan] APScheduler started with 3 jobs")
     yield
+    SCHEDULER.shutdown(wait=False)
 
 app = FastAPI(
     title="Osquestador-Auditor",
@@ -586,6 +644,38 @@ def root():
 @app.get("/api/health")
 def health():
     return {"status": "ok", "ts": time.time(), "uptime": round(time.time() - BOOT_TIME, 2)}
+
+# ----- AUTH (JWT + HttpOnly cookie, 2026 best practice) -----
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+@app.post("/api/auth/login")
+def login(req: LoginRequest, response: Response):
+    user = USERS.get(req.username)
+    if not user:
+        raise HTTPException(401, "Invalid credentials")
+    # Demo: password = username + "123"
+    if req.password != f"{req.username}123":
+        raise HTTPException(401, "Invalid credentials")
+    token = make_token(user.id)
+    response.set_cookie(
+        key="access_token", value=token,
+        httponly=True, secure=False, samesite="lax",
+        max_age=60 * 60 * 24
+    )
+    return {"user": user.model_dump(), "token": token, "status": "logged_in"}
+
+@app.post("/api/auth/logout")
+def logout(response: Response):
+    response.delete_cookie("access_token")
+    return {"status": "logged_out"}
+
+@app.get("/api/auth/me")
+def me(user: Optional[User] = Depends(get_current_user_optional)):
+    if not user:
+        return {"user": None, "authenticated": False}
+    return {"user": user.model_dump(), "authenticated": True}
 
 # ----- PROJECTS -----
 @app.get("/api/projects")

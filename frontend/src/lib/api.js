@@ -2,7 +2,11 @@
 const BASE = ''
 
 export async function api(path, method = 'GET', body = null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } }
+  const opts = {
+    method,
+    credentials: 'include',  // send HttpOnly cookies
+    headers: { 'Content-Type': 'application/json' }
+  }
   if (body) opts.body = JSON.stringify(body)
   try {
     const r = await fetch(BASE + path, opts)
@@ -20,6 +24,7 @@ export async function api(path, method = 'GET', body = null) {
 export async function stream(path, body, onChunk) {
   const r = await fetch(BASE + path, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   })
@@ -27,6 +32,7 @@ export async function stream(path, body, onChunk) {
   const reader = r.body.getReader()
   const dec = new TextDecoder()
   let buf = ''
+  let eventType = null
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
@@ -34,12 +40,16 @@ export async function stream(path, body, onChunk) {
     const lines = buf.split('\n')
     buf = lines.pop()
     for (const line of lines) {
-      if (line.startsWith('data: ')) {
+      if (line.startsWith('event: ')) {
+        eventType = line.slice(7).trim()
+      } else if (line.startsWith('data: ')) {
         const data = line.slice(6).trim()
         if (data === '[DONE]') return
         try {
           const j = JSON.parse(data)
+          j.event = eventType
           onChunk(j)
+          eventType = null
         } catch {}
       }
     }
