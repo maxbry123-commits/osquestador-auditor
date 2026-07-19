@@ -21,6 +21,7 @@ from datetime import datetime
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from .auth import (
     USERS, User, make_token, verify_token,
@@ -628,6 +629,9 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Prometheus metrics endpoint at /metrics
+Instrumentator().instrument(app).expose(app)
+
 # WebSocket Connection Manager
 class WSConnectionManager:
     def __init__(self):
@@ -729,10 +733,10 @@ def create_project(p: ProjectCreate):
 
 # ----- CHAT -----
 @app.post("/api/chat")
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, request: Request):
     if not req.messages:
         raise HTTPException(400, "messages required")
-    if req.stream:
+    if req.stream or request.query_params.get("stream") == "true":
         gen = await PLUGINS["claude"].chat([m.model_dump() for m in req.messages], model=req.model, stream=True)
         return StreamingResponse(gen, media_type="text/event-stream")
     result = await PLUGINS["claude"].chat([m.model_dump() for m in req.messages], model=req.model, stream=False)
