@@ -388,3 +388,19 @@
 - Pasada 2: comunidad devs + features faltantes
 - Pasada 3: input-block features específicos que aplican
 
+
+## 2026-07-19 18:30 — RECONSTRUCCIÓN LITERAL DESDE CERO (BUCLE 0)
+**Trigger de Max**: "ok termina llevas 5 días en esto sin lograr los objetivos"
+
+**Gap real detectado** (verificación cruzada 50x):
+- Lo construido (v1.0-v1.6): 13 plugins toy + vista switcher + FastAPI random
+- Lo que pide el spec (`01_ESPECIFICACION_v1.0.md` + `PLAN_INTERFACE_INTEGRADA.md` + 9 instrucciones INPUT_BLOCK_004):
+  - Orquestador con kernel (200 LOC) + 4 workflows + adapters reales
+  - HTML estático con 5 zonas fijas (no SPA)
+  - 9 instrucciones literales: 10 SDKs + 7 fotos + 10 patterns + 3 ventanas + iOS file rows + multi-select + routing agentes + 70 ideas + 25 decisiones + binario + window.osquestador
+  - Modo loops + modo reparación + modo bucle
+  - 25 hipótesis → 25 simulaciones → 10 refutaciones → 10 paneles experto → 25 sim diseño → prototipo → auditoría → REDISEÑO
+
+**Acciones tomadas**:
+- [✓] BUCLE 0: 25 hipótesis de uso escritas en `HIPOTESIS_USO_25.md` (paso 3 de las instrucciones de Max)
+- [→] Próximo BUCLE 1: 25 simulaciones de uso de cada hipótesis
