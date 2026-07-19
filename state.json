@@ -1,135 +1,18 @@
 {
-  "pipeline": "DSL_DAG_SHERIFF_v8.2",
-  "version": "0.4.5",
-  "last_update": "2026-07-18T21:21:00-04:00",
-  "session_id": "418434919792827",
-  "node_id": "TASK_020",
-  "phases": {
-    "PIPELINE_BOOT": {
-      "status": "completed",
-      "timestamp": "2026-07-18T20:50:00",
-      "components_loaded": [
-        "PIPELINE_MANAGER",
-        "NODE_MANAGER",
-        "NODE_LIFECYCLE",
-        "SHERIFF",
-        "SENTINEL",
-        "SUPERVISOR",
-        "EXECUTOR",
-        "VALIDATOR"
-      ]
-    },
-    "NODE_001_DISCOVERY": {
-      "status": "completed",
-      "commit": "2761e81",
-      "findings": "13 programas, 9 instrucciones Max, 10 patterns, 7 funciones"
-    },
-    "NODE_002_003_004": {
-      "status": "completed",
-      "commit": "8a13c29",
-      "findings": "17 tasks extraídos literal del spec"
-    },
-    "NODE_005_HYPOTHESIS_25": {
-      "status": "completed",
-      "commit": "11a242b"
-    },
-    "NODE_006_SIMULATION_25": {
-      "status": "completed",
-      "commit": "4c8bfb1"
-    },
-    "NODE_007_008_009_PANEL_REFUTATION": {
-      "status": "completed",
-      "commit": "7e0d7fd"
-    },
-    "CROSS_VALIDATION": {
-      "status": "completed",
-      "commit": "0a6f0aa"
-    },
-    "TASK_001": {
-      "status": "completed",
-      "commit": "0a6f0aa"
-    },
-    "TASK_002_014_PROTOTYPE_PLAN": {
-      "status": "completed",
-      "commit": "4d1aa29"
-    },
-    "TASK_015_PROTOTYPE_GENERATION": {
-      "status": "completed",
-      "commit": "eef5946",
-      "files": [
-        "00_main_dashboard.html",
-        "01_conocimiento_proyecto.html",
-        "02_nuevo_proyecto.html",
-        "03_configuracion.html",
-        "04_file_manager_ios.html",
-        "05_routing_agentes.html",
-        "06_kanban_dragdrop.html",
-        "07_panel_completo.html"
-      ],
-      "size_kb": 138
-    },
-    "TASK_016_DOCUMENT_AUDIT": {
-      "status": "completed",
-      "commit": "36250fe",
-      "result": "10 PASS, 2 PARTIAL, 0 FAIL",
-      "findings": ["F-016-01", "F-016-02"]
-    },
-    "TASK_017_REDESIGN_ENGINE": {
-      "status": "completed",
-      "commit": "45772d8",
-      "findings_closed": ["F-016-01", "F-016-02"],
-      "fixes": [
-        "10 data-sdk-method en 00_main_dashboard",
-        "Generative UI + Hybrid Input patterns (6/10 total)"
-      ]
-    },
-    "TASK_018_RESEARCH_LOOP": {
-      "status": "completed",
-      "commit": "c21b814",
-      "searches_executed": 5,
-      "gap_found": "F-018-01 WCAG 2.5.7",
-      "gap_closed": true
-    },
-    "TASK_019_LOOP_CONTROLLER": {
-      "status": "completed",
-      "commit": "8c07a04",
-      "loops_defined": 5
-    },
-    "TASK_020_STATE_SYNC": {
-      "status": "in_progress",
-      "timestamp": "2026-07-18T21:21:00"
-    }
-  },
-  "pending": [
-    "TASK_021_EXECUTION_GUARD",
-    "TASK_022_FINAL_CROSS_VALIDATION",
-    "TASK_023_CERTIFICATION",
-    "TASK_024_OUTPUT_MANAGER",
-    "HARDENING",
-    "PIPELINE_END"
-  ],
-  "metrics": {
-    "htmls_v5": 8,
-    "total_size_kb": 138,
-    "ui_patterns_applied": "6/10",
-    "wcag_compliance": "2.2 AA",
-    "findings_open": 0,
-    "findings_closed": 3,
-    "sdk_methods_referenced": 10,
-    "window_osquestador_functions": 7,
-    "anthropic_ventanas": 3,
-    "ios_patterns_applied": 5,
-    "openclaw_intact": true
-  },
-  "git": {
-    "remote": "git@github.com:maxbry123-commits/osquestador-auditor.git",
-    "branch": "main",
-    "last_commit": "8c07a04"
-  },
-  "rules": {
-    "REGLA_0_OPENCLAW_INTACTO": true,
-    "REGLA_13_ANOTAR_1A1": true,
-    "REGLA_14_NO_IMPROVISAR": true,
-    "SHERIFF_v8.2_strict": true
-  }
+  "version": "v11.0.0-target",
+  "mode": "loops",
+  "goal": "backend + frontend + 13 programas 100% funcional",
+  "max_searches_per_error": 200,
+  "escalate": false,
+  "started": "2026-07-19T02:35:00-04:00",
+  "openclaw_intact": true,
+  "phases": [
+    {"id": "P1", "name": "Backend FastAPI scaffold", "status": "in_progress"},
+    {"id": "P2", "name": "13 programas MCP/API", "status": "pending"},
+    {"id": "P3", "name": "Frontend Vite build", "status": "pending"},
+    {"id": "P4", "name": "Integrar 13 programas en UI", "status": "pending"},
+    {"id": "P5", "name": "Persistencia SQLite + FAISS + Neo4j", "status": "pending"},
+    {"id": "P6", "name": "Deploy a VPS", "status": "pending"},
+    {"id": "P7", "name": "Verificación end-to-end", "status": "pending"}
+  ]
 }

@@ -1,0 +1,101 @@
+{
+  "graphiti": {
+    "description": "Memoria episodica con Neo4j fallback in-process",
+    "version": "1.0.0",
+    "methods": [
+      "add_episode",
+      "search"
+    ]
+  },
+  "kanboard": {
+    "description": "Task manager (kanban board)",
+    "version": "1.0.0",
+    "methods": [
+      "create_task",
+      "delete_task",
+      "list_tasks",
+      "move_task"
+    ]
+  },
+  "paddleocr": {
+    "description": "OCR con PaddleOCR v3.5+ (100+ idiomas)",
+    "version": "1.0.0",
+    "methods": [
+      "ocr"
+    ]
+  },
+  "serper": {
+    "description": "Google search via Serper.dev API",
+    "version": "1.0.0",
+    "methods": [
+      "search"
+    ]
+  },
+  "claude": {
+    "description": "Anthropic Claude API client (streaming + non-streaming)",
+    "version": "1.0.0",
+    "methods": [
+      "chat"
+    ]
+  },
+  "observer": {
+    "description": "Monitoring metrics + logs",
+    "version": "1.0.0",
+    "methods": [
+      "get_status"
+    ]
+  },
+  "watchdog": {
+    "description": "OpenClaw INTACTO verifier + SHERIFF compliance",
+    "version": "1.0.0",
+    "methods": [
+      "check_openclaw",
+      "check_rules"
+    ]
+  },
+  "memory": {
+    "description": "Triple memory HOT/WARM/COLD unified search",
+    "version": "1.0.0",
+    "methods": [
+      "get_stats",
+      "search"
+    ]
+  },
+  "research": {
+    "description": "Loop de investigacion con 200 busquedas por gap",
+    "version": "1.0.0",
+    "methods": [
+      "loop"
+    ]
+  },
+  "design": {
+    "description": "Design tokens + shadcn/Tailwind generator",
+    "version": "1.0.0",
+    "methods": [
+      "generate",
+      "get_tokens"
+    ]
+  },
+  "build": {
+    "description": "Vite + esbuild bundler wrapper",
+    "version": "1.0.0",
+    "methods": [
+      "build",
+      "test"
+    ]
+  },
+  "audit": {
+    "description": "10 role auditor with severity findings",
+    "version": "1.0.0",
+    "methods": [
+      "run"
+    ]
+  },
+  "dispatch": {
+    "description": "Telegram/email/Slack webhook dispatcher",
+    "version": "1.0.0",
+    "methods": [
+      "send"
+    ]
+  }
+}
