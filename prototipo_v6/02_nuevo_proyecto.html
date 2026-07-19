@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<title>Nuevo proyecto</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --border:#2e2e2e; --text-1:#fff; --text-2:#b0aea5; --text-3:#9ca3af; --text-4:#6b7280; --icon:#b0aea5; --accent:#3b82f6; --focus-ring:#3898ec; --font-display:'Charter','Iowan Old Style',Georgia,serif; --font-body:system-ui,sans-serif; --font-mono:'JetBrains Mono',Menlo,monospace; --transition:150ms cubic-bezier(0.4,0,0.2,1); }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+html,body { overflow-x:hidden; }
+body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(--text-1); background:var(--bg-0); -webkit-font-smoothing:antialiased; min-height:100vh; }
+.serif { font-family:var(--font-display); }
+.mono { font-family:var(--font-mono); }
+*:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:3px; }
+.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+.icon-sm { width:12px; height:12px; }
+
+.page { max-width:720px; margin:0 auto; padding:16px; }
+.back-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-3); font-size:12px; text-decoration:none; padding:6px 10px; border:1px solid var(--border); border-radius:6px; min-height:36px; }
+.modal { background:var(--bg-1); border:1px solid var(--border); border-radius:8px; padding:20px; margin-top:12px; max-height:90vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.modal-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:16px; }
+.modal-title { font-family:var(--font-display); font-size:clamp(1.5rem, 5vw, 2rem); font-weight:400; flex:1; min-width:0; }
+.btn-close { background:transparent; border:1px solid var(--border); color:var(--text-3); width:32px; height:32px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+.field { margin-bottom:16px; }
+.label { display:block; font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; }
+.input, .textarea { width:100%; padding:10px 12px; background:var(--bg-2); border:1px solid var(--border); border-radius:6px; color:var(--text-1); font-size:13px; font-family:inherit; min-height:44px; }
+.input:focus, .textarea:focus { border-color:var(--accent); outline:none; }
+.textarea { min-height:80px; resize:vertical; }
+.hint { font-size:11px; color:var(--text-4); margin-top:4px; }
+
+.icons { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; }
+@media (min-width:480px) { .icons { grid-template-columns:repeat(8, 1fr); } }
+.icon-btn { aspect-ratio:1; background:var(--bg-2); border:1px solid var(--border); border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; min-height:44px; }
+.icon-btn:hover { background:var(--bg-3); }
+.icon-btn.active { background:var(--bg-3); border-color:var(--accent); }
+.icon-btn .icon { color:var(--icon); }
+.icon-btn.active .icon { color:var(--accent); }
+
+.templates { display:grid; grid-template-columns:1fr; gap:8px; }
+@media (min-width:480px) { .templates { grid-template-columns:repeat(2, 1fr); } }
+.tpl { padding:12px; background:var(--bg-2); border:1px solid var(--border); border-radius:6px; cursor:pointer; }
+.tpl:hover { background:var(--bg-3); }
+.tpl.active { border-color:var(--accent); }
+.tpl-name { font-size:14px; color:var(--text-1); font-weight:500; margin-bottom:2px; }
+.tpl-desc { font-size:11px; color:var(--text-3); }
+
+.footer { display:flex; gap:8px; margin-top:20px; flex-wrap:wrap; }
+.btn { flex:1; min-width:120px; padding:10px 16px; border-radius:6px; font-size:13px; cursor:pointer; border:1px solid var(--border); background:var(--bg-2); color:var(--text-1); min-height:44px; }
+.btn-primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+</style>
+</head>
+<body>
+<main class="page" role="main">
+  <a href="00_main_dashboard.html" class="back-link">
+    <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver
+  </a>
+  <div class="modal">
+    <div class="modal-header">
+      <h1 class="modal-title">Nuevo proyecto</h1>
+      <button class="btn-close" aria-label="Cerrar">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="field">
+      <label class="label" for="name">Nombre del proyecto</label>
+      <input class="input mono" id="name" type="text" placeholder="ej. osquestador-v4">
+      <div class="hint">Slug único, sin espacios, max 32 caracteres</div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="desc">Descripción</label>
+      <textarea class="textarea mono" id="desc" placeholder="¿Qué hace este proyecto?"></textarea>
+      <div class="hint">Markdown soportado. Aparece en el sidebar.</div>
+    </div>
+
+    <div class="field">
+      <label class="label">Icono del proyecto</label>
+      <div class="icons" role="radiogroup" aria-label="Icono">
+        <button class="icon-btn active" role="radio" aria-checked="true" data-icon="building"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="22" x2="9" y2="2"/><line x1="15" y1="22" x2="15" y2="2"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="code"><svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="monitor"><svg class="icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="circle"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="folder"><svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="star"><svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 15 8.5 22 9.3 17 14 18 21 12 17.5 6 21 7 14 2 9.3 9 8.5 12 2"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="chat"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+        <button class="icon-btn" role="radio" aria-checked="false" data-icon="graph"><svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label">Template inicial</label>
+      <div class="templates">
+        <button class="tpl active" data-tpl="research">
+          <div class="tpl-name">Research / Notes</div>
+          <div class="tpl-desc">Vault + Graphiti + Kanboard</div>
+        </button>
+        <button class="tpl" data-tpl="webapp">
+          <div class="tpl-name">Webapp</div>
+          <div class="tpl-desc">Frontend + deploy + Cloudflare Pages</div>
+        </button>
+        <button class="tpl" data-tpl="data">
+          <div class="tpl-name">Data pipeline</div>
+          <div class="tpl-desc">ETL + SQLite WAL + Neo4j</div>
+        </button>
+        <button class="tpl" data-tpl="blank">
+          <div class="tpl-name">Blank</div>
+          <div class="tpl-desc">Solo estructura mínima</div>
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="color">Color de acento</label>
+      <input class="input mono" id="color" type="color" value="#3b82f6" style="height:44px;padding:4px">
+    </div>
+
+    <div class="field">
+      <label class="label" for="agent">Agente por defecto</label>
+      <select class="input mono" id="agent">
+        <option>investigador</option>
+        <option>code</option>
+        <option>escritor</option>
+        <option>qa</option>
+        <option>orchestrator</option>
+      </select>
+    </div>
+
+    <div class="footer">
+      <button class="btn">Cancelar</button>
+      <button class="btn btn-primary">Crear proyecto</button>
+    </div>
+  </div>
+</main>
+<script>
+document.querySelectorAll('.icon-btn').forEach(b => b.addEventListener('click', function() { document.querySelectorAll('.icon-btn').forEach(x => { x.classList.remove('active'); x.setAttribute('aria-checked', 'false'); }); this.classList.add('active'); this.setAttribute('aria-checked', 'true'); }));
+document.querySelectorAll('.tpl').forEach(b => b.addEventListener('click', function() { document.querySelectorAll('.tpl').forEach(x => x.classList.remove('active')); this.classList.add('active'); }));
+</script>
+</body>
+</html>
