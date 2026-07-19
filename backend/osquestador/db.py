@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form, Request, Response, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File, Form, Request, Response, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +18,9 @@ import numpy as np
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .auth import (
     USERS, User, make_token, verify_token,
@@ -608,7 +611,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Osquestador-Auditor",
-    version="1.0.0",
+    version="1.1.0",
     description="Orquestador con 13 programas · FastAPI + SQLite + FAISS · OpenClaw INTACTO",
     lifespan=lifespan
 )
@@ -619,6 +622,32 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["120/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# WebSocket Connection Manager
+class WSConnectionManager:
+    def __init__(self):
+        self.active = {}  # project_id -> list of websockets
+    async def connect(self, ws, project_id):
+        await ws.accept()
+        self.active.setdefault(project_id, []).append(ws)
+    def disconnect(self, ws, project_id):
+        if project_id in self.active:
+            try: self.active[project_id].remove(ws)
+            except: pass
+    async def broadcast(self, project_id, message):
+        if project_id not in self.active: return
+        dead = []
+        for ws in self.active[project_id]:
+            try: await ws.send_json(message)
+            except: dead.append(ws)
+        for d in dead: self.disconnect(d, project_id)
+
+WSM = WSConnectionManager()
 
 # ----- ROOT (api info) -----
 @app.get("/api/")
@@ -870,6 +899,36 @@ if FRONTEND_DIST.exists():
         if f.exists() and f.is_file():
             return FileResponse(str(f))
         return FileResponse(str(FRONTEND_DIST / "index.html"))
+
+# ----- WEBSOCKET (real-time chat broadcast) -----
+@app.websocket("/ws/{project_id}")
+async def ws_chat(ws: WebSocket, project_id: str):
+    await WSM.connect(ws, project_id)
+    try:
+        conn = db()
+        rows = conn.execute("SELECT * FROM messages WHERE project_id=? ORDER BY ts DESC LIMIT 20", (project_id,)).fetchall()
+        conn.close()
+        for r in reversed(rows):
+            await ws.send_json({"type": "history", "role": r["role"], "content": r["content"], "ts": r["ts"]})
+        while True:
+            data = await ws.receive_json()
+            text = data.get("content", "").strip()
+            if not text: continue
+            conn = db()
+            conn.execute("INSERT INTO messages(project_id,role,content,ts) VALUES(?,?,?,?)", (project_id, "user", text, time.time()))
+            conn.commit()
+            await WSM.broadcast(project_id, {"type": "message", "role": "user", "content": text, "ts": time.time()})
+            msgs = conn.execute("SELECT role, content FROM messages WHERE project_id=? ORDER BY ts", (project_id,)).fetchall()
+            conn.close()
+            last_user = next((m["content"] for m in reversed(msgs) if m["role"] == "user"), "")
+            response_text = PLUGINS["claude"]._generate_response(last_user)
+            conn = db()
+            conn.execute("INSERT INTO messages(project_id,role,content,ts) VALUES(?,?,?,?)", (project_id, "assistant", response_text, time.time()))
+            conn.commit()
+            conn.close()
+            await WSM.broadcast(project_id, {"type": "message", "role": "assistant", "content": response_text, "ts": time.time()})
+    except WebSocketDisconnect:
+        WSM.disconnect(ws, project_id)
 
 if __name__ == "__main__":
     import uvicorn
