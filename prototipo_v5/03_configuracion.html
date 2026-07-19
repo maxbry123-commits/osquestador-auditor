@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración — Osquestador</title>
+<style>
+:root { --bg-0:#000; --bg-1:#0a0a0a; --bg-2:#141414; --bg-3:#1a1a1a; --bg-4:#222; --border:#2e2e2e; --text-1:#fff; --text-2:#b0aea5; --text-3:#9ca3af; --text-4:#6b7280; --icon:#b0aea5; --accent:#3b82f6; --accent-hover:#2563eb; --focus-ring:#3898ec; --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --font-display:'Charter','Iowan Old Style',Georgia,serif; --font-body:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono','SF Mono',Menlo,monospace; --transition:150ms cubic-bezier(0.4,0,0.2,1); }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(--text-1); background:var(--bg-0); min-height:100vh; -webkit-font-smoothing:antialiased; }
+.serif { font-family:var(--font-display); }
+.mono { font-family:var(--font-mono); }
+*:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; border-radius:3px; }
+.icon { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.icon-sm { width:12px; height:12px; }
+
+.page { max-width:800px; margin:0 auto; padding:32px 24px; }
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; gap:16px; flex-wrap:wrap; }
+.back-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-3); font-size:12px; text-decoration:none; padding:6px 10px; border:1px solid var(--border); border-radius:6px; }
+.back-link:hover { background:var(--bg-2); color:var(--text-1); }
+.page-title { font-family:var(--font-display); font-size:32px; font-weight:400; }
+.page-subtitle { color:var(--text-3); font-size:14px; }
+
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto; }
+.tab { padding:10px 16px; font-size:13px; color:var(--text-3); cursor:pointer; border-bottom:2px solid transparent; transition:all var(--transition); background:transparent; border-top:none; border-left:none; border-right:none; min-height:44px; display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.tab:hover { color:var(--text-2); }
+.tab.active { color:var(--text-1); border-bottom-color:var(--accent); }
+
+.section { margin-bottom:24px; background:var(--bg-1); border:1px solid var(--border); border-radius:8px; padding:20px; }
+.section-title { font-family:var(--font-display); font-size:16px; font-weight:400; margin-bottom:4px; }
+.section-desc { color:var(--text-3); font-size:12px; margin-bottom:16px; }
+.row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border-soft); gap:12px; }
+.row:last-child { border-bottom:none; }
+.row-label { flex:1; }
+.row-label-name { font-size:13px; color:var(--text-1); }
+.row-label-desc { font-size:11px; color:var(--text-3); margin-top:2px; }
+.toggle { width:36px; height:20px; background:var(--bg-3); border-radius:10px; position:relative; cursor:pointer; transition:background var(--transition); flex-shrink:0; }
+.toggle::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; background:var(--text-3); border-radius:50%; transition:all var(--transition); }
+.toggle.on { background:var(--accent); }
+.toggle.on::after { left:18px; background:#fff; }
+.select-mini, .input-mini { background:var(--bg-2); border:1px solid var(--border); color:var(--text-1); padding:4px 8px; border-radius:4px; font-size:12px; font-family:inherit; outline:none; }
+.btn { padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid var(--border); background:var(--bg-2); color:var(--text-1); }
+.btn:hover { background:var(--bg-3); }
+.btn-danger { color:var(--err); border-color:rgba(239,68,68,0.3); }
+.btn-danger:hover { background:rgba(239,68,68,0.1); }
+</style>
+</head>
+<body>
+<main class="page" role="main">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title serif">Configuración</h1>
+      <p class="page-subtitle">osquestador-v3 · 9 modelos · 52 skills · 13 programas</p>
+    </div>
+    <a href="00_main_dashboard.html" class="back-link">
+      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      Volver
+    </a>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" role="tab" aria-selected="true">Capacidades</button>
+    <button class="tab" role="tab" aria-selected="false">Conectores</button>
+    <button class="tab" role="tab" aria-selected="false">Permisos</button>
+    <button class="tab" role="tab" aria-selected="false">Habilidades</button>
+    <button class="tab" role="tab" aria-selected="false">Notificaciones</button>
+  </div>
+
+  <section class="section" aria-labelledby="cap-title">
+    <h2 class="section-title serif" id="cap-title">Capacidades del agente</h2>
+    <p class="section-desc">Qué puede hacer el Osquestador en este proyecto</p>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Ejecutar código (Python/Bash)</div>
+        <div class="row-label-desc">Sandbox con timeout 30s, sin red por defecto</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Acceso a filesystem</div>
+        <div class="row-label-desc">Read/Write en ~/.osquestador/proyectos/&lt;id&gt;/</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Búsqueda web (Tavily/Exa)</div>
+        <div class="row-label-desc">Hasta 50 búsquedas/día, 20 pasadas por gap</div>
+      </div>
+      <div class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Auto-crear skills (threshold 5/3d)</div>
+        <div class="row-label-desc">Propone nuevas skills tras detectar patrón</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Notificar a Telegram al terminar</div>
+        <div class="row-label-desc">Push notification al móvil</div>
+      </div>
+      <div class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="conn-title">
+    <h2 class="section-title serif" id="conn-title">Conectores MCP</h2>
+    <p class="section-desc">Servicios externos conectados al Osquestador</p>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Graphiti (knowledge graph)</div>
+        <div class="row-label-desc">aip.baidubce.com + Neo4j 5.26 · stdio + HTTP</div>
+      </div>
+      <select class="select-mini"><option>stdio</option><option selected>SSE</option><option>HTTP</option></select>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Kanboard (JSON-RPC)</div>
+        <div class="row-label-desc">/jsonrpc.php v1.2.52 · HTTP</div>
+      </div>
+      <select class="select-mini"><option>stdio</option><option>SSE</option><option selected>HTTP</option></select>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Filesystem (FS)</div>
+        <div class="row-label-desc">STDIO via subprocess</div>
+      </div>
+      <select class="select-mini"><option selected>stdio</option><option>SSE</option><option>HTTP</option></select>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">PaddleOCR (local OCR)</div>
+        <div class="row-label-desc">CLI subprocess + JSON output</div>
+      </div>
+      <select class="select-mini"><option selected>stdio</option><option>HTTP</option></select>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Baidu OCR (cloud)</div>
+        <div class="row-label-desc">aip.baidubce.com REST API</div>
+      </div>
+      <select class="select-mini"><option>stdio</option><option selected>HTTP</option></select>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="perm-title">
+    <h2 class="section-title serif" id="perm-title">Permisos</h2>
+    <p class="section-desc">Quién puede acceder a qué</p>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Acceso a API keys de Max</div>
+        <div class="row-label-desc">5 keys: Cerebras, Groq, MiniMax, NVidia × 2</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Acceso a Graphiti (memoria cross-session)</div>
+        <div class="row-label-desc">2,847 entities, 8,124 relations indexadas</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Acceso a GitHub (maxbry123-commits)</div>
+        <div class="row-label-desc">Repos: osquestador-auditor, agentes</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Acceso a secrets (chmod 600)</div>
+        <div class="row-label-desc">EXCLUIDO de backup y git</div>
+      </div>
+      <div class="toggle" role="switch" aria-checked="false" tabindex="0"></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="skills-title">
+    <h2 class="section-title serif" id="skills-title">Habilidades habilitadas</h2>
+    <p class="section-desc">52 de 100 activas · 2 auto-propuestas pendientes</p>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">input-block-reader (100 usos)</div>
+        <div class="row-label-desc">Lee literal el input · 120 puntos de verificación</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">graphiti-recall (89 usos)</div>
+        <div class="row-label-desc">Top-5 entities relevantes + negative feedback</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">mcp-bridge (156 usos)</div>
+        <div class="row-label-desc">3 transports: stdio + SSE + HTTP</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">orchestrator-kernel (201 usos)</div>
+        <div class="row-label-desc">5 hooks nativos (SessionStart, UserPromptSubmit, etc)</div>
+      </div>
+      <div class="toggle on" role="switch" aria-checked="true" tabindex="0"></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="sess-title">
+    <h2 class="section-title serif" id="sess-title">Sesión</h2>
+    <div class="row">
+      <div class="row-label">
+        <div class="row-label-name">Cerrar sesión</div>
+        <div class="row-label-desc">Limpia state local, mantiene memoria Graphiti</div>
+      </div>
+      <button class="btn btn-danger">Cerrar sesión</button>
+    </div>
+  </section>
+</main>
+</body>
+</html>
