@@ -1,293 +1,94 @@
 {
-  "pipeline_id": "osquestador-auditor-v1",
+  "pipeline": "DSL_DAG_SHERIFF_V8.2",
   "session_id": "418434919792827",
-  "pipeline_name": "Osquestador Auditor",
-  "mode": "SHERIFF-v8.2-STRICT",
-  "owner": "maxbry123-commits",
-  "agent": "Mavis",
-  "started_at": "2026-07-17T22:55:00Z",
-  "last_update": "2026-07-18T03:02:00Z",
-  "current_phase": "FASE_4.5",
-  "current_node": "4.5.8-panel-v2-input-block-reader",
-  "current_task": "Aprobado PARCIAL con correcciones. Max dio 10 reglas para rehacer el panel. Sigo input-block-reader para leer literal sus instrucciones antes de la proxima tarea.",
-  "current_step": "esperando-proxima-tarea-de-max",
-  "current_worker": "Mavis",
-  "next_node": "panel-v2-fusion-8-interfaces",
-  "previous_node": "4.5.6-punto-4-v2",
-  "node_status": "IN_PROGRESS",
-  "certification_status": "PENDING",
-  "phases": {
-    "FASE_0_investigacion": {
-      "status": "COMPLETADA",
-      "checkpoint": "ckpt-f0-investigacion",
-      "nodos": 30,
-      "fuentes": 90,
-      "duration_s": 1800
-    },
-    "FASE_1_skills": {
-      "status": "COMPLETADA",
-      "checkpoint": "ckpt-f1-skills",
-      "skills_generadas": 5,
-      "duration_s": 600
-    },
-    "FASE_2_doc_gate": {
-      "status": "COMPLETADA",
-      "checkpoint": "ckpt-f2-docs",
-      "docs_total": 8,
-      "duration_s": 300
-    },
-    "FASE_3_repositorio": {
-      "status": "COMPLETADA",
-      "checkpoint": "ckpt-f3-repo",
-      "commits": 11,
-      "archivos_subidos": 32
-    },
-    "FASE_4_5_investigacion_comunitaria_extendida": {
-      "status": "FASE_4.5_CERRADA_CON_FUENTE_DE_VERDAD_2026-07-18",
-      "punto_1": "APROBADO_POR_MAX",
-      "punto_2": "APROBADO_POR_MAX",
-      "punto_3": "APROBADO_POR_MAX_2026-07-18_02:02",
-      "punto_4": "APROBADO_POR_MAX_2026-07-18_02:10",
-      "punto_4_v2": "APROBADO_POR_MAX_2026-07-18_02:14",
-      "total_busquedas": 62,
-      "total_ideas": 70,
-      "total_decisiones": 25,
-      "fuente_de_verdad": "FUENTE_DE_VERDAD_OSQUESTADOR.md",
-      "panel_estado": "DESAPROBADO_parcial_v1_REHACER_v2",
-      "reglas_panel_v2": [
-        "estudiar_codigo_fuente_8_interfaces",
-        "capturas_cada_interface",
-        "fusionar_todas_en_una",
-        "ventanas_bandeja_proyecto_anthropic",
-        "ventanas_archivos_ios_apple",
-        "docs_seleccionables_individual_grupo_folder",
-        "routing_agentes_chat",
-        "clasificar_70_ideas_25_decisiones_ui_vs_backend",
-        "resultado_binario_auto_run_sin_modificar",
-        "funciones_abiertas_para_agentes_internos",
-        "estetica_exacta_anthropic_fotos"
-      ]
-    },
-    "FASE_4_diseno": {
-      "status": "PENDING"
-    },
-    "FASE_5_panel": {
-      "status": "PENDING"
-    },
-    "FASE_6_deploy_pages": {
-      "status": "PENDING"
-    },
-    "FASE_7_deploy_vps": {
-      "status": "PENDING"
-    },
-    "FASE_8_e2e": {
-      "status": "PENDING"
-    },
-    "FASE_9_certificacion": {
-      "status": "PENDING"
-    }
-  },
+  "started_at": "2026-07-18T19:35:00-04:00",
+  "current_node": "TASK_001_GITHUB_RESEARCH",
+  "max_paso": 16,
+  "completed_nodes": [
+    "PIPELINE_BOOT",
+    "NODE_MANAGER",
+    "NODE_LIFECYCLE",
+    "SHERIFF",
+    "SENTINEL",
+    "SUPERVISOR",
+    "EXECUTOR",
+    "VALIDATOR",
+    "NODE_001_DISCOVERY",
+    "NODE_002_INVENTORY",
+    "NODE_003_GITHUB_MEMORY",
+    "NODE_004_REQUIREMENT_ANALYSIS",
+    "NODE_005_HYPOTHESIS_ENGINE",
+    "NODE_006_SIMULATION_ENGINE",
+    "NODE_007_EXPERT_PANEL",
+    "NODE_008_REFUTATION_ENGINE",
+    "NODE_009_GAP_ANALYZER",
+    "CROSS_VALIDATION_MANAGER",
+    "QUALITY_GATE",
+    "INPUT_BLOCK_GUARDIAN",
+    "TASK_001_GITHUB_RESEARCH"
+  ],
+  "pending_nodes": [
+    "TASK_002_UI_PROTOTYPE",
+    "TASK_003_HYPOTHESIS_25",
+    "TASK_004_SIMULATION_25",
+    "TASK_005_REFUTATION_10",
+    "TASK_006_EXPERT_PANEL_10_with_10x_github_reads",
+    "TASK_007_GITHUB_REVIEW_LOOP_10x",
+    "TASK_008_UI_FUSION",
+    "TASK_009_UI_PATTERN_VALIDATION_10",
+    "TASK_010_ANTHROPIC_WINDOWS_3",
+    "TASK_011_IOS_FILE_MANAGER",
+    "TASK_012_AGENT_ROUTING",
+    "TASK_013_DECISION_CLASSIFIER",
+    "TASK_014_RUNTIME_INTERFACE_7_functions",
+    "TASK_015_PROTOTYPE_GENERATION_HTMLs",
+    "TASK_016_DOCUMENT_AUDIT",
+    "TASK_017_REDESIGN",
+    "TASK_018_RESEARCH_LOOP_20x",
+    "TASK_019_LOOP_CONTROLLER",
+    "TASK_020_STATE_SYNCHRONIZER",
+    "TASK_021_EXECUTION_GUARD",
+    "TASK_022_FINAL_CROSS_VALIDATION",
+    "TASK_023_CERTIFICATION",
+    "TASK_024_OUTPUT_MANAGER",
+    "HARDENING_MANAGER",
+    "EXECUTION_LOOP_MANAGER",
+    "REPAIR_LOOP_MANAGER",
+    "RESEARCH_LOOP_MANAGER",
+    "MEMORY_MANAGER",
+    "GITHUB_STATE_MANAGER",
+    "GLOBAL_AUDITOR",
+    "GLOBAL_JUDGE",
+    "GLOBAL_CERTIFIER",
+    "OUTPUT_MANAGER",
+    "PIPELINE_END"
+  ],
   "evidence": {
-    "repos_upstream_verificados": [
-      {
-        "name": "haystack",
-        "url": "https://github.com/deepset-ai/haystack",
-        "hash": "007c66b",
-        "http": 200
-      },
-      {
-        "name": "plandex",
-        "url": "https://github.com/plandex-ai/plandex",
-        "hash": "e2d7720",
-        "http": 200
-      },
-      {
-        "name": "SWE-agent",
-        "url": "https://github.com/SWE-agent/SWE-agent",
-        "hash": "3ea751c",
-        "http": 200
-      },
-      {
-        "name": "repomix",
-        "url": "https://github.com/yamadashy/repomix",
-        "hash": "a5577d5",
-        "http": 200
-      },
-      {
-        "name": "kanboard",
-        "url": "https://github.com/kanboard/kanboard",
-        "hash": "564cc30",
-        "http": 200
-      },
-      {
-        "name": "graphiti",
-        "url": "https://github.com/getzep/graphiti",
-        "hash": "0b4bcf1",
-        "http": 200
-      },
-      {
-        "name": "litellm",
-        "url": "https://github.com/BerriAI/litellm",
-        "hash": "dbb5b81",
-        "http": 200
-      },
-      {
-        "name": "tesseract",
-        "url": "https://github.com/tesseract-ocr/tesseract",
-        "hash": "4b70b7d",
-        "http": 200
-      },
-      {
-        "name": "PaddleOCR",
-        "url": "https://github.com/PaddlePaddle/PaddleOCR",
-        "hash": "211989f",
-        "http": 200
-      }
-    ],
-    "repos_escalados": [
-      {
-        "name": "OpenClaw",
-        "razon": "es npm package, no repo GitHub público",
-        "alternativa": "npm install openclaw@2026.6.11"
-      },
-      {
-        "name": "Hermes",
-        "razon": "es modelo/dataset de HuggingFace, no código"
-      },
-      {
-        "name": "Obsidian",
-        "razon": "app de pago, no OSS"
-      },
-      {
-        "name": "Anthropic Console",
-        "razon": "producto cerrado"
-      },
-      {
-        "name": "Telegram (binary)",
-        "razon": "es API + libs cliente, no repo único"
-      }
-    ],
-    "patrones_comunidad": {
-      "total": 19,
-      "fuentes_web": 10,
-      "documento": "INVESTIGACION_COMUNIDAD.md",
-      "sintesis_final": "7 patrones validados para implementar",
-      "lista": [
-        "vault_filesystem_markdown",
-        "agents_md_por_proyecto",
-        "memory_tripartita_tiers",
-        "lazy_loading_por_proyecto",
-        "mcp_server_navaja",
-        "rag_contextual_retrieval_anthropic",
-        "memory_stream_scoring_triple",
-        "contextual_retrieval_chunks",
-        "graphiti_group_id_multi_tenant",
-        "obsidian_cli_1_12",
-        "rag_pipeline_2026",
-        "memory_hierarchy_3_tier",
-        "generative_agents_park_2023",
-        "memory_unit_estandar",
-        "agentic_paging_virtual_memory",
-        "tiered_memory_hwc_produccion",
-        "mcp_servers_referencia",
-        "pipeline_etl_augi",
-        "project_isolation_3_estrategias"
-      ]
-    },
-    "punto_1_investigacion_comunitaria_aprobado": {
-      "status": "APROBADO_POR_MAX",
-      "fecha_aprobacion": "2026-07-18T01:19:00Z",
-      "max_confirmacion_literal": "apruebo todas tu busqueda y hallazgos para integración anota en github",
-      "busquedas_total": 15,
-      "archivos_generados": [
-        "INVESTIGACION_COMUNIDAD_V2_PUNTO1.md",
-        "INVESTIGACION_COMUNIDAD_V2_PUNTO1_APENDICE_SEARCH.md"
-      ],
-      "commits_punto1": [
-        "1ecd437",
-        "cb07bc9"
-      ],
-      "decision_arquitectura_aprobada": {
-        "workspace_aislado": "~/.osquestador/proyectos/<id>/ con vault/ db/ .env AGENTS.md .git/",
-        "repo_memoria_github": "osquestador-memoria monorepo con dirs/<project_id>/ (raíz memoria permanente)",
-        "storage_local": "SQLite FTS5 (BM25) + FAISS MiniLM-L6-v2 (384-dim) namespace por proyecto",
-        "memory_tiering": "HOT <500 tokens working / WARM 1-3K facts comprimidos / COLD repo GitHub summaries firmados",
-        "search_engines_3": [
-          "local_hybrid: BM25+FAISS+RRF sobre vault+memoria del proyecto",
-          "web_fallback: Tavily default, Exa para multi-hop, Perplexity cheap",
-          "memoria_historica: git log + WARM summaries (queries sobre ayer/antes/recuerdas)"
-        ],
-        "hooks_lifecycle_5": [
-          "SessionStart: pre-carga AGENTS.md + vault index + summaries (<200ms ready)",
-          "UserPromptSubmit: auto query expansion + hybrid search + inyecta top-5 al LLM",
-          "PreToolUse: valida project_id, rate limit, audit log",
-          "PostToolUse: index si es knowledge nuevo, WARM update si relevante",
-          "Stop: commit scratchpad al repo, redistribuir tiers si HOT>800 tokens"
-        ],
-        "tools_mcp_expuestas_al_agente": [
-          "memoria_commit / memoria_log / memoria_diff / memoria_blame / memoria_checkout / memoria_branch / memoria_merge",
-          "osquestador_search_hybrid / osquestador_search_keyword / osquestador_search_vector / osquestador_search_recent / osquestador_search_tags / osquestador_collections_list"
-        ],
-        "stack_tecnologico": {
-          "bm25": "SQLite FTS5 built-in zero deps",
-          "vector": "FAISS + sentence-transformers/all-MiniLM-L6-v2 offline gratis",
-          "fusion": "Reciprocal Rank Fusion (RRF) estándar 2026",
-          "reranker_opcional": "cross-encoder sentence-transformers (solo si budget)",
-          "query_expansion": "Haystack QueryExpander con M2.5 cerebras barato",
-          "web_default": "Tavily API 998ms $0.008/credit 93% SimpleQA",
-          "web_multihop": "Exa API 1.4-1.7s $5/1k búsquedas 81% WebWalker",
-          "background_indexing": "watchdog sobre vault/ async zero-blocking"
-        },
-        "metricas_exito": {
-          "cold_start_p95": "<200ms",
-          "search_local_p95": "<500ms",
-          "search_web_fallback_p95": "<2s",
-          "recall_hybrid_test": ">85% en 100 queries de Max",
-          "cross_project_isolation": "verificado con test E2E",
-          "web_fallback_hit_rate": "<10% de queries"
-        },
-        "riesgos_mitigados": [
-          "costo embeddings OpenAI -> default local MiniLM",
-          "background indexing CPU -> throttle 1 core + scheduled",
-          "FAISS namespace escala -> switch Qdrant cluster si >100 proyectos",
-          "rate limits Tavily/Exa -> cache local web results 24h",
-          "cold start vault gigante -> lazy load top-K + full index background"
-        ]
-      }
-    }
+    "input_block_hash": "INPUT_BLOCK_004_max_esta_incompleto.md",
+    "prompt_dsl_hash": "PROMPT_DSL_DAG_SHERIFF_V8.md",
+    "github_commits": 38,
+    "files_loaded": 45,
+    "decisions": 37,
+    "ideas": 70,
+    "programs": 13,
+    "agents": 52,
+    "tags": 12,
+    "models": 9
   },
-  "health": {
-    "status": "alive",
-    "last_check": "2026-07-18T01:22:00Z",
-    "openclaw_intacto": true,
-    "vps_alcanzable": true,
-    "github_alcanzable": true,
-    "cloudflare_alcanzable": true
-  },
-  "security": {
-    "openclaw_isolated": true,
-    "sandbox_workspace": "/root/osquestador/",
-    "openclaw_path": "/opt/nct/agents/* (intocable)",
-    "regla": "prohibido modificar /opt/nct/agents/*, /opt/nct/secrets/, /opt/nct/keep/, /etc/systemd/system/openclaw*"
-  },
-  "metrics": {
-    "commits_total": 14,
-    "archivos_total": 49,
-    "patrones_comunidad_aplicados": 10,
-    "patrones_comunidad_fuentes_total": 25,
-    "investigaciones_completadas": 30,
-    "skills_generadas": 5,
-    "puntos_investigacion_comunitaria": {
-      "punto_1_memoria_extendida": "APROBADO_POR_MAX_2026-07-18",
-      "punto_2_anclaje_skills": "APROBADO_POR_MAX_2026-07-18",
-      "punto_3_capability_advertisement": "APROBADO_POR_MAX_2026-07-18",
-      "punto_4_herramientas_comunidad": "INVESTIGACION_COMPLETA_2026-07-18_ESPERANDO_APROBACION_MAX"
-    },
-    "pendientes": [
-      "FASE_4-9",
-      "Punto 2/3/4 investigación comunitaria"
+  "input_block_summary": {
+    "objetivo": "Crear prototipo HTML con 9 instrucciones de Max",
+    "instrucciones": [
+      "1. Codigo fuente 8 interfaces (10 SDKs)",
+      "2. Capturas como funciona cada interface (7 fotos + iOS)",
+      "3. Fusionar paneles en uno (10 patterns community)",
+      "4. Ventanas tipo bandeja Anthropic (3 ventanas)",
+      "5. Ventanas tipo iOS Apple (3 patrones)",
+      "6. Documentos seleccionables (3 patrones + source)",
+      "7. Routing a agentes y chat",
+      "8. Clasificar 70 ideas + 25 decisiones UI vs Backend",
+      "9. Binario/auto-run + funciones window.osquestador (7 funciones)"
     ],
-    "patrones_comunidad_validados": 19,
-    "fuentes_investigacion_total": 115
+    "orden": "25 hipotesis + 25 sim uso + 10 refut + 10 paneles + (repite 2da) + 25 sim diseno + aplicar diseno + auditar + (repite 3ra) + 25 sim diseno + aplicar + auditar docs+github + REDISENAR + ensenar",
+    "modo": "loops + reparacion + bucle + 20 pasadas gap minimo"
   }
 }
