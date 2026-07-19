@@ -43,6 +43,11 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
 .card.priority-med { border-left-color:var(--warn); }
 .card.priority-low { border-left-color:var(--ok); }
 .card.done { opacity:0.6; }
+.card-move { display:inline-block; margin-left:6px; padding:1px 6px; background:var(--bg-3); border:1px solid var(--border); border-radius:3px; font-size:9px; color:var(--text-2); cursor:pointer; font-family:inherit; }
+.card-move:hover { background:var(--bg-2); color:var(--text-1); border-color:var(--accent); }
+.card-move-menu { position:absolute; background:var(--bg-1); border:1px solid var(--border); border-radius:6px; padding:4px; z-index:100; min-width:140px; box-shadow:0 4px 12px rgba(0,0,0,0.5); }
+.card-move-menu button { display:block; width:100%; text-align:left; padding:6px 10px; font-size:11px; color:var(--text-2); background:transparent; border:none; border-radius:4px; cursor:pointer; }
+.card-move-menu button:hover { background:var(--bg-3); color:var(--text-1); }
 .card-priority { display:inline-block; padding:1px 5px; border-radius:3px; font-size:9px; font-weight:600; text-transform:uppercase; margin-bottom:4px; letter-spacing:0.05em; }
 .card-priority.high { background:rgba(239,68,68,0.1); color:var(--err); }
 .card-priority.med { background:rgba(245,158,11,0.1); color:var(--warn); }
@@ -99,6 +104,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#orquestador</span>
             <span class="card-id">#42</span>
+            <button class="card-move" aria-label="Mover D38 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-low" draggable="true" tabindex="0">
@@ -108,6 +114,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#seguridad</span>
             <span class="card-id">#41</span>
+            <button class="card-move" aria-label="Mover D39 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-med" draggable="true" tabindex="0">
@@ -117,6 +124,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#arquitectura</span>
             <span class="card-id">#40</span>
+            <button class="card-move" aria-label="Mover #40 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-low" draggable="true" tabindex="0">
@@ -126,6 +134,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#research</span>
             <span class="card-id">#39</span>
+            <button class="card-move" aria-label="Mover #39 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
       </div>
@@ -148,6 +157,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#mcp</span>
             <span class="card-id">#38</span>
+            <button class="card-move" aria-label="Mover #38 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-high" draggable="true" tabindex="0">
@@ -157,6 +167,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#ui</span>
             <span class="card-id">#37</span>
+            <button class="card-move" aria-label="Mover #37 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-med" draggable="true" tabindex="0">
@@ -166,6 +177,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#deploy</span>
             <span class="card-id">#36</span>
+            <button class="card-move" aria-label="Mover #36 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
       </div>
@@ -188,6 +200,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#prototipo</span>
             <span class="card-id">#35</span>
+            <button class="card-move" aria-label="Mover #35 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-low" draggable="true" tabindex="0">
@@ -197,6 +210,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#docs</span>
             <span class="card-id">#34</span>
+            <button class="card-move" aria-label="Mover #34 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
       </div>
@@ -219,6 +233,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#research</span>
             <span class="card-id">#33</span>
+            <button class="card-move" aria-label="Mover #33 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-low done" draggable="true" tabindex="0">
@@ -228,6 +243,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#research</span>
             <span class="card-id">#32</span>
+            <button class="card-move" aria-label="Mover #32 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-med done" draggable="true" tabindex="0">
@@ -237,6 +253,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#spec</span>
             <span class="card-id">#31</span>
+            <button class="card-move" aria-label="Mover #31 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
         <article class="card priority-med done" draggable="true" tabindex="0">
@@ -246,6 +263,7 @@ body { font-family:var(--font-body); font-size:14px; line-height:1.5; color:var(
           <div class="card-meta">
             <span class="card-tag">#assets</span>
             <span class="card-id">#30</span>
+            <button class="card-move" aria-label="Mover #30 a otra columna" data-move>Mover a…</button>
           </div>
         </article>
       </div>
@@ -269,6 +287,36 @@ document.querySelectorAll('.cards').forEach(col => {
       this.appendChild(draggedCard);
       console.log('[kanban] Card moved to', this.dataset.col, '— optimistic UI');
     }
+  });
+});
+// Single-pointer alternative (WCAG 2.5.7) — boton Mover a...
+document.querySelectorAll('[data-move]').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const card = this.closest('.card');
+    const cols = ['backlog', 'doing', 'review', 'done'];
+    const current = card.closest('.cards').dataset.col;
+    const others = cols.filter(c => c !== current);
+    const menu = document.createElement('div');
+    menu.className = 'card-move-menu';
+    menu.setAttribute('role', 'menu');
+    others.forEach(c => {
+      const item = document.createElement('button');
+      item.textContent = 'Mover a ' + c;
+      item.addEventListener('click', function(ev) {
+        ev.stopPropagation();
+        const target = document.querySelector('.cards[data-col="' + c + '"]');
+        if (target) { target.appendChild(card); console.log('[kanban] Card moved via button to', c); }
+        menu.remove();
+      });
+      menu.appendChild(item);
+    });
+    const rect = this.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = rect.left + 'px';
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener('click', function dismiss() { menu.remove(); document.removeEventListener('click', dismiss); }, { once: true }), 0);
   });
 });
 </script>
