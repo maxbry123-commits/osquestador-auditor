@@ -404,3 +404,25 @@
 **Acciones tomadas**:
 - [✓] BUCLE 0: 25 hipótesis de uso escritas en `HIPOTESIS_USO_25.md` (paso 3 de las instrucciones de Max)
 - [→] Próximo BUCLE 1: 25 simulaciones de uso de cada hipótesis
+
+## 2026-07-19 18:55 — BUCLE 5: PROTOTIPO V11 APLICADO + AUDITADO
+
+**Trigger**: Max "luego aplicas un diseño prototipo y luego lo auditas contras los documentos"
+
+**Aplicado en `prototipo_v11/index.html`** (39KB, 1 archivo):
+- Background cream `#FAF9F5` (light) / `#0D0D0F` (dark) — Anthropic oficial
+- Accent `#CC785C` (Anthropic oficial, no más coral inventado)
+- Tipografía Fraunces serif + Inter sans + JetBrains Mono
+- 5 zonas fijas: Sidebar 280px + Header 60px + Main + Right 320px + Status 32px
+- Sidebar con proyectos + 9 agentes + filtros + botón "+ Nuevo proyecto"
+- Header con breadcrumb + search + acciones + avatar
+- Dashboard "Hola, Max" con 4 project cards
+- Artefactos con file rows iOS + tabs Individual/Grupo/Folder
+- Chat con composer + slash commands + @routing
+- Vista API con 7 funciones `window.osquestador` (search/commit/log/diff/blame/checkout/branch)
+- Bandeja Anthropic modal con 3 tabs (Conocimiento/Nuevo/Config)
+- Toggles iOS animados
+- Status bar con 7 métricas live (Kernel/Tokens/Latencia/SQLite/FAISS/Backup/OpenClaw)
+- SF Symbols SVG inline (30+ iconos)
+- Mobile drawer con scrim blur 12px
+- 8 screenshots Playwright (light, dark, mobile, modal, chat, API, drawer)
