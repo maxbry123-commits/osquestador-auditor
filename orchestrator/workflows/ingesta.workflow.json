@@ -1,0 +1,14 @@
+{
+  "name": "ingesta",
+  "description": "Workflow 1 — Ingesta de documento (P0)",
+  "trigger": "doc_nuevo_inbox",
+  "steps": [
+    {"name": "hash", "type": "atomic", "description": "Calcular SHA256 (en main.py)"},
+    {"name": "ocr", "type": "ocr", "agent": "ocr"},
+    {"name": "classify", "type": "classify", "agent": "classifier"},
+    {"name": "save_vault", "type": "save_vault", "agent": "obsidian-adapter"},
+    {"name": "graphiti_node", "type": "graphiti_node", "agent": "graphiti-adapter"},
+    {"name": "kanboard_task", "type": "kanboard_task", "agent": "kanboard-adapter"},
+    {"name": "done", "type": "done", "description": "Inventario actualizado"}
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Procesar SMOKE_TEST.md",
+      "proyecto": "test-proyecto",
+      "column": "backlog",
+      "priority": "medium",
+      "agente_recomendado": "auditor",
+      "ts": ""
+    },
+    {
+      "id": 2,
+      "title": "Procesar SECOND_DOC.md",
+      "proyecto": "test-proyecto",
+      "column": "backlog",
+      "priority": "medium",
+      "agente_recomendado": "auditor",
+      "ts": ""
+    }
+  ]
+}

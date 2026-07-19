@@ -1,0 +1,30 @@
+{
+  "entities": [
+    {
+      "id": "doc::SMOKE_TEST.md",
+      "type": "documento",
+      "name": "SMOKE_TEST.md",
+      "proyecto": "test-proyecto",
+      "ts": ""
+    },
+    {
+      "id": "doc::SECOND_DOC.md",
+      "type": "documento",
+      "name": "SECOND_DOC.md",
+      "proyecto": "test-proyecto",
+      "ts": ""
+    }
+  ],
+  "relations": [
+    {
+      "from": "doc::SMOKE_TEST.md",
+      "to": "proyecto::test-proyecto",
+      "type": "pertenece_a"
+    },
+    {
+      "from": "doc::SECOND_DOC.md",
+      "to": "proyecto::test-proyecto",
+      "type": "pertenece_a"
+    }
+  ]
+}
