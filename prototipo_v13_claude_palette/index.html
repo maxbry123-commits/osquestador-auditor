@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Osquestador · V13 · Paleta Claude mobile real</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   OSQUESTADOR V13 — PALETA EXACTA de las fotos de Claude mobile
+   ============================================================
+   Tokens extraídos literal de las fotos:
+   - bg:        #0D0D0F  (dark mode puro)
+   - surface:   #1A1817  (cards / drawers)
+   - surface-2: #232120  (tab bars / list items)
+   - surface-3: #2D2A28  (hover / pressed)
+   - border:    rgba(255,255,255,0.08)
+   - text:      #F5F2EA  (Fraunces cream)
+   - text-mute: #B5AFA6
+   - text-sub:  #8E8780
+   - accent:    #CC785C  (Anthropic official, del "Cerrar sesión" coral)
+   - info:      #0A84FF  (iOS blue, de "Actualizar"/"Nuevo")
+   - danger:    #C84B3A  (del triángulo rojo "La conexión no es privada")
+   - success:   #4A8B6F
+   ============================================================ */
+:root {
+  --bg: #0D0D0F;
+  --surface: #1A1817;
+  --surface-2: #232120;
+  --surface-3: #2D2A28;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --text: #F5F2EA;
+  --text-mute: #B5AFA6;
+  --text-sub: #8E8780;
+  --accent: #CC785C;
+  --accent-hover: #B8694E;
+  --accent-soft: rgba(204, 120, 92, 0.16);
+  --info: #0A84FF;
+  --info-hover: #0070DD;
+  --danger: #C84B3A;
+  --success: #4A8B6F;
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius-card: 18px;
+  --radius-button: 12px;
+  --radius-input: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: none; }
+.icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.icon-sm { width: 14px; height: 14px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+
+.serif { font-family: var(--font-serif); }
+.mono { font-family: var(--font-mono); }
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+.app__title {
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.app__sub {
+  color: var(--text-mute);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+.section {
+  margin-bottom: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--surface);
+}
+.section__head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+}
+.section__num {
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+.section__title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 500;
+  flex: 1;
+}
+.section__sub {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-family: var(--font-mono);
+}
+.section__body {
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+/* === Botones === */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-button);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 120ms;
+  cursor: pointer;
+}
+.btn--primary { background: var(--accent); color: white; }
+.btn--primary:hover { background: var(--accent-hover); }
+.btn--info { background: var(--info); color: white; }
+.btn--info:hover { background: var(--info-hover); }
+.btn--ghost {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+.btn--ghost:hover { background: var(--surface-3); }
+.btn--danger { background: var(--danger); color: white; }
+.btn--text { color: var(--info); padding: 4px 0; }
+.btn--text:hover { text-decoration: underline; }
+
+/* === Cards === */
+.card {
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.card__title {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.card__meta {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+}
+
+/* === Form === */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 2px solid var(--info);
+  border-radius: var(--radius-input);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  font-family: var(--font-sans);
+}
+.input::placeholder { color: var(--text-sub); }
+
+/* === iOS Toggle === */
+.ios-toggle {
+  position: relative;
+  width: 44px; height: 26px;
+  background: var(--surface-3);
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 200ms;
+}
+.ios-toggle::after {
+  content: '';
+  position: absolute;
+  width: 22px; height: 22px;
+  background: white;
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ios-toggle.is-on { background: var(--info); }
+.ios-toggle.is-on::after { transform: translateX(18px); }
+
+/* === Chip (del "Nuevo" azul foto 4) === */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--info);
+  color: white;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* === Avatar (del "M" gris foto 3) === */
+.avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #C8B79C, #8E7A60);
+  display: grid; place-items: center;
+  color: white;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+/* === File row iOS (de Configuración foto 9) === */
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.file-row:last-child { border-bottom: none; }
+.file-row__icon {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  background: var(--surface-3);
+  border-radius: 8px;
+  color: var(--text-mute);
+}
+.file-row__main { flex: 1; min-width: 0; }
+.file-row__title { font-size: 15px; }
+.file-row__sub { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.file-row__chev { color: var(--text-sub); }
+
+/* === Toast (patrón "Cerrar sesión coral" foto 9) === */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* === Modelo: 1 = Drawer iOS === */
+.drawer {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background: var(--surface-2);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  min-height: 320px;
+}
+.drawer__panel { padding: 16px; }
+.drawer__list { display: grid; gap: 2px; }
+.drawer__item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 120ms;
+}
+.drawer__item:hover { background: var(--surface-3); }
+.drawer__item.is-active { background: var(--accent-soft); color: var(--accent); }
+
+/* === Modelo: 2 = Chat con burbujas === */
+.chat {
+  display: grid;
+  gap: 8px;
+  max-width: 600px;
+}
+.bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.bubble--user {
+  justify-self: end;
+  background: var(--accent);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.bubble--asst {
+  justify-self: start;
+  background: var(--surface-2);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+/* === Modelo: 3 = Modal/Drawer estilo "Directorio" foto 5 === */
+.sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+}
+.sheet__title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.sheet__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  width: fit-content;
+}
+.sheet__tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 120ms;
+}
+.sheet__tab.is-active { background: var(--surface); color: var(--text); font-weight: 500; }
+.sheet__tab:not(.is-active) { color: var(--text-mute); }
+
+/* === Modelo: 4 = Badges de error / info / success === */
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* === Modelo: 5 = Sidebar tipo Configuración foto 9 === */
+.settings {
+  background: var(--surface-2);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.settings__head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.settings__head h3 {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  flex: 1;
+}
+.settings__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.settings__row:last-child { border-bottom: none; }
+.settings__icon {
+  width: 28px; height: 28px;
+  color: var(--text-mute);
+}
+.settings__main { flex: 1; }
+.settings__title { font-size: 15px; }
+.settings__sub { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.settings__cta { color: var(--accent); }
+.settings__cta.is-danger { color: var(--danger); }
+
+/* === Modelo: 6 = Error states (de las fotos 1 y 2) === */
+.error-page {
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+.error-page__icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 16px;
+  color: var(--text-mute);
+  stroke-width: 1.5;
+}
+.error-page__title {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.error-page__desc {
+  color: var(--text-mute);
+  font-size: 14px;
+  margin-bottom: 20px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.error-page__code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-bottom: 24px;
+}
+
+/* === Modelo: 7 = Cards de proyecto con SF Symbol === */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.project-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 120ms;
+}
+.project-card:hover { background: var(--surface-3); }
+.project-card__icon {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  background: var(--surface-3);
+  border-radius: 10px;
+  color: var(--accent);
+}
+.project-card__main { flex: 1; }
+.project-card__name {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.project-card__sub { font-size: 12px; color: var(--text-sub); }
+
+/* === Tokens display (paleta visible) === */
+.tokens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.token {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.token__swatch {
+  width: 100%;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.token__name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.token__hex {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1 class="app__title">Osquestador · V13</h1>
+  <p class="app__sub">Paleta extraída literal de las fotos de Claude mobile · 7 modelos de componentes en una sola pantalla</p>
+
+  <!-- MODELO 0: Tokens de la paleta -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">0</div>
+      <h2 class="section__title">Paleta extraída de las fotos</h2>
+      <span class="section__sub">8 tokens</span>
+    </div>
+    <div class="section__body">
+      <div class="tokens">
+        <div class="token">
+          <div class="token__swatch" style="background:#0D0D0F"></div>
+          <div class="token__name">--bg</div>
+          <div class="token__hex">#0D0D0F</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#1A1817"></div>
+          <div class="token__name">--surface</div>
+          <div class="token__hex">#1A1817</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#232120"></div>
+          <div class="token__name">--surface-2</div>
+          <div class="token__hex">#232120</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#2D2A28"></div>
+          <div class="token__name">--surface-3</div>
+          <div class="token__hex">#2D2A28</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#F5F2EA"></div>
+          <div class="token__name">--text</div>
+          <div class="token__hex">#F5F2EA</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#CC785C"></div>
+          <div class="token__name">--accent</div>
+          <div class="token__hex">#CC785C</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#0A84FF"></div>
+          <div class="token__name">--info</div>
+          <div class="token__hex">#0A84FF</div>
+        </div>
+        <div class="token">
+          <div class="token__swatch" style="background:#C84B3A"></div>
+          <div class="token__name">--danger</div>
+          <div class="token__hex">#C84B3A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 1: Drawer iOS -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">1</div>
+      <h2 class="section__title">Drawer iOS</h2>
+      <span class="section__sub">de la foto 3 "Claude" sidebar</span>
+    </div>
+    <div class="section__body">
+      <div class="drawer">
+        <aside class="drawer__panel">
+          <div class="drawer__list">
+            <div class="drawer__item">+ Nuevo chat</div>
+            <div class="drawer__item">Chats</div>
+            <div class="drawer__item is-active">Proyectos</div>
+            <div class="drawer__item">Artefactos</div>
+            <div class="drawer__item">Personalizar</div>
+          </div>
+        </aside>
+        <div class="drawer__panel" style="background:var(--surface)">
+          <div style="font-family:var(--font-serif);font-size:15px;margin-bottom:12px">Productos</div>
+          <div class="drawer__item">&lt;/&gt; Código</div>
+          <div class="drawer__item">🎨 Diseño <span class="chip" style="margin-left:8px">Nuevo</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 2: Chat con burbujas -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">2</div>
+      <h2 class="section__title">Chat con burbujas</h2>
+      <span class="section__sub">user coral / asst surface-2</span>
+    </div>
+    <div class="section__body">
+      <div class="chat">
+        <div class="bubble bubble--asst">Hola Max. Soy el kernel del osquestador. ¿Qué necesitás?</div>
+        <div class="bubble bubble--user">@auditor revisá el panel V13</div>
+        <div class="bubble bubble--asst">Recibido. 7 modelos con paleta extraída de las fotos. Auditoría en progreso…</div>
+        <div class="bubble bubble--user">perfecto</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 3: Sheet/Drawer estilo Directorio -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">3</div>
+      <h2 class="section__title">Sheet Directorio</h2>
+      <span class="section__sub">de la foto 5 "Directorio"</span>
+    </div>
+    <div class="section__body">
+      <div class="sheet">
+        <h2 class="sheet__title">Directorio</h2>
+        <div class="sheet__tabs">
+          <div class="sheet__tab is-active">Habilidades</div>
+          <div class="sheet__tab">Conectores</div>
+        </div>
+        <input type="text" class="input" placeholder="🔍 Buscar plugins…" style="margin-bottom:16px">
+        <div class="sheet__tabs" style="background:transparent;padding:0;gap:8px;margin-bottom:16px">
+          <div class="sheet__tab is-active" style="background:var(--surface-2)">Anthropic</div>
+          <div class="sheet__tab" style="background:transparent">Socios</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn btn--ghost">Filtrar por ▾</button>
+          <button class="btn btn--ghost">Ordenar por ▾</button>
+        </div>
+        <div class="card" style="display:flex;align-items:center;gap:12px">
+          <div style="width:48px;height:48px;background:var(--surface-3);border-radius:10px;display:grid;place-items:center">📄</div>
+          <div style="flex:1">
+            <div class="card__title">Produ...</div>
+            <div style="font-size:12px;color:var(--text-sub)">Anthropic</div>
+            <div style="font-size:13px;color:var(--text-mute);margin-top:6px">Manage tasks, plan your day, and build up memor...</div>
+          </div>
+          <button class="btn btn--primary" style="width:36px;height:36px;padding:0;justify-content:center">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 4: Chips / badges -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">4</div>
+      <h2 class="section__title">Chips &amp; badges</h2>
+      <span class="section__sub">azul iOS, coral, success, danger</span>
+    </div>
+    <div class="section__body">
+      <div class="badges">
+        <span class="chip">Nuevo</span>
+        <span class="chip" style="background:var(--accent)">Cerrar sesión</span>
+        <span class="chip" style="background:var(--success)">Activo</span>
+        <span class="chip" style="background:var(--danger)">Error</span>
+        <span class="chip" style="background:var(--surface-3);color:var(--text-mute)">Archivado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 5: Settings -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">5</div>
+      <h2 class="section__title">Configuración (estilo iOS Settings)</h2>
+      <span class="section__sub">de la foto 9 "Cerrar sesión coral"</span>
+    </div>
+    <div class="section__body">
+      <div class="settings">
+        <div class="settings__head">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+          <h3>Configuración</h3>
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </div>
+        <div class="settings__row">
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M3 6h18M9 12h12M3 18h18"/></svg>
+          <div class="settings__main">
+            <div class="settings__title">Capacidades</div>
+            <div class="settings__sub">2 habilitadas</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="settings__row">
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <div class="settings__main">
+            <div class="settings__title">Conectores</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="settings__row">
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          <div class="settings__main">
+            <div class="settings__title">Modo de color</div>
+            <div class="settings__sub">Sistema</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="settings__row">
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+          <div class="settings__main">
+            <div class="settings__title">Retroalimentación háptica</div>
+          </div>
+          <div class="ios-toggle is-on"></div>
+        </div>
+        <div class="settings__row">
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          <div class="settings__main">
+            <div class="settings__title">Notificaciones</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="settings__row" style="justify-content:flex-start;gap:14px">
+          <svg class="icon" viewBox="0 0 24 24" style="color:var(--danger);width:28px;height:28px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span class="settings__cta is-danger" style="font-size:15px">Cerrar sesión</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 6: Error states -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">6</div>
+      <h2 class="section__title">Error states</h2>
+      <span class="section__sub">de las fotos 1 (DNS) y 2 (cert inválido)</span>
+    </div>
+    <div class="section__body" style="grid-template-columns:1fr 1fr;display:grid;gap:16px">
+      <div class="error-page">
+        <svg class="error-page__icon" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M20 36c-3 0-5 2-5 5s2 5 5 5 5-2 5-5c0-2-1-3-2-4M44 36c-3 0-5 2-5 5s2 5 5 5 5-2 5-5c0-2-1-3-2-4"/>
+          <path d="M18 30c2-8 8-13 14-13s12 5 14 13"/>
+        </svg>
+        <div class="error-page__title">Vaya… no se puede acceder a esta página</div>
+        <div class="error-page__desc">Comprueba si hay un error ortográfico en blog-searches-diabetes-father.trycloudflare.com.</div>
+        <div class="error-page__code">DNS_PROBE_FINISHED_NXDOMAIN</div>
+        <button class="btn btn--info">Actualizar</button>
+      </div>
+      <div class="error-page">
+        <svg class="error-page__icon" viewBox="0 0 64 64" fill="none" stroke="var(--danger)" stroke-width="2">
+          <path d="M32 8L60 56H4L32 8z"/>
+          <path d="M32 26v14" stroke-linecap="round"/>
+          <circle cx="32" cy="46" r="1.5" fill="var(--danger)"/>
+        </svg>
+        <div class="error-page__title">La conexión no es privada</div>
+        <div class="error-page__desc">Es posible que los atacantes estén intentando robar tu información de <strong>maxbry1.duckdns.org</strong>.</div>
+        <div class="error-page__code">NET::ERR_CERT_AUTHORITY_INVALID</div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn--ghost">Ocultar opciones avanzadas</button>
+          <button class="btn btn--info">Volver</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 7: Project cards -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">7</div>
+      <h2 class="section__title">Project cards</h2>
+      <span class="section__sub">con SF Symbol folder + Fraunces</span>
+    </div>
+    <div class="section__body">
+      <div class="grid-2">
+        <div class="project-card">
+          <div class="project-card__icon">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          </div>
+          <div class="project-card__main">
+            <div class="project-card__name">osquestador-auditor</div>
+            <div class="project-card__sub">52 docs · 28 commits</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="project-card">
+          <div class="project-card__icon">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+          </div>
+          <div class="project-card__main">
+            <div class="project-card__name">osquestador-memoria</div>
+            <div class="project-card__sub">23 docs · 12 commits</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="project-card">
+          <div class="project-card__icon">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+          </div>
+          <div class="project-card__main">
+            <div class="project-card__name">agentes</div>
+            <div class="project-card__sub">9 agentes activos</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="project-card" style="border-left:3px solid var(--success)">
+          <div class="project-card__icon" style="color:var(--success)">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
+          <div class="project-card__main">
+            <div class="project-card__name">openclaw</div>
+            <div class="project-card__sub" style="color:var(--success)">INTACTO · REGLA #0</div>
+          </div>
+          <svg class="icon settings__icon" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELO 8: Toasts / Alerts -->
+  <div class="section">
+    <div class="section__head">
+      <div class="section__num">+</div>
+      <h2 class="section__title">Toasts y alerts</h2>
+      <span class="section__sub">de los patrones iOS</span>
+    </div>
+    <div class="section__body">
+      <div style="display:grid;gap:10px;max-width:480px">
+        <div class="toast">
+          <div style="width:32px;height:32px;background:var(--success);border-radius:8px;display:grid;place-items:center">
+            <svg class="icon" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:14px">Listo</div>
+            <div style="font-size:12px;color:var(--text-mute)">Proyecto creado correctamente</div>
+          </div>
+          <button class="btn--text btn" style="font-size:13px">Ver</button>
+        </div>
+        <div class="toast">
+          <div style="width:32px;height:32px;background:var(--info);border-radius:8px;display:grid;place-items:center">
+            <svg class="icon" viewBox="0 0 24 24" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:14px">Búsqueda: "graphiti"</div>
+            <div style="font-size:12px;color:var(--text-mute)">3 hits local · 12 BM25 · 5 git</div>
+          </div>
+          <button class="btn--text btn" style="font-size:13px">Ver</button>
+        </div>
+        <div class="toast">
+          <div style="width:32px;height:32px;background:var(--danger);border-radius:8px;display:grid;place-items:center">
+            <svg class="icon" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:14px">Kernel DOWN</div>
+            <div style="font-size:12px;color:var(--text-mute)">Watchdog reintentando en 30s…</div>
+          </div>
+          <button class="btn--text btn" style="font-size:13px">Reiniciar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
