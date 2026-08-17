@@ -1,22 +1,41 @@
 # osquestador-auditor
 
-**Estado**: En limpieza por orden de Max (2026-07-19).
+Orquestador auditor del ecosistema YAIWES / NCT.
 
-## Contenido actual
+## Método de trabajo — multi-cuenta (obligatorio)
 
-Solo material original del proyecto (anterior al trabajo de Mavis/M3):
+```
+CUENTA A (sistema vivo)
+  maxbry123-commits/agentes          ← Wordflow / kernel
+  maxbry123-commits/maxbry-router    ← Router
+  maxbry123-commits/osquestador-auditor  ← este repo
+  maxbry123-commits/MEMORIA
+        │
+        │ credential_ref (nunca token en git/chat)
+        ▼
+CUENTA B (almacén software, NO ejecuta)
+  ej. abc1tienda-web / repos de software, forks, tools
+        │
+        │ download/clone/API
+        ▼
+RUNTIME (VPS / sandbox / HF Space)  ← aquí se ejecuta
+HF ← datasets / models / skills grandes
+```
 
-- 12 `INPUT_BLOCK_*.md` — palabras textuales de Max
-- `INSTRUCCIONES.md` — spec de despliegue original
-- `docs/fuente/` (7 archivos) — specs originales del orquestador Fase 0
-- `docs/fuente_max/` (6 archivos) — documentos de la raíz maestra
-- `docs/referencias/` (3 HTMLs) — referencias estéticas
-- `docs/fotos/` (7 fotos) — capturas de Claude mobile
+| Qué vive aquí (Cuenta A) | Qué NO saturar aquí |
+|--------------------------|---------------------|
+| Orquestación, auditoría, plugins del auditor | Software externo completo, datasets grandes |
 
-## Acción recomendada
+### Conexión a Cuenta B
 
-Si el director (Max) quiere **borrar el repo entero**, debe hacerlo desde:
-- **GitHub UI**: https://github.com/maxbry123-commits/osquestador-auditor/settings → Danger Zone → Delete
-- **GitHub API**: `curl -X DELETE -H "Authorization: token <PAT>" https://api.github.com/repos/maxbry123-commits/osquestador-auditor`
+El conector canónico está en el repo sistema:
 
-Esto requiere la confirmación directa del dueño de la cuenta.
+- https://github.com/maxbry123-commits/agentes/blob/main/extensions/wordflow/connectors/github_external.py
+- Método: https://github.com/maxbry123-commits/agentes/blob/main/PIPELINE/53_MULTI_ACCOUNT_STORAGE_METHOD.md
+
+Este repo **usa el mismo contrato**: `account_id` + `credential_ref` + `owner/repo/branch`.  
+Tokens solo en secret store / variables de entorno del runtime.
+
+### Contenido histórico del repo
+
+Material de limpieza 2026-07 y docs fuente en `docs/`. El método multi-cuenta aplica a todo trabajo nuevo.
