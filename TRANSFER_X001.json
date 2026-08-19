@@ -1,0 +1,13 @@
+{
+  "TRANSFER_ID": "X-001",
+  "SOURCE_REPOSITORY": "maxbry123-commits/orchestrator-auditor",
+  "SOURCE_PATH": "orchestrator/",
+  "SOURCE_COMMIT": "31c6da33faf1c1d67a195de94e5e81fea5212299",
+  "DESTINATION_REPOSITORY": "maxbry123-commits/osquestador-auditor",
+  "DESTINATION_PATH": "orchestrator/",
+  "METHOD": "COPY_FIRST",
+  "CONTENT_POLICY": "PRESERVE",
+  "REWRITE": "DENY",
+  "SOURCE_DELETE": "DENY",
+  "NOTE": "Cross-repo MOVE is COPY + optional later source delete. Repo not deleted."
+}
