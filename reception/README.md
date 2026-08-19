@@ -1,10 +1,15 @@
 # Sistema de subida de documentos — osquestador-auditor
 
+## Enlace de carga (oficial)
+https://github.com/maxbry123-commits/osquestador-auditor/upload/main/reception
+
+También: https://github.com/maxbry123-commits/osquestador-auditor/tree/main/reception
+
 ## Cómo subir
 1. Repo `osquestador-auditor`.
-2. Carpeta `reception/` (también existe RECEPTION_*.md en raíz si aplica).
-3. **Add file → Upload files**.
-4. Sube auditorías/specs/docs.
+2. Abrir el enlace de carga de `reception/`.
+3. **Add file → Upload files** (o el enlace de arriba).
+4. Sube auditorías/specs/docs (.md / .py / .json / .yaml).
 5. Commit a `main`.
 
 ## Cómo funciona
