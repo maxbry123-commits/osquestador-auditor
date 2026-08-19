@@ -1,0 +1,14 @@
+{
+  "id": "taskindex", "version": "2.0", "trigger": "project.taskindex",
+  "steps": [
+    {"id": "planificar", "capability": "planificar"},
+    {"id": "documentar", "capability": "documentar"},
+    {"id": "guardar_raiz", "connector": "vault", "accion": "save", "params": {}},
+    {"id": "frontera", "capability": "frontera"},
+    {"id": "handoff", "when": {"campo": "frontera_ok", "truthy": true},
+     "connector": "handoff", "accion": "export", "params": {}},
+    {"id": "avisar", "when": {"campo": "frontera_ok", "truthy": true},
+     "connector": "notify", "accion": "send",
+     "params": {"text": "✅ FASE 0 lista — contenedor exportado en handoff/"}}
+  ]
+}

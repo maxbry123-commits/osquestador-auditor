@@ -1,0 +1,23 @@
+{
+  "id": "ingesta_auditoria", "version": "2.0", "trigger": "document.new",
+  "steps": [
+    {"id": "ocr", "capability": "ocr", "on_error": "stop"},
+    {"id": "skip_binario", "when": {"campo": "requiere_ocr", "truthy": true},
+     "connector": "notify", "accion": "send",
+     "params": {"text": "📄 Binario recibido: pendiente de OCR externo"}, "on_error": "continue"},
+    {"id": "persistir", "when": {"campo": "requiere_ocr", "truthy": false},
+     "capability": "persistir", "on_error": "stop"},
+    {"id": "auditar", "when": {"campo": "requiere_ocr", "truthy": false},
+     "capability": "auditoria",
+     "params": {"similitud_duplicado": 0.98, "similitud_version": 0.70}},
+    {"id": "avisar_conflicto",
+     "when": {"campo": "resultado_auditoria", "eq": "conflicto"},
+     "connector": "notify", "accion": "send",
+     "params": {"text": "⚠️ CONFLICTO detectado — usa /conflictos y /resolver"}},
+    {"id": "tarjeta_conflicto",
+     "when": {"campo": "resultado_auditoria", "eq": "conflicto"},
+     "connector": "taskboard", "accion": "crear_tarea",
+     "params": {"titulo": "CONFLICTO: revisar versiones",
+                "descripcion": "Resolver con /resolver <id> A|B|FUSION"}}
+  ]
+}

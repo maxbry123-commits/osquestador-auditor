@@ -1,0 +1,7 @@
+{
+  "id": "arbol", "version": "2.0", "trigger": "document.tree",
+  "steps": [
+    {"id": "extraer", "capability": "arbol", "on_error": "stop"},
+    {"id": "grafo", "connector": "graph", "accion": "bulk_edges", "params": {}}
+  ]
+}
