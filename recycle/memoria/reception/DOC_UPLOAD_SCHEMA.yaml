@@ -1,0 +1,15 @@
+version: "1.0"
+repo: MEMORIA
+required_before_work: [context_documents, work_method_reference, verified_handoff]
+if_missing: BLOCK
+handoff_is_not_full_traceability: true
+document:
+  id: string
+  mission_id: string
+  task_id: string
+  path: reception/<filename>
+  method_ref: agentes/PIPELINE/00_METODO_TRABAJO_Y_ARQUITECTURA.md
+  forensic_ref: agentes/PIPELINE/FORENSIC_CODE_AUDIT.md
+traceability:
+  memory_to_context: required_before_programming
+  context_to_mission: required
