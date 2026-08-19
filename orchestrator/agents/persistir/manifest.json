@@ -1,0 +1,1 @@
+{"type":"agent","name":"persistir","version":"2.0","iface":"agent.v1","capabilities":["persistir"],"priority":1,"status":"active"}

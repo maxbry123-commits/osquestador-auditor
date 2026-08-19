@@ -1,0 +1,1 @@
+{"type":"agent","name":"auditor","version":"2.0","iface":"agent.v1","capabilities":["auditoria"],"priority":1,"status":"active"}
