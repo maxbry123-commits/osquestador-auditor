@@ -11,16 +11,20 @@ from .managers import Registry, AgentManager, OutputManager
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 P = lambda *a: os.path.join(BASE, *a)
 
+# Configuración agnóstica: solo estructura, sin nombres de plugins específicos.
+# Cada plugin lee su propio bloque desde config.json (auto-generado).
 DEFAULT_CONFIG = {
     "mode": "prod",
     "poll_seconds": 10,
     "mcp_server": {"enabled": True, "port": 8765},
     "similitud_duplicado": 0.98,
     "similitud_version": 0.70,
-    "inputs": {},
-    "outputs": {},
-    "agents": {},
+    "inputs": {},   # cada input plugin lee aquí su config
+    "outputs": {},  # cada output connector lee aquí su config
+    "agents": {},   # cada agent plugin lee aquí su config
 }
+# DIRS agnóstico: solo carpetas genéricas del kernel.
+# Cada plugin se autocrea sus carpetas en su adapter si las necesita.
 DIRS = ["inputs", "outputs", "agents", "workflows",
         "inbox", "archive", "vault", "handoff", "state"]
 

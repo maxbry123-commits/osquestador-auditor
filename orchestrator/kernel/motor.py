@@ -39,6 +39,7 @@ def run(wf, ctx, agents, outputs, db):
             if "capability" in step:
                 r = agents.execute(step["capability"], step.get("params", {}), ctx)
             elif "connector" in step:
+                # Pasar resultados previos relevantes
                 extra = {k: ctx[k] for k in ("edges", "nombre", "contenido", "proyecto",
                        "hash", "titulo", "descripcion", "readme", "tareas_nuevas")
                        if k in ctx}
