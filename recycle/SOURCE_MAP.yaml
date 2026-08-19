@@ -16,56 +16,89 @@ already_in_canonical:
     note: kernel+plugins already copied; leave source as shell
   - path: reception/
     source: uploaded documents + schema
+  - path: recycle/wordflow/*.json|abi|validator
+  - path: recycle/wordflow_kernel/**
 
-copied_this_commit:
-  - dest: recycle/wordflow/ficha.v2.json
-    src: agentes/extensions/wordflow/ficha.v2.json
-    sha: 449b4517ad0b0159600ef04f792d2f16985912f6
-  - dest: recycle/wordflow/ENCHUFE_UNIVERSAL_v2_SCHEMA.json
-    src: agentes/wordflow/ENCHUFE_UNIVERSAL_v2_SCHEMA.json
-    sha: 3c10ae3f3a909593c19575a2220cdabbacee2c1b
-  - dest: recycle/wordflow/abi.py
-    src: agentes/wordflow/abi.py
-    sha: 0addc7e3af5e86d4587a684094c752d2be53b29b
-  - dest: recycle/wordflow/validator_v2.py
-    src: agentes/wordflow/validator_v2.py
-    sha: 0044af78a07cf7e3ee7d26d7356eb0913f5bffb2
-  - dest: recycle/wordflow_kernel/bootstrap_multi.py
-    src: agentes/extensions/wordflow_kernel/bootstrap_multi.py
-    sha: c703a02f060dd50fad2f9d33ad242a32347ca575
-  - dest: recycle/wordflow_kernel/ficha_loader.py
-    src: agentes/extensions/wordflow_kernel/ficha_loader.py
-    sha: b4da223282cf8a05cf45f04124367061111af21d
-  - dest: recycle/wordflow_kernel/memory.py
-    src: agentes/extensions/wordflow_kernel/memory.py
-    sha: 6dd18881f98efe11f78de949dac165da46fab47e
-  - dest: recycle/wordflow_kernel/llm_control.py
-    src: agentes/extensions/wordflow_kernel/llm_control.py
-    sha: fa8d294c9ea723b0d71ca604fb89dcdfacfa4c69
-  - dest: recycle/wordflow_kernel/ficha.v2.json
-    src: agentes/extensions/wordflow_kernel/ficha.v2.json
-    sha: 7100176c0a27dfc53cf5a261e94a0878329d8a0e
-  - dest: recycle/wordflow_kernel/memory_slot/adapter.py
-    src: agentes/extensions/wordflow_kernel/memory_slot/adapter.py
-    sha: 69a8e15f0d9c33042a3b33d1f836c89b8fb53af4
-  - dest: recycle/wordflow_kernel/memory_slot/contracts.py
-    src: agentes/extensions/wordflow_kernel/memory_slot/contracts.py
-    sha: 9f6d8cbdf4d93982714be6158d7a1170a24c232e
-  - dest: recycle/audit_forensic/ficha.v2.json
-    src: agentes/extensions/audit_forensic/ficha.v2.json
-    sha: d95b1a5b9ba3c333b1ecd3f5f5b3b8cf27832353
-  - dest: recycle/memoria/MEMORIA-FRONT.md
-    src: MEMORIA/MEMORIA-FRONT.md
-    sha: d93ce8dfcbe9acddf4a20bbcc733b1582d34d9ac
+copied_salida_2_engine:
+  - dest: recycle/audit_forensic/engine/__init__.py
+    src: agentes/extensions/audit_forensic/engine/__init__.py
+    sha: bbaaaa40c26619d52dfcb13459e4b8d98b224a55
+  - dest: recycle/audit_forensic/engine/entrypoint.py
+    src: agentes/extensions/audit_forensic/engine/entrypoint.py
+    sha: e9ad90fe102f606c86a2a7e32445f263508a90de
+  - dest: recycle/audit_forensic/engine/doc_truth.py
+    src: agentes/extensions/audit_forensic/engine/doc_truth.py
+    sha: fe2e4515376f506b45d9f9bd02bc29f19e0cf6fd
+  - dest: recycle/audit_forensic/engine/repo_truth.py
+    src: agentes/extensions/audit_forensic/engine/repo_truth.py
+    sha: 5b4e5e81709f7d640db8363b2c2f1c08dcf86f32
+  - dest: recycle/audit_forensic/engine/verdict_engine.py
+    src: agentes/extensions/audit_forensic/engine/verdict_engine.py
+    sha: c328be2f46ba8dc74f34c19df5c7b427009ba140
+  - dest: recycle/audit_forensic/engine/packet_normalizer.py
+    src: agentes/extensions/audit_forensic/engine/packet_normalizer.py
+    sha: 6261fb916f690089b2d4c6ce3105915d7dfc2826
+  - dest: recycle/audit_forensic/engine/matrix_contradiction.py
+    src: agentes/extensions/audit_forensic/engine/matrix_contradiction.py
+    sha: 4b716154c755aee96ff98285b62605e3eacae9af
+  - dest: recycle/audit_forensic/engine/matrix_coverage.py
+    src: agentes/extensions/audit_forensic/engine/matrix_coverage.py
+    sha: 8d49f803648296e080c570c553201ef5632413b0
+  - dest: recycle/audit_forensic/engine/matrix_gaps.py
+    src: agentes/extensions/audit_forensic/engine/matrix_gaps.py
+    sha: 6197c440093b253a13f879c935fca765c76974d0
+  - dest: recycle/audit_forensic/engine/matrix_literal.py
+    src: agentes/extensions/audit_forensic/engine/matrix_literal.py
+    sha: 49d0f7eabf5a38b7ecdd651cc6c329b64b33a117
+  - dest: recycle/audit_forensic/engine/report_builder.py
+    src: agentes/extensions/audit_forensic/engine/report_builder.py
+    sha: 8ef6ac422c828fc17ff212e5c6daefe0c5b68f4d
+  - dest: recycle/audit_forensic/engine/requirements_loader.py
+    src: agentes/extensions/audit_forensic/engine/requirements_loader.py
+    sha: c1c4f1850b2b52337a89786a6bf0ad164c5b1972
+  - dest: recycle/audit_forensic/schema_module.json
+    src: agentes/extensions/audit_forensic/schema_module.json
+    sha: b9ec1ecfa8589ac3777ff7de8c324867f9a1ff6b
+  - dest: recycle/audit_forensic/manifest.yaml
+    src: agentes/extensions/audit_forensic/manifest.yaml
+    sha: 00ea75e58a27d64812fdb6b189afd9bdd79926b8
+  - dest: recycle/audit_forensic/CI_NOTE.md
+    src: agentes/extensions/audit_forensic/CI_NOTE.md
+    sha: 5d25bfda6d011e8f03d0ddb763f69d788f62227c
+  - dest: recycle/audit_forensic/requirements/phase_seed.yaml
+    src: agentes/extensions/audit_forensic/requirements/phase_seed.yaml
+    sha: b23a6e98425b194ab06baa22694d5087e22c70d8
+  - dest: recycle/audit_forensic/store/document_truth_seed.yaml
+    src: agentes/extensions/audit_forensic/store/document_truth_seed.yaml
+    sha: 8e36afb721c8eac38a4e46b740f45f6daf7f5b99
+  - dest: recycle/wordflow/engine/reuse_12.py
+    src: agentes/extensions/wordflow/engine/reuse_12.py
+    sha: da5e546eb64a4758ff4a1bbe2206f701e73b6fde
+  - dest: recycle/wordflow/engine/ports/memory_port.py
+    src: agentes/extensions/wordflow/engine/ports/memory_port.py
+    sha: ae0f28b687e9d8d962a5e8f62472356dae20f2d9
+  - dest: recycle/wordflow/engine/cognitive_registers.py
+    src: agentes/extensions/wordflow/engine/cognitive_registers.py
+    sha: 97b4e6462830ed9262ea41b917ceeeb8f8c1f6c3
+    note: load_from_lock has ImportError fallback; goal_lock stays in agentes
+  - dest: recycle/wordflow/standards/copy_first.py
+    src: agentes/extensions/wordflow/standards/copy_first.py
+    sha: 0db3a27b612ad3d153055f22f553d022344b2618
+    note: depends on symbol_index (pointer in agentes)
+  - dest: recycle/memoria/reception/DOC_UPLOAD_SCHEMA.yaml
+    src: MEMORIA/reception/DOC_UPLOAD_SCHEMA.yaml
+    sha: ac0fe5e450f0abc0b54a8ff901f697317ed88657
 
 not_copied_on_purpose:
-  - agentes/extensions/wordflow/engine/** (~250 py) — stays in A to avoid saturating agentes clone
+  - agentes/extensions/wordflow/engine/** (~250 py) — stays in A except reuse_12/memory_port/cognitive_registers
   - agentes/extensions/wordflow/tests/** — tests stay source-of-truth in A
   - MEMORIA/app.js (26990 bytes) — pointer only; not a UI dump
-  - full wordflow_kernel tests
+  - audit_forensic/tests/** — stay in agentes
+  - goal_lock.py / symbol_index.py / resource_catalog.py — pointer deps
 
 pointer_only:
   wordflow_engine: maxbry123-commits/agentes/extensions/wordflow/engine/
-  audit_engine: maxbry123-commits/agentes/extensions/audit_forensic/engine/
+  goal_lock: maxbry123-commits/agentes/extensions/wordflow/engine/goal_lock.py
+  symbol_index: maxbry123-commits/agentes/extensions/wordflow/standards/symbol_index.py
+  resource_catalog: maxbry123-commits/agentes/extensions/wordflow/engine/resource_catalog.py
   memoria_app: maxbry123-commits/MEMORIA/app.js
-  memoria_schema: maxbry123-commits/MEMORIA/reception/DOC_UPLOAD_SCHEMA.yaml
