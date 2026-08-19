@@ -1,0 +1,17 @@
+{
+  "version": "1.7.0",
+  "source": "component_catalog.json",
+  "copied_from": "agentes/extensions/wordflow/connect_catalog.json",
+  "note": "COPY-FIRST SALIDA-5. Full connection map stays source-of-truth in A.",
+  "usb_relevant": [
+    {"id": "CONN.ingest_to_plugin", "from": "wordflow_kernel.reception.ingest", "to": "wordflow.engine.enchufe_gate", "type": "plugin", "status": "WIRED"},
+    {"id": "CONN.kernel_openclaw", "from": "wordflow_kernel", "to": "engine.openclaw", "type": "adapter", "status": "WIRED_STUB"},
+    {"id": "CONN.kernel_hermes", "from": "wordflow_kernel", "to": "engine.hermes", "type": "adapter", "status": "WIRED_STUB"},
+    {"id": "CONN.audit_to_plan", "from": "wordflow_kernel.workflow.WordflowKernel", "to": "audit_engine+compiler", "type": "orchestrator", "status": "WIRED"}
+  ],
+  "gaps_for_salida_5": [
+    "plugins/graphiti",
+    "plugins/n8n",
+    "plugins/ocr"
+  ]
+}

@@ -1,0 +1,49 @@
+transfer: SALIDA-5
+method: COPY-FIRST
+rewrite: false
+delete_source: false
+cuenta_b: UNREACHABLE
+
+canonical: maxbry123-commits/osquestador-auditor
+
+copied:
+  - dest: recycle/wordflow/engine/resource_catalog.py
+    src: agentes/extensions/wordflow/engine/resource_catalog.py
+    sha: 7f3ca77c2488f2d79b3a87d644b774a1081b6e2c
+  - dest: recycle/wordflow/engine/resource_gate.py
+    src: agentes/extensions/wordflow/engine/resource_gate.py
+    sha: 73115ff4d3efdc196066709ca6131e4de2fd4b85
+  - dest: recycle/wordflow/engine/resource_broker.py
+    src: agentes/extensions/wordflow/engine/resource_broker.py
+    sha: ab68ad6a7b51e38bc7ad99bee5ccd0bc594a7b94
+  - dest: recycle/wordflow/engine/resource_runtime.py
+    src: agentes/extensions/wordflow/engine/resource_runtime.py
+    sha: 6e77c84ba507b493a122cbba5d9bc61f5336d80d
+  - dest: recycle/wordflow/engine/capability_brain.py
+    src: agentes/extensions/wordflow/engine/capability_brain.py
+    sha: 34fecb7fad9f5bc05333fbe2c8ffd6c68710c5c1
+    note: imports environment_scan, extension_registry, hf_index stay POINTER in A
+  - dest: recycle/wordflow/engine/capability_intent.py
+    src: agentes/extensions/wordflow/engine/capability_intent.py
+    sha: f60951497a88a6d6f4da2a0ad28370aa591a1fc5
+  - dest: recycle/wordflow/engine/capability_passport.py
+    src: agentes/extensions/wordflow/engine/capability_passport.py
+    sha: f1b1377af06fdedca6547608e365e12b95302175
+  - dest: recycle/wordflow/engine/enchufe_gate.py
+    src: agentes/extensions/wordflow/engine/enchufe_gate.py
+    sha: 120081f85bb3073b755045e79ab10ffaf79b6844
+
+pointer_only:
+  - agentes/extensions/wordflow/engine/environment_scan.py
+  - agentes/extensions/wordflow/engine/extension_registry.py
+  - agentes/extensions/wordflow/engine/hf_index.py
+  - agentes/extensions/wordflow/engine/docker_transport.py
+  - agentes/extensions/wordflow/engine/credential_store.py
+  - agentes/extensions/wordflow/engine/resource_trace.py
+  - agentes/extensions/wordflow/connectors/github_external.py
+  - MEMORIA/app.js
+
+not_found:
+  - plugins/graphiti
+  - plugins/n8n
+  - plugins/ocr
