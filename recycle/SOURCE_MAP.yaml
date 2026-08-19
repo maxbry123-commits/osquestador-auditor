@@ -1,0 +1,71 @@
+transfer: SALIDA-2
+method: COPY-FIRST
+policy: 90-10
+rewrite: false
+delete_source: false
+cuenta_b: UNREACHABLE
+
+canonical: maxbry123-commits/osquestador-auditor
+workflow_kernel_stays_in: maxbry123-commits/agentes
+cuenta_b_requested: abc1tienda-web/osquestador-auditor-y-memoria-1
+cuenta_b_status: NO_ACCESS_FROM_maxbry123-commits
+
+already_in_canonical:
+  - path: orchestrator/
+    source: maxbry123-commits/orchestrator-auditor
+    note: kernel+plugins already copied; leave source as shell
+  - path: reception/
+    source: uploaded documents + schema
+
+copied_this_commit:
+  - dest: recycle/wordflow/ficha.v2.json
+    src: agentes/extensions/wordflow/ficha.v2.json
+    sha: 449b4517ad0b0159600ef04f792d2f16985912f6
+  - dest: recycle/wordflow/ENCHUFE_UNIVERSAL_v2_SCHEMA.json
+    src: agentes/wordflow/ENCHUFE_UNIVERSAL_v2_SCHEMA.json
+    sha: 3c10ae3f3a909593c19575a2220cdabbacee2c1b
+  - dest: recycle/wordflow/abi.py
+    src: agentes/wordflow/abi.py
+    sha: 0addc7e3af5e86d4587a684094c752d2be53b29b
+  - dest: recycle/wordflow/validator_v2.py
+    src: agentes/wordflow/validator_v2.py
+    sha: 0044af78a07cf7e3ee7d26d7356eb0913f5bffb2
+  - dest: recycle/wordflow_kernel/bootstrap_multi.py
+    src: agentes/extensions/wordflow_kernel/bootstrap_multi.py
+    sha: c703a02f060dd50fad2f9d33ad242a32347ca575
+  - dest: recycle/wordflow_kernel/ficha_loader.py
+    src: agentes/extensions/wordflow_kernel/ficha_loader.py
+    sha: b4da223282cf8a05cf45f04124367061111af21d
+  - dest: recycle/wordflow_kernel/memory.py
+    src: agentes/extensions/wordflow_kernel/memory.py
+    sha: 6dd18881f98efe11f78de949dac165da46fab47e
+  - dest: recycle/wordflow_kernel/llm_control.py
+    src: agentes/extensions/wordflow_kernel/llm_control.py
+    sha: fa8d294c9ea723b0d71ca604fb89dcdfacfa4c69
+  - dest: recycle/wordflow_kernel/ficha.v2.json
+    src: agentes/extensions/wordflow_kernel/ficha.v2.json
+    sha: 7100176c0a27dfc53cf5a261e94a0878329d8a0e
+  - dest: recycle/wordflow_kernel/memory_slot/adapter.py
+    src: agentes/extensions/wordflow_kernel/memory_slot/adapter.py
+    sha: 69a8e15f0d9c33042a3b33d1f836c89b8fb53af4
+  - dest: recycle/wordflow_kernel/memory_slot/contracts.py
+    src: agentes/extensions/wordflow_kernel/memory_slot/contracts.py
+    sha: 9f6d8cbdf4d93982714be6158d7a1170a24c232e
+  - dest: recycle/audit_forensic/ficha.v2.json
+    src: agentes/extensions/audit_forensic/ficha.v2.json
+    sha: d95b1a5b9ba3c333b1ecd3f5f5b3b8cf27832353
+  - dest: recycle/memoria/MEMORIA-FRONT.md
+    src: MEMORIA/MEMORIA-FRONT.md
+    sha: d93ce8dfcbe9acddf4a20bbcc733b1582d34d9ac
+
+not_copied_on_purpose:
+  - agentes/extensions/wordflow/engine/** (~250 py) — stays in A to avoid saturating agentes clone
+  - agentes/extensions/wordflow/tests/** — tests stay source-of-truth in A
+  - MEMORIA/app.js (26990 bytes) — pointer only; not a UI dump
+  - full wordflow_kernel tests
+
+pointer_only:
+  wordflow_engine: maxbry123-commits/agentes/extensions/wordflow/engine/
+  audit_engine: maxbry123-commits/agentes/extensions/audit_forensic/engine/
+  memoria_app: maxbry123-commits/MEMORIA/app.js
+  memoria_schema: maxbry123-commits/MEMORIA/reception/DOC_UPLOAD_SCHEMA.yaml
