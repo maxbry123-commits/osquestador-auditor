@@ -19,6 +19,30 @@ Reglas cortas:
 - SOURCE_HASH = DESTINATION_HASH o COPY_INTEGRITY FAIL.
 - Secretos: no copiar.
 
+## Procedimiento operativo detallado — copia entre repositorios
+
+1. Auditar origen y destino antes de cualquier escritura.
+2. Identificar la ruta exacta y comprobar si ya existe en destino.
+3. Si existe: no borrar y no sobrescribir.
+4. Si no existe: obtener el blob original del origen y conservar su SHA.
+5. En destino, usar el árbol actual como `base_tree`.
+6. Añadir al `tree` únicamente las rutas nuevas, apuntando al blob correspondiente.
+7. Crear el commit con ese tree.
+8. Actualizar la referencia de la rama destino (push).
+9. Hacer read-back desde GitHub y comparar SHA/contenido origen ↔ destino.
+10. Registrar evidencia y continuar con el siguiente archivo.
+
+Para lotes, varias rutas nuevas pueden entrar en un mismo tree y un solo commit. Nunca incluir una ruta existente si la regla es no reescribir.
+
+## Reglas de integridad
+
+- COPY-FIRST.
+- Origen intacto.
+- Copia literal; no resumir, reconstruir, traducir ni corregir.
+- GitHub = fuente de verdad.
+- La tarea no es DONE hasta SOURCE_HASH = DESTINATION_HASH para cada copia verificable.
+- No usar Actions/issues/workflows como mecanismo de copia cuando la transferencia directa Git blob/tree es suficiente.
+
 Hashes de los protocolos (origen local de esta publicación):
 
 - 57: ecd9e8b21ed3ade18a9e8f3b2bdca1cfabecec7de4dd14dec20488c892974a82
