@@ -34,4 +34,24 @@ Cualquier instancia debe leer y seguir:
 - No usar Actions, issues ni workflows como mecanismo de copia cuando la operación puede hacerse directamente mediante Git blobs/trees.
 - Para lotes, se pueden incluir varios archivos nuevos en un mismo `tree` y un mismo commit, siempre que ninguno existente sea sobrescrito.
 
-Este procedimiento se basa en el modelo Git de GitHub: los archivos se almacenan como blobs; los trees relacionan rutas con blobs; después se crea un commit y se actualiza la referencia de la rama. 
+## Procedimiento ZIP → nueva raíz
+
+1. Localizar el ZIP exacto y verificar nombre, ruta, SHA y tamaño.
+2. Descargarlo como binario; no interpretarlo como UTF-8.
+3. Extraer todos los archivos y directorios a un área temporal.
+4. Auditar el inventario y detectar una carpeta envolvente creada por el ZIP.
+5. Crear una sola raíz nueva con el nombre solicitado.
+6. Colocar TODO el contenido extraído dentro de esa raíz, quitando solo la carpeta envolvente si existe.
+7. Mantener nombres, rutas internas y contenido sin cambios.
+8. Comparar inventario ZIP ↔ raíz: archivos, directorios, tamaños y SHA/contenido cuando sea posible.
+9. Crear tree/commit conservando el resto del repositorio y actualizar la rama destino.
+10. Verificar directamente en GitHub que la nueva raíz contiene todo lo esperado.
+
+### Reglas ZIP
+
+- ZIP original intacto salvo instrucción expresa.
+- No clasificar, mover, borrar ni reescribir documentos ajenos a esta tarea.
+- GitHub = verdad.
+- TERMINADA solo después de la verificación cruzada.
+
+Flujo ZIP: `localizar → descargar binario → extraer → inventariar → nueva raíz → desplegar completo → comparar → commit → push → verificar`.
