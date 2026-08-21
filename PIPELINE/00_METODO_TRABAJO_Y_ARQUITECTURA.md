@@ -92,3 +92,24 @@ Solo tras FORENSIC_DONE + aprobación usuario. Proteger: método, GitHub, fuente
 
 ## STAGNATION (refuerzo)
 Mismo fallo ×2 → cambiar mecanismo. Fallo publish → no regenerar documento completo. Fallo verify → reparar, no declarar éxito.
+
+---
+
+# APPEND — PROCEDIMIENTO CANÓNICO DE COPIA ENTRE REPOSITORIOS
+
+1. Auditar origen y destino antes de escribir.
+2. Identificar ruta exacta y comprobar si ya existe en destino.
+3. Si existe: **NO borrar y NO reescribir**.
+4. Si no existe: obtener del origen el blob original y su SHA.
+5. Usar el árbol actual del destino como `base_tree`.
+6. Añadir al tree solo las rutas nuevas, apuntando a sus blobs originales.
+7. Crear un commit con el tree resultante.
+8. Actualizar la referencia de la rama destino (push).
+9. Hacer read-back desde GitHub y comparar SHA/contenido origen ↔ destino.
+10. Registrar evidencia y pasar al siguiente archivo.
+
+Para lotes se pueden incluir varias rutas nuevas en un único tree y commit. Nunca incluir rutas existentes cuando la regla sea no sobrescribir.
+
+**Flujo:** `origen → blob/SHA → auditoría destino → tree → commit → push → verificación SHA`.
+
+**Regla de cierre:** SOURCE_HASH = DESTINATION_HASH; si no coincide, COPY_INTEGRITY FAIL y no se declara DONE.
