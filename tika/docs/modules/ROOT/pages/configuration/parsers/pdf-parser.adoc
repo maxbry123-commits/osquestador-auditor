@@ -1,0 +1,40 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+= PDFParser Configuration
+
+Configuration options for `PDFParser`.
+
+== Basic Configuration
+
+[source,json]
+----
+include::example$pdf-parser-basic.json[]
+----
+icon:github[] https://github.com/apache/tika/blob/main/tika-parsers/tika-parsers-standard/tika-parsers-standard-integration-tests/src/test/resources/config-examples/pdf-parser-basic.json[View source on GitHub]
+
+== Full Configuration
+
+Every option with its default value and an inline comment describing it. The `default-parser` entry
+keeps the rest of Tika's parsers loaded — see xref:configuration/index.adoc[Configuration] for why
+that matters.
+
+[source,json]
+----
+include::example$pdf-parser-full.json[]
+----
+icon:github[] https://github.com/apache/tika/blob/main/tika-parsers/tika-parsers-standard/tika-parsers-standard-integration-tests/src/test/resources/config-examples/pdf-parser-full.json[View source on GitHub]
