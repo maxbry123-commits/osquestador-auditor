@@ -47,3 +47,8 @@
 {"number": 47, "slug": "opentelemetry-specification", "source": "https://github.com/open-telemetry/opentelemetry-specification.git", "source_commit": "8057bf6d5cf0ab10891b9e6f7b928cded76ab2f7", "parts": 2, "status": "COMPLETE"}
 {"number": 48, "slug": "restic", "source": "https://github.com/restic/restic.git", "source_commit": "ba802d42b7294c98b62c16d1157ea3e80820c019", "parts": 3, "status": "COMPLETE"}
 {"number": 49, "slug": "cloudflared", "source": "https://github.com/cloudflare/cloudflared.git", "source_commit": "274888eb1e63c0d3764564eef89835b9fd47c54c", "parts": 1, "status": "COMPLETE"}
+{"number": 50, "slug": "systemd", "source": "https://github.com/systemd/systemd.git", "source_commit": "048970650ce5d50bceffff97442c4a90c1cf0572", "parts": 2, "status": "COMPLETE"}
+{"number": 51, "slug": "moby", "source": "https://github.com/moby/moby.git", "source_commit": "c00fef565de5a4808ab174af5c490143e68f99e5", "parts": 3, "status": "COMPLETE"}
+{"number": 52, "slug": "fastapi", "source": "https://github.com/tiangolo/fastapi.git", "source_commit": "49033471594ea5d99a80abdf1043231b7791ee49", "parts": 2, "status": "COMPLETE"}
+{"number": 53, "slug": "python-diskcache", "source": "https://github.com/grantjenks/python-diskcache.git", "source_commit": "ebfa37cd99d7ef716ec452ad8af4b4276a8e2233", "parts": 1, "status": "COMPLETE"}
+{"number": 54, "slug": "cachelib", "source": "https://github.com/facebook/cachelib.git", "source_commit": "f85ec250d2cb0276bc851e9ef0de1e6c664649e1", "parts": 1, "status": "COMPLETE"}
