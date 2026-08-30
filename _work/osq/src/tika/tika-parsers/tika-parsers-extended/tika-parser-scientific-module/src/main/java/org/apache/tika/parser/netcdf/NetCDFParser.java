@@ -1,0 +1,157 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.tika.parser.netcdf;
+
+//JDK imports
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import ucar.nc2.Attribute;
+import ucar.nc2.Dimension;
+import ucar.nc2.NetcdfFile;
+import ucar.nc2.Variable;
+
+import org.apache.tika.annotation.TikaComponent;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.KeyPrefix;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.climate.ClimateForecast;
+import org.apache.tika.sax.XHTMLContentHandler;
+
+/**
+ * A {@link Parser} for <a
+ * href="http://www.unidata.ucar.edu/software/netcdf/index.html">NetCDF</a>
+ * files using the UCAR, MIT-licensed <a
+ * href="http://www.unidata.ucar.edu/software/netcdf-java/">NetCDF for Java</a>
+ * API.
+ */
+@TikaComponent
+public class NetCDFParser implements Parser {
+
+    /**
+     * Serial version UID
+     */
+    private static final long serialVersionUID = -5940938274907708665L;
+
+    public static final KeyPrefix NETCDF =
+            KeyPrefix.file("netcdf:", "NetCDF global attribute names");
+
+    private static final Property FILE_TYPE_DESCRIPTION =
+            Property.externalText("netcdf:file-type-description");
+
+    private final Set<MediaType> SUPPORTED_TYPES =
+            Collections.singleton(MediaType.application("x-netcdf"));
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser
+     * .ParseContext)
+     */
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.tika.parser.Parser#parse(java.io.InputStream,
+     * org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata,
+     * org.apache.tika.parser.ParseContext)
+     */
+    public void parse(TikaInputStream tis, ContentHandler handler, Metadata metadata,
+                      ParseContext context) throws IOException, SAXException, TikaException {
+
+        try (NetcdfFile ncFile = NetcdfFile.open(tis.getFile().getAbsolutePath())) {
+            metadata.set(FILE_TYPE_DESCRIPTION, ncFile.getFileTypeDescription());
+            // first parse out the set of global attributes
+            for (Attribute attr : ncFile.getGlobalAttributes()) {
+                if (attr.getDataType().isString()) {
+                    addGlobalAttribute(metadata, attr.getFullName(), attr.getStringValue());
+                } else if (attr.getDataType().isNumeric()) {
+                    addGlobalAttribute(metadata, attr.getFullName(),
+                            String.valueOf(attr.getNumericValue().intValue()));
+                }
+            }
+
+
+            XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata, context);
+            xhtml.startDocument();
+            xhtml.newline();
+            xhtml.element("h1", "dimensions");
+            xhtml.startElement("ul");
+            xhtml.newline();
+            for (Dimension dim : ncFile.getDimensions()) {
+                xhtml.element("li", dim.getFullName() + " = " + dim.getLength());
+            }
+            xhtml.endElement("ul");
+
+            xhtml.element("h1", "variables");
+            xhtml.startElement("ul");
+            xhtml.newline();
+            for (Variable var : ncFile.getVariables()) {
+                xhtml.startElement("li");
+                xhtml.characters(var.getDataType() + " " + var.getNameAndDimensions());
+                xhtml.newline();
+                List<Attribute> attributes = var.getAttributes();
+                if (!attributes.isEmpty()) {
+                    xhtml.startElement("ul");
+                    for (Attribute element : attributes) {
+                        xhtml.element("li", element.toString());
+                    }
+                    xhtml.endElement("ul");
+                }
+                xhtml.endElement("li");
+            }
+            xhtml.endElement("ul");
+
+            xhtml.endDocument();
+        } catch (IOException e) {
+            throw new TikaException("NetCDF parse error", e);
+        }
+    }
+
+    private static void addGlobalAttribute(Metadata metadata, String name, String value) {
+        if ("title".equals(name)) {
+            metadata.add(TikaCoreProperties.TITLE, value);
+            return;
+        }
+        Property cfProperty = ClimateForecast.byName(name);
+        if (cfProperty != null) {
+            if (cfProperty.isMultiValuePermitted()) {
+                metadata.add(cfProperty, value);
+            } else {
+                // malformed files can repeat attribute names; SIMPLE CF keys take last-wins, not a throw
+                metadata.set(cfProperty, value);
+            }
+        } else {
+            metadata.add(NETCDF, name, value);
+        }
+    }
+}
