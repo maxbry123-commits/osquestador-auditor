@@ -1,0 +1,64 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.internal.kernel.api.exceptions.schema;
+
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.gqlstatus.ErrorGqlStatusObject;
+import org.neo4j.gqlstatus.ErrorGqlStatusObjectImplementation;
+import org.neo4j.gqlstatus.GqlHelper;
+import org.neo4j.gqlstatus.GqlParams;
+import org.neo4j.gqlstatus.GqlStatusInfoCodes;
+import org.neo4j.kernel.api.exceptions.Status;
+import org.neo4j.logging.Log;
+
+public class IndexNotApplicableKernelException extends KernelException {
+    private IndexNotApplicableKernelException(ErrorGqlStatusObject gqlStatusObject, String msg) {
+        super(gqlStatusObject, Status.Schema.IndexNotApplicable, msg);
+    }
+
+    public static IndexNotApplicableKernelException internalError(String msgTitle, String message) {
+        var gql = GqlHelper.get50N00(msgTitle, message);
+        return new IndexNotApplicableKernelException(gql, message);
+    }
+
+    public static IndexNotApplicableKernelException indexNotApplicable(Log log, String indexName, String msg) {
+        var gql = ErrorGqlStatusObjectImplementation.from(GqlStatusInfoCodes.STATUS_50N15)
+                .withParam(GqlParams.StringParam.idx, indexName)
+                .build();
+
+        var e = new IndexNotApplicableKernelException(gql, msg);
+        log.error(msg, e);
+        return e;
+    }
+
+    public static IndexNotApplicableKernelException vectorIndexDimensionalityMismatch(
+            String indexName, int indexDim, int vectorDim) {
+        var gql = ErrorGqlStatusObjectImplementation.from(GqlStatusInfoCodes.STATUS_51N65)
+                .withParam(GqlParams.StringParam.idx, indexName)
+                .withParam(GqlParams.NumberParam.dim1, indexDim)
+                .withParam(GqlParams.NumberParam.dim2, vectorDim)
+                .build();
+
+        return new IndexNotApplicableKernelException(
+                gql,
+                "Index query vector has a dimensionality of %d, but indexed vectors have %d."
+                        .formatted(indexDim, vectorDim));
+    }
+}

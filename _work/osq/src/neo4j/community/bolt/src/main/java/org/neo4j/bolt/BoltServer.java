@@ -1,0 +1,984 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.bolt;
+
+import static org.neo4j.configuration.ssl.SslPolicyScope.BOLT;
+import static org.neo4j.configuration.ssl.SslPolicyScope.CLUSTER;
+import static org.neo4j.function.Suppliers.lazySingleton;
+
+import inet.ipaddr.IPAddressNetwork.IPAddressGenerator;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.local.LocalAddress;
+import io.netty.handler.ssl.SslProvider;
+import io.netty.util.concurrent.Future;
+import io.netty.util.internal.PlatformDependent;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.nio.file.Files;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import org.neo4j.bolt.discovery.DiscoveryConnector;
+import org.neo4j.bolt.discovery.config.DiscoveryConfiguration;
+import org.neo4j.bolt.discovery.info.InstanceDiscoveryInformationProvider;
+import org.neo4j.bolt.negotiation.version.ProtocolVersion;
+import org.neo4j.bolt.protocol.BoltProtocolRegistry;
+import org.neo4j.bolt.protocol.common.BoltProtocol;
+import org.neo4j.bolt.protocol.common.connection.BoltConnectionMetricsMonitor;
+import org.neo4j.bolt.protocol.common.connection.BoltDriverMetricsMonitor;
+import org.neo4j.bolt.protocol.common.connection.hint.ConnectionHintRegistry;
+import org.neo4j.bolt.protocol.common.connection.hint.KeepAliveConnectionHintProvider;
+import org.neo4j.bolt.protocol.common.connection.hint.SeverSideRoutingHintProvider;
+import org.neo4j.bolt.protocol.common.connection.hint.TelemetryConnectionHintProvider;
+import org.neo4j.bolt.protocol.common.connector.Connector;
+import org.neo4j.bolt.protocol.common.connector.accounting.error.CircuitBreakerErrorAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.error.ErrorAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.error.NoopErrorAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.thread.NoopThreadAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.thread.ThreadAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.thread.TimeLimitedThreadAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.traffic.AtomicTrafficAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.traffic.NoopTrafficAccountant;
+import org.neo4j.bolt.protocol.common.connector.accounting.traffic.TrafficAccountant;
+import org.neo4j.bolt.protocol.common.connector.admissioncontrol.ConnectionAdmissionControlTrackerFactory;
+import org.neo4j.bolt.protocol.common.connector.config.DomainSocketConnectorConfiguration;
+import org.neo4j.bolt.protocol.common.connector.config.LocalConnectorConfiguration;
+import org.neo4j.bolt.protocol.common.connector.config.SocketConnectorConfiguration;
+import org.neo4j.bolt.protocol.common.connector.connection.AtomicSchedulingConnection;
+import org.neo4j.bolt.protocol.common.connector.connection.Connection;
+import org.neo4j.bolt.protocol.common.connector.executor.ExecutorServiceFactory;
+import org.neo4j.bolt.protocol.common.connector.executor.NettyThreadFactory;
+import org.neo4j.bolt.protocol.common.connector.executor.ThreadPoolExecutorServiceFactory;
+import org.neo4j.bolt.protocol.common.connector.listener.AuthenticationProtocolLimiterConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.AuthenticationTimeoutConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.KeepAliveConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.MetricsConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.ReadLimitConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.ResetMessageConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.listener.ResponseMetricsConnectorListener;
+import org.neo4j.bolt.protocol.common.connector.netty.AdditionalSocketNettyConnector;
+import org.neo4j.bolt.protocol.common.connector.netty.DomainSocketNettyConnector;
+import org.neo4j.bolt.protocol.common.connector.netty.FabricSocketNettyConnector;
+import org.neo4j.bolt.protocol.common.connector.netty.LocalNettyConnector;
+import org.neo4j.bolt.protocol.common.connector.netty.SocketNettyConnector;
+import org.neo4j.bolt.protocol.common.connector.transport.ConnectorTransport;
+import org.neo4j.bolt.protocol.common.connector.transport.LocalConnectorTransport;
+import org.neo4j.bolt.security.Authentication;
+import org.neo4j.bolt.security.basic.BasicAuthentication;
+import org.neo4j.bolt.transport.BoltMemoryPool;
+import org.neo4j.bolt.transport.NettyMemoryPool;
+import org.neo4j.bolt.tx.TransactionManager;
+import org.neo4j.common.DependencyResolver;
+import org.neo4j.configuration.Config;
+import org.neo4j.configuration.GraphDatabaseInternalSettings;
+import org.neo4j.configuration.GraphDatabaseSettings;
+import org.neo4j.configuration.SslSystemSettings;
+import org.neo4j.configuration.connectors.BoltConnector;
+import org.neo4j.configuration.connectors.BoltConnector.EncryptionLevel;
+import org.neo4j.configuration.connectors.BoltConnectorInternalSettings;
+import org.neo4j.configuration.connectors.CommonConnectorConfig;
+import org.neo4j.configuration.connectors.ConnectorPortRegister;
+import org.neo4j.configuration.connectors.ConnectorType;
+import org.neo4j.dbms.api.DatabaseManagementService;
+import org.neo4j.dbms.identity.ServerIdentity;
+import org.neo4j.dbms.routing.RoutingService;
+import org.neo4j.function.Suppliers;
+import org.neo4j.internal.kernel.api.security.AbstractSecurityLog;
+import org.neo4j.kernel.api.net.NetworkConnectionTracker;
+import org.neo4j.kernel.api.security.AuthManager;
+import org.neo4j.kernel.database.DefaultDatabaseResolver;
+import org.neo4j.kernel.impl.factory.DbmsInfo;
+import org.neo4j.kernel.lifecycle.LifeSupport;
+import org.neo4j.kernel.lifecycle.LifecycleAdapter;
+import org.neo4j.logging.InternalLog;
+import org.neo4j.logging.Log;
+import org.neo4j.logging.internal.LogService;
+import org.neo4j.memory.MemoryPools;
+import org.neo4j.monitoring.Monitors;
+import org.neo4j.scheduler.Group;
+import org.neo4j.scheduler.JobScheduler;
+import org.neo4j.server.config.AuthConfigProvider;
+import org.neo4j.ssl.config.DefaultScopedSslPolicyProvider;
+import org.neo4j.ssl.config.ScopedSslPolicyProvider;
+import org.neo4j.ssl.config.SslPolicyProvider;
+import org.neo4j.time.SystemNanoClock;
+import org.neo4j.util.VisibleForTesting;
+
+public class BoltServer extends LifecycleAdapter {
+
+    @VisibleForTesting
+    public static final Suppliers.Lazy<PooledByteBufAllocator> NETTY_BUF_ALLOCATOR =
+            lazySingleton(() -> new PooledByteBufAllocator(PlatformDependent.directBufferPreferred()));
+
+    private final DbmsInfo dbmsInfo;
+    private final DatabaseManagementService databaseManagementService;
+    private final ServerIdentity identityModule;
+    private final JobScheduler jobScheduler;
+    private final ConnectorPortRegister connectorPortRegister;
+    private final NetworkConnectionTracker connectionTracker;
+    private final Config config;
+    private final SystemNanoClock clock;
+    private final Monitors monitors;
+    private final LogService logService;
+    private final AuthManager externalAuthManager;
+    private final AuthManager internalAuthManager;
+    private final AuthManager domainSocketAuthManager;
+    private final MemoryPools memoryPools;
+    private final DefaultDatabaseResolver defaultDatabaseResolver;
+    private final ConnectionHintRegistry connectionHintRegistry;
+
+    private final ExecutorServiceFactory primaryExecutorServiceFactory;
+    private final ExecutorServiceFactory domainSocketExecutorServiceFactory;
+    private final SslPolicyProvider sslPolicyProvider;
+    private final BoltProtocolRegistry protocolRegistry;
+    private final AuthConfigProvider authConfigProvider;
+    private final TransactionManager transactionManager;
+    private final RoutingService routingService;
+    private final Log userLog;
+    private final InternalLog internalLog;
+    private final ConnectionAdmissionControlTrackerFactory admissionControlTrackerFactory;
+
+    private final List<Connector> connectors = new ArrayList<>();
+    private final LifeSupport connectorLife = new LifeSupport();
+    private final AbstractSecurityLog securityLog;
+    private BoltMemoryPool memoryPool;
+    private EventLoopGroup bossEventLoopGroup;
+    private EventLoopGroup workerEventLoopGroup;
+    private EventLoopGroup localBossEventLoopGroup;
+    private EventLoopGroup localWorkerEventLoopGroup;
+    private ExecutorService executorService;
+    private ExecutorService primaryExecutorService;
+    private ExecutorService domainSocketExecutorService;
+    private BoltConnectionMetricsMonitor connectionMetricsMonitor;
+    private BoltDriverMetricsMonitor driverMetricsMonitor;
+
+    public BoltServer(
+            DbmsInfo dbmsInfo,
+            JobScheduler jobScheduler,
+            ConnectorPortRegister connectorPortRegister,
+            NetworkConnectionTracker connectionTracker,
+            TransactionManager transactionManager,
+            Config config,
+            SystemNanoClock clock,
+            Monitors monitors,
+            LogService logService,
+            DependencyResolver dependencyResolver,
+            AuthManager externalAuthManager,
+            AuthManager internalAuthManager,
+            AuthManager domainSocketAuthManager,
+            MemoryPools memoryPools,
+            RoutingService routingService,
+            DefaultDatabaseResolver defaultDatabaseResolver,
+            ConnectionAdmissionControlTrackerFactory admissionControlTrackerFactory,
+            AbstractSecurityLog securityLog) {
+        this.dbmsInfo = dbmsInfo;
+        this.jobScheduler = jobScheduler;
+        this.connectorPortRegister = connectorPortRegister;
+        this.connectionTracker = connectionTracker;
+        this.transactionManager = transactionManager;
+        this.config = config;
+        this.clock = clock;
+        this.monitors = monitors;
+        this.logService = logService;
+        this.externalAuthManager = externalAuthManager;
+        this.internalAuthManager = internalAuthManager;
+        this.domainSocketAuthManager = domainSocketAuthManager;
+        this.memoryPools = memoryPools;
+        this.defaultDatabaseResolver = defaultDatabaseResolver;
+        this.securityLog = securityLog;
+        this.connectionHintRegistry = ConnectionHintRegistry.newBuilder()
+                .withProvider(new KeepAliveConnectionHintProvider(config))
+                .withProvider(new TelemetryConnectionHintProvider(config))
+                .withProvider(new SeverSideRoutingHintProvider(config))
+                .build();
+
+        this.identityModule = dependencyResolver.resolveDependency(ServerIdentity.class);
+        this.databaseManagementService = dependencyResolver.resolveDependency(DatabaseManagementService.class);
+
+        this.primaryExecutorServiceFactory = new ThreadPoolExecutorServiceFactory(
+                config.get(BoltConnector.thread_pool_min_size),
+                config.get(BoltConnector.thread_pool_max_size),
+                true,
+                config.get(BoltConnector.thread_pool_keep_alive),
+                config.get(BoltConnectorInternalSettings.unsupported_thread_pool_queue_size),
+                this.jobScheduler.threadFactory(Group.BOLT_WORKER));
+
+        if (config.get(BoltConnector.unix_socket_use_dedicated_thread_pool)) {
+            this.domainSocketExecutorServiceFactory = new ThreadPoolExecutorServiceFactory(
+                    config.get(BoltConnector.unix_socket_dedicated_thread_pool_min_size),
+                    config.get(BoltConnector.unix_socket_dedicated_thread_pool_max_size),
+                    true,
+                    config.get(BoltConnector.unix_socket_dedicated_thread_pool_keep_alive),
+                    config.get(BoltConnectorInternalSettings.unsupported_thread_pool_queue_size),
+                    this.jobScheduler.threadFactory(Group.BOLT_WORKER));
+        } else {
+            this.domainSocketExecutorServiceFactory = null;
+        }
+
+        this.routingService = routingService;
+
+        this.sslPolicyProvider = dependencyResolver.resolveDependency(SslPolicyProvider.class);
+        this.authConfigProvider = dependencyResolver.resolveDependency(AuthConfigProvider.class);
+        this.userLog = logService.getUserLog(BoltServer.class);
+        this.internalLog = logService.getInternalLog(BoltServer.class);
+        this.admissionControlTrackerFactory = admissionControlTrackerFactory;
+        var minProtocolVersion = Optional.ofNullable(config.get(BoltConnectorInternalSettings.min_protocol_version))
+                .map(version -> new ProtocolVersion(version.major(), version.minor()));
+        var maxProtocolVersion = Optional.ofNullable(config.get(BoltConnectorInternalSettings.max_protocol_version))
+                .map(version -> new ProtocolVersion(version.major(), version.minor()));
+
+        this.protocolRegistry = BoltProtocolRegistry.builder()
+                .register(
+                        minProtocolVersion.isEmpty() && maxProtocolVersion.isEmpty()
+                                ? BoltProtocol.available()
+                                : BoltProtocol.installed().stream()
+                                        .filter(candidate -> minProtocolVersion.isEmpty()
+                                                || candidate.version().isAtLeast(minProtocolVersion.get()))
+                                        .filter(candidate -> (maxProtocolVersion.isEmpty() && !candidate.preview())
+                                                || candidate.version().isAtMost(maxProtocolVersion.get()))
+                                        .toList())
+                .build();
+    }
+
+    private boolean isEnabled() {
+        return config.get(BoltConnector.enabled);
+    }
+
+    @VisibleForTesting
+    public ExecutorService getPrimaryExecutorService() {
+        return primaryExecutorService;
+    }
+
+    @VisibleForTesting
+    public ExecutorService getDomainSocketExecutorService() {
+        return domainSocketExecutorService;
+    }
+
+    @VisibleForTesting
+    public List<Connector> getConnectors() {
+        return Collections.unmodifiableList(this.connectors);
+    }
+
+    @Override
+    public void init() {
+        if (!isEnabled()) {
+            return;
+        }
+
+        if (config.get(CommonConnectorConfig.ocsp_stapling_enabled)) {
+            enableOcspStapling();
+            internalLog.info("Enabled OCSP stapling support");
+        }
+
+        jobScheduler.setThreadFactory(Group.BOLT_NETWORK_IO, NettyThreadFactory::new);
+
+        Predicate<ConnectorTransport> filter;
+        if (config.get(BoltConnectorInternalSettings.use_native_transport)) {
+            // permit all transport implementations so long as native transports have not been explicitly disabled in
+            // the application configuration
+            filter = transport -> true;
+        } else {
+            filter = Predicate.not(ConnectorTransport::isNative);
+        }
+
+        // select the most optimal transport according to its priority - should only throw in case of Class-Path issues
+        // as we provide a NIO fallback
+        var transport = ConnectorTransport.selectOptimal(filter)
+                .orElseThrow(() ->
+                        new IllegalStateException("No transport implementations available within current environment"));
+        internalLog.info("Using connector transport %s", transport.getName());
+
+        bossEventLoopGroup = createEventLoopGroup(transport);
+        workerEventLoopGroup = createEventLoopGroup(transport);
+        primaryExecutorService = primaryExecutorServiceFactory.create();
+        connectionMetricsMonitor = monitors.newMonitor(BoltConnectionMetricsMonitor.class);
+
+        if (config.get(BoltConnector.server_bolt_telemetry_enabled)) {
+            driverMetricsMonitor = monitors.newMonitor(BoltDriverMetricsMonitor.class);
+        } else {
+            driverMetricsMonitor = BoltDriverMetricsMonitor.noop();
+        }
+
+        ByteBufAllocator allocator = getBufferAllocator();
+        var connectionFactory = createConnectionFactory();
+
+        // to support legacy installations more easily, we'll consider the
+        // enable_unix_socket_loopback_auth option to be equivalent to enable_unix_socket - all
+        // relevant parameters sans enable_unix_socket will be migrated automatically
+        var unixDomainSocketEnabled = config.get(BoltConnector.enable_unix_socket)
+                || config.get(GraphDatabaseInternalSettings.enable_aura_profile);
+        if (unixDomainSocketEnabled) {
+            domainSocketExecutorService = primaryExecutorService;
+            var domainSocketConnectionFactory = connectionFactory;
+            if (domainSocketExecutorServiceFactory != null) {
+                domainSocketExecutorService = domainSocketExecutorServiceFactory.create();
+                domainSocketConnectionFactory = createDomainSocketConnectionFactory();
+            }
+
+            registerConnector(createDomainSocketConnector(
+                    domainSocketConnectionFactory,
+                    transport,
+                    createAuthentication(domainSocketAuthManager, securityLog),
+                    allocator));
+
+            internalLog.info("Configured Unix Domain Socket Bolt connector");
+        }
+
+        var listenAddress = config.get(BoltConnector.listen_address).socketAddress();
+        var encryptionLevel = config.get(BoltConnector.encryption_level);
+        boolean encryptionRequired = encryptionLevel == EncryptionLevel.REQUIRED;
+
+        if (encryptionLevel != EncryptionLevel.DISABLED && !sslPolicyProvider.hasPolicyForScope(BOLT)) {
+            internalLog.warn("TLS policy must be provided for Bolt when tls_level is not DISABLED");
+        }
+
+        var boltSslPolicyProvider = encryptionLevel == EncryptionLevel.DISABLED
+                ? ScopedSslPolicyProvider.getNullInstance()
+                : new DefaultScopedSslPolicyProvider(BOLT, sslPolicyProvider);
+
+        var threadAccountant = createThreadAccountant();
+
+        registerConnector(createSocketConnector(
+                listenAddress,
+                connectionFactory,
+                encryptionRequired,
+                transport,
+                boltSslPolicyProvider,
+                createAuthentication(externalAuthManager, securityLog),
+                ConnectorType.BOLT,
+                allocator,
+                threadAccountant));
+
+        for (var address : config.get(BoltConnector.additional_listen_addresses)) {
+            registerConnector(createAdditionalSocketConnector(
+                    address.socketAddress(),
+                    connectionFactory,
+                    transport,
+                    boltSslPolicyProvider,
+                    createAuthentication(externalAuthManager, securityLog),
+                    ConnectorType.BOLT,
+                    allocator,
+                    threadAccountant));
+        }
+
+        internalLog.info("Configured external Bolt connector with listener address %s", listenAddress);
+
+        boolean isRoutingEnabled = config.get(GraphDatabaseSettings.routing_enabled);
+        if (isRoutingEnabled && dbmsInfo == DbmsInfo.ENTERPRISE) {
+            SocketAddress internalListenAddress;
+            if (config.isExplicitlySet(GraphDatabaseSettings.routing_listen_address)) {
+                internalListenAddress =
+                        config.get(GraphDatabaseSettings.routing_listen_address).socketAddress();
+            } else {
+                internalListenAddress = new InetSocketAddress(
+                        config.get(BoltConnector.listen_address).getHostname(),
+                        config.get(GraphDatabaseSettings.routing_listen_address).getPort());
+            }
+
+            var internalEncryptionRequired = sslPolicyProvider.hasPolicyForScope(CLUSTER);
+            var clusterSslPolicyProvider = new DefaultScopedSslPolicyProvider(CLUSTER, sslPolicyProvider);
+
+            registerConnector(createFabricSocketConnector(
+                    internalListenAddress,
+                    connectionFactory,
+                    internalEncryptionRequired,
+                    transport,
+                    clusterSslPolicyProvider,
+                    createAuthentication(internalAuthManager, securityLog),
+                    allocator,
+                    threadAccountant));
+
+            internalLog.info("Configured internal Bolt connector with listener address %s", internalListenAddress);
+        }
+
+        if (config.get(BoltConnectorInternalSettings.enable_local_connector)) {
+            var localTransport = new LocalConnectorTransport();
+
+            localBossEventLoopGroup = createEventLoopGroup(localTransport);
+            localWorkerEventLoopGroup = createEventLoopGroup(localTransport);
+            registerConnector(createLocalConnector(
+                    connectionFactory,
+                    localTransport,
+                    createAuthentication(externalAuthManager, securityLog),
+                    allocator,
+                    threadAccountant));
+        }
+
+        if (config.get(BoltConnector.enable_discovery)) {
+            createAndRegisterDiscoveryConnector(transport);
+        }
+
+        internalLog.info("Bolt server loaded");
+        connectorLife.init();
+    }
+
+    @Override
+    public void start() throws Exception {
+        if (!isEnabled()) {
+            return;
+        }
+
+        connectorLife.start();
+        internalLog.info("Bolt server started");
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (!isEnabled()) {
+            return;
+        }
+
+        internalLog.info("Requested Bolt server shutdown");
+        connectorLife.stop();
+    }
+
+    @Override
+    public void shutdown() {
+        if (isEnabled()) {
+            internalLog.info("Shutting down Bolt server");
+
+            // shutdown all accept threads prior to connection termination in order to prevent new
+            // connections from being established to the server
+            terminateBossGroup(bossEventLoopGroup, localBossEventLoopGroup);
+
+            // send shutdown notifications to all of our connectors in order to perform the necessary shutdown
+            // procedures for the remaining connections
+            connectorLife.shutdown();
+
+            // once the remaining connections have been shut down, we'll request a graceful shutdown from the network
+            // thread pool
+            terminateWorkGroup(workerEventLoopGroup, localWorkerEventLoopGroup);
+
+            // also make sure that our executor service is cleanly shut down - there should be no remaining jobs present
+            // as connectors will kill any remaining jobs forcefully as part of their shutdown procedures
+            var remainingJobs = new ArrayList<>(primaryExecutorService.shutdownNow());
+            if (domainSocketExecutorService != null) {
+                remainingJobs.addAll(domainSocketExecutorService.shutdownNow());
+            }
+
+            if (!remainingJobs.isEmpty()) {
+                internalLog.warn(
+                        "Forcefully killed %d remaining Bolt jobs to fulfill shutdown request", remainingJobs.size());
+            }
+
+            internalLog.info("Bolt server has been shut down");
+        }
+
+        if (memoryPool != null) {
+            memoryPool.close();
+        }
+    }
+
+    private void terminateWorkGroup(EventLoopGroup... workGroups) {
+        terminateEventLoopGroups(
+                "Termination of worker event loop group has exceeded maximum permitted duration - Remaining jobs will be forcefully terminated",
+                "Termination of worker event loop group has failed",
+                workGroups);
+    }
+
+    private void terminateBossGroup(EventLoopGroup... bossGroups) {
+        terminateEventLoopGroups(
+                "Termination of boss event loop group has exceeded maximum permitted duration - Remaining jobs will be forcefully terminated",
+                "Termination of boss event loop group has failed",
+                bossGroups);
+    }
+
+    private void terminateEventLoopGroups(
+            String unsuccessfulTerminationMessage, String failedTerminationMessage, EventLoopGroup... eventLoopGroups) {
+        if (eventLoopGroups == null || eventLoopGroups.length == 0) {
+            return;
+        }
+
+        var shutdownFutures = new Future<?>[eventLoopGroups.length];
+        for (int i = 0; i < eventLoopGroups.length; i++) {
+            var bossGroup = eventLoopGroups[i];
+            if (bossGroup != null) {
+                shutdownFutures[i] = bossGroup.shutdownGracefully(
+                        config.get(GraphDatabaseInternalSettings.netty_server_shutdown_quiet_period)
+                                .toMillis(),
+                        config.get(GraphDatabaseInternalSettings.netty_server_shutdown_timeout)
+                                .toMillis(),
+                        TimeUnit.MILLISECONDS);
+            }
+        }
+
+        long startTime = clock.nanos();
+        long timeOut = config.get(BoltConnectorInternalSettings.thread_pool_shutdown_wait_time)
+                .toNanos();
+        for (Future<?> future : shutdownFutures) {
+            if (future != null) {
+                boolean eventLoopTermination =
+                        timeOut > 0 ? future.awaitUninterruptibly(timeOut, TimeUnit.NANOSECONDS) : future.isDone();
+                timeOut -= clock.nanos() - startTime;
+                if (!eventLoopTermination) {
+                    internalLog.warn(unsuccessfulTerminationMessage);
+                } else if (!future.isSuccess()) {
+                    internalLog.warn(failedTerminationMessage, future.cause());
+                }
+            }
+        }
+    }
+
+    private EventLoopGroup createEventLoopGroup(ConnectorTransport transport) {
+        return new MultiThreadIoEventLoopGroup(
+                jobScheduler.threadFactory(Group.BOLT_NETWORK_IO), transport.createIoHandlerFactory());
+    }
+
+    private ByteBufAllocator getBufferAllocator() {
+        PooledByteBufAllocator allocator = NETTY_BUF_ALLOCATOR.get();
+        var pool = new BoltMemoryPool(memoryPools, allocator.metric());
+        connectorLife.add(new BoltMemoryPoolLifeCycleAdapter(pool));
+        memoryPool = pool;
+        return allocator;
+    }
+
+    private void registerConnector(Connector connector) {
+        // append a listener which handles the creation of metrics
+        connector.registerListener(new MetricsConnectorListener(connectionMetricsMonitor));
+
+        if (config.get(BoltConnectorInternalSettings.enable_response_metrics)) {
+            connector.registerListener(new ResponseMetricsConnectorListener(connectionMetricsMonitor));
+        }
+
+        // if an authentication timeout has been configured, we'll register a listener which appends the necessary
+        // timeout handlers with the network pipelines upon connection creation
+        var authenticationTimeout =
+                config.get(BoltConnectorInternalSettings.unsupported_bolt_unauth_connection_timeout);
+        if (!authenticationTimeout.isZero()) {
+            connector.registerListener(new AuthenticationTimeoutConnectorListener(
+                    authenticationTimeout, logService.getInternalLogProvider()));
+        }
+
+        if (connector.supportsKeepAlive()) {
+            // if keep-alive have been configured, we'll register a listener which appends the necessary handlers to the
+            // network pipelines upon connection negotiation
+            var keepAliveMechanism = config.get(BoltConnector.connection_keep_alive_type);
+            var keepAliveInterval =
+                    config.get(BoltConnector.connection_keep_alive).toMillis();
+            if (keepAliveMechanism != BoltConnector.KeepAliveRequestType.OFF) {
+                connector.registerListener(new KeepAliveConnectorListener(
+                        keepAliveMechanism != BoltConnector.KeepAliveRequestType.ALL,
+                        keepAliveInterval,
+                        logService.getInternalLogProvider()));
+            }
+        }
+
+        // if read-limit has been configured, we'll register a listener which appends the necessary handlers to the
+        // network pipelines upon connection negotiation, but we only want to do this if it's an external connector
+        // This is because of an issue caused by using session auth:
+        // if you use session auth, the driver will pipeline the `LOGOFF` `, LOGON`, and `RUN` messages,
+        // This meant the read limit connector will be added between the logoff and logon.
+        // if your parameter map in the run is large# (like in SPD) this will hit the read limit and fail the query.
+        // meaning using session auth with a large parameter map will throw, even if you would be authenticated
+        // properly, we can fix
+        // this for SPD and query router by not installing it at all for internal trusted connections.
+        if (!connector.configuration().isInternalConnector()) {
+            var readLimit =
+                    config.get(BoltConnectorInternalSettings.unsupported_bolt_unauth_connection_max_inbound_bytes);
+            if (readLimit != 0) {
+                connector.registerListener(
+                        new ReadLimitConnectorListener(readLimit, logService.getInternalLogProvider()));
+            }
+
+            // JavaObjectMessages don't have depth limit. Since they aren't PackStream binaries,
+            // they don't trigger stack overflow when unpacked
+            if (!connector.configuration().enableJavaObjectMessages()) {
+                var structureElementLimit = connector.configuration().maxAuthenticationStructureElements();
+                var structureDepthLimit = connector.configuration().maxAuthenticationStructureDepth();
+
+                if (structureElementLimit != 0 || structureDepthLimit != 0) {
+                    connector.registerListener(new AuthenticationProtocolLimiterConnectorListener(
+                            structureElementLimit, structureDepthLimit, logService.getInternalLogProvider()));
+                }
+            }
+        }
+
+        // Register the reset message connection listener
+        connector.registerListener(new ResetMessageConnectorListener(logService.getInternalLogProvider()));
+
+        connectors.add(connector);
+        connectorLife.add(connector);
+    }
+
+    private Connection.Factory createConnectionFactory() {
+        return new AtomicSchedulingConnection.Factory(
+                primaryExecutorService, clock, logService, admissionControlTrackerFactory);
+    }
+
+    private Connection.Factory createDomainSocketConnectionFactory() {
+        return new AtomicSchedulingConnection.Factory(
+                domainSocketExecutorService, clock, logService, admissionControlTrackerFactory);
+    }
+
+    private static Authentication createAuthentication(AuthManager authManager, AbstractSecurityLog securityLog) {
+        return new BasicAuthentication(authManager, securityLog);
+    }
+
+    private void enableOcspStapling() {
+        if (SslProvider.JDK.equals(config.get(SslSystemSettings.netty_ssl_provider))) {
+            // currently the only way to enable OCSP server stapling for JDK is through this property
+            System.setProperty("jdk.tls.server.enableStatusRequestExtension", "true");
+        } else {
+            throw new IllegalArgumentException("OCSP Server stapling can only be used with JDK ssl provider (see "
+                    + SslSystemSettings.netty_ssl_provider.name() + ")");
+        }
+    }
+
+    private Connector createSocketConnector(
+            SocketAddress bindAddress,
+            Connection.Factory connectionFactory,
+            boolean encryptionRequired,
+            ConnectorTransport transport,
+            ScopedSslPolicyProvider sslPolicyProvider,
+            Authentication authentication,
+            ConnectorType connectorType,
+            ByteBufAllocator allocator,
+            ThreadAccountant threadAccountant) {
+        var config = SocketConnectorConfiguration.factory()
+                .fromConfig(this.config)
+                .requireEncryption(encryptionRequired)
+                .sslPolicyProvider(sslPolicyProvider)
+                .build();
+
+        return new SocketNettyConnector(
+                BoltConnector.NAME,
+                bindAddress,
+                connectorType,
+                connectorPortRegister,
+                memoryPool,
+                clock,
+                allocator,
+                bossEventLoopGroup,
+                workerEventLoopGroup,
+                transport,
+                connectionFactory,
+                connectionTracker,
+                protocolRegistry,
+                authentication,
+                authConfigProvider,
+                defaultDatabaseResolver,
+                connectionHintRegistry,
+                transactionManager,
+                routingService,
+                createErrorAccountant(),
+                createTrafficAccountant(),
+                threadAccountant,
+                driverMetricsMonitor,
+                config,
+                logService.getUserLogProvider(),
+                logService.getInternalLogProvider());
+    }
+
+    private Connector createAdditionalSocketConnector(
+            SocketAddress bindAddress,
+            Connection.Factory connectionFactory,
+            ConnectorTransport transport,
+            ScopedSslPolicyProvider sslPolicyProvider,
+            Authentication authentication,
+            ConnectorType connectorType,
+            ByteBufAllocator allocator,
+            ThreadAccountant threadAccountant) {
+        var config = SocketConnectorConfiguration.factory()
+                .fromConfig(this.config)
+                .sslPolicyProvider(sslPolicyProvider)
+                .build();
+
+        return new AdditionalSocketNettyConnector(
+                BoltConnector.NAME,
+                bindAddress,
+                connectorType,
+                connectorPortRegister,
+                memoryPool,
+                clock,
+                allocator,
+                bossEventLoopGroup,
+                workerEventLoopGroup,
+                transport,
+                connectionFactory,
+                connectionTracker,
+                protocolRegistry,
+                authentication,
+                authConfigProvider,
+                defaultDatabaseResolver,
+                connectionHintRegistry,
+                transactionManager,
+                routingService,
+                createErrorAccountant(),
+                createTrafficAccountant(),
+                threadAccountant,
+                driverMetricsMonitor,
+                config,
+                logService.getUserLogProvider(),
+                logService.getInternalLogProvider());
+    }
+
+    private Connector createFabricSocketConnector(
+            SocketAddress bindAddress,
+            Connection.Factory connectionFactory,
+            boolean encryptionRequired,
+            ConnectorTransport transport,
+            ScopedSslPolicyProvider sslPolicyProvider,
+            Authentication authentication,
+            ByteBufAllocator allocator,
+            ThreadAccountant threadAccountant) {
+        var config = SocketConnectorConfiguration.factory()
+                .fromConfig(this.config)
+                .requireEncryption(encryptionRequired)
+                .sslPolicyProvider(sslPolicyProvider)
+                .isInternalConnector(true)
+                .build();
+
+        return new FabricSocketNettyConnector(
+                BoltConnector.NAME,
+                bindAddress,
+                connectorPortRegister,
+                memoryPool,
+                clock,
+                allocator,
+                bossEventLoopGroup,
+                workerEventLoopGroup,
+                transport,
+                connectionFactory,
+                connectionTracker,
+                protocolRegistry,
+                authentication,
+                authConfigProvider,
+                defaultDatabaseResolver,
+                connectionHintRegistry,
+                transactionManager,
+                routingService,
+                createErrorAccountant(),
+                createTrafficAccountant(),
+                threadAccountant,
+                driverMetricsMonitor,
+                config,
+                logService.getUserLogProvider(),
+                logService.getInternalLogProvider());
+    }
+
+    private Connector createDomainSocketConnector(
+            Connection.Factory connectionFactory,
+            ConnectorTransport transport,
+            Authentication authentication,
+            ByteBufAllocator allocator) {
+
+        var config = DomainSocketConnectorConfiguration.factory()
+                .fromConfig(this.config)
+                .build();
+
+        var isPPEnabled = config.enableProxyProtocol();
+        var log = logService.getInternalLogProvider().getLog(BoltServer.class);
+        log.info("Proxy Protocol Handling enabled: %b", isPPEnabled);
+
+        var socketFile = this.config.get(BoltConnector.unix_socket_path);
+        if (socketFile == null || Files.isDirectory(socketFile)) {
+            throw new IllegalArgumentException("A file has not been specified for use with the Unix Domain Socket.");
+        }
+
+        return new DomainSocketNettyConnector(
+                BoltConnectorInternalSettings.LOOPBACK_NAME,
+                socketFile,
+                memoryPool,
+                clock,
+                allocator,
+                bossEventLoopGroup,
+                bossEventLoopGroup,
+                transport,
+                connectionFactory,
+                connectionTracker,
+                protocolRegistry,
+                authentication,
+                authConfigProvider,
+                defaultDatabaseResolver,
+                connectionHintRegistry,
+                transactionManager,
+                routingService,
+                createErrorAccountant(),
+                createThreadAccountant(),
+                driverMetricsMonitor,
+                config,
+                logService.getUserLogProvider(),
+                logService.getInternalLogProvider());
+    }
+
+    private Connector createLocalConnector(
+            Connection.Factory connectionFactory,
+            ConnectorTransport transport,
+            Authentication authentication,
+            ByteBufAllocator allocator,
+            ThreadAccountant threadAccountant) {
+        var config = LocalConnectorConfiguration.factory()
+                .fromConfig(this.config)
+                .enableJavaObjectMessages(
+                        this.config.get(BoltConnectorInternalSettings.enable_object_messages_local_connector));
+
+        Optional.ofNullable(this.config.get(
+                        BoltConnectorInternalSettings.enable_object_messages_protocol_version_local_connector))
+                .map(protocolVer -> new ProtocolVersion(protocolVer.major(), protocolVer.minor()))
+                .ifPresent(config::withJavaObjectProtocolVersion);
+
+        var bindAddress = new LocalAddress(this.config.get(BoltConnectorInternalSettings.local_channel_address));
+
+        return new LocalNettyConnector(
+                BoltConnectorInternalSettings.LOCAL_NAME,
+                bindAddress,
+                memoryPool,
+                clock,
+                allocator,
+                localBossEventLoopGroup,
+                localWorkerEventLoopGroup,
+                connectionFactory,
+                connectionTracker,
+                protocolRegistry,
+                authentication,
+                authConfigProvider,
+                defaultDatabaseResolver,
+                connectionHintRegistry,
+                transactionManager,
+                routingService,
+                createErrorAccountant(),
+                threadAccountant,
+                driverMetricsMonitor,
+                logService.getUserLogProvider(),
+                logService.getInternalLogProvider(),
+                transport,
+                config.build());
+    }
+
+    private void createAndRegisterDiscoveryConnector(ConnectorTransport transport) {
+        var permittedMasks = this.config.get(BoltConnectorInternalSettings.discovery_network_masks);
+
+        List<InetAddress> broadcastAddresses;
+        try {
+            var generator = new IPAddressGenerator();
+
+            broadcastAddresses = NetworkInterface.networkInterfaces()
+                    .flatMap(iface -> iface.getInterfaceAddresses().stream())
+                    .map(InterfaceAddress::getBroadcast)
+                    .filter(Objects::nonNull)
+                    .filter(addr -> {
+                        var addrString = generator.from(addr).toAddressString();
+
+                        return permittedMasks.stream().anyMatch(mask -> mask.contains(addrString));
+                    })
+                    .toList();
+        } catch (SocketException ex) {
+            internalLog.warn("Failed to acquire list of viable broadcast addresses for discovery", ex);
+            broadcastAddresses = List.of();
+        }
+
+        if (broadcastAddresses.isEmpty()) {
+            userLog.warn(
+                    "Fleet discovery broadcasts are unavailable - No viable network addresses are available to this instance");
+            return;
+        }
+
+        var config = DiscoveryConfiguration.builder()
+                .fromConfig(this.config)
+                .withAddresses(broadcastAddresses)
+                .build(new InstanceDiscoveryInformationProvider(
+                        this.databaseManagementService,
+                        this.dbmsInfo,
+                        this.identityModule,
+                        this.config.get(BoltConnector.advertised_address)));
+
+        var connector = new DiscoveryConnector(this.bossEventLoopGroup, transport, config, this.logService);
+
+        connectorLife.add(connector);
+    }
+
+    private ErrorAccountant createErrorAccountant() {
+        if (!config.get(BoltConnector.enable_error_accounting)) {
+            return new NoopErrorAccountant(logService);
+        }
+
+        return new CircuitBreakerErrorAccountant(
+                config.get(BoltConnector.network_abort_warn_threshold),
+                config.get(BoltConnector.network_abort_warn_window_duration).toMillis(),
+                config.get(BoltConnector.network_abort_clear_window_duration).toMillis(),
+                config.get(BoltConnector.thread_starvation_warn_threshold),
+                config.get(BoltConnector.thread_starvation_warn_window_duration).toMillis(),
+                config.get(BoltConnector.thread_starvation_clear_window_duration)
+                        .toMillis(),
+                Clock.systemUTC(),
+                logService);
+    }
+
+    private TrafficAccountant createTrafficAccountant() {
+        var checkPeriod = config.get(BoltConnector.traffic_accounting_check_period);
+        if (Duration.ZERO.equals(checkPeriod)) {
+            return NoopTrafficAccountant.getInstance();
+        }
+
+        return new AtomicTrafficAccountant(
+                config.get(BoltConnector.traffic_accounting_check_period).toMillis(),
+                config.get(BoltConnector.traffic_accounting_incoming_threshold_mbps),
+                config.get(BoltConnector.traffic_accounting_outgoing_threshold_mbps),
+                config.get(BoltConnector.traffic_accounting_clear_duration).toMillis(),
+                logService);
+    }
+
+    private ThreadAccountant createThreadAccountant() {
+        var maxRunTime = config.get(BoltConnectorInternalSettings.thread_accountant_max_run_time)
+                .toMillis();
+        var checkPeriod = config.get(BoltConnectorInternalSettings.thread_accountant_check_period)
+                .toMillis();
+
+        if (checkPeriod == 0) {
+            return new NoopThreadAccountant();
+        }
+
+        var accountant = new TimeLimitedThreadAccountant(maxRunTime, this.logService);
+
+        this.jobScheduler.scheduleRecurring(
+                Group.BOLT_MONITORING, accountant::reportStuckThreads, checkPeriod, TimeUnit.MILLISECONDS);
+        internalLog.info("Monitoring Bolt worker threads for possible deadlocks at interval of %d ms", checkPeriod);
+
+        return accountant;
+    }
+
+    private static class BoltMemoryPoolLifeCycleAdapter extends LifecycleAdapter {
+
+        private final NettyMemoryPool pool;
+
+        private BoltMemoryPoolLifeCycleAdapter(NettyMemoryPool pool) {
+            this.pool = pool;
+        }
+
+        @Override
+        public void shutdown() {
+            pool.close();
+        }
+    }
+}

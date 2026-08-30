@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.neo4j</groupId>
+    <artifactId>cypher-parent</artifactId>
+    <version>2026.07.0</version>
+  </parent>
+
+  <artifactId>neo4j-front-end-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>openCypher Front End Parent</name>
+  <description>Project that builds the openCypher front end modules</description>
+  <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
+
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <modules>
+    <module>ast</module>
+    <module>ast-test-util</module>
+    <module>ast-test</module>
+    <module>rewriting</module>
+    <module>frontend</module>
+    <module>frontend-inspector</module>
+    <module>util</module>
+    <module>test-util</module>
+    <module>expressions</module>
+    <module>cypher-macros-scala3</module>
+    <module>neo4j-ast-factory</module>
+    <module>ast-generator</module>
+    <module>parser</module>
+  </modules>
+
+  <scm>
+    <connection>scm:git:git://github.com/openCypher/front-end.git</connection>
+    <developerConnection>scm:git:git://github.com/openCypher/front-end.git</developerConnection>
+    <url>https://github.com/openCypher/front-end</url>
+  </scm>
+
+  <properties>
+    <license-text.header>license/neo4j_apache_v2/header.txt</license-text.header>
+    <license.id>neo4j_apache_v2</license.id>
+    <licensing.prepend.text>license/neo4j_apache_v2/notice.txt</licensing.prepend.text>
+    <scala3.migration.wconf>w</scala3.migration.wconf>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>scala-fatal-warnings</id>
+      <activation>
+        <property>
+          <name>scalaFatalWarnings</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <scala3.migration.wconf>s</scala3.migration.wconf>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <configuration>
+              <args combine.children="append">
+                <arg>-Xfatal-warnings</arg>
+                <arg>-feature</arg>
+              </args>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>strict-scala3-migration</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <scala3.migration.wconf>e</scala3.migration.wconf>
+      </properties>
+    </profile>
+  </profiles>
+</project>

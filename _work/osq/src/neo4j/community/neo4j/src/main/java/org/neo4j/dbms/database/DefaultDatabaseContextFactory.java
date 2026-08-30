@@ -1,0 +1,159 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.dbms.database;
+
+import static org.neo4j.kernel.DatabaseCreationOptions.EMPTY_CREATION_OPTIONS;
+
+import org.neo4j.configuration.DatabaseConfig;
+import org.neo4j.cypher.internal.javacompat.CommunityCypherEngineProvider;
+import org.neo4j.dbms.identity.ServerIdentity;
+import org.neo4j.dbms.systemgraph.TopologyGraphDbmsModel.HostedOnMode;
+import org.neo4j.graphdb.factory.module.GlobalModule;
+import org.neo4j.graphdb.factory.module.ModularDatabaseCreationContext;
+import org.neo4j.io.device.DeviceMapper;
+import org.neo4j.kernel.api.Kernel;
+import org.neo4j.kernel.database.Database;
+import org.neo4j.kernel.database.DatabaseCreationContext;
+import org.neo4j.kernel.database.DatabaseMonitors;
+import org.neo4j.kernel.database.DatabaseMonitorsFactory;
+import org.neo4j.kernel.database.DatabaseTracers;
+import org.neo4j.kernel.database.DefaultDatabaseMonitorsFactory;
+import org.neo4j.kernel.database.GlobalAvailabilityGuardController;
+import org.neo4j.kernel.database.IdContextFactory;
+import org.neo4j.kernel.database.IdGeneratorSettings;
+import org.neo4j.kernel.database.NamedDatabaseId;
+import org.neo4j.kernel.impl.api.ExternalIdReuseConditionProvider;
+import org.neo4j.kernel.impl.api.LeaseService;
+import org.neo4j.kernel.impl.api.TransactionalProcessFactory;
+import org.neo4j.kernel.impl.api.TransactionsFactory;
+import org.neo4j.kernel.impl.constraints.StandardConstraintSemantics;
+import org.neo4j.kernel.impl.core.IsolatedTransactionVectorStoreCreator;
+import org.neo4j.kernel.impl.factory.AccessCapabilityFactory;
+import org.neo4j.kernel.impl.index.DatabaseIndexStats;
+import org.neo4j.kernel.impl.pagecache.CommunityVersionStorageFactory;
+import org.neo4j.kernel.impl.pagecache.IOControllerService;
+import org.neo4j.kernel.impl.transaction.log.pruning.LogPruneStrategyFactory;
+import org.neo4j.kernel.impl.transaction.stats.DatabaseTransactionStats;
+import org.neo4j.logging.internal.DatabaseLogIdentifier;
+import org.neo4j.logging.internal.DatabaseLogProvider;
+
+public class DefaultDatabaseContextFactory
+        extends AbstractDatabaseContextFactory<StandaloneDatabaseContext, NamedDatabaseId> {
+    private final DatabaseTransactionStats.Factory transactionStatsFactory;
+    private final DatabaseIndexStats.Factory indexStatsFactory;
+    private final DeviceMapper deviceMapper;
+    private final IOControllerService controllerService;
+    private final TransactionalProcessFactory commitProcessFactory;
+    private final DefaultDatabaseContextFactoryComponents components;
+    private final ServerIdentity serverIdentity;
+
+    public DefaultDatabaseContextFactory(
+            GlobalModule globalModule,
+            ServerIdentity serverIdentity,
+            DatabaseTransactionStats.Factory transactionStatsFactory,
+            DatabaseIndexStats.Factory indexStatsFactory,
+            IdContextFactory idContextFactory,
+            DeviceMapper deviceMapper,
+            IOControllerService controllerService,
+            TransactionalProcessFactory commitProcessFactory,
+            DefaultDatabaseContextFactoryComponents components) {
+        super(globalModule, idContextFactory);
+        this.serverIdentity = serverIdentity;
+        this.transactionStatsFactory = transactionStatsFactory;
+        this.indexStatsFactory = indexStatsFactory;
+        this.deviceMapper = deviceMapper;
+        this.controllerService = controllerService;
+        this.commitProcessFactory = commitProcessFactory;
+        this.components = components;
+    }
+
+    @Override
+    public StandaloneDatabaseContext create(NamedDatabaseId namedDatabaseId) {
+        return new Creator(namedDatabaseId).context();
+    }
+
+    private class Creator {
+        private final Database kernelDatabase;
+        private final StandaloneDatabaseContext context;
+
+        private Creator(NamedDatabaseId namedDatabaseId) {
+            var databaseConfig = new DatabaseConfig(globalModule.getGlobalConfig());
+            var contextFactory = createContextFactorySupplier(databaseConfig, namedDatabaseId);
+            var databaseLogIdentifier = DatabaseLogIdentifier.create(namedDatabaseId);
+            var creationContext = new ModularDatabaseCreationContext(
+                    HostedOnMode.SINGLE,
+                    serverIdentity,
+                    namedDatabaseId,
+                    databaseLogIdentifier,
+                    globalModule,
+                    globalModule.getGlobalDependencies(),
+                    contextFactory,
+                    deviceMapper,
+                    new CommunityVersionStorageFactory(),
+                    databaseConfig,
+                    LeaseService.NO_LEASES,
+                    () -> DatabaseCreationContext.selectStorageEngine(
+                            globalModule.getFileSystem(),
+                            globalModule.getNeo4jLayout(),
+                            databaseConfig,
+                            namedDatabaseId),
+                    new StandardConstraintSemantics(),
+                    new CommunityCypherEngineProvider(),
+                    transactionStatsFactory.create(),
+                    indexStatsFactory.create(),
+                    ModularDatabaseCreationContext.defaultFileWatcherFilter(),
+                    AccessCapabilityFactory.configDependent(),
+                    ExternalIdReuseConditionProvider.NONE,
+                    idContextFactory,
+                    new IdGeneratorSettings(true, true),
+                    commitProcessFactory,
+                    createTokenHolderProvider(this::kernel),
+                    new IsolatedTransactionVectorStoreCreator(this::kernel),
+                    new GlobalAvailabilityGuardController(globalModule.getGlobalAvailabilityGuard()),
+                    components.readOnlyDatabases(),
+                    controllerService,
+                    new DatabaseTracers(globalModule.getTracers(), namedDatabaseId),
+                    globalModule.getDefaultCommandCommitListeners(),
+                    TransactionsFactory.DEFAULT,
+                    databaseMonitorsFactory(databaseLogIdentifier),
+                    globalModule.getExceptionHandlerService(),
+                    EMPTY_CREATION_OPTIONS,
+                    new LogPruneStrategyFactory(),
+                    false);
+            kernelDatabase = new Database(creationContext);
+            context = new StandaloneDatabaseContext(kernelDatabase);
+        }
+
+        private DatabaseMonitorsFactory databaseMonitorsFactory(DatabaseLogIdentifier databaseLogIdentifier) {
+            return new DefaultDatabaseMonitorsFactory(new DatabaseMonitors(
+                    globalModule.getGlobalMonitors(),
+                    new DatabaseLogProvider(
+                            databaseLogIdentifier, globalModule.getLogService().getInternalLogProvider())));
+        }
+
+        private StandaloneDatabaseContext context() {
+            return context;
+        }
+
+        private Kernel kernel() {
+            return kernelDatabase.getDependencyResolver().resolveDependency(Kernel.class);
+        }
+    }
+}
