@@ -1,0 +1,162 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.cypher.internal
+
+import org.neo4j.configuration.Config
+import org.neo4j.cypher.CommunityCypherTestSuite
+import org.neo4j.cypher.internal.config.CypherConfiguration
+import org.neo4j.cypher.internal.options.CypherCacheOption
+import org.neo4j.cypher.internal.options.CypherConnectComponentsPlannerOption
+import org.neo4j.cypher.internal.options.CypherDebugOption
+import org.neo4j.cypher.internal.options.CypherDebugOptions
+import org.neo4j.cypher.internal.options.CypherEagerAnalyzerOption
+import org.neo4j.cypher.internal.options.CypherExecutionMode
+import org.neo4j.cypher.internal.options.CypherExpressionEngineOption
+import org.neo4j.cypher.internal.options.CypherHeapEstimatorCacheOption
+import org.neo4j.cypher.internal.options.CypherInferSchemaPartsOption
+import org.neo4j.cypher.internal.options.CypherInterpretedPipesFallbackOption
+import org.neo4j.cypher.internal.options.CypherOperatorEngineOption
+import org.neo4j.cypher.internal.options.CypherParallelRepeatHeuristicOption
+import org.neo4j.cypher.internal.options.CypherParallelRuntimeConfigOption
+import org.neo4j.cypher.internal.options.CypherParallelRuntimeSupportOption
+import org.neo4j.cypher.internal.options.CypherPipelinedBatchReuseOption
+import org.neo4j.cypher.internal.options.CypherPipelinedBatchSizePresetOption
+import org.neo4j.cypher.internal.options.CypherPlanMode
+import org.neo4j.cypher.internal.options.CypherPlanVarExpandInto
+import org.neo4j.cypher.internal.options.CypherPlannerOption
+import org.neo4j.cypher.internal.options.CypherPlannerVersionOption
+import org.neo4j.cypher.internal.options.CypherQueryOptions
+import org.neo4j.cypher.internal.options.CypherReplanOption
+import org.neo4j.cypher.internal.options.CypherRuntimeOption
+import org.neo4j.cypher.internal.options.CypherStatefulShortestPlanningModeOption
+import org.neo4j.cypher.internal.options.CypherTransactionBatchStrategyOption
+import org.neo4j.cypher.internal.options.CypherUpdateStrategy
+import org.neo4j.cypher.internal.options.CypherVersionOption
+
+class CacheKeyTest extends CommunityCypherTestSuite {
+
+  test("For default options,the cache key should be empty") {
+    val options = CypherQueryOptions.defaultOptions
+
+    options.cacheKey
+      .shouldEqual("")
+  }
+
+  test("EXPLAIN does not appear in cache key") {
+    val options = CypherQueryOptions.defaultOptions.copy(executionMode = CypherExecutionMode.explain)
+
+    options.cacheKey
+      .shouldEqual("")
+  }
+
+  test("All non-default options should be part of cache key, except replan and cypher version") {
+    val options = CypherQueryOptions(
+      cypherVersion = CypherVersionOption.cypher5,
+      executionMode = CypherExecutionMode.profile,
+      planMode = CypherPlanMode.default,
+      planner = CypherPlannerOption.dp,
+      runtime = CypherRuntimeOption.pipelined,
+      updateStrategy = CypherUpdateStrategy.eager,
+      expressionEngine = CypherExpressionEngineOption.interpreted,
+      operatorEngine = CypherOperatorEngineOption.interpreted,
+      interpretedPipesFallback = CypherInterpretedPipesFallbackOption.allPossiblePlans,
+      replan = CypherReplanOption.force,
+      cache = CypherCacheOption.force,
+      connectComponentsPlanner = CypherConnectComponentsPlannerOption.idp,
+      debugOptions = CypherDebugOptions(Set(CypherDebugOption.queryGraph, CypherDebugOption.tostring)),
+      parallelRuntimeSupportOption = CypherParallelRuntimeSupportOption.disabled,
+      parallelRuntimeConfigOption = CypherParallelRuntimeConfigOption.none,
+      eagerAnalyzer = CypherEagerAnalyzerOption.ir,
+      inferSchemaParts = CypherInferSchemaPartsOption.mostSelectiveLabel,
+      statefulShortestPlanningModeOption = CypherStatefulShortestPlanningModeOption.allIfPossible,
+      planVarExpandInto = CypherPlanVarExpandInto.minimumCost,
+      plannerVersionOption = CypherPlannerVersionOption.v2026_03,
+      pipelinedBatchSizePresetOption = CypherPipelinedBatchSizePresetOption.small,
+      pipelinedBatchReuseOption = CypherPipelinedBatchReuseOption.pack,
+      heapEstimatorCacheOption = CypherHeapEstimatorCacheOption.disabled,
+      transactionBatchStrategy = CypherTransactionBatchStrategyOption.auto,
+      parallelRepeatHeuristic = CypherParallelRepeatHeuristicOption.enabled
+    )
+
+    options.cacheKey
+      .shouldEqual(
+        """PROFILE planner=dp runtime=pipelined updateStrategy=eager expressionEngine=interpreted operatorEngine=interpreted interpretedPipesFallback=all connectComponentsPlanner=idp debug=querygraph debug=tostring parallelRuntimeSupport=disabled eagerAnalyzer=ir inferSchemaParts=most_selective_label statefulShortestPlanningMode=all_if_possible planVarExpandInto=minimum_cost plannerVersion=v2026_03 transactionBatchStrategy=auto parallelRepeatHeuristic=enabled"""
+      )
+
+    val derivedOptions = CypherQueryOptions.derivedOptions(options, CypherConfiguration.fromConfig(Config.defaults()))
+    derivedOptions.cacheKey
+      .shouldEqual(
+        """BatchSize(128,128)"""
+      )
+  }
+
+  test("Only certain non-default options should be part of logical plan cache key") {
+    val options = CypherQueryOptions(
+      cypherVersion = CypherVersionOption.cypher5,
+      executionMode = CypherExecutionMode.profile,
+      planMode = CypherPlanMode.default,
+      planner = CypherPlannerOption.dp,
+      runtime = CypherRuntimeOption.pipelined,
+      updateStrategy = CypherUpdateStrategy.eager,
+      expressionEngine = CypherExpressionEngineOption.interpreted,
+      operatorEngine = CypherOperatorEngineOption.interpreted,
+      interpretedPipesFallback = CypherInterpretedPipesFallbackOption.allPossiblePlans,
+      replan = CypherReplanOption.force,
+      cache = CypherCacheOption.force,
+      connectComponentsPlanner = CypherConnectComponentsPlannerOption.idp,
+      debugOptions = CypherDebugOptions(Set(CypherDebugOption.queryGraph, CypherDebugOption.tostring)),
+      parallelRuntimeSupportOption = CypherParallelRuntimeSupportOption.disabled,
+      parallelRuntimeConfigOption = CypherParallelRuntimeConfigOption.none,
+      eagerAnalyzer = CypherEagerAnalyzerOption.ir,
+      inferSchemaParts = CypherInferSchemaPartsOption.mostSelectiveLabel,
+      statefulShortestPlanningModeOption = CypherStatefulShortestPlanningModeOption.allIfPossible,
+      planVarExpandInto = CypherPlanVarExpandInto.minimumCost,
+      plannerVersionOption = CypherPlannerVersionOption.v2026_03,
+      pipelinedBatchSizePresetOption = CypherPipelinedBatchSizePresetOption.small,
+      pipelinedBatchReuseOption = CypherPipelinedBatchReuseOption.pack,
+      heapEstimatorCacheOption = CypherHeapEstimatorCacheOption.disabled,
+      transactionBatchStrategy = CypherTransactionBatchStrategyOption.auto,
+      parallelRepeatHeuristic = CypherParallelRepeatHeuristicOption.enabled
+    )
+
+    options.logicalPlanCacheKey
+      .shouldEqual(
+        """updateStrategy=eager connectComponentsPlanner=idp eagerAnalyzer=ir inferSchemaParts=most_selective_label statefulShortestPlanningMode=all_if_possible planVarExpandInto=minimum_cost plannerVersion=v2026_03 transactionBatchStrategy=auto parallelRepeatHeuristic=enabled"""
+      )
+
+    val derivedOptions = CypherQueryOptions.derivedOptions(options, CypherConfiguration.fromConfig(Config.defaults()))
+    derivedOptions.cacheKey
+      .shouldEqual(
+        """BatchSize(128,128)"""
+      )
+  }
+
+  test("cachekey with plannerVersion latest should be the same as the default version") {
+    val options = CypherQueryOptions.defaultOptions.copy(plannerVersionOption = CypherPlannerVersionOption.latest)
+    options.cacheKey
+      .shouldEqual(
+        ""
+      )
+    options.logicalPlanCacheKey
+      .shouldEqual(
+        ""
+      )
+  }
+}

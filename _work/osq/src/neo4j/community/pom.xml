@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.neo4j</groupId>
+    <artifactId>parent</artifactId>
+    <version>2026.07.0</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <groupId>org.neo4j.build</groupId>
+  <artifactId>community-build</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Neo4j - Community Build</name>
+  <description>Project that builds the Neo4j Community distribution.</description>
+  <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
+
+  <modules>
+    <module>arrow-bom</module>
+    <module>zstd-proxy</module>
+    <module>token-api</module>
+    <module>schema</module>
+    <module>id-generator</module>
+    <module>lock</module>
+    <module>monitoring</module>
+    <module>wal</module>
+    <module>record-storage-engine</module>
+    <module>common</module>
+    <module>configuration</module>
+    <module>resource</module>
+    <module>collections</module>
+    <module>concurrent</module>
+    <module>graphdb-api</module>
+    <module>procedure-api</module>
+    <module>procedure-compiler</module>
+    <module>procedure</module>
+    <module>unsafe</module>
+    <module>io</module>
+    <module>native</module>
+    <module>diagnostics</module>
+    <module>kernel-api</module>
+    <module>csv</module>
+    <module>logging</module>
+    <module>security</module>
+    <module>codegen</module>
+    <module>index</module>
+    <module>gbptree-tests</module>
+    <module>kernel</module>
+    <module>kernel-test-utils</module>
+    <module>kernel-test</module>
+    <module>lucene9-shaded</module>
+    <module>lucene-index</module>
+    <module>graph-algo</module>
+    <module>neo4j</module>
+    <module>neo4j-community</module>
+    <module>import-api</module>
+    <module>import-tool</module>
+    <module>import-util</module>
+    <module>server-api</module>
+    <module>bolt</module>
+    <module>bolt-messages</module>
+    <module>server</module>
+    <module>server-test-utils</module>
+    <module>consistency-check</module>
+    <module>neo4j-harness</module>
+    <module>neo4j-slf4j-provider</module>
+    <module>dbms</module>
+    <module>command-line</module>
+    <module>values</module>
+    <module>ssl</module>
+    <module>spatial-index</module>
+    <module>community-it</module>
+    <module>data-collector</module>
+    <module>testing</module>
+    <module>neo4j-exceptions</module>
+    <module>layout</module>
+    <module>push-to-cloud</module>
+    <module>push-to-cloud-test</module>
+    <module>fabric</module>
+    <module>capabilities</module>
+    <module>storage-engine-util</module>
+    <module>bootcheck-base</module>
+    <module>bootcheck</module>
+    <module>neo4j-notifications</module>
+    <module>cloud</module>
+    <module>neo4j-gql-status</module>
+    <module>udc</module>
+    <module>genai-plugin</module>
+    <module>cypher</module>
+    <module>cypher-shell</module>
+    <module>fleet-management</module>
+  </modules>
+
+  <profiles>
+    <profile>
+      <id>jdk-25</id>
+      <activation>
+        <jdk>25</jdk>
+      </activation>
+      <modules>
+        <module>import-vector-util</module>
+      </modules>
+    </profile>
+  </profiles>
+</project>
