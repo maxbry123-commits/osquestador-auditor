@@ -1,7 +1,0 @@
-{
-  "pipesIterato": {
-    "class": "org.apache.tika.pipes.iterator.fs.FileSystemPipesIterator",
-    "fetcheName": "fs",
-    "basePath": "basePath"
-  }
-}

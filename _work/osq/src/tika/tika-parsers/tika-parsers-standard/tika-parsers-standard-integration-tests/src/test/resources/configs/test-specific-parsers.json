@@ -1,7 +1,0 @@
-{
-  "parsers": [
-    {"pdf-parser": {}},
-    {"html-parser": {}},
-    {"xml-parser": {}}
-  ]
-}

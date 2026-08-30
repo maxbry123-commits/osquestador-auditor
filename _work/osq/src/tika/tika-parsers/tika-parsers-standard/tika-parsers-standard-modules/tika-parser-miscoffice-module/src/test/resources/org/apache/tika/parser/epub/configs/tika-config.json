@@ -1,9 +1,0 @@
-{
-  "parsers": [
-    {
-      "epub-parser": {
-        "streaming": true
-      }
-    }
-  ]
-}

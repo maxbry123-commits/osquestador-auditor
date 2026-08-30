@@ -5,3 +5,4 @@
 {"number": 5, "slug": "Speech", "source": "https://github.com/NVIDIA-NeMo/Speech.git", "source_commit": "d47d7a3c306790637aff39c2d3f9eceb83ca8879", "parts": 5, "status": "COMPLETE"}
 {"number": 6, "slug": "parakeet.cpp", "source": "https://github.com/mudler/parakeet.cpp.git", "source_commit": "e75de9b6b9b688fd293aa22f7e27aa724ea286f8", "parts": 1, "status": "COMPLETE"}
 {"number": 7, "slug": "ultralytics", "source": "https://github.com/ultralytics/ultralytics.git", "source_commit": "ead21a2f71a94611ede54ff9a49e5b8283de9da3", "parts": 1, "status": "COMPLETE"}
+{"number": 8, "slug": "tika", "source": "https://github.com/apache/tika.git", "source_commit": "1a8b2efd59f5322671c9b922fd23b932b7af46eb", "parts": 15, "status": "COMPLETE"}
