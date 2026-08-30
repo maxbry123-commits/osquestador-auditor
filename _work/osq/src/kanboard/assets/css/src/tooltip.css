@@ -1,0 +1,27 @@
+.tooltip i.fa {
+    cursor: pointer
+}
+
+.tooltip .fa-info-circle {
+    color: var(--color-light);
+}
+
+#tooltip-container {
+    padding: 5px;
+    background: var(--tooltip-background-color);
+    border: 1px solid var(--tooltip-border-color);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px var(--tooltip-shadow-color);
+    position: absolute;
+    min-width: 350px;
+    max-height: 50vh;
+    overflow: auto;
+}
+
+#tooltip-container .markdown p:last-child {
+    margin-bottom: 0
+}
+
+#tooltip-container .tooltip-large {
+    width: 600px
+}
