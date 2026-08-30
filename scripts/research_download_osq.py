@@ -12,7 +12,7 @@ def clone_retry(url, root):
     for attempt in range(1,5):
         shutil.rmtree(root,ignore_errors=True)
         try:
-            clone_retry(url,root)
+            run(['git','clone','--depth','1','--no-tags',url,str(root)])
             return
         except subprocess.CalledProcessError as e:
             last=e
