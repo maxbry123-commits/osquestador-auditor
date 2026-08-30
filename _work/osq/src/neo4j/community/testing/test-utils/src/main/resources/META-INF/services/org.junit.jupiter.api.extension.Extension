@@ -1,5 +1,0 @@
-org.neo4j.test.extension.TestInstanceValidationExtension
-org.neo4j.test.extension.guard.JUnitUsageGuardExtension
-org.neo4j.test.extension.timeout.VerboseTimeoutExceptionExtension
-org.neo4j.test.extension.timeout.TimeoutGuardExtension
-org.neo4j.test.extension.SettingsInitialisationDeadlockGuard
