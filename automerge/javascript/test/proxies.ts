@@ -1,0 +1,307 @@
+import * as assert from "assert"
+import { beforeEach } from "mocha"
+import { type Doc, from, change } from "../src/index.js"
+
+type DocType = {
+  list: string[]
+}
+
+describe("Proxies", () => {
+  let doc: Doc<DocType>
+  beforeEach(() => {
+    doc = from({ list: ["a", "b", "c"] })
+  })
+
+  describe("recursive document", () => {
+    it("should throw a useful RangeError when attempting to set a document inside itself", () => {
+      type RecursiveDoc = { [key: string]: RecursiveDoc }
+      const doc = from<RecursiveDoc>({})
+      change(doc, d => {
+        assert.throws(() => {
+          d.doc = doc
+        }, /Cannot create a reference to an existing document object/)
+      })
+    })
+  })
+
+  describe("List Iterators", () => {
+    it("should return iterable entries", () => {
+      change(doc, d => {
+        let count = 0
+
+        for (const [index, value] of d.list.entries()) {
+          assert.equal(value, d.list[index])
+          count++
+        }
+
+        assert.equal(count, 3)
+      })
+    })
+
+    it("should return iterable values", () => {
+      change(doc, d => {
+        let count = 0
+
+        for (const value of d.list.values()) {
+          assert.equal(value, d.list[count++])
+        }
+
+        assert.equal(count, 3)
+      })
+    })
+
+    it("should return iterable keys", () => {
+      change(doc, d => {
+        let count = 3
+
+        for (const index of d.list.keys()) {
+          assert.equal(index + count--, 3)
+        }
+
+        assert.equal(count, 0)
+      })
+    })
+  })
+
+  describe("List indexOf", () => {
+    let doc: Doc<DocType>
+    beforeEach(() => {
+      doc = from({ list: ["a", "b", "c"] })
+    })
+
+    it("should return the index of a value for a string in a list of strings", () => {
+      change(doc, d => {
+        assert.equal(d.list.indexOf("b"), 1)
+      })
+    })
+
+    it("should return -1 if the value is not found", () => {
+      change(doc, d => {
+        assert.equal(d.list.indexOf("d"), -1)
+      })
+    })
+  })
+
+  describe("List splice", () => {
+    it("should be able to remove a defined number of list entries", () => {
+      doc = change(doc, d => {
+        const deleted = d.list.splice(1, 1)
+        assert.deepEqual(deleted, ["b"])
+      })
+
+      assert.deepEqual(doc.list, ["a", "c"])
+    })
+
+    it("should be able to remove a defined number of list entries and add new ones", () => {
+      doc = change(doc, d => {
+        const deleted = d.list.splice(1, 1, "d", "e")
+        assert.deepEqual(deleted, ["b"])
+      })
+
+      assert.deepEqual(doc.list, ["a", "d", "e", "c"])
+    })
+
+    it("should be able to insert new values", () => {
+      doc = change(doc, d => {
+        const deleted = d.list.splice(1, 0, "d", "e")
+        assert.deepEqual(deleted, [])
+      })
+
+      assert.deepEqual(doc.list, ["a", "d", "e", "b", "c"])
+    })
+
+    it("should work with only a start parameter", () => {
+      doc = change(doc, d => {
+        const deleted = d.list.splice(1)
+        assert.deepEqual(deleted, ["b", "c"])
+      })
+
+      assert.deepEqual(doc.list, ["a"])
+    })
+
+    it("should throw a useful RangeError when attempting to splice undefined values", () => {
+      const doc = from<{ list: (undefined | number)[] }>({ list: [] })
+      change(doc, d => {
+        assert.throws(() => {
+          d.list.splice(0, 0, 5, undefined)
+        }, /Cannot assign undefined value at \/list.*at index 1 in the input/)
+      })
+    })
+  })
+
+  describe("map proxy", () => {
+    it("does allow null values", () => {
+      let doc = from<any>({})
+      doc = change(doc, doc => {
+        doc.foo = null
+      })
+      assert.equal(doc.foo, null)
+    })
+
+    it("does not allow undefined values", () => {
+      let doc = from<any>({})
+      assert.throws(() => {
+        doc = change(doc, doc => {
+          doc.foo = undefined
+        })
+      }, "Cannot assign undefined")
+    })
+
+    it("should print the property path in the error when setting an undefined key", () => {
+      const doc = from({ map: {} })
+      change(doc, d => {
+        assert.throws(() => {
+          d.map["a"] = undefined
+        }, /map\/a/)
+      })
+    })
+  })
+
+  describe("list proxy", () => {
+    it("should print the property path in the error when setting an undefined key", () => {
+      const doc = from<{ list: undefined[] }>({ list: [] })
+      change(doc, d => {
+        assert.throws(() => {
+          d.list[0] = undefined
+        }, /list\/0/)
+      })
+    })
+
+    it("should support .at() to access values", () => {
+      const doc = from<{ list: string[] }>({ list: ["a", "b"] })
+      change(doc, d => {
+        assert.doesNotThrow(() => {
+          assert.equal(typeof d.list.at(0), "string")
+        })
+      })
+    })
+  })
+
+  describe("structuredClone support", () => {
+    it("should support objects cloned with structuredClone", () => {
+      const doc = from({ map: structuredClone({ key: "value", number: 2 }) })
+
+      assert.deepEqual(doc, { map: { key: "value", number: 2 } })
+    })
+  })
+
+  // Ensure that falsy values are respected when checking their values in the
+  // proxy implementation.
+  describe("Falsy values are respected", () => {
+    type FalsyDoc = {
+      zero?: number
+      empty?: string
+      flag?: boolean
+      nothing?: null
+    }
+
+    it("should read back zero", () => {
+      const doc = from({} as FalsyDoc)
+      change(doc, d => {
+        d.zero = 0
+        assert.strictEqual(d.zero, 0)
+        assert.strictEqual(d.zero, 0)
+      })
+    })
+
+    it("should read back empty", () => {
+      const doc = from({} as FalsyDoc)
+      change(doc, d => {
+        d.empty = ""
+        assert.strictEqual(d.empty, "")
+        assert.strictEqual(d.empty, "")
+      })
+    })
+
+    it("should read back flag", () => {
+      const doc = from({} as FalsyDoc)
+      change(doc, d => {
+        d.flag = false
+        assert.strictEqual(d.flag, false)
+        assert.strictEqual(d.flag, false)
+      })
+    })
+
+    it("should read back nothing", () => {
+      const doc = from({} as FalsyDoc)
+      change(doc, d => {
+        d.nothing = null
+        assert.strictEqual(d.nothing, null)
+        assert.strictEqual(d.nothing, null)
+      })
+    })
+  })
+
+  describe("Object.prototype toString, valueOf, and hasOwnProperty properties", () => {
+    // TS sees `{}` as having Object.prototype's toString(), which clashes
+    // with our declared `toString?: { x: number }`.
+    //
+    // To instantiate a new `PropDoc`, you must cast the object:
+    //     const doc = from({} as PropDoc)
+    type PropDoc = {
+      toString?: { x: number }
+      valueOf?: { x: number }
+      hasOwnProperty?: { x: number }
+    }
+
+    it("should respect `in` and Object.keys for toString", () => {
+      const doc = from({} as PropDoc)
+      change(doc, d => {
+        assert.equal("toString" in d, false)
+        assert.deepEqual(Object.keys(d), [])
+        d.toString = { x: 1 }
+        assert.equal("toString" in d, true)
+        assert.deepEqual(Object.keys(d), ["toString"])
+      })
+    })
+
+    it("should respect `in` and Object.keys for valueOf", () => {
+      const doc = from({} as PropDoc)
+      change(doc, d => {
+        assert.equal("valueOf" in d, false)
+        assert.deepEqual(Object.keys(d), [])
+        d.valueOf = { x: 1 }
+        assert.equal("valueOf" in d, true)
+        assert.deepEqual(Object.keys(d), ["valueOf"])
+      })
+    })
+
+    it("should respect `in` and Object.keys for hasOwnProperty", () => {
+      const doc = from({} as PropDoc)
+      change(doc, d => {
+        assert.equal("hasOwnProperty" in d, false)
+        assert.deepEqual(Object.keys(d), [])
+        d.hasOwnProperty = { x: 1 }
+        assert.equal("hasOwnProperty" in d, true)
+        assert.deepEqual(Object.keys(d), ["hasOwnProperty"])
+      })
+    })
+
+    it("should read back the assigned toString inside and outside change()", () => {
+      let doc = from({} as PropDoc)
+      doc = change(doc, d => {
+        d.toString = { x: 1 }
+        assert.deepEqual(d.toString, { x: 1 })
+      })
+      assert.deepEqual(doc.toString, { x: 1 })
+    })
+
+    it("should read back the assigned valueOf inside and outside change()", () => {
+      let doc = from({} as PropDoc)
+      doc = change(doc, d => {
+        d.valueOf = { x: 1 }
+        assert.deepEqual(d.valueOf, { x: 1 })
+      })
+      assert.deepEqual(doc.valueOf, { x: 1 })
+    })
+
+    it("should read back the assigned hasOwnProperty inside and outside change()", () => {
+      let doc = from({} as PropDoc)
+      doc = change(doc, d => {
+        d.hasOwnProperty = { x: 1 }
+        assert.deepEqual(d.hasOwnProperty, { x: 1 })
+      })
+      assert.deepEqual(doc.hasOwnProperty, { x: 1 })
+    })
+  })
+})
