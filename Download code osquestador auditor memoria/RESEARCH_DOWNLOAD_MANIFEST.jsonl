@@ -6,3 +6,4 @@
 {"number": 6, "slug": "parakeet.cpp", "source": "https://github.com/mudler/parakeet.cpp.git", "source_commit": "e75de9b6b9b688fd293aa22f7e27aa724ea286f8", "parts": 1, "status": "COMPLETE"}
 {"number": 7, "slug": "ultralytics", "source": "https://github.com/ultralytics/ultralytics.git", "source_commit": "ead21a2f71a94611ede54ff9a49e5b8283de9da3", "parts": 1, "status": "COMPLETE"}
 {"number": 8, "slug": "tika", "source": "https://github.com/apache/tika.git", "source_commit": "1a8b2efd59f5322671c9b922fd23b932b7af46eb", "parts": 15, "status": "COMPLETE"}
+{"number": 9, "slug": "unstructured", "source": "https://github.com/Unstructured-IO/unstructured.git", "source_commit": "d68ab0fda9bcac317b7c033d42412d716ba1d790", "parts": 11, "status": "COMPLETE"}
