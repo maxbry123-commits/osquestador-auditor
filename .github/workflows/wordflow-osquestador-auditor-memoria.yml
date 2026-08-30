@@ -21,26 +21,19 @@ jobs:
           ref: main
           fetch-depth: 1
           lfs: false
-      - name: Eliminar capacidad LFS del runner
-        shell: bash
-        run: |
-          set -euo pipefail
-          if dpkg-query -W -f='${Status}' git-lfs 2>/dev/null | grep -q 'install ok installed'; then
-            sudo apt-get purge -y git-lfs
-          fi
-          ! command -v git-lfs
       - name: Preparar tooling
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -y
           sudo apt-get install -y zip unzip
-      - name: Limpiar descarga anterior
+      - name: Limpiar descargas generadas sin borrar REPOS.json
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf 'Download code osquestador auditor memoria'
-          mkdir -p 'Download code osquestador auditor memoria'
+          find 'Download code osquestador auditor memoria' -maxdepth 1 -type f -name '*.zip' -delete
+          rm -f 'Download code osquestador auditor memoria/RESEARCH_DOWNLOAD_MANIFEST.jsonl'
+          test -f 'Download code osquestador auditor memoria/REPOS.json'
       - name: ZIP + EXTRACT 96 desde cero
         shell: bash
         run: |
