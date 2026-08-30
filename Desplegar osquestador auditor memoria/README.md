@@ -1,0 +1,1 @@
+# Desplegar osquestador auditor memoria
