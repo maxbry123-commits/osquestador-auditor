@@ -11,3 +11,5 @@
 {"number": 11, "slug": "sentence-transformers", "source": "https://github.com/UKPLab/sentence-transformers.git", "source_commit": "652c8e8a70b9bef7161405ac7e6d8f3b2a828aed", "parts": 2, "status": "COMPLETE"}
 {"number": 12, "slug": "haystack", "source": "https://github.com/deepset-ai/haystack.git", "source_commit": "e318778c9bf60a1963e3b5f451359655dd696c30", "parts": 3, "status": "COMPLETE"}
 {"number": 13, "slug": "graphiti", "source": "https://github.com/getzep/graphiti.git", "source_commit": "c18d6778184c55e3be28f5ae3e5821930b361d47", "parts": 1, "status": "COMPLETE"}
+{"number": 14, "slug": "neo4j", "source": "https://github.com/neo4j/neo4j.git", "source_commit": "f213380f812b820a1b312e2ea52cb3d8f1931ccc", "parts": 4, "status": "COMPLETE"}
+{"number": 15, "slug": "sqlite", "source": "https://github.com/sqlite/sqlite.git", "source_commit": "d92acf1afe6dbd4c8aec9aa9513a518f690c2acf", "parts": 2, "status": "COMPLETE"}
