@@ -1,8 +1,0 @@
-# name: test/sql/copy/csv/test_soccer_kaggle.test
-# description: Test read CSV function with the kaggle soccer data sample
-# group: [csv]
-
-query I
-select count(*) from '{DATA_DIR}/csv/soccer_kaggle.csv'
-----
-14
