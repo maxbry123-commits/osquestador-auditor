@@ -4,9 +4,21 @@ ROOT=Path('.').resolve()
 LIST=ROOT/'Download code osquestador auditor memoria'/'REPOS.json'
 MANIFEST=ROOT/'Download code osquestador auditor memoria'/'RESEARCH_DOWNLOAD_MANIFEST.jsonl'
 WORK=ROOT/'_work/osq'; SRC=WORK/'src'; PACK=WORK/'pack'
-SPLIT_TARGET=12000000; BATCH_LIMIT=90*1024*1024; CHUNK=8*1024*1024
+SPLIT_TARGET=12000000; MAX_ZIP=17000000; BATCH_LIMIT=90*1024*1024; CHUNK=8*1024*1024
 def run(c,cwd=None):
     subprocess.run(c,cwd=cwd,check=True)
+def clone_retry(url, root):
+    last=None
+    for attempt in range(1,5):
+        shutil.rmtree(root,ignore_errors=True)
+        try:
+            clone_retry(url,root)
+            return
+        except subprocess.CalledProcessError as e:
+            last=e
+            print(f'CLONE RETRY {attempt}/4 {url}', flush=True)
+            time.sleep(attempt*3)
+    raise last
 def done(slug):
     if not MANIFEST.exists(): return False
     return any(json.loads(x).get('slug')==slug and json.loads(x).get('status')=='COMPLETE' for x in MANIFEST.read_text().splitlines() if x.strip())
@@ -54,7 +66,12 @@ for item in REPOS:
         made=[p for p in PACK.glob('*.zip') if p not in before]
         for i,p in enumerate(sorted(made,key=lambda p:(p.stat().st_mtime,p.name)),1):
             q=PACK/f'{slug}_{i:04d}.zip'; p.replace(q); parts.append((q,q.stat().st_size))
-    dest=ROOT/slug; dest.mkdir(parents=True, exist_ok=True)
+    for z,sz in parts:
+        if sz>MAX_ZIP: raise RuntimeError(f'FORENSIC FAIL: ZIP exceeds MAX_ZIP {z} {sz}')
+        with zipfile.ZipFile(z) as zf:
+            bad=zf.testzip()
+            if bad is not None: raise RuntimeError(f'FORENSIC FAIL: CRC {z}:{bad}')
+    dest=ROOT/slug; shutil.rmtree(dest,ignore_errors=True); dest.mkdir(parents=True, exist_ok=True)
     for z,sz in parts:
         shutil.copy2(z, dest/z.name)
         with zipfile.ZipFile(z) as zf: zf.extractall(dest)
