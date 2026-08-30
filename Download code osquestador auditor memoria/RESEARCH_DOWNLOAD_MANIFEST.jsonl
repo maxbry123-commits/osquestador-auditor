@@ -1,1 +1,6 @@
 {"number": 1, "slug": "PaddleOCR", "source": "https://github.com/PaddlePaddle/PaddleOCR.git", "source_commit": "2661c7c0ef5c613e8f93c6e93b2e052399f0f854", "parts": 10, "status": "COMPLETE"}
+{"number": 2, "slug": "tesseract", "source": "https://github.com/tesseract-ocr/tesseract.git", "source_commit": "76865fa087c15f5ea2f75f697993fc3b05eabaf2", "parts": 1, "status": "COMPLETE"}
+{"number": 3, "slug": "whisper", "source": "https://github.com/openai/whisper.git", "source_commit": "5f86d1d86363843179951550570367b37c5d6f78", "parts": 1, "status": "COMPLETE"}
+{"number": 4, "slug": "whisperX", "source": "https://github.com/m-bain/whisperX.git", "source_commit": "2cfd7b7c5c7bba144954364db747319b50e8232b", "parts": 2, "status": "COMPLETE"}
+{"number": 5, "slug": "Speech", "source": "https://github.com/NVIDIA-NeMo/Speech.git", "source_commit": "d47d7a3c306790637aff39c2d3f9eceb83ca8879", "parts": 5, "status": "COMPLETE"}
+{"number": 6, "slug": "parakeet.cpp", "source": "https://github.com/mudler/parakeet.cpp.git", "source_commit": "e75de9b6b9b688fd293aa22f7e27aa724ea286f8", "parts": 1, "status": "COMPLETE"}
