@@ -1,9 +1,0 @@
-{
-  "parsers": [
-    {
-      "wordperfect-parser": {
-        "includeDeletedContent": false
-      }
-    }
-  ]
-}
