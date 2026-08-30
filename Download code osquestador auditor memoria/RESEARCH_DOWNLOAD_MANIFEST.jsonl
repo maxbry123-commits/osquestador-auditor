@@ -37,3 +37,13 @@
 {"number": 37, "slug": "graphology", "source": "https://github.com/graphology/graphology.git", "source_commit": "b6e4b31ac0d68aaff36600c19faa0c751db6d015", "parts": 1, "status": "COMPLETE"}
 {"number": 38, "slug": "tree-sitter", "source": "https://github.com/tree-sitter/tree-sitter.git", "source_commit": "efa0dd9a364dd19af7a5ad7fe5350f87fdc8c032", "parts": 1, "status": "COMPLETE"}
 {"number": 39, "slug": "ast-grep", "source": "https://github.com/ast-grep/ast-grep.git", "source_commit": "c6b32d74ad12cea690cb331c88f004764df6e985", "parts": 1, "status": "COMPLETE"}
+{"number": 40, "slug": "semgrep", "source": "https://github.com/semgrep/semgrep.git", "source_commit": "cb3a4ae9b2b3af81bdada48d52e939168d1f6431", "parts": 2, "status": "COMPLETE"}
+{"number": 41, "slug": "git", "source": "https://github.com/git/git.git", "source_commit": "c73e85354c275c9d409b26445089bc16940fc527", "parts": 2, "status": "COMPLETE"}
+{"number": 42, "slug": "litestream", "source": "https://github.com/benbjohnson/litestream.git", "source_commit": "25ac743d2f559ac9efa3dae5b501cf79e553801d", "parts": 1, "status": "COMPLETE"}
+{"number": 43, "slug": "watchdog", "source": "https://github.com/gorakhargosh/watchdog.git", "source_commit": "86203db52746ded3d32afb50b6fea3ec36c1a335", "parts": 1, "status": "COMPLETE"}
+{"number": 44, "slug": "nats-server", "source": "https://github.com/nats-io/nats-server.git", "source_commit": "6f3d85d56d708a7fc816666d1fa70819e4ee462f", "parts": 1, "status": "COMPLETE"}
+{"number": 45, "slug": "BLAKE3", "source": "https://github.com/BLAKE3-team/BLAKE3.git", "source_commit": "f3149ec5bb5449af877ba20377a11008ff499fa2", "parts": 1, "status": "COMPLETE"}
+{"number": 46, "slug": "RapidFuzz", "source": "https://github.com/rapidfuzz/RapidFuzz.git", "source_commit": "868a451a6eb8b111fd97bbd3b3413fcf14ee88e4", "parts": 1, "status": "COMPLETE"}
+{"number": 47, "slug": "opentelemetry-specification", "source": "https://github.com/open-telemetry/opentelemetry-specification.git", "source_commit": "8057bf6d5cf0ab10891b9e6f7b928cded76ab2f7", "parts": 2, "status": "COMPLETE"}
+{"number": 48, "slug": "restic", "source": "https://github.com/restic/restic.git", "source_commit": "ba802d42b7294c98b62c16d1157ea3e80820c019", "parts": 3, "status": "COMPLETE"}
+{"number": 49, "slug": "cloudflared", "source": "https://github.com/cloudflare/cloudflared.git", "source_commit": "274888eb1e63c0d3764564eef89835b9fd47c54c", "parts": 1, "status": "COMPLETE"}
