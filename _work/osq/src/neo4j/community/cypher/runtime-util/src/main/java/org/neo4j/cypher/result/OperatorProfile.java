@@ -1,0 +1,201 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.cypher.result;
+
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.neo4j.internal.schema.IndexDescriptor;
+
+/**
+ * Profile for a operator during a query execution.
+ */
+public interface OperatorProfile {
+    /**
+     * Time spent executing this operator.
+     */
+    long time();
+
+    /**
+     * Database hits caused while executing this operator. This is an approximate measure
+     * of how many nodes, records and properties that have been read.
+     */
+    long dbHits();
+
+    /**
+     * Number of rows produced by this operator.
+     */
+    long rows();
+
+    /**
+     * Page cache hits while executing this operator.
+     */
+    long pageCacheHits();
+
+    /**
+     * Page cache misses while executing this operator.
+     */
+    long pageCacheMisses();
+
+    /**
+     * The maximum amount of memory that this operator held onto while executing the query.
+     */
+    long maxAllocatedMemory();
+
+    /**
+     * The set of indexes used while executing this operator.
+     */
+    IndexDescriptor[] indexesUsed();
+
+    /**
+     * The number of times each index was used while executing this operator.
+     */
+    int[] indexUseCount();
+
+    long NO_DATA = -1L;
+
+    OperatorProfile NONE = new ConstOperatorProfile(NO_DATA);
+    OperatorProfile ZERO = new ConstOperatorProfile(0);
+
+    static int hashCode(OperatorProfile self) {
+        return Objects.hash(
+                Arrays.hashCode(new long[] {
+                    self.time(),
+                    self.dbHits(),
+                    self.rows(),
+                    self.pageCacheHits(),
+                    self.pageCacheMisses(),
+                    self.maxAllocatedMemory()
+                }),
+                Arrays.hashCode(self.indexesUsed()),
+                Arrays.hashCode(self.indexUseCount()));
+    }
+
+    static boolean equals(OperatorProfile self, Object o) {
+        if (self == o) {
+            return true;
+        }
+        if (!(o instanceof OperatorProfile that)) {
+            return false;
+        }
+        return self.time() == that.time()
+                && self.dbHits() == that.dbHits()
+                && self.rows() == that.rows()
+                && self.pageCacheHits() == that.pageCacheHits()
+                && self.pageCacheMisses() == that.pageCacheMisses()
+                && self.maxAllocatedMemory() == that.maxAllocatedMemory()
+                && Arrays.equals(self.indexesUsed(), that.indexesUsed())
+                && Arrays.equals(self.indexUseCount(), that.indexUseCount());
+    }
+
+    static String toString(OperatorProfile self) {
+        return String.format(
+                "Operator Profile { time: %d, dbHits: %d, rows: %d, page cache hits: %d, page cache misses: %d, max allocated: %d, indexes used: %s, index use count: %s }",
+                self.time(),
+                self.dbHits(),
+                self.rows(),
+                self.pageCacheHits(),
+                self.pageCacheMisses(),
+                self.maxAllocatedMemory(),
+                Arrays.stream(self.indexesUsed()).map(IndexDescriptor::getName).collect(Collectors.joining(",")),
+                Arrays.stream(self.indexUseCount()).mapToObj(String::valueOf).collect(Collectors.joining(",")));
+    }
+
+    class ConstOperatorProfile implements OperatorProfile {
+
+        private final long time;
+        private final long dbHits;
+        private final long rows;
+        private final long pageCacheHits;
+        private final long pageCacheMisses;
+        private final long maxAllocatedMemory;
+        private final IndexDescriptor[] indexesUsed = new IndexDescriptor[0];
+        private final int[] indexUseCount = new int[0];
+
+        ConstOperatorProfile(long value) {
+            this(value, value, value, value, value, value);
+        }
+
+        public ConstOperatorProfile(
+                long time, long dbHits, long rows, long pageCacheHits, long pageCacheMisses, long maxAllocatedMemory) {
+            this.time = time;
+            this.dbHits = dbHits;
+            this.rows = rows;
+            this.pageCacheHits = pageCacheHits;
+            this.pageCacheMisses = pageCacheMisses;
+            this.maxAllocatedMemory = maxAllocatedMemory;
+        }
+
+        @Override
+        public long time() {
+            return time;
+        }
+
+        @Override
+        public long dbHits() {
+            return dbHits;
+        }
+
+        @Override
+        public long rows() {
+            return rows;
+        }
+
+        @Override
+        public long pageCacheHits() {
+            return pageCacheHits;
+        }
+
+        @Override
+        public long pageCacheMisses() {
+            return pageCacheMisses;
+        }
+
+        @Override
+        public long maxAllocatedMemory() {
+            return maxAllocatedMemory;
+        }
+
+        @Override
+        public IndexDescriptor[] indexesUsed() {
+            return indexesUsed;
+        }
+
+        @Override
+        public int[] indexUseCount() {
+            return indexUseCount;
+        }
+
+        @Override
+        public int hashCode() {
+            return OperatorProfile.hashCode(this);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return OperatorProfile.equals(this, o);
+        }
+
+        @Override
+        public String toString() {
+            return OperatorProfile.toString(this);
+        }
+    }
+}

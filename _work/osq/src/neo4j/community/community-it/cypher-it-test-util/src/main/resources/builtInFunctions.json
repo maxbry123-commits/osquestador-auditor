@@ -1,0 +1,6777 @@
+[
+  {
+    "name": "abs",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER | FLOAT",
+    "description": "Returns the absolute value of an `INTEGER` or `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "abs(input :: INTEGER | FLOAT) :: INTEGER | FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A numeric value from which the absolute number will be returned.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "acos",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the arccosine of a `FLOAT` in radians.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "acos(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "all",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the predicate holds for all elements in the given `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "all(variable :: VARIABLE IN list :: LIST<ANY> WHERE predicate :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "variable",
+        "description": "A variable that can be used within the `WHERE` clause.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "list",
+        "description": "A predicate must hold for all elements in this list for the function to return `true`.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "allReduce",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Evaluates `expression` against each element of `LIST<ANY>`, with the result stored in `accumulator`. Returns true if `predicate` holds for each iteration of `accumulator`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "allReduce(accumulator :: VARIABLE = initial :: ANY, variable :: VARIABLE IN list :: LIST<ANY> | reducer :: ANY, predicate :: BOOLEAN) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "accumulator = initial",
+        "description": "The variable holding the result of reducer for each iteration, set to the value initial.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "variable IN list | reducer",
+        "description": "The iteration over a list that binds each list element to var and evaluates reducer to update the accumulator.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "predicate",
+        "description": "The predicate applied to the accumulator value for each element in the list.",
+        "isDeprecated": false,
+        "type": "BOOLEAN"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "any",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the predicate holds for at least one element in the given `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "any(variable :: VARIABLE IN list :: LIST<ANY> WHERE predicate :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "variable",
+        "description": "A variable that can be used within the `WHERE` clause.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "list",
+        "description": "A list for the predicate to check against.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "asin",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the arcsine of a `FLOAT` in radians.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "asin(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "atan",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the arctangent of a `FLOAT` in radians.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "atan(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "atan2",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the arctangent2 of a set of coordinates in radians.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "atan2(y :: FLOAT, x :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "y",
+        "description": "A y angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      },
+      {
+        "name": "x",
+        "description": "An x angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "avg",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER | FLOAT | DURATION",
+    "description": "Returns the average of a set of `INTEGER`, `FLOAT` or `DURATION` values.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "avg(input :: INTEGER | FLOAT | DURATION) :: INTEGER | FLOAT | DURATION",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value aggregated to form an average.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT | DURATION"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "btrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading and trailing whitespace removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "btrim(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value from which all leading and trailing whitespace will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "btrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading and trailing `trimCharacterString` characters removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "btrim(input :: STRING, trimCharacterString :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value from which the leading and trailing trim character will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "trimCharacterString",
+        "description": "A character to be removed from the start and end of the given string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "cardinality",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of keys in a `MAP`, the number of elements in a `LIST`, or the number of nodes and relationships in a `PATH`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "cardinality(input :: MAP | LIST<ANY> | PATH) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A map, list or path whose cardinality is to be calculated.",
+        "isDeprecated": false,
+        "type": "MAP | LIST<ANY> | PATH"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "ceil",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the smallest `FLOAT` that is greater than or equal to a number and equal to an `INTEGER`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "ceil(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be rounded to the nearest higher integer.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "ceiling",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the smallest `FLOAT` that is greater than or equal to a number and equal to an `INTEGER`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "ceiling(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be rounded to the nearest higher integer.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "char_length",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of Unicode characters in a `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "char_length(input :: STRING) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string value whose length in characters is to be calculated.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "character_length",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of Unicode characters in a `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "character_length(input :: STRING) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string value whose length in characters is to be calculated.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "coalesce",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the first non-null value in a list of expressions.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "coalesce(input :: ANY) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "If this is the first non-`NULL` value, it will be returned.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "coll.distinct",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns the given list with all duplicate values removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.distinct(list :: LIST<ANY>) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to be deduplicated.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.flatten",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list flattened to the given nesting depth.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.flatten(list :: LIST<ANY>, depth :: INTEGER) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A nested list to be flattened.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      },
+      {
+        "name": "depth",
+        "description": "The maximum depth to flatten to.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.flatten",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list flattened to ....",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.flatten(list :: LIST<ANY>) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to flatten.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.indexOf",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the index for the first match of a value in the given list or -1 if the value is not present.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.indexOf(list :: LIST<ANY>, value :: ANY) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to be searched.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      },
+      {
+        "name": "value",
+        "description": "A value to search for.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.insert",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list with the given value inserted at the given index.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.insert(list :: LIST<ANY>, index :: INTEGER, value :: ANY) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to add to.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      },
+      {
+        "name": "index",
+        "description": "The index to add the given value at.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "value",
+        "description": "The value to add into the list.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.max",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the largest value present in the given list..",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.max(list :: LIST<ANY>) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to be searched.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.min",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the smallest value present in the given list.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.min(list :: LIST<ANY>) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to be searched.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.remove",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list with the value at the given index removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.remove(list :: LIST<ANY>, index :: INTEGER) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to remove a value from.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      },
+      {
+        "name": "index",
+        "description": "The index of the value to be removed.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "coll.sort",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a sorted list.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coll.sort(list :: LIST<ANY>) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list to be sorted.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "collect",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list containing the values returned by an expression.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "collect(input :: ANY) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value aggregated into a list.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "collect_list",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns a list containing the values returned by an expression.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "collect_list(input :: ANY) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value aggregated into a list.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "cos",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the cosine of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "cos(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "cosh",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the hyperbolic cosine of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "cosh(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "cot",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the cotangent of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "cot(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "coth",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the hyperbolic cotangent of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "coth(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "count",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of values or rows.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "count(input :: ANY) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "date",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Creates a `DATE` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "date(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('date', 'year', 'month', 'day', 'week', 'dayOfWeek', 'quarter', 'dayOfQuarter', 'ordinalDay') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "date",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Creates a `DATE` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "date(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('date', 'year', 'month', 'day', 'week', 'dayOfWeek', 'quarter', 'dayOfQuarter', 'ordinalDay') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a date value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "date.realtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Returns the current `DATE` instant using the realtime clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "date.realtime(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "date.statement",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Returns the current `DATE` instant using the statement clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "date.statement(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "date.transaction",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Returns the current `DATE` instant using the transaction clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "date.transaction(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "date.truncate",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DATE",
+    "description": "Truncates the given temporal value to a `DATE` instant using the specified unit.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "date.truncate(unit :: STRING, input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, fields = null :: MAP) :: DATE",
+    "argumentDescription": [
+      {
+        "name": "unit",
+        "description": "A string representing one of the following: 'day', 'week', 'month', 'weekYear', 'quarter', 'year', 'decade', 'century', 'millennium'.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "The date to be truncated using either `ZONED DATETIME`, `LOCAL DATETIME`, or `DATE`.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "fields",
+        "description": "A list of time components smaller than those specified in `unit` to preserve during truncation.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=null, type=MAP}",
+        "type": "MAP"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone', 'epochSeconds', 'epochMillis') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone', 'epochSeconds', 'epochMillis') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a zoned datetime value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.fromepoch",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` given the seconds and nanoseconds since the start of the epoch.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.fromepoch(seconds :: INTEGER | FLOAT, nanoseconds :: INTEGER | FLOAT) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "seconds",
+        "description": "The number of seconds from the UNIX epoch in the UTC time zone.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      },
+      {
+        "name": "nanoseconds",
+        "description": "The number of nanoseconds from the UNIX epoch in the UTC time zone. This can be added to seconds.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.fromepochmillis",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` given the milliseconds since the start of the epoch.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.fromepochmillis(milliseconds :: INTEGER | FLOAT) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "milliseconds",
+        "description": "The number of milliseconds from the UNIX epoch in the UTC time zone.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.realtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Returns the current `ZONED DATETIME` instant using the realtime clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.realtime(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.statement",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Returns the current `ZONED DATETIME` instant using the statement clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.statement(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.transaction",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Returns the current `ZONED DATETIME` instant using the transaction clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.transaction(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "datetime.truncate",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Truncates the given temporal value to a `ZONED DATETIME` instant using the specified unit.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "datetime.truncate(unit :: STRING, input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, fields = null :: MAP) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "unit",
+        "description": "A string representing one of the following: 'microsecond', 'millisecond', 'second', 'minute', 'hour', 'day', 'week', 'month', 'weekYear', 'quarter', 'year', 'decade', 'century', 'millennium'.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "The date to be truncated using either `ZONED DATETIME`, `LOCAL DATETIME`, or `DATE`.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "fields",
+        "description": "A list of time components smaller than those specified in `unit` to preserve during truncation.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=null, type=MAP}",
+        "type": "MAP"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "db.nameFromElementId",
+    "category": "Database",
+    "description": "Resolves the database name for the given element id",
+    "signature": "db.nameFromElementId(elementId :: STRING) :: STRING",
+    "isBuiltIn": true,
+    "enterpriseOnly": true,
+    "argumentDescription": [
+      {
+        "name": "elementId",
+        "description": "An element id of a node or relationship.",
+        "type": "STRING",
+        "isDeprecated": false
+      }
+    ],
+    "returnDescription": "STRING",
+    "aggregating": false,
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "rolesBoostedExecution": [],
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "cypherVersionScope": [
+      5,
+      25
+    ]
+  },
+  {
+    "name": "degrees",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Converts radians to degrees.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "degrees(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "duration",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Creates a `DURATION` value.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "duration(input :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a duration value or a map optionally containing the following keys: 'years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds', 'milliseconds', 'microseconds', or 'nanoseconds'.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Creates a `DURATION` value.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "duration(input :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a duration value or a map optionally containing the following keys: 'years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds', 'milliseconds', 'microseconds', or 'nanoseconds'.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a duration value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration.between",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Computes the `DURATION` between the `from` instant (inclusive) and the `to` instant (exclusive) in logical units.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "duration.between(from :: ANY, to :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the starting instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "to",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the ending instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration.inDays",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Computes the `DURATION` between the `from` instant (inclusive) and the `to` instant (exclusive) in days.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "duration.inDays(from :: ANY, to :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the starting instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "to",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the ending instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration.inMonths",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Computes the `DURATION` between the `from` instant (inclusive) and the `to` instant (exclusive) in months.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "duration.inMonths(from :: ANY, to :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the starting instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "to",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the ending instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration.inSeconds",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Computes the `DURATION` between the `from` instant (inclusive) and the `to` instant (exclusive) in seconds.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "duration.inSeconds(from :: ANY, to :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the starting instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "to",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the ending instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "duration_between",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "DURATION",
+    "description": "Computes the `DURATION` between the `from` instant (inclusive) and the `to` instant (exclusive) in logical units.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "duration_between(from :: ANY, to :: ANY) :: DURATION",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the starting instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "to",
+        "description": "A temporal instant type (`DATE`, `LOCAL TIME`, `ZONED TIME`, `LOCAL DATETIME`, `ZONED DATETIME`) representing the ending instant.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "e",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the base of the natural logarithm, e.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "e() :: FLOAT",
+    "argumentDescription": [],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "elementId",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the element id of a `NODE` or `RELATIONSHIP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "elementId(input :: NODE | RELATIONSHIP) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An element id of a node or a relationship.",
+        "isDeprecated": false,
+        "type": "NODE | RELATIONSHIP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "endNode",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "NODE",
+    "description": "Returns the end `NODE` of a `RELATIONSHIP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "endNode(input :: RELATIONSHIP) :: NODE",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A relationship.",
+        "isDeprecated": false,
+        "type": "RELATIONSHIP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "exists",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if a match for the pattern exists in the graph.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "exists(input :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A pattern to verify the existence of.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "exp",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns e^n, where e is the base of the natural logarithm, and n is the value of the argument expression.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "exp(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to which the base of the natural logarithm, e, will be raised.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "file",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the absolute path of the file that LOAD CSV is using.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "file() :: STRING",
+    "argumentDescription": [],
+    "category": "Scalar"
+  },
+  {
+    "name": "floor",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the largest `FLOAT` that is less than or equal to a number and equal to an `INTEGER`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "floor(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be rounded to the nearest lower integer.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "format",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the temporal value as an ISO-formatted string or as a string formatted by the provided pattern.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "format(value :: DATE | LOCAL TIME | ZONED TIME | LOCAL DATETIME | ZONED DATETIME | DURATION) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "value",
+        "description": "A temporal value to be formatted.",
+        "isDeprecated": false,
+        "type": "DATE | LOCAL TIME | ZONED TIME | LOCAL DATETIME | ZONED DATETIME | DURATION"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "format",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the temporal value as an ISO-formatted string or as a string formatted by the provided pattern.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "format(value :: DATE | LOCAL TIME | ZONED TIME | LOCAL DATETIME | ZONED DATETIME | DURATION, pattern :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "value",
+        "description": "A temporal value to be formatted.",
+        "isDeprecated": false,
+        "type": "DATE | LOCAL TIME | ZONED TIME | LOCAL DATETIME | ZONED DATETIME | DURATION"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to format the temporal value. If the pattern is not provided the value will be formatted according to ISO 8601.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "graph.byElementId",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "GRAPH",
+    "description": "Returns the graph reference with the given element id. It is only supported in the `USE` clause, on composite databases.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "graph.byElementId(elementId :: STRING) :: GRAPH",
+    "argumentDescription": [
+      {
+        "name": "elementId",
+        "description": "An element id of a node or relationship.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Graph"
+  },
+  {
+    "name": "graph.byName",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "GRAPH",
+    "description": "Returns the graph reference of the given name. It is only supported in the `USE` clause, on composite databases.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "graph.byName(name :: STRING) :: GRAPH",
+    "argumentDescription": [
+      {
+        "name": "name",
+        "description": "The name of the graph to be resolved.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Graph"
+  },
+  {
+    "name": "graph.names",
+    "category": "Graph",
+    "description": "Lists the names of graphs in the current database.",
+    "signature": "graph.names() :: LIST<STRING>",
+    "isBuiltIn": true,
+    "enterpriseOnly": true,
+    "argumentDescription": [],
+    "returnDescription": "LIST<STRING>",
+    "aggregating": false,
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "rolesBoostedExecution": [],
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "cypherVersionScope": [
+      5,
+      25
+    ]
+  },
+  {
+    "name": "graph.propertiesByName",
+    "category": "Graph",
+    "description": "Returns the `MAP` of properties associated with a graph.",
+    "signature": "graph.propertiesByName(graphName :: STRING) :: MAP",
+    "isBuiltIn": true,
+    "enterpriseOnly": true,
+    "argumentDescription": [
+      {
+        "name": "graphName",
+        "description": "The name of the graph from which all associated properties will be returned.",
+        "type": "STRING",
+        "isDeprecated": false
+      }
+    ],
+    "returnDescription": "MAP",
+    "aggregating": false,
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "rolesBoostedExecution": [],
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "cypherVersionScope": [
+      5,
+      25
+    ]
+  },
+  {
+    "name": "haversin",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns half the versine of a number.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "haversin(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "head",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the first element in a `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "head(list :: LIST<ANY>) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list from which the first element will be returned.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "id",
+    "aggregating": false,
+    "isDeprecated": true,
+    "deprecatedBy": "elementId or consider using an application-generated id",
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the id of a `NODE` or `RELATIONSHIP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "id(input :: NODE | RELATIONSHIP) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A node or a relationship.",
+        "isDeprecated": false,
+        "type": "NODE | RELATIONSHIP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "isEmpty",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Checks whether a `STRING`, `MAP` or `LIST<ANY>` is empty.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "isEmpty(input :: STRING | MAP | LIST<ANY>) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be checked for emptiness.",
+        "isDeprecated": false,
+        "type": "STRING | MAP | LIST<ANY>"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "isNaN",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns whether the given `INTEGER` or `FLOAT` is NaN.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "isNaN(input :: INTEGER | FLOAT) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A numeric value to be compared against `NaN`.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "keys",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<STRING>",
+    "description": "Returns a `LIST<STRING>` containing the `STRING` representations for all the property names of a `NODE`, `RELATIONSHIP` or `MAP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "keys(input :: NODE | RELATIONSHIP | MAP) :: LIST<STRING>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A node or relationship from which the names of all properties will be returned.",
+        "isDeprecated": false,
+        "type": "NODE | RELATIONSHIP | MAP"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "labels",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<STRING>",
+    "description": "Returns a `LIST<STRING>` containing the `STRING` representations for all the labels of a `NODE`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "labels(input :: NODE) :: LIST<STRING>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A node whose labels will be returned.",
+        "isDeprecated": false,
+        "type": "NODE"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "last",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the last element in a `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "last(list :: LIST<ANY>) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "list",
+        "description": "A list from which the last element will be returned.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "left",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` containing the specified number (`INTEGER`) of leftmost characters in the given `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "left(original :: STRING, length :: INTEGER) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "A string value whose rightmost characters will be trimmed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "length",
+        "description": "The length of the leftmost characters to be returned.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "length",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the length of a `PATH`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "length(input :: PATH) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A path whose relationships will be counted.",
+        "isDeprecated": false,
+        "type": "PATH"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "linenumber",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the line number that LOAD CSV is currently using.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "linenumber() :: INTEGER",
+    "argumentDescription": [],
+    "category": "Scalar"
+  },
+  {
+    "name": "ln",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the natural logarithm of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "ln(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value for which the natural logarithm will be returned.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "local_datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Creates a `LOCAL DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "local_datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "local_datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Creates a `LOCAL DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "local_datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a local datetime value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "local_time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Creates a `LOCAL TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "local_time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour, 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond' as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "local_time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Creates a `LOCAL TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "local_time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour, 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond' as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a local time value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Creates a `LOCAL DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "localdatetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Creates a `LOCAL DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "localdatetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a local datetime value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime.realtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Returns the current `LOCAL DATETIME` instant using the realtime clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localdatetime.realtime(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime.statement",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Returns the current `LOCAL DATETIME` instant using the statement clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localdatetime.statement(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime.transaction",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Returns the current `LOCAL DATETIME` instant using the transaction clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localdatetime.transaction(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localdatetime.truncate",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL DATETIME",
+    "description": "Truncates the given temporal value to a `LOCAL DATETIME` instant using the specified unit.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localdatetime.truncate(unit :: STRING, input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, fields = null :: MAP) :: LOCAL DATETIME",
+    "argumentDescription": [
+      {
+        "name": "unit",
+        "description": "A string representing one of the following: 'microsecond', 'millisecond', 'second', 'minute', 'hour', 'day', 'week', 'month', 'weekYear', 'quarter', 'year', 'decade', 'century', 'millennium'.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "The date to be truncated using either `ZONED DATETIME`, `LOCAL DATETIME`, or `DATE`.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "fields",
+        "description": "A list of time components smaller than those specified in `unit` to preserve during truncation.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=null, type=MAP}",
+        "type": "MAP"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Creates a `LOCAL TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "localtime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour, 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond' as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Creates a `LOCAL TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "localtime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour, 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond' as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a local time value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime.realtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Returns the current `LOCAL TIME` instant using the realtime clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localtime.realtime(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime.statement",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Returns the current `LOCAL TIME` instant using the statement clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localtime.statement(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime.transaction",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Returns the current `LOCAL TIME` instant using the transaction clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localtime.transaction(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "localtime.truncate",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LOCAL TIME",
+    "description": "Truncates the given temporal value to a `LOCAL TIME` instant using the specified unit.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "localtime.truncate(unit :: STRING, input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, fields = null :: MAP) :: LOCAL TIME",
+    "argumentDescription": [
+      {
+        "name": "unit",
+        "description": "A string representing one of the following: 'day', 'week', 'month', 'weekYear', 'quarter', 'year', 'decade', 'century', 'millennium'.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "The date to be truncated using either `ZONED DATETIME`, `LOCAL DATETIME`, `LOCAL TIME`, or `DATE`.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "fields",
+        "description": "A list of time components smaller than those specified in `unit` to preserve during truncation.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=null, type=MAP}",
+        "type": "MAP"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "log",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the natural logarithm of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "log(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value for which the natural logarithm will be returned.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "log10",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the common logarithm (base 10) of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "log10(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value for which the common logarithm (base 10) will be returned.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "lower",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` in lowercase.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "lower(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string to be converted into lowercase.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "ltrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading whitespace removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "ltrim(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value in which all leading whitespace will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "ltrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading `trimCharacterString` characters removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "ltrim(input :: STRING, trimCharacterString :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value from which the leading trim character will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "trimCharacterString",
+        "description": "A character to be removed from the start of the given string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "max",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the maximum value in a set of values.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "max(input :: ANY) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "min",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns the minimum value in a set of values.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "min(input :: ANY) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "nodes",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<NODE>",
+    "description": "Returns a `LIST<NODE>` containing all the `NODE` values in a `PATH`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "nodes(input :: PATH) :: LIST<NODE>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A path whose nodes will be returned.",
+        "isDeprecated": false,
+        "type": "PATH"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "none",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the predicate holds for no element in the given `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "none(variable :: VARIABLE IN list :: LIST<ANY> WHERE predicate :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "variable",
+        "description": "A variable that can be used within the `WHERE` clause.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "list",
+        "description": "A list for the predicate to check against.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "normalize",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Normalize a `STRING`. The `STRING` will be normalized using the normal form 'NFC'.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "normalize(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be normalized.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "normalize",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Normalize a `STRING`. The `STRING` will be normalized according to the specified normalization form.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "normalize(input :: STRING, normalForm = NFC :: [NFC, NFD, NFKC, NFKD]) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be normalized.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "normalForm",
+        "description": "A keyword specifying any of the normal forms; NFC, NFD, NFKC or NFKD.",
+        "isDeprecated": false,
+        "type": "[NFC, NFD, NFKC, NFKD]"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "nullIf",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Returns null if the two given parameters are equivalent, otherwise returns the value of the first parameter.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "nullIf(v1 :: ANY, v2 :: ANY) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "v1",
+        "description": "A first value to be returned if the second value is not equivalent.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "v2",
+        "description": "A second value against which the first value is compared.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "path_length",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the length of a `PATH`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "path_length(input :: PATH) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A path whose relationships will be counted.",
+        "isDeprecated": false,
+        "type": "PATH"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "percentileCont",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the percentile of a value over a group using linear interpolation.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "percentileCont(input :: FLOAT, percentile :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      },
+      {
+        "name": "percentile",
+        "description": "A percentile between 0.0 and 1.0.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "percentileDisc",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER | FLOAT",
+    "description": "Returns the nearest `INTEGER` or `FLOAT` value to the given percentile over a group using a rounding method.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "percentileDisc(input :: INTEGER | FLOAT, percentile :: FLOAT) :: INTEGER | FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      },
+      {
+        "name": "percentile",
+        "description": "A percentile between 0.0 and 1.0.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "percentile_cont",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the percentile of a value over a group using linear interpolation.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "percentile_cont(input :: FLOAT, percentile :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      },
+      {
+        "name": "percentile",
+        "description": "A percentile between 0.0 and 1.0.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "percentile_disc",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER | FLOAT",
+    "description": "Returns the nearest `INTEGER` or `FLOAT` value to the given percentile over a group using a rounding method.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "percentile_disc(input :: INTEGER | FLOAT, percentile :: FLOAT) :: INTEGER | FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      },
+      {
+        "name": "percentile",
+        "description": "A percentile between 0.0 and 1.0.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "pi",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the mathematical constant pi.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "pi() :: FLOAT",
+    "argumentDescription": [],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "point",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "POINT",
+    "description": "Returns a 2D or 3D point object, given two or respectively three coordinate values in the Cartesian coordinate system or WGS 84 geographic coordinate system.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "point(input :: MAP) :: POINT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Cartesian 2D: {x :: FLOAT, y :: FLOAT, crs = \"cartesian\" :: STRING, srid = 7203 :: INTEGER}\n\nCartesian 3D: {x :: FLOAT, y :: FLOAT, z :: FLOAT, crs = \"cartesian-3D\" :: STRING, srid = 9157 :: INTEGER} \n\nWGS 84 2D: {longitude | x :: FLOAT, latitude | y :: FLOAT, crs = \"WGS-84-2D\" :: STRING, srid = 4326 :: INTEGER}\n\nWGS 84 3D: {longitude | x :: FLOAT, latitude | y :: FLOAT, height | z :: FLOAT, crs = \"WGS-84-3D\" :: STRING, srid = 4979 :: INTEGER}",
+        "isDeprecated": false,
+        "type": "MAP"
+      }
+    ],
+    "category": "Spatial"
+  },
+  {
+    "name": "point.distance",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the distance between any two points in the same CRS. If the points are in the WGS 84 CRS, the function returns the geodesic distance (i.e., the shortest path along the curved surface of the Earth). If the points are in a Cartesian CRS, the function returns the Euclidean distance (i.e., the shortest straight-line distance in a flat, planar space).",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "point.distance(from :: POINT, to :: POINT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "from",
+        "description": "A start point.",
+        "isDeprecated": false,
+        "type": "POINT"
+      },
+      {
+        "name": "to",
+        "description": "An end point in the same CRS as the start point.",
+        "isDeprecated": false,
+        "type": "POINT"
+      }
+    ],
+    "category": "Spatial"
+  },
+  {
+    "name": "point.withinBBox",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the provided point is within the bounding box defined by the two provided points.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "point.withinBBox(point :: POINT, lowerLeft :: POINT, upperRight :: POINT) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "point",
+        "description": "A point to be confirmed in the bounding box.",
+        "isDeprecated": false,
+        "type": "POINT"
+      },
+      {
+        "name": "lowerLeft",
+        "description": "The lower left side point of the bounding box.",
+        "isDeprecated": false,
+        "type": "POINT"
+      },
+      {
+        "name": "upperRight",
+        "description": "The upper right side point of the bounding box.",
+        "isDeprecated": false,
+        "type": "POINT"
+      }
+    ],
+    "category": "Spatial"
+  },
+  {
+    "name": "properties",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "MAP",
+    "description": "Returns a `MAP` containing all the properties of a `NODE`, `RELATIONSHIP` or `MAP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "properties(input :: NODE | RELATIONSHIP | MAP) :: MAP",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An entity to return the properties from.",
+        "isDeprecated": false,
+        "type": "NODE | RELATIONSHIP | MAP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "property_exists",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the given node or relationship has a property with the given key, otherwise false. Returns null if the first argument is null.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "property_exists(element :: NODE | RELATIONSHIP, propertyKeyName :: STRING) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "element",
+        "description": "A node or relationship to check for the property.",
+        "isDeprecated": false,
+        "type": "NODE | RELATIONSHIP"
+      },
+      {
+        "name": "propertyKeyName",
+        "description": "The name of the property to check for.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "radians",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Converts degrees to radians.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "radians(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in degrees.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "rand",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a random `FLOAT` in the range from 0 (inclusive) to 1 (exclusive).",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "rand() :: FLOAT",
+    "argumentDescription": [],
+    "category": "Numeric"
+  },
+  {
+    "name": "randomUUID",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Generates a random UUID.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "randomUUID() :: STRING",
+    "argumentDescription": [],
+    "category": "Scalar"
+  },
+  {
+    "name": "range",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<INTEGER>",
+    "description": "Returns a `LIST<INTEGER>` comprising all `INTEGER` values within a specified range.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "range(start :: INTEGER, end :: INTEGER) :: LIST<INTEGER>",
+    "argumentDescription": [
+      {
+        "name": "start",
+        "description": "The start value of the range.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "end",
+        "description": "The end value of the range.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "range",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<INTEGER>",
+    "description": "Returns a `LIST<INTEGER>` comprising all `INTEGER` values within a specified range created with step length.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "range(start :: INTEGER, end :: INTEGER, step :: INTEGER) :: LIST<INTEGER>",
+    "argumentDescription": [
+      {
+        "name": "start",
+        "description": "The start value of the range.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "end",
+        "description": "The end value of the range.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "step",
+        "description": "The size of the increment (default value: 1).",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "reduce",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ANY",
+    "description": "Runs an expression against individual elements of a `LIST<ANY>`, storing the result of the expression in an accumulator.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "reduce(accumulator :: VARIABLE = initial :: ANY, variable :: VARIABLE IN list :: LIST<ANY> | expression :: ANY) :: ANY",
+    "argumentDescription": [
+      {
+        "name": "accumulator",
+        "description": "A variable that holds the result as the list is iterated.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "variable",
+        "description": "A variable that can be used within the reducing expression.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "relationships",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<RELATIONSHIP>",
+    "description": "Returns a `LIST<RELATIONSHIP>` containing all the `RELATIONSHIP` values in a `PATH`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "relationships(input :: PATH) :: LIST<RELATIONSHIP>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The path from which all relationships will be returned.",
+        "isDeprecated": false,
+        "type": "PATH"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "replace",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` in which all occurrences of a specified search `STRING` in the given `STRING` have been replaced by another (specified) replacement `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "replace(original :: STRING, search :: STRING, replace :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be modified.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "search",
+        "description": "The value to replace in the original string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "replace",
+        "description": "The value to be inserted in the original string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "replace",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` in which all occurrences of a specified search `STRING` in the given `STRING` have been replaced by another (specified) replacement `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "replace(original :: STRING, search :: STRING, replace :: STRING, limit :: INTEGER) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be modified.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "search",
+        "description": "The value to replace in the original string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "replace",
+        "description": "The value to be inserted in the original string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "limit",
+        "description": "The maximum amount of times the search value should be replaced in the string, starting from the left.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "reverse",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING | LIST<ANY>",
+    "description": "Returns a `STRING` or `LIST<ANY>` in which the order of all characters or elements in the given `STRING` or `LIST<ANY>` have been reversed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "reverse(input :: STRING | LIST<ANY>) :: STRING | LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The string or list to be reversed.",
+        "isDeprecated": false,
+        "type": "STRING | LIST<ANY>"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "right",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` containing the specified number of rightmost characters in the given `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "right(original :: STRING, length :: INTEGER) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "A string value whose leftmost characters will be trimmed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "length",
+        "description": "The length of the rightmost characters to be returned.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "round",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the value of a number rounded to the nearest `INTEGER`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "round(value :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "value",
+        "description": "A value to be rounded.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "round",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the value of a number rounded to the specified precision using rounding mode HALF_UP.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "round(value :: FLOAT, precision :: INTEGER | FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "value",
+        "description": "A value to be rounded.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      },
+      {
+        "name": "precision",
+        "description": "The rounding precision.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "round",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the value of a number rounded to the specified precision with the specified rounding mode.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "round(value :: FLOAT, precision :: INTEGER | FLOAT, mode :: STRING) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "value",
+        "description": "A value to be rounded.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      },
+      {
+        "name": "precision",
+        "description": "The rounding precision.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      },
+      {
+        "name": "mode",
+        "description": "A precision rounding mode (`UP`, `DOWN`, `CEILING`, `FLOOR`, `HALF_UP`, `HALF_DOWN`, `HALF_EVEN`).",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "rtrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with trailing whitespace removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "rtrim(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value from which all leading and trailing whitespace will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "rtrim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with trailing `trimCharacterString` characters removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "rtrim(input :: STRING, trimCharacterString :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value from which the leading and trailing trim character will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "trimCharacterString",
+        "description": "A character to be removed from the start and end of the given string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "sign",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the signum of an `INTEGER` or `FLOAT`: 0 if the number is 0, -1 for any negative number, and 1 for any positive number.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "sign(input :: INTEGER | FLOAT) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A positive or negative number.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT"
+      }
+    ],
+    "category": "Numeric"
+  },
+  {
+    "name": "sin",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the sine of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "sin(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "single",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Returns true if the predicate holds for exactly one of the elements in the given `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "single(variable :: VARIABLE IN list :: LIST<ANY> WHERE predicate :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "variable",
+        "description": "A variable that can be used within the `WHERE` clause.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "list",
+        "description": "A list for the predicate to check against.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "Predicate"
+  },
+  {
+    "name": "sinh",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the hyperbolic sine of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "sinh(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "size",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of items in a `LIST<ANY>` or the number of Unicode characters in a `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "size(input :: STRING | LIST<ANY>) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value whose length is to be calculated.",
+        "isDeprecated": false,
+        "type": "STRING | LIST<ANY>"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "size",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the number of items in a `LIST<ANY>`, the number of Unicode characters in a `STRING` or the dimension of a `VECTOR`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "size(input :: STRING | VECTOR | LIST<ANY>) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value whose length is to be calculated.",
+        "isDeprecated": false,
+        "type": "STRING | VECTOR | LIST<ANY>"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "split",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<STRING>",
+    "description": "Returns a `LIST<STRING>` resulting from the splitting of the given `STRING` around matches of the given delimiter(s).",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "split(original :: STRING, splitDelimiters :: STRING | LIST<STRING>) :: LIST<STRING>",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be split.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "splitDelimiters",
+        "description": "The string with which to split the original string.",
+        "isDeprecated": false,
+        "type": "STRING | LIST<STRING>"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "sqrt",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the square root of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "sqrt(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The value to calculate the square root of.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Logarithmic"
+  },
+  {
+    "name": "stDev",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the standard deviation for the given value over a group for a sample of a population.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "stDev(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The value to calculate the standard deviation of.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "stDevP",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the standard deviation for the given value over a group for an entire population.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "stDevP(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The value to calculate the population standard deviation of.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "startNode",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "NODE",
+    "description": "Returns the start `NODE` of a `RELATIONSHIP`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "startNode(input :: RELATIONSHIP) :: NODE",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A relationship.",
+        "isDeprecated": false,
+        "type": "RELATIONSHIP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "stdev_pop",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the standard deviation for the given value over a group for an entire population.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "stdev_pop(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The value to calculate the population standard deviation of.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "stdev_samp",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the standard deviation for the given value over a group for a sample of a population.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "stdev_samp(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The value to calculate the standard deviation of.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "string.indexOf",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the index of the first occurrence of the given `value` within the `input` `STRING`, or -1 if no match is found.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "string.indexOf(input :: STRING, value :: STRING) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The string to be searched.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "value",
+        "description": "A value to search for.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "string.join",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Concatenates the elements in `input`, inserting `delimiter` between each element, and returns the resulting `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "string.join(input :: LIST<STRING>, delimiter :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of strings to be joined.",
+        "isDeprecated": false,
+        "type": "LIST<STRING>"
+      },
+      {
+        "name": "delimiter",
+        "description": "The joining delimiter",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "string.regexReplace",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` where all matches of `regex` in the `original` `STRING` are replaced with the `replacement` `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "string.regexReplace(original :: STRING, regex :: STRING, replacement :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be modified.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "regex",
+        "description": "The regex pattern to replace in the original `STRING`.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "replacement",
+        "description": "The value to be inserted in the original string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "substring",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a substring of the given `STRING`, beginning with a 0-based index start.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "substring(original :: STRING, start :: INTEGER) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be shortened.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "start",
+        "description": "The start position of the new string.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "substring",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a substring of a given `length` from the given `STRING`, beginning with a 0-based index start.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "substring(original :: STRING, start :: INTEGER, length :: INTEGER) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "original",
+        "description": "The string to be shortened.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "start",
+        "description": "The start position of the new string.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "length",
+        "description": "The length of the new string.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "sum",
+    "aggregating": true,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER | FLOAT | DURATION",
+    "description": "Returns the sum of a set of `INTEGER`, `FLOAT` or `DURATION` values",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "sum(input :: INTEGER | FLOAT | DURATION) :: INTEGER | FLOAT | DURATION",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be aggregated.",
+        "isDeprecated": false,
+        "type": "INTEGER | FLOAT | DURATION"
+      }
+    ],
+    "category": "Aggregating"
+  },
+  {
+    "name": "tail",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<ANY>",
+    "description": "Returns all but the first element in a `LIST<ANY>`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "tail(input :: LIST<ANY>) :: LIST<ANY>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list from which all but the first element will be returned.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "tan",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the tangent of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "tan(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "An angle in radians.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "tanh",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns the hyperbolic tangent of a `FLOAT`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "tanh(input :: FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value.",
+        "isDeprecated": false,
+        "type": "FLOAT"
+      }
+    ],
+    "category": "Trigonometric"
+  },
+  {
+    "name": "time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Creates a `ZONED TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Creates a `ZONED TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone') as components.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a zoned time value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=STRING}",
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "time.realtime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Returns the current `ZONED TIME` instant using the realtime clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "time.realtime(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "time.statement",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Returns the current `ZONED TIME` instant using the statement clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "time.statement(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "time.transaction",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Returns the current `ZONED TIME` instant using the transaction clock.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "time.transaction(timezone = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "timezone",
+        "description": "A string value representing a time zone.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "time.truncate",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Truncates the given temporal value to a `ZONED TIME` instant using the specified unit.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "time.truncate(unit :: STRING, input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, fields = null :: MAP) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "unit",
+        "description": "A string representing one of the following: 'microsecond', 'millisecond', 'second', 'minute', 'hour', 'day'.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "The date to be truncated using either `ZONED DATETIME`, `LOCAL DATETIME`, `ZONED TIME`, or `LOCAL TIME`.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=DEFAULT_TEMPORAL_ARGUMENT, type=ANY}",
+        "type": "ANY"
+      },
+      {
+        "name": "fields",
+        "description": "A list of time components smaller than those specified in `unit` to preserve during truncation.",
+        "isDeprecated": false,
+        "default": "DefaultParameterValue{value=null, type=MAP}",
+        "type": "MAP"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "timestamp",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the difference, measured in milliseconds, between the current time and midnight, January 1, 1970 UTC",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "timestamp() :: INTEGER",
+    "argumentDescription": [],
+    "category": "Scalar"
+  },
+  {
+    "name": "toBoolean",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Converts a `BOOLEAN`, `STRING` or `INTEGER` value to a `BOOLEAN` value. For `INTEGER` values, 0 is defined to be false and any other `INTEGER` is defined to be true.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toBoolean(input :: BOOLEAN | STRING | INTEGER) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a boolean.",
+        "isDeprecated": false,
+        "type": "BOOLEAN | STRING | INTEGER"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toBooleanList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<BOOLEAN>",
+    "description": "Converts a `LIST<ANY>` of values to a `LIST<BOOLEAN>` values. If any values are not convertible to `BOOLEAN` they will be null in the `LIST<BOOLEAN>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toBooleanList(input :: LIST<ANY>) :: LIST<BOOLEAN>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values to be converted into a list of booleans.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toBooleanOrNull",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "BOOLEAN",
+    "description": "Converts a value to a `BOOLEAN` value, or null if the value cannot be converted.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toBooleanOrNull(input :: ANY) :: BOOLEAN",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a boolean or null.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toFloat",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Converts a `STRING`, `INTEGER` or `FLOAT` value to a `FLOAT` value.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toFloat(input :: STRING | INTEGER | FLOAT) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a float.",
+        "isDeprecated": false,
+        "type": "STRING | INTEGER | FLOAT"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toFloatList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<FLOAT>",
+    "description": "Converts a `LIST<ANY>` to a `LIST<FLOAT>` values. If any values are not convertible to `FLOAT` they will be null in the `LIST<FLOAT>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "toFloatList(input :: LIST<ANY>) :: LIST<FLOAT>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values to be converted into a list of floats.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toFloatList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<FLOAT>",
+    "description": "Converts a `LIST<ANY> | VECTOR` to a `LIST<FLOAT>` values. If any values are not convertible to `FLOAT` they will be null in the `LIST<FLOAT>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "toFloatList(input :: VECTOR | LIST<ANY>) :: LIST<FLOAT>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values or vector to be converted into a list of floats.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toFloatOrNull",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Converts a value to a `FLOAT` value, or null if the value cannot be converted.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toFloatOrNull(input :: ANY) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a float or null.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toInteger",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Converts a `BOOLEAN`, `STRING`, `INTEGER` or `FLOAT` value to an `INTEGER` value. For `BOOLEAN` values, true is defined to be 1 and false is defined to be 0.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toInteger(input :: BOOLEAN | STRING | INTEGER | FLOAT) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into an integer.",
+        "isDeprecated": false,
+        "type": "BOOLEAN | STRING | INTEGER | FLOAT"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toIntegerList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<INTEGER>",
+    "description": "Converts a `LIST<ANY>` to a `LIST<INTEGER>` values. If any values are not convertible to `INTEGER` they will be null in the `LIST<INTEGER>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "toIntegerList(input :: LIST<ANY>) :: LIST<INTEGER>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values to be converted into a list of integers.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toIntegerList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<INTEGER>",
+    "description": "Converts a `LIST<ANY> | VECTOR` to a `LIST<INTEGER>` values. If any values are not convertible to `INTEGER` they will be null in the `LIST<INTEGER>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "toIntegerList(input :: VECTOR | LIST<ANY>) :: LIST<INTEGER>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values or vector to be converted into a list of integers.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toIntegerOrNull",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Converts a value to an `INTEGER` value, or null if the value cannot be converted.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toIntegerOrNull(input :: ANY) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into an integer or null.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "toLower",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` in lowercase.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toLower(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string to be converted into lowercase.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "toString",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Converts an `INTEGER`, `FLOAT`, `BOOLEAN`, `POINT` or temporal type (i.e. `DATE`, `ZONED TIME`, `LOCAL TIME`, `ZONED DATETIME`, `LOCAL DATETIME` or `DURATION`) value to a `STRING`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toString(input :: ANY) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a string.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "toStringList",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "LIST<STRING>",
+    "description": "Converts a `LIST<ANY>` to a `LIST<STRING>` values. If any values are not convertible to `STRING` they will be null in the `LIST<STRING>` returned.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toStringList(input :: LIST<ANY>) :: LIST<STRING>",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A list of values to be converted into a list of strings.",
+        "isDeprecated": false,
+        "type": "LIST<ANY>"
+      }
+    ],
+    "category": "List"
+  },
+  {
+    "name": "toStringOrNull",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Converts an `INTEGER`, `FLOAT`, `BOOLEAN`, `POINT` or temporal type (i.e. `DATE`, `ZONED TIME`, `LOCAL TIME`, `ZONED DATETIME`, `LOCAL DATETIME` or `DURATION`) value to a `STRING`, or null if the value cannot be converted.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toStringOrNull(input :: ANY) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to be converted into a string or null.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "toUpper",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` in uppercase.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "toUpper(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string to be converted into uppercase.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "trim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading and trailing whitespace removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "trim(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "trimSpecification",
+        "description": "The parts of the string to trim; LEADING, TRAILING, BOTH",
+        "isDeprecated": false,
+        "type": "[LEADING, TRAILING, BOTH]"
+      },
+      {
+        "name": "input",
+        "description": "A value from which all leading and trailing whitespace will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "trim",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` with leading and/or trailing `trimCharacterString` removed.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "trim([[LEADING | TRAILING | BOTH] [trimCharacterString :: STRING] FROM] input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "trimSpecification",
+        "description": "The parts of the string to trim; LEADING, TRAILING, BOTH",
+        "isDeprecated": false,
+        "type": "[LEADING, TRAILING, BOTH]"
+      },
+      {
+        "name": "trimCharacterString",
+        "description": "The characters to be removed from the start and/or end of the given string.",
+        "isDeprecated": false,
+        "type": "STRING"
+      },
+      {
+        "name": "input",
+        "description": "A value from which all leading and/or trailing trim characters will be removed.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "type",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` representation of the `RELATIONSHIP` type.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "type(input :: RELATIONSHIP) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A relationship.",
+        "isDeprecated": false,
+        "type": "RELATIONSHIP"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "upper",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns the given `STRING` in uppercase.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "upper(input :: STRING) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A string to be converted into uppercase.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "String"
+  },
+  {
+    "name": "valueType",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "STRING",
+    "description": "Returns a `STRING` representation of the most precise value type that the given expression evaluates to.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5,
+      25
+    ],
+    "signature": "valueType(input :: ANY) :: STRING",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "A value to return the type of.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "vector",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "VECTOR",
+    "description": "Constructs a `VECTOR` value.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector(vectorValue :: STRING | LIST<INTEGER | FLOAT>, dimension :: INTEGER, coordinateType :: [INTEGER64, INTEGER32, INTEGER16, INTEGER8, FLOAT64, FLOAT32]) :: VECTOR",
+    "argumentDescription": [
+      {
+        "name": "vectorValue",
+        "description": "The numeric values to create the vector coordinates from.",
+        "isDeprecated": false,
+        "type": "STRING | LIST<INTEGER | FLOAT>"
+      },
+      {
+        "name": "dimension",
+        "description": "The dimension (number of coordinates) of the vector.",
+        "isDeprecated": false,
+        "type": "INTEGER"
+      },
+      {
+        "name": "coordinateType",
+        "description": "The type of each coordinate in the vector.",
+        "isDeprecated": false,
+        "type": "[INTEGER64, INTEGER32, INTEGER16, INTEGER8, FLOAT64, FLOAT32]"
+      }
+    ],
+    "category": "Scalar"
+  },
+  {
+    "name": "vector.similarity.cosine",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the similarity between the argument vectors based on their cosine.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "vector.similarity.cosine(a :: LIST<INTEGER | FLOAT>, b :: LIST<INTEGER | FLOAT>) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "a",
+        "description": "A list representing the first vector.",
+        "isDeprecated": false,
+        "type": "LIST<INTEGER | FLOAT>"
+      },
+      {
+        "name": "b",
+        "description": "A list representing the second vector.",
+        "isDeprecated": false,
+        "type": "LIST<INTEGER | FLOAT>"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector.similarity.cosine",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the similarity between the argument vectors based on their cosine.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector.similarity.cosine(a :: VECTOR | LIST<INTEGER | FLOAT>, b :: VECTOR | LIST<INTEGER | FLOAT>) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "a",
+        "description": "A vector or list value representing the first vector.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<INTEGER | FLOAT>"
+      },
+      {
+        "name": "b",
+        "description": "A vector or list value representing the second vector.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<INTEGER | FLOAT>"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector.similarity.euclidean",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the similarity between the argument vectors based on their Euclidean distance.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      5
+    ],
+    "signature": "vector.similarity.euclidean(a :: LIST<INTEGER | FLOAT>, b :: LIST<INTEGER | FLOAT>) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "a",
+        "description": "A list representing the first vector.",
+        "isDeprecated": false,
+        "type": "LIST<INTEGER | FLOAT>"
+      },
+      {
+        "name": "b",
+        "description": "A list representing the second vector.",
+        "isDeprecated": false,
+        "type": "LIST<INTEGER | FLOAT>"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector.similarity.euclidean",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the similarity between the argument vectors based on their Euclidean distance.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector.similarity.euclidean(a :: VECTOR | LIST<INTEGER | FLOAT>, b :: VECTOR | LIST<INTEGER | FLOAT>) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "a",
+        "description": "A vector or list value representing the first vector.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<INTEGER | FLOAT>"
+      },
+      {
+        "name": "b",
+        "description": "A vector or list value representing the second vector.",
+        "isDeprecated": false,
+        "type": "VECTOR | LIST<INTEGER | FLOAT>"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector_dimension_count",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "INTEGER",
+    "description": "Returns the dimension of a `VECTOR`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector_dimension_count(input :: VECTOR) :: INTEGER",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "The vector to calculate the dimension of.",
+        "isDeprecated": false,
+        "type": "VECTOR"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector_distance",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the distance between the two vector values based on the selected `vectorDistanceMetric` algorithm.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector_distance(vector1 :: VECTOR, vector2 :: VECTOR, coordinateType :: [EUCLIDEAN, EUCLIDEAN_SQUARED, MANHATTAN, COSINE, DOT, HAMMING]) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "vector1",
+        "description": "The first vector.",
+        "isDeprecated": false,
+        "type": "VECTOR"
+      },
+      {
+        "name": "vector2",
+        "description": "The second vector.",
+        "isDeprecated": false,
+        "type": "VECTOR"
+      },
+      {
+        "name": "vectorDistanceMetric",
+        "description": "The vector distance algorithm to calculate the distance by.",
+        "isDeprecated": false,
+        "type": "[EUCLIDEAN, EUCLIDEAN_SQUARED, MANHATTAN, COSINE, DOT, HAMMING]"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "vector_norm",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "FLOAT",
+    "description": "Returns a `FLOAT` representing the distance between the given vector and an origin vector, which is a vector with the same dimension with all coordinates set to zero, calculated using the specified `vectorDistanceMetric`.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "vector_norm(vector1 :: VECTOR, vector2 :: VECTOR, coordinateType :: [EUCLIDEAN, EUCLIDEAN_SQUARED, MANHATTAN, COSINE, DOT, HAMMING]) :: FLOAT",
+    "argumentDescription": [
+      {
+        "name": "vector",
+        "description": "A vector for which the norm to the origin vector will be computed.",
+        "isDeprecated": false,
+        "type": "VECTOR"
+      },
+      {
+        "name": "vectorDistanceMetric",
+        "description": "The vector distance algorithm to calculate the distance by.",
+        "isDeprecated": false,
+        "type": "[EUCLIDEAN, MANHATTAN]"
+      }
+    ],
+    "category": "Vector"
+  },
+  {
+    "name": "zoned_datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "zoned_datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone', 'epochSeconds', 'epochMillis') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "zoned_datetime",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED DATETIME",
+    "description": "Creates a `ZONED DATETIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "zoned_datetime(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: ZONED DATETIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone', 'epochSeconds', 'epochMillis') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a zoned datetime value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "zoned_time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Creates a `ZONED TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "zoned_time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      }
+    ],
+    "category": "Temporal"
+  },
+  {
+    "name": "zoned_time",
+    "aggregating": false,
+    "isDeprecated": false,
+    "deprecatedBy": null,
+    "isBuiltIn": true,
+    "rolesBoostedExecution": [],
+    "returnDescription": "ZONED TIME",
+    "description": "Creates a `ZONED TIME` instant.",
+    "rolesExecution": [
+      "PUBLIC",
+      "admin",
+      "architect",
+      "editor",
+      "publisher",
+      "reader"
+    ],
+    "cypherVersionScope": [
+      25
+    ],
+    "signature": "zoned_time(input = DEFAULT_TEMPORAL_ARGUMENT :: ANY, pattern = DEFAULT_TEMPORAL_ARGUMENT :: STRING) :: ZONED TIME",
+    "argumentDescription": [
+      {
+        "name": "input",
+        "description": "Either a string representation of a temporal value, a map containing the single key 'timezone', or a map containing temporal values ('hour', 'minute', 'second', 'millisecond', 'microsecond', 'nanosecond', 'timezone') as components.",
+        "isDeprecated": false,
+        "type": "ANY"
+      },
+      {
+        "name": "pattern",
+        "description": "A pattern used to parse a zoned time value. If the pattern is not provided the value will be parsed according to default patterns.",
+        "isDeprecated": false,
+        "type": "STRING"
+      }
+    ],
+    "category": "Temporal"
+  }
+]

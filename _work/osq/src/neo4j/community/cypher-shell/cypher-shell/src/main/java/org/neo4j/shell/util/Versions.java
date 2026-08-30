@@ -1,0 +1,96 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.shell.util;
+
+import static java.lang.Integer.parseInt;
+import static java.lang.String.format;
+
+import java.util.OptionalInt;
+import org.neo4j.driver.exceptions.Neo4jException;
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public final class Versions {
+
+    private Versions() {
+        throw new UnsupportedOperationException("Don't instantiate");
+    }
+
+    public static int majorVersion(String version) throws FailedToParseException {
+        return version(version).major();
+    }
+
+    public static int minorVersion(String version) throws FailedToParseException {
+        return version(version).minor();
+    }
+
+    public static int patch(String version) throws FailedToParseException {
+        return version(version).patch();
+    }
+
+    public static OptionalInt preRelease(String version) throws FailedToParseException {
+        return version(version).preRelease();
+    }
+
+    public static Version version(String version) throws FailedToParseException {
+        if (version == null) {
+            throw new FailedToParseException("null is not a valid version string");
+        }
+        if (version.isEmpty()) {
+            return new Version(0, 0, 0, OptionalInt.empty());
+        }
+        // remove -alpha, and -beta etc
+        int offset = version.indexOf('-');
+        OptionalInt preRelease = OptionalInt.empty();
+        if (offset > 0) {
+            try {
+                preRelease =
+                        OptionalInt.of(version.length() > offset + 1 ? parseInt(version.substring(offset + 1)) : 0);
+            } catch (NumberFormatException ignored) {
+            }
+            version = version.substring(0, offset);
+        }
+
+        String[] split = version.split("\\.");
+
+        try {
+            return switch (split.length) {
+                case 1 -> new Version(parseInt(split[0]), 0, 0, preRelease);
+                case 2 -> new Version(parseInt(split[0]), parseInt(split[1]), 0, preRelease);
+                case 3 -> new Version(parseInt(split[0]), parseInt(split[1]), parseInt(split[2]), preRelease);
+                default ->
+                    throw new FailedToParseException(
+                            format("%s is not a proper version string, it should be of the form X.Y.Z-W ", version));
+            };
+        } catch (NumberFormatException e) {
+            throw new FailedToParseException(
+                    format("%s is not a proper version string, it should be of the form X.Y.Z or X.Y.Z-W ", version));
+        }
+    }
+
+    public static boolean isPasswordChangeRequiredException(Neo4jException e) {
+        return "Neo.ClientError.Security.CredentialsExpired".equalsIgnoreCase(e.code());
+    }
+
+    public static class FailedToParseException extends Exception {
+        public FailedToParseException(String message) {
+            super(message);
+        }
+    }
+}
