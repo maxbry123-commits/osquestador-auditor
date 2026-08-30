@@ -1,9 +1,0 @@
-{
-  "parsers": [
-    {
-      "pdf-parser": {
-        "sortByPosition": true
-      }
-    }
-  ]
-}
