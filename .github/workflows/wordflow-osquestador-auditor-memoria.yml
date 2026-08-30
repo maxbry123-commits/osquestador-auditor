@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/wordflow-osquestador-auditor-memoria.yml'
       - 'scripts/research_download_osq.py'
+      - 'Download code osquestador auditor memoria/REPOS.json'
   workflow_dispatch:
 permissions:
   contents: write
@@ -27,15 +28,45 @@ jobs:
           set -euo pipefail
           sudo apt-get update -y
           sudo apt-get install -y zip unzip
+      - name: Validar y restaurar cola determinista
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p 'Download code osquestador auditor memoria'
+          if [ ! -f 'Download code osquestador auditor memoria/REPOS.json' ]; then
+            git show 'HEAD:Download code osquestador auditor memoria/REPOS.json' > 'Download code osquestador auditor memoria/REPOS.json'
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('Download code osquestador auditor memoria/REPOS.json')
+          q=json.loads(p.read_text())
+          if len(q)!=96 or [str(x['n']) for x in q] != [f'{i:02d}' for i in range(1,97)]: raise SystemExit('FORENSIC FAIL: queue must be exactly 01..96')
+          print('FORENSIC PASS: queue 01..96')
+          PY
       - name: Limpiar descargas generadas sin borrar REPOS.json
         shell: bash
         run: |
           set -euo pipefail
           find 'Download code osquestador auditor memoria' -maxdepth 1 -type f -name '*.zip' -delete
           rm -f 'Download code osquestador auditor memoria/RESEARCH_DOWNLOAD_MANIFEST.jsonl'
-          test -f 'Download code osquestador auditor memoria/REPOS.json'
+          rm -rf '_work/osq'
+      - name: Validación estática
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/research_download_osq.py
+          PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          p=Path('scripts/research_download_osq.py'); t=ast.parse(p.read_text())
+          for n in ast.walk(t):
+              if isinstance(n,ast.FunctionDef) and 'retry' in n.name.lower():
+                  if any(isinstance(x,ast.Call) and isinstance(x.func,ast.Name) and x.func.id==n.name for x in ast.walk(n)): raise SystemExit('FORENSIC FAIL: retry recursion')
+          print('FORENSIC PASS: retry recursion check')
+          PY
       - name: ZIP + EXTRACT 96 desde cero
         shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/research_download_osq.py
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/research_download_osq.py
