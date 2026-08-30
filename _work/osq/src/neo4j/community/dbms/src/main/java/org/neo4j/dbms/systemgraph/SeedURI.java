@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.dbms.systemgraph;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public record SeedURI(Optional<String> singleUri, Map<String, String> uriMap, Optional<List<String>> multipleUris) {
+    public static final SeedURI EMPTY = new SeedURI(Optional.empty(), Map.of(), Optional.empty());
+    public static final String MULTIPLE_URIS_DELIMITER = ";";
+    public static final String MULTIPLE_URIS_UNDEFINED_SERVERS = "undefined_servers";
+
+    public static SeedURI single(String singleUri) {
+        return new SeedURI(Optional.of(singleUri), Map.of(), Optional.empty());
+    }
+
+    public static SeedURI sharded(Map<String, String> uriMap) {
+        return new SeedURI(Optional.empty(), Map.copyOf(uriMap), Optional.empty());
+    }
+
+    public static SeedURI multiple(List<String> multipleUris) {
+        return new SeedURI(Optional.empty(), Map.of(), Optional.of(List.copyOf(multipleUris)));
+    }
+
+    public boolean isEmpty() {
+        return singleUri.isEmpty() && uriMap.isEmpty() && multipleUris.isEmpty();
+    }
+
+    public Optional<String> best(String databaseName) {
+        return Optional.ofNullable(uriMap.get(databaseName))
+                .or(this::multipleURIsAsString)
+                .or(this::singleUri);
+    }
+
+    public Optional<String> multipleURIsAsString() {
+        return multipleUris.map(
+                uris -> uris.isEmpty() ? MULTIPLE_URIS_UNDEFINED_SERVERS : String.join(MULTIPLE_URIS_DELIMITER, uris));
+    }
+}

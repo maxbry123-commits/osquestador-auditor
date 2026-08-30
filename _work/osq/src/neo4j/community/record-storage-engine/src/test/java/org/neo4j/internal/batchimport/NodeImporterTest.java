@@ -1,0 +1,284 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.internal.batchimport;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.neo4j.internal.batchimport.SchemaMonitor.NO_MONITOR;
+import static org.neo4j.internal.recordstorage.RecordCursorTypes.NODE_CURSOR;
+import static org.neo4j.io.pagecache.context.CursorContextFactory.NULL_CONTEXT_FACTORY;
+import static org.neo4j.io.pagecache.context.FixedVersionContextSupplier.EMPTY_CONTEXT_SUPPLIER;
+import static org.neo4j.io.pagecache.tracing.PageCacheTracer.NULL;
+import static org.neo4j.memory.EmptyMemoryTracker.INSTANCE;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import org.eclipse.collections.api.factory.primitive.IntObjectMaps;
+import org.eclipse.collections.api.factory.primitive.IntSets;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.neo4j.batchimport.api.Configuration;
+import org.neo4j.batchimport.api.input.Collector;
+import org.neo4j.configuration.Config;
+import org.neo4j.exceptions.KernelException;
+import org.neo4j.internal.batchimport.cache.idmapping.IdMapper;
+import org.neo4j.internal.batchimport.cache.idmapping.IdMappers;
+import org.neo4j.internal.batchimport.store.BatchingNeoStores;
+import org.neo4j.io.fs.FileSystemAbstraction;
+import org.neo4j.io.layout.recordstorage.RecordDatabaseLayout;
+import org.neo4j.io.pagecache.PageCache;
+import org.neo4j.io.pagecache.PageCursor;
+import org.neo4j.io.pagecache.context.CursorContext;
+import org.neo4j.io.pagecache.context.CursorContextFactory;
+import org.neo4j.io.pagecache.tracing.DefaultPageCacheTracer;
+import org.neo4j.kernel.impl.store.NodeLabelsField;
+import org.neo4j.kernel.impl.store.NodeStore;
+import org.neo4j.kernel.impl.store.cursor.CachedStoreCursors;
+import org.neo4j.kernel.impl.store.record.NodeRecord;
+import org.neo4j.kernel.impl.store.record.RecordLoad;
+import org.neo4j.logging.internal.NullLogService;
+import org.neo4j.memory.EmptyMemoryTracker;
+import org.neo4j.storageengine.api.EagerValueIndexEntryUpdate;
+import org.neo4j.storageengine.api.IndexEntryUpdate;
+import org.neo4j.test.RandomSupport;
+import org.neo4j.test.extension.Inject;
+import org.neo4j.test.extension.Neo4jLayoutExtension;
+import org.neo4j.test.extension.RandomSupportExtension;
+import org.neo4j.test.extension.pagecache.PageCacheExtension;
+import org.neo4j.test.scheduler.ThreadPoolJobScheduler;
+import org.neo4j.token.api.TokenHolder;
+import org.neo4j.values.storable.Values;
+
+@PageCacheExtension
+@Neo4jLayoutExtension
+@RandomSupportExtension
+class NodeImporterTest {
+    @Inject
+    private PageCache pageCache;
+
+    @Inject
+    private FileSystemAbstraction fs;
+
+    @Inject
+    private RecordDatabaseLayout layout;
+
+    @Inject
+    private RandomSupport random;
+
+    private ThreadPoolJobScheduler jobScheduler;
+    private BatchingNeoStores stores;
+    private CachedStoreCursors storeCursors;
+
+    @BeforeEach
+    void start() throws IOException {
+        jobScheduler = new ThreadPoolJobScheduler();
+        stores = BatchingNeoStores.batchingNeoStoresWithExternalPageCache(
+                fs,
+                pageCache,
+                NULL,
+                NULL_CONTEXT_FACTORY,
+                layout,
+                Configuration.DEFAULT,
+                NullLogService.getInstance(),
+                Config.defaults(),
+                INSTANCE);
+        stores.createNew();
+        storeCursors = new CachedStoreCursors(stores.getNeoStores(), CursorContext.NULL_CONTEXT);
+    }
+
+    @AfterEach
+    void stop() throws IOException {
+        stores.close();
+        jobScheduler.close();
+    }
+
+    @Test
+    void shouldHandleLargeAmountsOfLabels() {
+        // given
+        IdMapper idMapper = mock(IdMapper.class);
+        int numberOfLabels = 50;
+        long nodeId = 0;
+
+        // when
+        try (NodeImporter importer = new NodeImporter(
+                0,
+                stores,
+                idMapper,
+                new DataImporter.Monitor(),
+                Collector.EMPTY,
+                NULL_CONTEXT_FACTORY,
+                INSTANCE,
+                NO_MONITOR)) {
+            importer.id(nodeId);
+            String[] labels = new String[numberOfLabels];
+            for (int i = 0; i < labels.length; i++) {
+                labels[i] = "Label" + i;
+            }
+            importer.labels(labels);
+            importer.endOfEntity();
+        }
+
+        // then
+        NodeStore nodeStore = stores.getNodeStore();
+        PageCursor nodeCursor = storeCursors.readCursor(NODE_CURSOR);
+        NodeRecord record = nodeStore.getRecordByCursor(
+                nodeId, nodeStore.newRecord(), RecordLoad.NORMAL, nodeCursor, EmptyMemoryTracker.INSTANCE);
+        int[] labels = NodeLabelsField.parseLabelsField(record).get(nodeStore, storeCursors);
+        assertEquals(numberOfLabels, labels.length);
+    }
+
+    @Test
+    void tracePageCacheAccessOnNodeImport() {
+        // given
+        int numberOfLabels = 50;
+        long nodeId = 0;
+        var cacheTracer = new DefaultPageCacheTracer();
+        var contextFactory = new CursorContextFactory(cacheTracer, EMPTY_CONTEXT_SUPPLIER);
+
+        // when
+        try (NodeImporter importer = new NodeImporter(
+                0,
+                stores,
+                IdMappers.actual(),
+                new DataImporter.Monitor(),
+                Collector.EMPTY,
+                contextFactory,
+                INSTANCE,
+                NO_MONITOR)) {
+            importer.id(nodeId);
+            String[] labels = new String[numberOfLabels];
+            for (int i = 0; i < labels.length; i++) {
+                labels[i] = "Label" + i;
+            }
+            importer.labels(labels);
+            importer.property("a", random.nextAsciiStringOfLength(10), false);
+            importer.property("b", random.nextAsciiStringOfLength(100), false);
+            importer.property("c", random.nextAsciiStringOfLength(1000), false);
+            importer.endOfEntity();
+        }
+
+        // then
+        NodeStore nodeStore = stores.getNodeStore();
+        PageCursor nodeCursor = storeCursors.readCursor(NODE_CURSOR);
+        NodeRecord record = nodeStore.getRecordByCursor(
+                nodeId, nodeStore.newRecord(), RecordLoad.NORMAL, nodeCursor, EmptyMemoryTracker.INSTANCE);
+        int[] labels = NodeLabelsField.parseLabelsField(record).get(nodeStore, storeCursors);
+        assertEquals(numberOfLabels, labels.length);
+        assertThat(cacheTracer.faults()).isEqualTo(2);
+        assertThat(cacheTracer.pins()).isEqualTo(5);
+        assertThat(cacheTracer.unpins()).isEqualTo(5);
+        assertThat(cacheTracer.hits()).isEqualTo(3);
+    }
+
+    @Test
+    void shouldTrackAffectedSchema() throws KernelException {
+        // given
+        var schemaMonitor = new CapturingSchemaMonitor();
+
+        // when
+        try (var importer = new NodeImporter(
+                0,
+                stores,
+                mock(IdMapper.class),
+                new DataImporter.Monitor(),
+                Collector.EMPTY,
+                NULL_CONTEXT_FACTORY,
+                INSTANCE,
+                schemaMonitor)) {
+            importNode(importer, 1, Map.of("key2", "value2", "key3", "value3"), "label1", "label2");
+        }
+
+        // then
+        var entity = schemaMonitor.entity;
+        assertThat(entity.propertiesMap())
+                .isEqualTo(IntObjectMaps.mutable.of(
+                        keyIds("key2")[0], Values.of("value2"), keyIds("key3")[0], Values.of("value3")));
+        assertThat(entity.entityTokens).isEqualTo(IntSets.immutable.of(labelIds("label1", "label2")));
+    }
+
+    private int[] labelIds(String... labels) throws KernelException {
+        return tokenIds(stores.getTokenHolders().labelTokens(), labels);
+    }
+
+    private int[] keyIds(String... keys) throws KernelException {
+        return tokenIds(stores.getTokenHolders().propertyKeyTokens(), keys);
+    }
+
+    private int[] tokenIds(TokenHolder tokenHolder, String... names) throws KernelException {
+        var ids = new int[names.length];
+        tokenHolder.getOrCreateIds(names, ids);
+        Arrays.sort(ids);
+        return ids;
+    }
+
+    private static void importNode(NodeImporter importer, long id, Map<String, String> properties, String... labels) {
+        importer.id(id);
+        properties.forEach((key, value) -> importer.property(key, value, false));
+        importer.labels(labels);
+        importer.endOfEntity();
+    }
+
+    private static class CapturingSchemaMonitor implements SchemaMonitor {
+        private SchemaMonitor.Entity entity;
+
+        @Override
+        public boolean handle(
+                Entity entity,
+                ExistingPropertyKeysLookup existingPropertyKeysLookup,
+                ViolationVisitor violationVisitor,
+                UniquenessIndexUpdatesListener uniquenessIndexUpdatesListener) {
+            this.entity = new Entity(
+                    entity.inputId,
+                    entity.entityId,
+                    new ArrayList<>(entity.properties),
+                    new ArrayList<>(entity.identifyingProperties),
+                    entity.encodedProperties,
+                    entity.encodedPropertiesOffloaded,
+                    entity.removedProperties,
+                    entity.existingEntityTokens,
+                    IntSets.immutable.ofAll(entity.entityTokens),
+                    entity.removedEntityTokens,
+                    entity.mode,
+                    entity.sourceDescription,
+                    entity.lineNumber);
+            return true;
+        }
+
+        @Override
+        public void indexUpdate(IndexEntryUpdate indexUpdate) {}
+
+        @Override
+        public boolean directIndexUpdate(IndexEntryUpdate indexUpdate) {
+            return true;
+        }
+
+        @Override
+        public boolean checkUniqueness(EagerValueIndexEntryUpdate[] checks) {
+            return true;
+        }
+
+        @Override
+        public void close() {}
+    }
+}

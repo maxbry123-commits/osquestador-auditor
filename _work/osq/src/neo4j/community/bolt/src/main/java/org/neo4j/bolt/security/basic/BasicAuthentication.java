@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.bolt.security.basic;
+
+import java.util.Map;
+import org.neo4j.bolt.security.Authentication;
+import org.neo4j.bolt.security.AuthenticationResult;
+import org.neo4j.bolt.security.error.AuthenticationException;
+import org.neo4j.internal.kernel.api.connectioninfo.ClientConnectionInfo;
+import org.neo4j.internal.kernel.api.security.AbstractSecurityLog;
+import org.neo4j.internal.kernel.api.security.LoginContext;
+import org.neo4j.internal.kernel.api.security.SecurityExceptionLogger;
+import org.neo4j.kernel.api.security.AuthManager;
+import org.neo4j.kernel.api.security.exception.InvalidAuthTokenException;
+
+/**
+ * Performs basic authentication with user name and password.
+ */
+public class BasicAuthentication implements Authentication {
+    private final AuthManager authManager;
+    private final SecurityExceptionLogger exceptionLog;
+
+    public BasicAuthentication(AuthManager authManager, AbstractSecurityLog securityLog) {
+        this.authManager = authManager;
+        exceptionLog = new SecurityExceptionLogger(securityLog);
+    }
+
+    @Override
+    public AuthenticationResult authenticate(Map<String, Object> authToken, ClientConnectionInfo connectionInfo)
+            throws AuthenticationException {
+        try {
+            LoginContext loginContext = authManager.login(authToken, connectionInfo);
+
+            switch (loginContext.subject().getAuthenticationResult()) {
+                case SUCCESS:
+                case PASSWORD_CHANGE_REQUIRED:
+                    break;
+                case TOO_MANY_ATTEMPTS:
+                    throw exceptionLog.logAndGet(AuthenticationException.rateLimit());
+                default:
+                    throw exceptionLog.logAndGet(AuthenticationException.unauthorized());
+            }
+
+            return new BasicAuthenticationResult(loginContext);
+        } catch (InvalidAuthTokenException e) {
+            throw exceptionLog.logAndGet(
+                    new AuthenticationException(e.gqlStatusObject(), e.status(), e.legacyMessage()));
+        }
+    }
+
+    @Override
+    public LoginContext impersonate(LoginContext context, String userToImpersonate) throws AuthenticationException {
+        return this.authManager.impersonate(context, userToImpersonate);
+    }
+}
