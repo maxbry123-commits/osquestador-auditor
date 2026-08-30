@@ -1,0 +1,194 @@
+from __future__ import annotations
+
+import os
+import os.path
+import struct
+from queue import Empty, Queue
+from time import sleep
+
+import pytest
+
+from watchdog.events import DirCreatedEvent, DirMovedEvent
+from watchdog.observers.api import ObservedWatch
+from watchdog.utils import platform
+
+from .shell import mkdir, mkdtemp, mv, rm
+
+# make pytest aware this is windows only
+if not platform.is_windows():
+    pytest.skip("Windows only.", allow_module_level=True)
+
+from watchdog.observers.read_directory_changes import WindowsApiEmitter
+from watchdog.observers.winapi import (
+    FILE_ACTION_CREATED,
+    FILE_ACTION_DELETED,
+    FILE_ACTION_RENAMED_NEW_NAME,
+    FILE_ACTION_RENAMED_OLD_NAME,
+    WinAPINativeEvent,
+    _drop_case_only_rename_deletions,
+    _parse_event_buffer,
+)
+
+SLEEP_TIME = 2
+
+# Path with non-ASCII
+temp_dir = os.path.join(mkdtemp(), "Strange \N{SNOWMAN}")
+os.makedirs(temp_dir)
+
+
+def p(*args):
+    """
+    Convenience function to join the temporary directory path
+    with the provided arguments.
+    """
+    return os.path.join(temp_dir, *args)
+
+
+@pytest.fixture
+def event_queue():
+    return Queue()
+
+
+@pytest.fixture
+def emitter(event_queue):
+    watch = ObservedWatch(temp_dir, recursive=True)
+    em = WindowsApiEmitter(event_queue, watch, timeout=0.2)
+    yield em
+    em.stop()
+
+
+def test___init__(event_queue, emitter):
+    emitter.start()
+    sleep(SLEEP_TIME)
+    mkdir(p("fromdir"))
+
+    sleep(SLEEP_TIME)
+    mv(p("fromdir"), p("todir"))
+
+    sleep(SLEEP_TIME)
+    emitter.stop()
+    sleep(SLEEP_TIME)  # time for background thread to exit
+
+    # What we need here for the tests to pass is a collection type
+    # that is:
+    #   * unordered
+    #   * non-unique
+    # A multiset! Python's collections.Counter class seems appropriate.
+    expected = {
+        DirCreatedEvent(p("fromdir")),
+        DirMovedEvent(p("fromdir"), p("todir")),
+    }
+
+    got = set()
+
+    while True:
+        try:
+            event, _ = event_queue.get_nowait()
+        except Empty:
+            break
+        else:
+            if event.event_type == "modified":
+                # On Windows can get one or two modified events.  Ignore
+                # them to make test more deterministic.
+                continue
+            got.add(event)
+
+    assert expected == got
+
+
+def test_root_deleted(event_queue, emitter):
+    r"""Test the event got when removing the watched folder.
+    The regression to prevent is:
+
+        Exception in thread Thread-1:
+        Traceback (most recent call last):
+        File "watchdog\observers\winapi.py", line 333, in read_directory_changes
+            ctypes.byref(nbytes), None, None)
+        File "watchdog\observers\winapi.py", line 105, in _errcheck_bool
+            raise ctypes.WinError()
+        PermissionError: [WinError 5] Access refused.
+
+        During handling of the above exception, another exception occurred:
+
+        Traceback (most recent call last):
+        File "C:\Python37-32\lib\threading.py", line 926, in _bootstrap_inner
+            self.run()
+        File "watchdog\observers\api.py", line 145, in run
+            self.queue_events(self.timeout)
+        File "watchdog\observers\read_directory_changes.py", line 76, in queue_events
+            winapi_events = self._read_events()
+        File "watchdog\observers\read_directory_changes.py", line 73, in _read_events
+            return read_events(self._whandle, self.watch.path, recursive=self.watch.is_recursive)
+        File "watchdog\observers\winapi.py", line 387, in read_events
+            buf, nbytes = read_directory_changes(handle, path, recursive=recursive)
+        File "watchdog\observers\winapi.py", line 340, in read_directory_changes
+            return _generate_observed_path_deleted_event()
+        File "watchdog\observers\winapi.py", line 298, in _generate_observed_path_deleted_event
+            event = FileNotifyInformation(0, FILE_ACTION_DELETED_SELF, len(path), path.value)
+        TypeError: expected bytes, str found
+    """
+
+    emitter.start()
+    sleep(SLEEP_TIME)
+
+    # This should not fail
+    rm(p(), recursive=True)
+    sleep(SLEEP_TIME)
+
+    # The emitter is automatically stopped, with no error
+    assert not emitter.should_keep_running()
+
+
+def test_drop_case_only_rename_deletions():
+    """A case-only rename is reported with an extra deletion of the old name."""
+    events = [
+        WinAPINativeEvent(FILE_ACTION_DELETED, "file"),
+        WinAPINativeEvent(FILE_ACTION_RENAMED_OLD_NAME, "file"),
+        WinAPINativeEvent(FILE_ACTION_RENAMED_NEW_NAME, "FILE"),
+    ]
+
+    assert _drop_case_only_rename_deletions(events) == events[1:]
+
+
+@pytest.mark.parametrize(
+    "events",
+    [
+        # A deletion is only spurious when the very next record renames that same
+        # path, so a path deleted, recreated and only then renamed is left alone.
+        [
+            WinAPINativeEvent(FILE_ACTION_DELETED, "file"),
+            WinAPINativeEvent(FILE_ACTION_CREATED, "file"),
+            WinAPINativeEvent(FILE_ACTION_RENAMED_OLD_NAME, "file"),
+            WinAPINativeEvent(FILE_ACTION_RENAMED_NEW_NAME, "other"),
+        ],
+        # A deletion followed by the rename of a different path.
+        [
+            WinAPINativeEvent(FILE_ACTION_DELETED, "file"),
+            WinAPINativeEvent(FILE_ACTION_RENAMED_OLD_NAME, "other"),
+            WinAPINativeEvent(FILE_ACTION_RENAMED_NEW_NAME, "OTHER"),
+        ],
+        # A deletion closing the batch, which is how a plain deletion is reported.
+        [WinAPINativeEvent(FILE_ACTION_DELETED, "file")],
+    ],
+)
+def test_drop_case_only_rename_deletions_keeps_real_deletions(events):
+    assert _drop_case_only_rename_deletions(events) == events
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "plain.txt",
+        # U+FEFF is a legal file name character that "utf-16" eats as a byte-order
+        # mark, silently reporting the event against a different, possibly existing,
+        # file. U+FFFE flips the byte order the rest of the name is decoded with.
+        "\ufeffhello.txt",
+        "\ufffehello.txt",
+    ],
+)
+def test_parse_event_buffer_reads_the_whole_file_name(file_name):
+    """ReadDirectoryChangesW writes UTF-16LE without a byte-order mark."""
+    name = file_name.encode("utf-16-le")
+    buffer = struct.pack("<III", 0, FILE_ACTION_CREATED, len(name)) + name
+
+    assert _parse_event_buffer(buffer) == [(FILE_ACTION_CREATED, file_name)]
