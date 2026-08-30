@@ -1,0 +1,70 @@
+name: Benchmark
+
+on:
+  workflow_call:
+    secrets:
+      SSH_KNOWN_HOSTS:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
+      SSH_HOST:
+        required: true
+
+env:
+  NODE_VERSION: '16'
+
+jobs:
+
+  benchmark:
+    concurrency: benchmark
+    name: Run
+    runs-on: ubuntu-latest
+    env:
+      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install libssl1.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install libssl1.1
+
+      - name: Add SSH Key
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ${HOME}/.ssh
+          echo "Created SSH DIR"
+          echo "$SSH_KNOWN_HOSTS" >> ${HOME}/.ssh/known_hosts
+          echo "Add known hosts"
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          echo "Started ssh agent"
+          ssh-add - <<< "${SSH_PRIVATE_KEY}"
+          echo "Add SSH key"
+
+      - name: Make benchmark dirs
+        working-directory: tests
+        run: |
+          mkdir -p results/k6_benchmark_results
+          mkdir results/lego_benchmark_results
+          mkdir results/js_benchmark_results
+
+      - name: Run k6 benchmark
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        working-directory: tests
+        run: |
+          ssh "$SSH_USER"@"$SSH_HOST" "benchmark $GITHUB_SHA all"
+          scp "$SSH_USER"@"$SSH_HOST":"/home/${SSH_USER}/benchmark_data/lego_terminusdb_${GITHUB_SHA}.json" results/lego_benchmark_results/
+          scp "$SSH_USER"@"$SSH_HOST":"/home/${SSH_USER}/benchmark_data/k6_output.json" "results/k6_benchmark_results/${GITHUB_SHA}.json"
+          scp "$SSH_USER"@"$SSH_HOST":"/home/${SSH_USER}/benchmark_data/js_benchmark_terminusdb_${GITHUB_SHA}.json" "results/js_benchmark_results/${GITHUB_SHA}.json"
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./tests/results/
+          keep_files: true

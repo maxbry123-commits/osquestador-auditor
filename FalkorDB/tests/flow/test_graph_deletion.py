@@ -1,0 +1,947 @@
+from common import *
+from index_utils import wait_for_indices_to_sync
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../..')
+
+GRAPH_ID = "graph_deletion"
+
+class testGraphDeletionFlow(FlowTestsBase):
+    def __init__(self):
+        self.env, self.db = Env()
+        self.conn = self.env.getConnection()
+        self.graph = self.db.select_graph(GRAPH_ID)
+        self.populate_graph()
+
+    def populate_graph(self):
+        nodes = {}
+         # Create entities
+        people = ["Roi", "Alon", "Ailon", "Boaz", "Tal", "Omri", "Ori"]
+        for idx, p in enumerate(people):
+            node = Node(alias=f"n_{idx}",labels="person", properties={"name": p})
+            nodes[p] = node
+
+        # Fully connected graph
+        edges = []
+        for src in nodes:
+            for dest in nodes:
+                if src != dest:
+                    edge = Edge(nodes[src], "know", nodes[dest])
+                    edges.append(edge)
+
+        # Connect Roi to Alon via another edge type.
+        edges.append(Edge(nodes["Roi"], "SameBirthday", nodes["Alon"]))
+
+        nodes_str = [str(n) for n in nodes.values()]
+        edges_str = [str(e) for e in edges]
+        self.graph.query(f"CREATE {','.join(nodes_str + edges_str)}")
+
+    # Count how many nodes contains the `name` attribute
+    # remove the `name` attribute from some nodes
+    # make sure the count updates accordingly,
+    # restore `name` attribute from, verify that count returns to its original value.
+    def test01_delete_attribute(self):
+        # How many nodes contains the 'name' attribute
+        query = """MATCH (n) WHERE EXISTS(n.name)=true RETURN count(n)"""
+        actual_result = self.graph.query(query)
+        nodeCount = actual_result.result_set[0][0]
+        self.env.assertEqual(nodeCount, 7)
+
+        # Remove Tal's name attribute.
+        query = """MATCH (n) WHERE n.name = 'Tal' SET n.name = NULL"""
+        self.graph.query(query)
+
+        # How many nodes contains the 'name' attribute,
+        # should reduce by 1 from previous count.
+        query = """MATCH (n) WHERE EXISTS(n.name)=true RETURN count(n)"""
+        actual_result = self.graph.query(query)
+        nodeCount = actual_result.result_set[0][0]
+        self.env.assertEqual(nodeCount, 6)
+
+        # Reintroduce Tal's name attribute.
+        query = """MATCH (n) WHERE EXISTS(n.name)=false SET n.name = 'Tal'"""
+        actual_result = self.graph.query(query)
+
+        # How many nodes contains the 'name' attribute
+        query = """MATCH (n) WHERE EXISTS(n.name)=true RETURN count(n)"""
+        actual_result = self.graph.query(query)
+        nodeCount = actual_result.result_set[0][0]
+        self.env.assertEqual(nodeCount, 7)
+
+    # Delete edges pointing into either Boaz or Ori.
+    def test02_delete_edges(self):
+        query = """MATCH (s:person)-[e:know]->(d:person) WHERE d.name = "Boaz" OR d.name = "Ori" RETURN count(e)"""
+        actual_result = self.graph.query(query)
+        edge_count = actual_result.result_set[0][0]
+
+        query = """MATCH (s:person)-[e:know]->(d:person) WHERE d.name = "Boaz" OR d.name = "Ori" DELETE e"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.relationships_deleted, edge_count)
+        self.env.assertEqual(actual_result.nodes_deleted, 0)
+
+    # Make sure there are no edges going into either Boaz or Ori.
+    def test03_verify_edge_deletion(self):
+        query = """MATCH (s:person)-[e:know]->(d:person)
+                    WHERE d.name = "Boaz" AND d.name = "Ori"
+                    RETURN COUNT(s)"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.result_set[0][0], 0)
+
+    # Remove 'know' edge connecting Roi to Alon
+    # Leaving a single edge of type SameBirthday
+    # connecting the two.
+    def test04_delete_typed_edge(self):
+        query = """MATCH (s:person {name: "Roi"})-[e:know]->(d:person {name: "Alon"})
+                   RETURN count(e)"""
+
+        actual_result = self.graph.query(query)
+        edge_count = actual_result.result_set[0][0]
+
+        query = """MATCH (s:person {name: "Roi"})-[e:know]->(d:person {name: "Alon"})
+                   DELETE e"""
+
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.relationships_deleted, edge_count)
+        self.env.assertEqual(actual_result.nodes_deleted, 0)
+
+    # Make sure Roi is still connected to Alon
+    # via the "SameBirthday" type edge.
+    def test05_verify_delete_typed_edge(self):
+        query = """MATCH (s:person {name: "Roi"})-[e:SameBirthday]->(d:person {name: "Alon"})
+                   RETURN COUNT(s)"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(len(actual_result.result_set), 1)
+
+        query = """MATCH (s:person {name: "Roi"})-[e:know]->(d:person {name: "Alon"})
+                   RETURN COUNT(s)"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.result_set[0][0], 0)
+
+    # Remove both Alon and Boaz from the graph.
+    def test06_delete_nodes(self):
+        rel_count_query = """MATCH (a:person)-[e]->(b:person)
+                             WHERE a.name = 'Boaz' OR a.name = 'Alon'
+                             OR b.name = 'Boaz' OR b.name = 'Alon'
+                             RETURN COUNT(e)"""
+        rel_count_result = self.graph.query(rel_count_query)
+        # Get the total number of unique edges (incoming and outgoing)
+        # connected to Alon and Boaz.
+        rel_count = rel_count_result.result_set[0][0]
+
+        query = """MATCH (s:person)
+                    WHERE s.name = "Boaz" OR s.name = "Alon"
+                    DELETE s"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.relationships_deleted, rel_count)
+        self.env.assertEqual(actual_result.nodes_deleted, 2)
+
+    # Make sure Alon and Boaz are not in the graph.
+    def test07_get_deleted_nodes(self):
+        query = """MATCH (s:person)
+                    WHERE s.name = "Boaz" OR s.name = "Alon"
+                    RETURN s"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(len(actual_result.result_set), 0)
+
+    # Make sure Alon and Boaz are the only removed nodes.
+    def test08_verify_node_deletion(self):
+        query = """MATCH (s:person)
+                   RETURN COUNT(s)"""
+        actual_result = self.graph.query(query)
+        nodeCount = actual_result.result_set[0][0]
+        self.env.assertEqual(nodeCount, 5)
+
+    def test09_delete_entire_graph(self):
+        # Make sure graph exists.
+        query = """MATCH (n) RETURN COUNT(n)"""
+        result = self.graph.query(query)
+        nodeCount = result.result_set[0][0]
+        self.env.assertGreater(nodeCount, 0)
+
+        # Delete graph.
+        self.graph.delete()
+
+        # Try to query a deleted graph.
+        self.graph.query(query)
+        result = self.graph.query(query)
+        nodeCount = result.result_set[0][0]
+        self.env.assertEqual(nodeCount, 0)
+
+    def test10_bulk_edge_deletion_timing(self):
+        # Create large amount of relationships (50000).
+        self.graph.query("""UNWIND range(1, 50000) as x CREATE ()-[:R]->()""")
+        # Delete and benchmark for 300ms.
+        query = """MATCH (a)-[e:R]->(b) DELETE e"""
+        result = self.graph.query(query)
+        self.env.assertEqual(result.relationships_deleted, 50000)
+
+    def test11_delete_entity_type_validation(self):
+        # Currently we only support deletion of either nodes, edges or paths
+
+        # Try to delete an integer.
+        query = """UNWIND [1] AS x DELETE x"""
+        try:
+            self.graph.query(query)
+            self.env.assertTrue(False)
+        except Exception as error:
+            self.env.assertTrue("Delete type mismatch" in str(error))
+
+    def test12_delete_unwind_entity(self):
+        self.graph.delete()
+
+        # Create 10 nodes.
+        self.graph.query("UNWIND range(1, 10) as x CREATE ()")
+
+        # Unwind path nodes.
+        query = """MATCH p = () UNWIND nodes(p) AS node DELETE node"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.nodes_deleted, 10)
+        self.env.assertEqual(actual_result.relationships_deleted, 0)
+
+        self.graph.query("UNWIND range(1, 10) as x CREATE ()")
+
+        # Unwind collected nodes.
+        query = """MATCH (n) WITH collect(n) AS nodes UNWIND nodes AS node DELETE node"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.nodes_deleted, 10)
+        self.env.assertEqual(actual_result.relationships_deleted, 0)
+
+    def test13_delete_path_elements(self):
+        self.graph.query("CREATE ()-[:R]->()")
+
+        # Delete projected
+        # Unwind path nodes.
+        query = """MATCH p = (src)-[e]->(dest) WITH nodes(p)[0] AS node, relationships(p)[0] as edge DELETE node, edge"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.nodes_deleted, 1)
+        self.env.assertEqual(actual_result.relationships_deleted, 1)
+
+    # Verify that variable-length traversals in each direction produce the correct results after deletion.
+    def test14_post_deletion_traversal_directions(self):
+        nodes = {}
+        # Create entities.
+        labels = ["Dest", "Src", "Src2"]
+        for idx, l in enumerate(labels):
+            node = Node(alias=f"n_{idx}", labels=l, properties={"val": idx})
+            nodes[l] = node
+
+        edges = [Edge(nodes["Src"], "R", nodes["Dest"]),
+                 Edge(nodes["Src2"], "R", nodes["Dest"])]
+
+        nodes_str = [str(n) for n in nodes.values()]
+        edges_str = [str(e) for e in edges]
+        self.graph.query(f"CREATE {','.join(nodes_str + edges_str)}")
+
+        # Delete a node.
+        query = """MATCH (n:Src2) DELETE n"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.nodes_deleted, 1)
+        self.env.assertEqual(actual_result.relationships_deleted, 1)
+
+        query = """MATCH (n1:Src)-[*]->(n2:Dest) RETURN COUNT(*)"""
+        actual_result = self.graph.query(query)
+        expected_result = [[1]]
+        self.env.assertEqual(actual_result.result_set, expected_result)
+
+        # Perform the same traversal, this time traveling from destination to source.
+        query = """MATCH (n1:Src)-[*]->(n2:Dest {val: 0}) RETURN COUNT(*)"""
+        actual_result = self.graph.query(query)
+        expected_result = [[1]]
+        self.env.assertEqual(actual_result.result_set, expected_result)
+
+    def test15_update_deleted_entities(self):
+        self.graph.delete()
+        self.graph.query("CREATE ()-[:R]->()")
+
+        # Attempt to update entities after deleting them.
+        query = """MATCH (a)-[e]->(b) DELETE a, b SET a.v = 1, e.v = 2, b.v = 3"""
+        actual_result = self.graph.query(query)
+        self.env.assertEqual(actual_result.nodes_deleted, 2)
+        self.env.assertEqual(actual_result.relationships_deleted, 1)
+        # No properties should be set.
+        # (Note that this behavior is left unspecified by Cypher.)
+        # self.env.assertEqual(actual_result.properties_set, 0)
+
+        # Validate that the graph is empty.
+        query = """MATCH (a) RETURN a"""
+        actual_result = self.graph.query(query)
+        expected_result = []
+        self.env.assertEqual(actual_result.result_set, expected_result)
+
+    def test16_repeated_entity_deletion(self):
+        # create 2 nodes cyclically connected by 2 edges
+        actual_result = self.graph.query("CREATE (x1:A)-[r:R]->(n2:B)-[t:T]->(x1)")
+        self.env.assertEqual(actual_result.nodes_created, 2)
+        self.env.assertEqual(actual_result.relationships_created, 2)
+
+        # attempt to repeatedly delete edges
+        query = """MATCH ()-[r]-() delete r delete r, r delete r, r"""
+        actual_result = self.graph.query(query)
+        # 2 edges should be reported as deleted
+        self.env.assertEqual(actual_result.relationships_deleted, 2)
+
+        # attempt to repeatedly delete nodes
+        query = """MATCH (n) delete n delete n, n delete n, n"""
+        actual_result = self.graph.query(query)
+        # 2 nodes should be reported as deleted
+        self.env.assertEqual(actual_result.nodes_deleted, 2)
+
+    def test17_invalid_deletions(self):
+        self.graph.query("CREATE ()")
+
+        # try to delete a value that's not a graph entity
+        try:
+            query = """DELETE 1"""
+            self.graph.query(query)
+            self.env.assertTrue(False)
+        except ResponseError as e:
+            self.env.assertContains("DELETE can only be called on nodes, paths and relationships", str(e))
+
+        # try to delete the output of a nonexistent function call
+        try:
+            query = """DELETE x()"""
+            self.graph.query(query)
+            self.env.assertTrue(False)
+        except ResponseError as e:
+            self.env.assertContains("Unknown function 'x'", str(e))
+
+        # try to delete with no child op
+        try:
+            query = """DELETE rand()"""
+            self.graph.query(query)
+            self.env.assertTrue(False)
+        except ResponseError as e:
+            self.env.assertContains("DELETE can only be called on nodes, paths and relationships", str(e))
+
+        # try to delete a function return that's not a graph entity
+        try:
+            query = """MATCH (a) DELETE rand()"""
+            self.graph.query(query)
+            self.env.assertTrue(False)
+        except ResponseError as e:
+            self.env.assertContains("DELETE can only be called on nodes, paths and relationships", str(e))
+
+        # try deleting all scalar types at runtime
+        queries = ["WITH 1 AS n DELETE n",
+                   "WITH 'str' AS n DELETE n",
+                   "WITH true AS n DELETE n",
+                   "WITH [] AS n DELETE n",
+                   "WITH {} AS n DELETE n"]
+        for query in queries:
+            try:
+                self.graph.query(query)
+                self.env.assertTrue(False)
+            except ResponseError as e:
+                self.env.assertContains("Delete type mismatch", str(e))
+
+    def test18_delete_self_edge(self):
+        self.graph.query("CREATE (:person{name:'roi',age:32})")
+        self.graph.query("CREATE (:person{name:'amit',age:30})")
+        self.graph.query("MATCH (a:person) WHERE (a.name = 'roi') DELETE a")
+
+        self.graph.query("CREATE (:person{name:'roi',age:32})")
+        self.graph.query("MATCH (a:person), (b:person) WHERE (a.name = 'roi' AND b.name='amit')  CREATE (a)-[:knows]->(a)")
+        res = self.graph.query("MATCH (a:person) WHERE (a.name = 'roi') DELETE a")
+
+        self.env.assertEqual(res.nodes_deleted, 1)
+        self.env.assertEqual(res.relationships_deleted, 1)
+
+    def test19_random_delete(self):
+        # test random graph deletion added as a result of a crash found in Graph_GetNodeEdges
+        # when iterating Delta_Matrix of type BOOL with Delta_MatrixTupleIter_next_UINT64
+        for i in range(1, 10):
+            self.graph.delete()
+
+            query = """UNWIND range(0, 10000) AS x CREATE (src:N {v: x}), (src)-[:R]->(:N), (src)-[:R]->(:N), (src)-[:R]->(:N)"""
+            self.graph.query(query)
+
+            query = """MATCH (n:N {v: floor(rand()*100001)}) DELETE n RETURN 1 LIMIT 1"""
+            for _ in range(1, 10):
+                self.graph.query(query)
+
+    def test20_consecutive_delete_clauses(self):
+        """Tests that consecutive `DELETE` clauses are handled correctly."""
+
+        # clean the db
+        self.graph.delete()
+
+        # create a graph with 2 nodes, with labels N and M
+        self.graph.query("CREATE (n:N) CREATE (m:M)")
+
+        # delete the nodes in 2 consecutive delete clauses
+        res = self.graph.query("MATCH p1=(n:N), p2=(m:M) DELETE nodes(p1)[0] \
+            DELETE nodes(p2)[0]")
+
+        # validate that the nodes were deleted
+        self.env.assertEqual(res.nodes_deleted, 2)
+
+        # create 2 nodes, with the same label N
+        self.graph.query("CREATE (:N), (:N)")
+        res = self.graph.query("MATCH p=(n:N) DELETE nodes(p)[0] DELETE \
+            nodes(p)[0]")
+
+        # validate that the nodes were deleted
+        self.env.assertEqual(res.nodes_deleted, 2)
+
+    def test21_not_existed_label(self):
+        res = self.graph.query("CREATE (n:Foo:Bar)")
+        self.env.assertEqual(res.nodes_created, 1)
+        self.env.assertEqual(res.labels_added, 2)
+
+        res = self.graph.query("MATCH (n) REMOVE n:Bar")
+        self.env.assertEqual(res.labels_removed, 1)
+
+        res = self.graph.query("MATCH (n) REMOVE n:Bar")
+        self.env.assertEqual(res.labels_removed, 0)
+
+        res = self.graph.query("MATCH (n:Bar) RETURN count(n)")
+        self.env.assertEqual(res.result_set[0][0], 0)
+
+    def test22_delete_reserve_id(self):
+        # clean the db
+        self.graph.delete()
+
+        res = self.graph.query("UNWIND range(0, 10) AS i CREATE (:A {id: i})")
+        self.env.assertEqual(res.nodes_created, 11)
+
+        # expecting IDs to be reused
+        res = self.graph.query("""
+            MATCH (a:A)
+            DELETE a
+            WITH *
+            CREATE (b:A)
+            RETURN ID(b) ORDER BY ID(b)"""
+        )
+        self.env.assertEqual(res.nodes_deleted, 11)
+        self.env.assertEqual(res.nodes_created, 11)
+        self.env.assertEqual(res.result_set, [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10]])
+
+        res = self.graph.query("""
+            MATCH (a:A)
+            DELETE a
+            WITH *
+            CREATE (b:A)
+            RETURN ID(b) ORDER BY ID(b)"""
+        )
+        self.env.assertEqual(res.nodes_deleted, 11)
+        self.env.assertEqual(res.nodes_created, 11)
+        self.env.assertEqual(res.result_set, [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10]])
+
+        # clean the db
+        self.graph.delete()
+
+        res = self.graph.query("UNWIND range(0, 9) AS i CREATE (:A {id: i})")
+        self.env.assertEqual(res.nodes_created, 10)
+
+        res = self.graph.query("""
+            MATCH (a:A)
+            WITH a, a.id as id
+            DELETE a
+            WITH *
+            MERGE (b:A {id: id})
+            RETURN ID(b), b.id ORDER BY ID(b)"""
+        )
+        self.env.assertEqual(res.nodes_deleted, 10)
+        self.env.assertEqual(res.nodes_created, 10)
+        self.env.assertEqual(res.result_set, [[0, 0], [1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 6], [7, 7], [8, 8], [9, 9]])
+
+        res = self.graph.query("""
+            MATCH (a:A)
+            WITH a, a.id as id
+            DELETE a
+            WITH *
+            MERGE (b:A {id: id})
+            RETURN ID(b), b.id ORDER BY ID(b) DESC"""
+        )
+        self.env.assertEqual(res.nodes_deleted, 10)
+        self.env.assertEqual(res.nodes_created, 10)
+        expected = [[i,i] for i in range(0, 10)]
+        expected.reverse()
+        self.env.assertEqual(res.result_set, expected)
+
+    def test23_delete_edges(self):
+        # clean the db
+        self.graph.delete()
+
+        # test deleting edges delete the matrix entries correctly
+        # GraphBLAS bug fixed in v9.1.0 https://github.com/DrTimothyAldenDavis/GraphBLAS/commit/01a3b746f29ea3bf03e7599b54d5e9a2b5e9dddb
+        self.graph.query("UNWIND range(1, 1000000) AS v CREATE (:N {v: v})")
+
+        for i in range(1, 1000):
+            self.graph.query("MATCH (n:N) WITH n LIMIT 10000 DELETE n")
+            self.graph.query("MATCH (n:N) RETURN n.v LIMIT 1")
+
+    def test24_delete_visible_to_subsequent_pattern_predicate(self):
+        # clean the db
+        self.graph.delete()
+
+        # regression test for issue:
+        # DELETE not visible to subsequent WHERE pattern predicate in same query
+        #
+        # after DELETE r, the pattern predicate `NOT (b)<-[]-()` must reflect
+        # the deletion - otherwise b is incorrectly filtered out and the
+        # following DELETE b silently fails to persist
+
+        # case 1: a single (orphaned) incoming edge - WHERE should pass and
+        # the orphaned target node should be deleted
+        result = self.graph.query("""CREATE (a:A {id:1})-[e:R]->(b:B {id:2})
+        RETURN a, e, b""").result_set
+        a = result[0][0]
+        e = result[0][1]
+        b = result[0][2]
+
+        result = self.graph.query(
+            """MATCH (a:A)-[r:R]->(b:B)
+            DELETE r
+            WITH b
+            WHERE NOT (b)<-[]-()
+            DELETE b""")
+
+        self.env.assertEqual(result.nodes_deleted, 1)
+        self.env.assertEqual(result.relationships_deleted, 1)
+
+        # only the A node should remain
+        result = self.graph.query("MATCH (n) RETURN n").result_set
+        self.env.assertEqual(len(result), 1)
+        self.env.assertEqual(result[0][0], a)
+
+        # cleanup
+        self.graph.delete()
+
+        # case 2: multiple incoming edges - after deleting one, the target
+        # still has another incoming edge so WHERE should filter it out
+        # and the target node should NOT be deleted
+        result = self.graph.query("""
+            CREATE (a0:A {id:1})-[:R]->(b:B {id:2})<-[:R]-(a1:A {id:3})
+            RETURN a0, b, a1""").result_set
+
+        a0 = result[0][0]
+        b  = result[0][1]
+        a1 = result[0][2]
+
+        result = self.graph.query("""
+            MATCH (a:A {id:1})-[r:R]->(b:B)
+            DELETE r
+            WITH b
+            WHERE NOT (b)<-[]-()
+            DELETE b""")
+
+        self.env.assertEqual(result.nodes_deleted, 0)
+        self.env.assertEqual(result.relationships_deleted, 1)
+
+        # both A nodes and the B node should still exist
+        result = self.graph.query("""
+        MATCH (n)
+        RETURN n ORDER BY n.id""").result_set
+
+        self.env.assertEqual(len(result), 3)
+        self.env.assertEqual(result[0][0], a0)
+        self.env.assertEqual(result[1][0], b)
+        self.env.assertEqual(result[2][0], a1)
+
+    def test25_delete_does_not_leave_phantom_label_entries(self):
+        # clean the db
+        self.graph.delete()
+
+        # create a single labeled node and then grow the graph dimensions
+        self.graph.query("CREATE (ghost:BOO)")
+        self.graph.query("UNWIND range(0, 100000) AS x CREATE ()")
+
+        # delete a subset that includes the BOO node (id 0)
+        res = self.graph.query("MATCH (x) WITH x LIMIT 10000 DELETE x")
+        self.env.assertEqual(res.nodes_deleted, 10000)
+
+        # regression: deleted node must not remain discoverable via label scan
+        res = self.graph.query("MATCH (x:BOO) RETURN count(x)")
+        self.env.assertEqual(res.result_set[0][0], 0)
+
+        # regression: property access on labeled result must not hit undefined attribute
+        res = self.graph.query("MATCH (x:BOO) WHERE x.id = 0 RETURN x")
+        self.env.assertEqual(res.result_set, [])
+
+    def test26_delete_recycled_pending_edge(self):
+        # Deleting an edge that was created in the same query must delete it,
+        # including when the create was handed a recycled edge id.
+        #
+        # reserve_relationship() hands out an id from the graph's deleted set
+        # without clearing it there, so for the whole life of the pending create
+        # the id still reads as deleted. DELETE used to test only that flag and
+        # so skipped the edge, leaving the create standing: the edge survived the
+        # very query that deleted it. Ids are only recycled once something has
+        # been deleted, which is why the first iteration below used to pass and
+        # every later one leaked.
+        self.graph.delete()
+
+        self.graph.query("CREATE (:P {id: 1}), (:P {id: 2})")
+
+        for i in range(6):
+            res = self.graph.query("""
+                MATCH (a:P {id: 1}), (b:P {id: 2})
+                CREATE (a)-[r:R {uid: 999}]->(b)
+                DELETE r
+                RETURN id(r)"""
+            )
+            # The id pins the precondition. On the first pass nothing has been
+            # freed yet so id 0 is fresh; from the second on it comes back off
+            # the free list, which is the case that used to leak. Asserting it
+            # stays 0 is what keeps this test exercising a recycled id — were
+            # reclamation to stop, the ids would climb and this would fail
+            # rather than quietly testing the already-working fresh-id path.
+            self.env.assertEqual(res.result_set, [[0]])
+            self.env.assertEqual(res.relationships_created, 1)
+            self.env.assertEqual(res.relationships_deleted, 1)
+
+            res = self.graph.query("MATCH ()-[r:R]->() RETURN count(r)")
+            self.env.assertEqual(res.result_set[0][0], 0)
+
+    def test27_delete_recycled_pending_edge_unique_constraint(self):
+        # The leak above was silent until a unique constraint made it fatal: the
+        # surviving edge kept its property, so the next execution of the same
+        # query failed to create its edge at all.
+        self.graph.delete()
+
+        self.graph.query("CREATE (:P {id: 1}), (:P {id: 2})")
+        self.graph.query("CREATE INDEX FOR ()-[r:R]-() ON (r.uid)")
+        self.conn.execute_command(
+            "GRAPH.CONSTRAINT", "CREATE", self.graph.name,
+            "UNIQUE", "RELATIONSHIP", "R", "PROPERTIES", "1", "uid")
+        wait_for_indices_to_sync(self.graph)
+
+        for i in range(6):
+            res = self.graph.query("""
+                MATCH (a:P {id: 1}), (b:P {id: 2})
+                CREATE (a)-[r:R {uid: 999}]->(b)
+                DELETE r
+                RETURN id(r)"""
+            )
+            self.env.assertEqual(res.result_set, [[0]])
+            self.env.assertEqual(res.relationships_created, 1)
+            self.env.assertEqual(res.relationships_deleted, 1)
+
+        res = self.graph.query("MATCH ()-[r:R]->() RETURN count(r)")
+        self.env.assertEqual(res.result_set[0][0], 0)
+
+    def test28_delete_subset_of_recycled_pending_edges(self):
+        # Same recycled-id path, but only one of two created edges is deleted —
+        # guards against a fix that cancels every pending create indiscriminately.
+        self.graph.delete()
+
+        self.graph.query("CREATE (:P {id: 1}), (:P {id: 2})")
+
+        # warm the free list so the ids below are recycled rather than fresh
+        self.graph.query("""
+            MATCH (a:P {id: 1}), (b:P {id: 2})
+            CREATE (a)-[r:R]->(b)
+            DELETE r""")
+
+        res = self.graph.query("""
+            MATCH (a:P {id: 1}), (b:P {id: 2})
+            CREATE (a)-[r1:R {n: 1}]->(b), (a)-[r2:R {n: 2}]->(b)
+            DELETE r1
+            RETURN id(r1), id(r2)"""
+        )
+        # r1 takes the one id on the free list, r2 is allocated fresh — so the
+        # edge being deleted is precisely the recycled one, and the edge that
+        # must survive is not.
+        self.env.assertEqual(res.result_set, [[0, 1]])
+        self.env.assertEqual(res.relationships_created, 2)
+        self.env.assertEqual(res.relationships_deleted, 1)
+
+        res = self.graph.query("MATCH ()-[r:R]->() RETURN id(r), r.n")
+        self.env.assertEqual(res.result_set, [[1, 2]])
+
+    def test29_delete_recycled_pending_node_and_edge(self):
+        # Coverage of the node-cascade path with every id reclaimed rather than
+        # fresh: both endpoints and the edge come back off the free lists.
+        #
+        # Unlike test26-test28 this one passes with or without the relationship
+        # fix, and deliberately stays here saying so. Deleting the nodes cascades
+        # through `remove_pending_relationships_for_node`, which cancels the
+        # edge's pending create outright, so the edge never reaches the
+        # relationship arm of `delete_entity` and the recycled-id bug cannot
+        # bite. What it does pin is that this cascade keeps handling recycled
+        # node *and* edge ids correctly, which is the neighbouring path.
+        self.graph.delete()
+
+        # warm both free lists
+        self.graph.query("CREATE (a:P {t: 0})-[r:R {t: 0}]->(b:P {t: 0})")
+        self.graph.query("MATCH (a:P)-[r:R]->(b:P) DELETE a, r, b")
+
+        for i in range(3):
+            res = self.graph.query("""
+                CREATE (a:P {t: 1})-[r:R {t: 2}]->(b:P {t: 3})
+                WITH a, r, b
+                DELETE a, r, b
+                RETURN id(a), id(r), id(b)"""
+            )
+            self.env.assertEqual(res.result_set, [[0, 0, 1]])
+            self.env.assertEqual(res.nodes_created, 2)
+            self.env.assertEqual(res.nodes_deleted, 2)
+            self.env.assertEqual(res.relationships_created, 1)
+            self.env.assertEqual(res.relationships_deleted, 1)
+
+            res = self.graph.query("MATCH (n) RETURN count(n)")
+            self.env.assertEqual(res.result_set[0][0], 0)
+            res = self.graph.query("MATCH ()-[r]->() RETURN count(r)")
+            self.env.assertEqual(res.result_set[0][0], 0)
+
+class testGraphBulkDeletion(FlowTestsBase):
+    def __init__(self):
+        self.env, self.db = Env()
+
+        if SANITIZER:
+            self.env.skip()
+
+        self.graph = self.db.select_graph("bulk-delete")
+
+    def test01_bulk_delete_tensors(self):
+        """ delete a large number of nodes > .5M
+            implicitly deleted edges include tensors
+        """
+
+        #-----------------------------------------------------------------------
+        # populate the graph
+        #-----------------------------------------------------------------------
+
+        q = """UNWIND range(1, 500000) as x
+               CREATE (:A)-[:R]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 1000000)
+        self.env.assertEqual(res.relationships_created, 500000)
+
+        #-----------------------------------------------------------------------
+        # introduce tensors
+        # connect node s to t via multiple edges of the same type
+        #-----------------------------------------------------------------------
+
+        q = """MATCH (s), (t)
+               WHERE ID(s) = 32442 AND ID(t) = 559139
+               CREATE (s)-[:X]->(t), (s)-[:X]->(t), (s)-[:R]->(t)
+               CREATE (t)-[:X]->(s), (t)-[:X]->(s), (t)-[:R]->(s)"""
+
+        res = self.graph.query(q)
+        self.env.assertEqual(res.relationships_created, 6)
+
+        #-----------------------------------------------------------------------
+        # delete all nodes
+        #-----------------------------------------------------------------------
+
+        q = "MATCH (n) DELETE n"
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_deleted, 1000000)
+        self.env.assertEqual(res.relationships_deleted, 500006)
+
+        #-----------------------------------------------------------------------
+        # verify graph stats
+        #-----------------------------------------------------------------------
+
+        q = "CALL db.meta.stats() YIELD labels, relTypes, nodeCount, relCount"
+        res = self.graph.query(q).result_set
+
+        labels    = res[0][0]
+        relTypes  = res[0][1]
+        nodeCount = res[0][2]
+        relCount  = res[0][3]
+
+        labels_expected    = {'A': 0}
+        relTypes_expected  = {'R': 0, 'X': 0}
+        relCount_expected  = 0
+        nodeCount_expected = 0
+
+        self.env.assertEqual(labels,    labels_expected)
+        self.env.assertEqual(relTypes,  relTypes_expected)
+        self.env.assertEqual(relCount,  relCount_expected)
+        self.env.assertEqual(nodeCount, nodeCount_expected)
+
+    def test02_bulk_delete_diff_dim(self):
+        """ delete a large number of nodes > .5M
+            at the time of the deletion some matrices aren't at the right dimension
+        """
+
+        #-----------------------------------------------------------------------
+        # populate the graph
+        #-----------------------------------------------------------------------
+
+        # introduce a small number of entities
+        # these will eventually have their matrices lag behind in terms of dimentionality
+        q = "CREATE (:A)-[:R]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 2)
+        self.env.assertEqual(res.relationships_created, 1)
+
+        # create additional entities under a different label / rel-types
+        q = """UNWIND range(1, 499999) as x
+               CREATE (:B)-[:X]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 999998)
+        self.env.assertEqual(res.relationships_created, 499999)
+
+        #-----------------------------------------------------------------------
+        # delete all nodes
+        #-----------------------------------------------------------------------
+
+        q = "MATCH (n) DELETE n"
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_deleted, 1000000)
+        self.env.assertEqual(res.relationships_deleted, 500000)
+
+        #-----------------------------------------------------------------------
+        # verify graph stats
+        #-----------------------------------------------------------------------
+
+        q = "CALL db.meta.stats() YIELD labels, relTypes, nodeCount, relCount"
+        res = self.graph.query(q).result_set
+
+        labels    = res[0][0]
+        relTypes  = res[0][1]
+        nodeCount = res[0][2]
+        relCount  = res[0][3]
+
+        labels_expected    = {'A': 0, 'B': 0}
+        relTypes_expected  = {'R': 0, 'X': 0}
+        relCount_expected  = 0
+        nodeCount_expected = 0
+
+        self.env.assertEqual(labels,    labels_expected)
+        self.env.assertEqual(relTypes,  relTypes_expected)
+        self.env.assertEqual(relCount,  relCount_expected)
+        self.env.assertEqual(nodeCount, nodeCount_expected)
+
+    def test03_bulk_delete_overlap_edges(self):
+        """
+        combine the deletion of both explicit and implicitly edges
+        where the explicit overlap the implicit
+        """
+
+        #-----------------------------------------------------------------------
+        # populate the graph
+        #-----------------------------------------------------------------------
+
+        q = """UNWIND range(1, 500000) as x
+               CREATE (:A)-[:R]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 1000000)
+        self.env.assertEqual(res.relationships_created, 500000)
+
+        #-----------------------------------------------------------------------
+        # delete all nodes and a few explicit edges
+        #-----------------------------------------------------------------------
+
+        q = "MATCH ()-[e]->() WITH e LIMIT 1 MATCH (n) DELETE e, n"
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_deleted, 1000000)
+        self.env.assertEqual(res.relationships_deleted, 500000)
+
+        #-----------------------------------------------------------------------
+        # verify graph stats
+        #-----------------------------------------------------------------------
+
+        q = "CALL db.meta.stats() YIELD labels, relTypes, nodeCount, relCount"
+        res = self.graph.query(q).result_set
+
+        labels    = res[0][0]
+        relTypes  = res[0][1]
+        nodeCount = res[0][2]
+        relCount  = res[0][3]
+
+        labels_expected    = {'A': 0, 'B': 0}
+        relTypes_expected  = {'R': 0, 'X': 0}
+        relCount_expected  = 0
+        nodeCount_expected = 0
+
+        self.env.assertEqual(labels,    labels_expected)
+        self.env.assertEqual(relTypes,  relTypes_expected)
+        self.env.assertEqual(relCount,  relCount_expected)
+        self.env.assertEqual(nodeCount, nodeCount_expected)
+
+    def test04_bulk_delete_duplicated_nodes(self):
+        """
+        introduce duplicated nodes to the DELETE op
+        """
+
+        #-----------------------------------------------------------------------
+        # populate the graph
+        #-----------------------------------------------------------------------
+
+        q = """UNWIND range(1, 500000) as x
+               CREATE (:A)-[:R]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 1000000)
+        self.env.assertEqual(res.relationships_created, 500000)
+
+        #-----------------------------------------------------------------------
+        # delete all nodes and a few explicit edges
+        #-----------------------------------------------------------------------
+
+        q = "MATCH (n) DELETE n, n, n"
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_deleted, 1000000)
+        self.env.assertEqual(res.relationships_deleted, 500000)
+
+        #-----------------------------------------------------------------------
+        # verify graph stats
+        #-----------------------------------------------------------------------
+
+        q = "CALL db.meta.stats() YIELD labels, relTypes, nodeCount, relCount"
+        res = self.graph.query(q).result_set
+
+        labels    = res[0][0]
+        relTypes  = res[0][1]
+        nodeCount = res[0][2]
+        relCount  = res[0][3]
+
+        labels_expected    = {'A': 0, 'B': 0}
+        relTypes_expected  = {'R': 0, 'X': 0}
+        relCount_expected  = 0
+        nodeCount_expected = 0
+
+        self.env.assertEqual(labels,    labels_expected)
+        self.env.assertEqual(relTypes,  relTypes_expected)
+        self.env.assertEqual(relCount,  relCount_expected)
+        self.env.assertEqual(nodeCount, nodeCount_expected)
+
+    def test05_bulk_delete_duplicated_edges(self):
+        """
+        combine the deletion of both explicit and implicitly edges
+        where the explicit edges are duplicated
+        """
+
+        #-----------------------------------------------------------------------
+        # populate the graph
+        #-----------------------------------------------------------------------
+
+        q = """UNWIND range(1, 500000) as x
+               CREATE (:A)-[:R]->()"""
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_created, 1000000)
+        self.env.assertEqual(res.relationships_created, 500000)
+
+        #-----------------------------------------------------------------------
+        # delete all nodes and a few explicit edges
+        #-----------------------------------------------------------------------
+
+        q = "MATCH ()-[e]->() WITH e LIMIT 1 MATCH (n) DELETE e, e, n, e, e"
+        res = self.graph.query(q)
+        self.env.assertEqual(res.nodes_deleted, 1000000)
+        self.env.assertEqual(res.relationships_deleted, 500000)
+
+        #-----------------------------------------------------------------------
+        # verify graph stats
+        #-----------------------------------------------------------------------
+
+        q = "CALL db.meta.stats() YIELD labels, relTypes, nodeCount, relCount"
+        res = self.graph.query(q).result_set
+
+        labels    = res[0][0]
+        relTypes  = res[0][1]
+        nodeCount = res[0][2]
+        relCount  = res[0][3]
+
+        labels_expected    = {'A': 0, 'B': 0}
+        relTypes_expected  = {'R': 0, 'X': 0}
+        relCount_expected  = 0
+        nodeCount_expected = 0
+
+        self.env.assertEqual(labels,    labels_expected)
+        self.env.assertEqual(relTypes,  relTypes_expected)
+        self.env.assertEqual(relCount,  relCount_expected)
+        self.env.assertEqual(nodeCount, nodeCount_expected)

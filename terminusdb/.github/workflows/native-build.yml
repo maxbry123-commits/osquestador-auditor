@@ -1,0 +1,183 @@
+name: Native Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: "Unit Tests"
+    strategy:
+      # Run all jobs even when some jobs fail.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            swipl_release: stable
+          - os: macos-latest
+            swipl_release: homebrew
+#            - os: ubuntu-latest
+#            swipl_release: devel
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for file changes
+        id: check_changes
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            git fetch --deepen=10
+            # Check that HEAD~1 exists
+            if git rev-parse HEAD~1 >/dev/null 2>&1; then
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            else
+              echo "Only one commit available; treating all files as changed"
+              CHANGED_FILES=$(git diff --name-only HEAD)
+            fi
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            # For pull requests, fetch the base commit and compare to head
+            git fetch origin ${{ github.event.pull_request.base.sha }} --depth=1
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          fi
+
+          RELEVANT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^(src/|tests/|distribution/|Makefile|\.github/workflows/native\-build\.yml)' || true)
+          if [ -n "$RELEVANT_CHANGED" ]; then
+            echo "Relevant files changed: $RELEVANT_CHANGED"
+            echo "::set-output name=relevant_changed::true"
+          else
+            echo "No relevant files changed"
+            echo "::set-output name=relevant_changed::false"
+          fi
+
+      - name: Install swi-prolog 
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}      
+        run: ./.github/install-swi-prolog.sh ${{ matrix.swipl_release }}
+
+      - name: Checkout tus
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}            
+        uses: actions/checkout@v4
+        with:
+          repository: terminusdb-org/tus
+          path: tus
+          ref: v0.0.17
+
+      - name: Install tus
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                  
+        run: swipl -g "pack_install('file://$GITHUB_WORKSPACE/tus', [interactive(false)])"
+
+      - name: Install Protobuf Compiler (Linux)
+        if: ${{runner.os == 'Linux' &&  steps.check_changes.outputs.relevant_changed == 'true' }}            
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
+      - name: Install Protobuf Compiler (macOS)
+        if: ${{ runner.os == 'macOS' && steps.check_changes.outputs.relevant_changed == 'true' }}            
+        run: brew install protobuf
+
+      - name: Build
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                  
+        run: make
+
+      - name: Unit tests
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                  
+        run: make test
+
+  inter-tests:
+    name: "Integration Tests"
+    if: github.event_name == 'pull_request'
+
+    strategy:
+      # Run all jobs even when some jobs fail.
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            swipl_release: stable
+          - os: macos-latest
+            swipl_release: homebrew
+#            - os: ubuntu-latest
+#            swipl_release: devel
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for file changes
+        id: check_changes
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.sha }} --depth=1
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          RELEVANT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^(src/|tests/|distribution/|Makefile|\.github/workflows/)' || true)
+          if [ -n "$RELEVANT_CHANGED" ]; then
+            echo "Relevant files changed: $RELEVANT_CHANGED"
+            echo "::set-output name=relevant_changed::true"
+          else
+            echo "No relevant files changed"
+            echo "::set-output name=relevant_changed::false"
+          fi
+
+
+      - name: Install swi-prolog 
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: ./.github/install-swi-prolog.sh ${{ matrix.swipl_release }}
+
+      - name: Checkout tus
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        uses: actions/checkout@v4
+        with:
+          repository: terminusdb-org/tus
+          path: tus
+          ref: v0.0.17
+
+      - name: Install tus
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: swipl -g "pack_install('file://$GITHUB_WORKSPACE/tus', [interactive(false)])"
+
+      - name: Install Protobuf Compiler (Linux)
+        if: ${{ runner.os == 'Linux' && steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
+      - name: Install Protobuf Compiler (macOS)
+        if: ${{ runner.os == 'macOS' && steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: brew install protobuf
+
+      - name: Build TerminusDB
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: make
+
+      - name: Init TerminusDB
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: |
+          ./terminusdb store init
+
+      - name: Start TerminusDB
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: |
+          ./terminusdb serve &
+          echo $! > terminusdb.pid
+          sleep 5  # wait for server to start
+
+      - name: Install NodeJS
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run tests
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: |
+            cd tests        
+            npm install-ci-test
+  
+      - name: Stop TerminusDB
+        if: ${{ steps.check_changes.outputs.relevant_changed == 'true' }}                        
+        run: |
+            kill $(cat terminusdb.pid)      
+        

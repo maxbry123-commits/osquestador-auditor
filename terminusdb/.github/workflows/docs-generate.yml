@@ -1,0 +1,98 @@
+
+name: Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'docs/terminusdb.1.ronn.template'      
+      - 'Makefile'            
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/docs-generate.yml'
+    
+jobs:
+
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    
+    outputs:
+      changed: ${{ steps.check_changes.outputs.relevant_changed }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Check for file changes
+      id: check_changes
+      run: |
+        git fetch --deepen=10
+
+        # Check that HEAD~1 exists
+        if git rev-parse HEAD~1 >/dev/null 2>&1; then
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+        else
+          echo "Only one commit available; treating all files as changed"
+          CHANGED_FILES=$(git diff --name-only HEAD)
+        fi
+
+        RELEVANT_CHANGED=$(echo "$CHANGED_FILES" | grep -E '^(src/|docs/terminusdb\.1\.ronn\.template|Makefile|\.github/workflows/)' || true)
+        if [ -n "$RELEVANT_CHANGED" ]; then
+          echo "Relevant files changed: $RELEVANT_CHANGED"
+          echo "relevant_changed=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "No relevant files changed"
+          echo "relevant_changed=false" >> "$GITHUB_OUTPUT"
+        fi
+
+  docs:
+    name: Generate
+    needs: check
+    if: ${{ github.event_name == 'push' && needs.check.outputs.changed == 'true' }}
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install swi-prolog 
+        run: ./.github/install-swi-prolog.sh stable
+
+      - name: Checkout tus
+        uses: actions/checkout@v4
+        with:
+          repository: terminusdb-org/tus
+          path: tus
+          ref: v0.0.17
+
+      - name: Install tus
+        run: swipl -g "pack_install('file://$GITHUB_WORKSPACE/tus', [interactive(false)])"
+
+      - name: Install Protobuf Compiler (Linux)
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+
+      - name: Install Ronn
+        run: |
+          sudo apt-get install --no-install-recommends ronn
+          ronn --version
+
+      - name: Build Docs
+        run: make docs
+  
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: Update man page
+          title: "docs: Update generated man page"
+          body: |
+            Auto-generated PR to update the man page documentation.
+            
+            This PR was created automatically by the Documentation workflow.
+          branch: docs/update-man-page
+          base: main
+          delete-branch: true
+          add-paths: docs/terminusdb.1          

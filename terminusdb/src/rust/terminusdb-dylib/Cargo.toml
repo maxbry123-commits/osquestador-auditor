@@ -1,0 +1,20 @@
+[package]
+name = "terminusdb-dylib"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["jemalloc-bg-threads"]
+jemalloc-bg-threads = ["tikv-jemallocator/background_threads"]
+
+[dependencies]
+terminusdb-community = {path="../terminusdb-community"}
+terminusdb-store-prolog = {path="../terminusdb-store-prolog"}
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = { version = "0.6", features = ["disable_initial_exec_tls"] }

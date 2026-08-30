@@ -1,0 +1,150 @@
+:- module(server, [terminus_server/2]).
+
+:- multifile enterprise_product_name/1.
+
+/** <module> HTTP server module
+ *
+ * This module implements the database server. It is primarily composed
+ * of a number of RESTful APIs which exchange information in JSON format
+ * over HTTP. This is intended as a mechanism for interprocess
+ * communication via *API* and not as a fully fledged high performance
+ * server.
+ *
+ **/
+
+:- use_module(core(triple)).
+:- use_module(core(util/utils)).
+:- use_module(core(util), [json_log_error_formatted/2]).
+:- use_module(core(api)).
+:- use_module(core(plugins)).
+
+% configuration predicates
+:- use_module(config(terminus_config),[jwt_enabled/0,
+                                       jwt_jwks_endpoint/1,
+                                       oidc_issuer_url/1,
+                                       check_jwt_scopes_claim_safety/0,
+                                       check_jwt_subject_claim_safety/0,
+                                       check_jwt_config_safety/0,
+                                       server/1,
+                                       server_port/1,
+                                       log_format/1,
+                                       worker_amount/1,
+                                       is_enterprise/0,
+                                       terminusdb_version/1,
+                                       set_memory_mode/0]).
+
+% Sockets
+:- use_module(library(socket)).
+:- use_module(library(ssl)).
+
+% http server
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+:- use_module(library(http/http_ssl_plugin)).
+% html_write no longer needed after busy_loading simplified to CGI-style 503
+:- use_module(library(aggregate)).
+
+:- use_module(library(option)).
+
+% JWT setup using Rust foreign predicates (registered in $rustnative module)
+:- if(jwt_enabled).
+
+load_jwt_conditionally :-
+    (   jwt_jwks_endpoint(Endpoint)
+    ->  ignore(catch('$rustnative':jwt_setup_jwks(Endpoint), E,
+              (   json_log_error_formatted('JWT JWKS setup failed: ~w', [E]),
+                  true)))
+    ;   oidc_issuer_url(IssuerUrl)
+    ->  ignore(catch('$rustnative':jwt_setup_oidc(IssuerUrl), E,
+              (   json_log_error_formatted('JWT OIDC setup failed: ~w', [E]),
+                  true)))
+    ;   true  % No JWKS or OIDC configured — JWT auth will fail at decode time
+    ),
+    check_jwt_scopes_claim_safety,
+    check_jwt_subject_claim_safety,
+    check_jwt_config_safety.
+
+:- else.
+
+% Otherwise, do nothing
+load_jwt_conditionally :-
+    true.
+
+:- endif.
+
+
+terminus_server(Argv,Wait) :-
+    server(Server),
+    server_port(Port),
+    worker_amount(Workers),
+    HTTPOptions = [port(Port), workers(Workers), silent(true)],
+    foreach(pre_server_startup_hook(Port),true),
+    catch(http_server(http_dispatch, HTTPOptions),
+          E,
+          (
+              writeq(E),
+              format(user_error, "Error: Port ~d is already in use.", [Port]),
+              halt(98) % EADDRINUSE
+          )),
+    http_handler(root(.), busy_loading,
+                 [ priority(1000),
+                   hide_children(true),
+                   id(busy_loading),
+                   time_limit(infinite),
+                   prefix
+                 ]),
+    % initialize the global store as an in-memory store if the memory flag is set
+    (   option(memory(Memory_Password),Argv),
+        ground(Memory_Password)
+    ->  memory_triple_store(Store),
+        (   Memory_Password = ''
+        ->  Password = root
+        ;   Password = Memory_Password),
+        initialize_database_with_store(Password, Store),
+        global_triple_store(Store),
+        set_memory_mode
+    ;   true),
+
+    (   triple_store(_Store), % ensure triple store has been set up by retrieving it once
+        http_delete_handler(id(busy_loading)),
+        load_jwt_conditionally,
+        welcome_banner(Server,Argv),
+        foreach(post_server_startup_hook(Port),true),
+        (   Wait = true
+        ->  http_current_worker(Port,ThreadID),
+            thread_join(ThreadID, _Status)
+        ;   true
+        )
+    ).
+
+
+busy_loading(_) :-
+    format('Status: 503 Service Unavailable~n'),
+    format('Content-type: text/html~n~n'),
+    format('<html><body><h1>Still loading</h1><p>TerminusDB is preparing to serve requests</p></body></html>~n').
+
+
+print_welcome_banner(Version, ProductName, Argv, _, _, Server) :-
+    log_format(json),
+    !,
+    format(user_error, '{"message": "Welcome to ~s server! You can view your server in a browser at ~s",\c
+                          "version": "~s", "args": "~w", "severity": "INFO"}~n',
+          [ProductName, Server, Version, Argv]).
+print_welcome_banner(Version, ProductName, Argv, StrTime, Now, Server) :-
+    format(user_error,'~N% TerminusDB server started at ~w (utime ~w) args ~w~n',
+           [StrTime, Now, Argv]),
+    format(user_error,'% Welcome to ~s, version ~s!~n',[ProductName, Version]),
+    format(user_error,'% You can view your server in a browser at \'~s\'~n~n',[Server]).
+
+welcome_banner(Server,Argv) :-
+    % Test utils currently reads this so watch out if you change it!
+    get_time(Now),
+    terminusdb_version(Version),
+    format_time(string(StrTime), '%A, %b %d, %H:%M:%S %Z', Now, posix),
+    (   enterprise_product_name(ProductName)
+    ->  true
+    ;   is_enterprise
+    ->  ProductName = "TerminusDB Enterprise"
+    ;   ProductName = "TerminusDB"
+    ),
+    print_welcome_banner(Version, ProductName, Argv, StrTime, Now, Server).

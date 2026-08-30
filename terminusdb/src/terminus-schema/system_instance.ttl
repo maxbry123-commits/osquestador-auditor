@@ -1,0 +1,83 @@
+@base <terminusdb://system/data/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix scm: <http://terminusdb.com/schema/system#> .
+@prefix woql: <http://terminusdb.com/schema/woql#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix xdd: <http://terminusdb.com/schema/xdd#> .
+@prefix vio: <http://terminusdb.com/schema/vio#> .
+@prefix sys: <http://terminusdb.com/schema/sys#> .
+@prefix api: <http://terminusdb.com/schema/api#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix state: <http://terminusdb.com/schema/system#DatabaseState/> .
+@prefix action: <http://terminusdb.com/schema/system#Action/> .
+
+<UserDatabase/bar>
+  a scm:UserDatabase ;
+  scm:comment "a test db"^^xsd:string ;
+  scm:label "test"^^xsd:string ;
+  scm:name "bar"^^xsd:string ;
+  scm:creation_date "2021-07-19T14:21:28.000Z"^^xsd:dateTime ;
+  scm:state state:finalized .
+
+<UserDatabase/foo>
+  a scm:UserDatabase ;
+  scm:comment "a test db"^^xsd:string ;
+  scm:label "test"^^xsd:string ;
+  scm:name "foo"^^xsd:string ;
+  scm:creation_date "2021-08-10T14:21:05.000Z"^^xsd:dateTime ;
+  scm:state state:finalized .
+
+<admin>
+  a scm:User ;
+  scm:capability <server_access> ;
+  scm:key_hash "fake"^^xsd:string ;
+  scm:name "admin"^^xsd:string .
+
+<Organization/admin>
+  a scm:Organization ;
+  scm:database <UserDatabase/bar> ,
+               <UserDatabase/foo> ,
+               <system> ;
+  scm:name "admin"^^xsd:string .
+
+<Role/admin>
+  a scm:Role ;
+  scm:action action:branch ,
+             action:class_frame ,
+             action:clone ,
+             action:commit_read_access ,
+             action:commit_write_access ,
+             action:create_database ,
+             action:delete_database ,
+             action:fetch ,
+             action:instance_read_access ,
+             action:instance_write_access ,
+             action:manage_capabilities ,
+             action:meta_read_access ,
+             action:meta_write_access ,
+             action:push ,
+             action:rebase ,
+             action:schema_read_access ,
+             action:schema_write_access ;
+  scm:name "Admin Role"^^xsd:string .
+
+<anonymous>
+  a scm:User ;
+  scm:name "anyonymous"^^xsd:string .
+
+<Role/consumer>
+  a scm:Role ;
+  scm:action action:class_frame ,
+             action:instance_read_access ,
+             action:schema_read_access ;
+  scm:name "Consumer Role"^^xsd:string .
+
+<server_access>
+  a scm:Capability ;
+  scm:role <Role/admin> ;
+  scm:scope <Organization/admin> .
+
+<system>
+  a scm:SystemDatabase ;
+  scm:name "_system"^^xsd:string .

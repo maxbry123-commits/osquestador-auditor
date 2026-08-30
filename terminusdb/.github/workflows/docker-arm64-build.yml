@@ -1,0 +1,49 @@
+# Build and run tests every night on non-Docker systems.
+name: ARM64 Image
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    paths: 
+      - ".github/workflows/docker-arm64-build.yml"
+      - ".github/workflows/docker-image-test.yml"
+#  schedule:
+#    - cron:  '45 2 * * *'
+
+jobs:
+  arm64_build:
+    name: Build
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout repository      
+        uses: actions/checkout@v4
+
+      - name: Docker Build
+        run: |
+          docker build \
+            --build-arg TERMINUSDB_GIT_HASH=${{ github.sha }} \
+            -t terminusdb/terminusdb-server:local \
+            .
+
+      - name: Save and compress image
+        run: docker save terminusdb/terminusdb-server:local | gzip > terminusdb-server-snapshot-arm64.tar.gz
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+            name: terminusdb-server-snapshot-arm64
+            path: terminusdb-server-snapshot-arm64.tar.gz
+
+  arm64_tests:
+    name: Tests
+    needs: arm64_build
+    uses: ./.github/workflows/docker-image-test.yml
+    with:
+      test_repository: ${{ github.repository }}
+      test_ref: ${{ github.sha }}
+      image_artifact: terminusdb-server-snapshot-arm64
+      image_platform: linux/arm64
+      runner: ubuntu-22.04-arm
+      mocha_parallel: false

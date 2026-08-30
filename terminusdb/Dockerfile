@@ -1,0 +1,100 @@
+# syntax=docker/dockerfile:1.3
+
+# Community-only Docker build.
+# Set the swipl version by argument (see Makefile for the default!)
+ARG SWIPL_VERSION=10.0.2
+ARG SKIP_TESTS=false
+
+# Minimal SWI-Prolog
+FROM swipl:${SWIPL_VERSION} AS swipl_minimal
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates
+
+# Install the SWI-Prolog pack dependencies.
+FROM swipl_minimal AS pack_installer
+RUN set -eux; \
+    BUILD_DEPS="git curl build-essential make libssl-dev \
+    pkg-config clang ca-certificates m4 libgmp-dev \
+    protobuf-compiler libprotobuf-dev"; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ${BUILD_DEPS}; \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /app/pack
+COPY distribution/Makefile.deps Makefile
+RUN make
+
+# Install Rust. Prepare to build the Rust code.
+FROM swipl_minimal AS rust_builder_base
+ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN set -eux; \
+    BUILD_DEPS="git build-essential curl clang ca-certificates m4 libgmp-dev protobuf-compiler libprotobuf-dev libssl-dev pkg-config"; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ${BUILD_DEPS}; \
+    rm -rf /var/lib/apt/lists/*
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+# Initialize the crates.io index git repo to cache it.
+RUN (cargo install lazy_static 2> /dev/null || true) && (cargo install cargo-swipl || true)
+WORKDIR /app/rust
+COPY distribution/Makefile.rust Makefile
+COPY src/rust src/rust/
+
+# Build the community dylib.
+FROM rust_builder_base AS rust_builder
+ARG CARGO_NET_GIT_FETCH_WITH_CLI=true
+ARG SKIP_TESTS=false
+RUN make DIST=community && ([ "$SKIP_TESTS" = "true" ] || (cd src/rust && cargo swipl test --release))
+
+# Copy the packs and dylib. Prepare to build the Prolog code.
+FROM pack_installer AS base
+RUN set -eux; \
+    RUNTIME_DEPS="make openssl binutils ca-certificates"; \
+    apt-get update; \
+    apt-get upgrade -y; \
+    apt-get install -y --no-install-recommends ${RUNTIME_DEPS}; \
+    rm -rf /var/cache/apt/*; \
+    rm -rf /var/lib/apt/lists/*
+ARG TERMINUSDB_GIT_HASH=null
+ENV TERMINUSDB_GIT_HASH=${TERMINUSDB_GIT_HASH}
+ARG TERMINUSDB_JWT_ENABLED=true
+ENV TERMINUSDB_JWT_ENABLED=${TERMINUSDB_JWT_ENABLED}
+WORKDIR /app/terminusdb
+COPY distribution/init_docker.sh distribution/
+COPY distribution/Makefile.prolog Makefile
+COPY src src/
+COPY --from=rust_builder /app/rust/src/rust/librust.so src/rust/
+
+# Build the community executable.
+FROM base AS base_community
+ARG SKIP_TESTS=false
+COPY --from=rust_builder /app/rust/src/rust/librust.so src/rust/
+RUN set -eux; \
+    make DIST=community; \
+    [ "$SKIP_TESTS" = "true" ] || make test
+
+FROM swipl_minimal AS min_community
+COPY --from=base_community /app/terminusdb/terminusdb /app/terminusdb/
+
+FROM min_community
+COPY --from=base_community /app/terminusdb/terminusdb /app/terminusdb/
+COPY --from=base_community /app/terminusdb/src/terminus-schema /app/terminusdb/src/terminus-schema/
+COPY --from=base_community /app/terminusdb/distribution/init_docker.sh /app/terminusdb/init_docker.sh
+
+RUN set -eux; \
+    RUNTIME_DEPS="make openssl binutils ca-certificates"; \
+    apt-get update; \
+    apt-get upgrade -y; \
+    apt-get install -y --no-install-recommends ${RUNTIME_DEPS}; \
+    rm -rf /var/cache/apt/*; \
+    rm -rf /var/lib/apt/lists/*
+COPY --from=pack_installer /usr/share/swi-prolog/pack/tus /usr/share/swi-prolog/pack/tus
+
+WORKDIR /app/terminusdb
+RUN mkdir -p storage \
+    && chown -R 1000:1000 storage
+ENV TERMINUSDB_PLUGINS_PATH=${TERMINUSDB_PLUGINS_PATH:-/plugins}
+COPY docker/plugins/auto-optimize.pl ${TERMINUSDB_PLUGINS_PATH}/
+RUN mkdir -p /app/terminusdb/dashboard/assets
+COPY dashboard/src/index.html /app/terminusdb/dashboard/
+COPY dashboard/src/output.css /app/terminusdb/dashboard/assets/
+CMD ["/app/terminusdb/init_docker.sh"]

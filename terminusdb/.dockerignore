@@ -1,0 +1,15 @@
+*~
+\#*\#
+.\#*
+.deps
+*.index*
+**/*.md
+**/.git*
+httpd.log
+docs
+storage
+tmp
+**/target
+**/*.so
+**/*.dylib
+terminusdb

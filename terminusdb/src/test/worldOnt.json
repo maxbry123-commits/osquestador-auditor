@@ -1,0 +1,32 @@
+{ "@type" : "@context",
+  "@base" : "http://example.com/data/world/",
+  "@schema" : "http://example.com/schema/worldOntology#",
+  "xsd" : "http://www.w3.org/2001/XMLSchema#" }
+
+{ "@id" : "Named",
+  "@type" : "Class",
+  "name" : "xsd:string" }
+
+{ "@id" : "City",
+  "@type" : "Class",
+  "@inherits" : "Named" }
+
+{ "@id" : "Person",
+  "@type" : "Class",
+  "@inherits" : "Named",
+  "address" : "xsd:string",
+  "parent" : { "@type" : "Optional",
+               "@class" : "Person" },
+  "birthday" : { "@type" : "Optional",
+                 "@class" : "xsd:dateTime" }}
+
+{ "@id" : "Twins",
+  "@type" : "Class",
+  "twins" : { "@type" : "Cardinality",
+              "@class" : "Person",
+              "@cardinality" : 2 }}
+
+{ "@id" : "Aliases",
+  "@type" : "Class",
+  "names" : { "@type" : "Set",
+              "@class" : "xsd:string" }}

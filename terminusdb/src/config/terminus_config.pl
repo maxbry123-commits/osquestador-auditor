@@ -1,0 +1,535 @@
+:- module(config,[
+              terminusdb_version/1,
+              bootstrap_config_files/0,
+              server/1,
+              server_name/1,
+              server_port/1,
+              worker_amount/1,
+              max_transaction_retries/1,
+              db_path/1,
+              jwt_jwks_endpoint/1,
+              jwt_enabled/0,
+              jwt_subject_claim_name/1,
+              jwt_issuer/1,
+              jwt_audience/1,
+              jwt_clock_tolerance/1,
+              oidc_issuer_url/1,
+              jwt_scopes_enabled/0,
+              jwt_scopes_claim/1,
+              check_jwt_scopes_claim_safety/0,
+              check_jwt_subject_claim_safety/0,
+              check_jwt_config_safety/0,
+              registry_path/1,
+              tmp_path/1,
+              server_worker_options/1,
+              http_options/1,
+              ignore_ref_and_repo_schema/0,
+              file_upload_storage_path/1,
+              log_level/1,
+              set_log_level/1,
+              clear_log_level/0,
+              log_format/1,
+              set_log_format/1,
+              clear_log_format/0,
+              insecure_user_header_key/1,
+              check_all_env_vars/0,
+              is_enterprise/0,
+              check_insecure_user_header_enabled/1,
+              clear_check_insecure_user_header_enabled/0,
+              clear_insecure_user_header_key/0,
+              pinned_databases/1,
+              pinned_organizations/1,
+              plugin_path/1,
+              dashboard_enabled/0,
+              parallelize_enabled/0,
+              grpc_label_endpoint/1,
+              crypto_password_cost/1,
+              lru_cache_size/1,
+              trust_migrations/0,
+              expose_stack_traces/0,
+              is_memory_mode/0,
+              set_memory_mode/0,
+              cache_eviction_probability/1
+]).
+
+:- use_module(library(pcre)).
+
+:- use_module(core(util)).
+:- use_module(core(query)).
+
+:- use_module(library(apply)).
+:- use_module(library(yall)).
+
+
+/* [[[cog import cog; cog.out(f"terminusdb_version('{CURRENT_REPO_VERSION}').") ]]] */
+terminusdb_version('12.0.7').
+/* [[[end]]] */
+
+bootstrap_config_files :-
+    initialize_system_ssl_certs.
+
+initialize_system_ssl_certs :-
+    (   getenv('TERMINUSDB_SYSTEM_SSL_CERTS', Value)
+    ->  set_prolog_flag(system_cacert_filename, Value)
+    ;   true).
+
+server_protocol(Value) :-
+    Value = http.
+
+:- table server_name/1 as shared.
+server_name(Value) :-
+    (   getenv('TERMINUSDB_SERVER_NAME', Value)
+    ->  true
+    ;   random_string(Value)).
+
+server_port(Value) :-
+    getenv_default_number('TERMINUSDB_SERVER_PORT', 6363, Value).
+
+worker_amount(Value) :-
+    current_prolog_flag(cpu_count,Integer),
+    getenv_default_number('TERMINUSDB_SERVER_WORKERS', Integer, Value).
+
+:- table max_transaction_retries/1 as shared.
+max_transaction_retries(Value) :-
+    (   getenv('TERMINUSDB_SERVER_MAX_TRANSACTION_RETRIES', Atom_Value)
+    ->  atom_number(Atom_Value, Value)
+    ;   worker_amount(Num_Workers),
+        Value is Num_Workers * 2).
+
+% This is defined only for testing. Use db_path/1 since it is tabled.
+default_database_path(Path) :-
+    getenv_default('TERMINUSDB_SERVER_DB_PATH', './storage/db', Value),
+    absolute_file_name(Value, Path).
+
+/**
+ * db_path(-Path) is det.
+ *
+ * Database storage path.
+ *
+ */
+:- table db_path/1 as shared.
+db_path(Path) :-
+    default_database_path(Path).
+
+dashboard_enabled :-
+    getenv_default('TERMINUSDB_ENABLE_DASHBOARD', true, Value),
+    Value = true.
+
+:- table plugin_path/1 as shared.
+plugin_path(Path) :-
+    (   getenv('TERMINUSDB_PLUGINS_PATH', Value)
+    ->  absolute_file_name(Value, Path)
+    ;   % Resolve relative to db_path to avoid compile-time resolution with autoload
+        db_path(Db_Path),
+        file_directory_name(Db_Path, Storage_Dir),  % Get parent dir: ./storage/db -> ./storage
+        atomic_list_concat([Storage_Dir, 'plugins'], '/', Path)
+    ).
+
+jwt_enabled_env_var :-
+    getenv_default('TERMINUSDB_JWT_ENABLED', false, true).
+
+% jwt_enabled is used for conditional compilation of jwt_io, but want to use the
+% value passed to TERMINUSDB_JWT_ENABLED at compile time, which may be different
+% from runtime. Therefore, we save the TERMINUSDB_JWT_ENABLED value for runtime
+% again using conditional compilation here.
+:- if(jwt_enabled_env_var).
+jwt_enabled :-
+    true.
+:- else.
+jwt_enabled :-
+    false.
+:- endif.
+
+jwt_jwks_endpoint(Endpoint) :-
+    getenv('TERMINUSDB_SERVER_JWKS_ENDPOINT', Value),
+    % Ignore an empty value in the environment variable.
+    (   Value = ''
+    ->  false
+    ;   atom_string(Value, Str),
+        (   string_concat("https://", _, Str)
+        ->  true
+        ;   string_concat("http://localhost", _, Str)
+        ->  true
+        ;   string_concat("http://127.0.0.1", _, Str)
+        ),
+        Endpoint = Value).
+
+jwt_subject_claim_name(Name) :-
+    getenv_default('TERMINUSDB_JWT_AGENT_NAME_PROPERTY', 'sub', Name).
+
+jwt_issuer(Issuer) :-
+    getenv('TERMINUSDB_JWT_ISSUER', Value),
+    (   Value = '' -> false ; Issuer = Value ).
+
+jwt_audience(Audience) :-
+    getenv('TERMINUSDB_JWT_AUDIENCE', Value),
+    (   Value = '' -> false ; Audience = Value ).
+
+jwt_clock_tolerance(Seconds) :-
+    getenv_default_number('TERMINUSDB_JWT_CLOCK_TOLERANCE', 60, Seconds).
+
+oidc_issuer_url(Url) :-
+    getenv('TERMINUSDB_OIDC_ISSUER_URL', Value),
+    (   Value = ''
+    ->  false
+    ;   atom_string(Value, Str),
+        (   string_concat("https://", _, Str)
+        ->  true
+        ;   string_concat("http://localhost", _, Str)
+        ->  true
+        ;   string_concat("http://127.0.0.1", _, Str)
+        ),
+        Url = Value ).
+
+jwt_scopes_enabled :-
+    getenv_default('TERMINUSDB_JWT_SCOPES_ENABLED', false, Value),
+    Value = true.
+
+jwt_scopes_claim(ClaimName) :-
+    getenv_default('TERMINUSDB_JWT_SCOPES_CLAIM', 'scope', ClaimName).
+
+check_jwt_scopes_claim_safety :-
+    jwt_scopes_enabled,
+    (   \+ getenv('TERMINUSDB_JWT_SCOPES_CLAIM', _)
+    ;   getenv('TERMINUSDB_JWT_SCOPES_CLAIM', '')
+    ),
+    !,
+    json_log_error_formatted(
+        'FATAL: JWT scopes are enabled (TERMINUSDB_JWT_SCOPES_ENABLED=true) but no scope claim is configured (TERMINUSDB_JWT_SCOPES_CLAIM is unset or empty). Set TERMINUSDB_JWT_SCOPES_CLAIM explicitly to the JWT claim your IdP uses for authorization scopes.',
+        []),
+    halt(1).
+check_jwt_scopes_claim_safety :-
+    jwt_scopes_enabled,
+    jwt_scopes_claim(ClaimName),
+    !,
+    json_log_warning_formatted(
+        'JWT scopes are enabled. Ensure your IdP controls the "~w" claim and users cannot self-set it.',
+        [ClaimName]).
+check_jwt_scopes_claim_safety.
+
+check_jwt_subject_claim_safety :-
+    jwt_enabled,
+    \+ getenv('TERMINUSDB_JWT_AGENT_NAME_PROPERTY', _),
+    !,
+    json_log_warning_formatted(
+        'JWT enabled with default subject claim "sub". If your IdP uses a different claim for usernames, set TERMINUSDB_JWT_AGENT_NAME_PROPERTY explicitly.',
+        []).
+check_jwt_subject_claim_safety.
+
+check_jwt_config_safety :-
+    check_jwt_key_source_safety,
+    check_jwt_issuer_safety,
+    check_jwt_audience_safety.
+
+check_jwt_key_source_safety :-
+    getenv('TERMINUSDB_SERVER_JWKS_ENDPOINT', JwksVal),
+    JwksVal \= '',
+    \+ jwt_jwks_endpoint(_),
+    !,
+    json_log_warning_formatted(
+        'JWT JWKS endpoint (TERMINUSDB_SERVER_JWKS_ENDPOINT) is set but does not use HTTPS or http://localhost. Only https:// URLs (or http://localhost for testing) are accepted. JWT authentication will fail until a valid endpoint is provided.',
+        []).
+check_jwt_key_source_safety :-
+    getenv('TERMINUSDB_OIDC_ISSUER_URL', OidcVal),
+    OidcVal \= '',
+    \+ oidc_issuer_url(_),
+    !,
+    json_log_warning_formatted(
+        'OIDC issuer URL (TERMINUSDB_OIDC_ISSUER_URL) is set but does not use HTTPS or http://localhost. Only https:// URLs (or http://localhost for testing) are accepted. JWT authentication will fail until a valid issuer URL is provided.',
+        []).
+check_jwt_key_source_safety :-
+    \+ jwt_jwks_endpoint(_),
+    \+ oidc_issuer_url(_),
+    !,
+    json_log_warning_formatted(
+        'JWT is enabled but no JWKS endpoint (TERMINUSDB_SERVER_JWKS_ENDPOINT) or OIDC issuer URL (TERMINUSDB_OIDC_ISSUER_URL) is configured. JWT authentication will fail for all tokens until a key source is provided.',
+        []).
+check_jwt_key_source_safety.
+
+check_jwt_issuer_safety :-
+    \+ jwt_issuer(_),
+    !,
+    json_log_warning_formatted(
+        'JWT is enabled but no issuer (TERMINUSDB_JWT_ISSUER) is configured. Tokens from any issuer will be accepted. Set TERMINUSDB_JWT_ISSUER to restrict accepted issuers.',
+        []).
+check_jwt_issuer_safety.
+
+check_jwt_audience_safety :-
+    \+ jwt_audience(_),
+    !,
+    json_log_warning_formatted(
+        'JWT is enabled but no audience (TERMINUSDB_JWT_AUDIENCE) is configured. Tokens with any audience will be accepted. Set TERMINUSDB_JWT_AUDIENCE to restrict accepted audiences.',
+        []).
+check_jwt_audience_safety.
+
+registry_path(Value) :-
+    once(expand_file_search_path(plugins('registry.pl'), Path)),
+    getenv_default('TERMINUSDB_SERVER_REGISTRY_PATH', Path, Value).
+
+:- table tmp_path/1 as shared.
+tmp_path(Value) :-
+    getenv_default('TERMINUSDB_SERVER_TMP_PATH', '/tmp', Value).
+
+:- table file_upload_storage_path/1 as shared.
+file_upload_storage_path(Path) :-
+    getenv('TERMINUSDB_FILE_STORAGE_PATH', Path).
+
+server(Server) :-
+    server_protocol(Protocol),
+    server_port(Port),
+    atomic_list_concat([Protocol,'://localhost',':',Port],Server).
+
+server_worker_options([]).
+
+http_options([]).
+
+:- table ignore_ref_and_repo_schema/0 as shared.
+ignore_ref_and_repo_schema :-
+    getenv('TERMINUSDB_IGNORE_REF_AND_REPO_SCHEMA', true).
+
+:- set_prolog_flag(stack_limit, 8_589_934_592).
+
+% Turn off mavis
+:- set_prolog_flag(optimise, true).
+
+% Preserve rational numbers in arithmetic operations for decimal precision
+% This ensures operations like +, -, * preserve exact rationals instead of converting to floats
+:- set_prolog_flag(prefer_rationals, true).
+
+:- dynamic log_level_override/1.
+
+:- table log_level_env/1 as shared.
+log_level_env(Log_Level) :-
+    getenv('TERMINUSDB_LOG_LEVEL', Log_Level_Lower),
+    upcase_atom(Log_Level_Lower, Log_Level),
+    memberchk(Log_Level, ['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG']),
+    !.
+log_level_env('INFO').
+
+log_level(Log_Level) :-
+    log_level_override(Found_Log_Level),
+    !,
+    Log_Level = Found_Log_Level.
+log_level(Log_Level) :-
+    log_level_env(Found_Log_Level),
+    Log_Level = Found_Log_Level.
+
+set_log_level(Log_Level) :-
+    memberchk(Log_Level, ['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG']),
+    clear_log_level,
+    asserta(log_level_override(Log_Level)).
+
+clear_log_level :-
+    retractall(log_level_override(_)).
+
+:- table log_format_env/1 as shared.
+log_format_env(Log_Format) :-
+    getenv('TERMINUSDB_LOG_FORMAT', Log_Format),
+    memberchk(Log_Format, [text, json]),
+    !.
+log_format_env(text).
+
+:- dynamic log_format_override/1.
+
+log_format(Log_Format) :-
+    log_format_override(Found_Log_Format),
+    !,
+    Log_Format = Found_Log_Format.
+log_format(Log_Format) :-
+    log_format_env(Found_Log_Format),
+    !,
+    Log_Format = Found_Log_Format.
+
+set_log_format(Log_Format) :-
+    memberchk(Log_Format, ['text', 'json']),
+    clear_log_format,
+    asserta(log_format_override(Log_Format)).
+
+clear_log_format :-
+    retractall(log_format_override(_)).
+
+:- dynamic check_insecure_user_header_enabled_/1.
+
+/* Retract the dynamic predicate for testing. */
+clear_check_insecure_user_header_enabled :-
+    retractall(check_insecure_user_header_enabled_(_)).
+
+/**
+ * check_insecure_user_header_enabled(-Enabled) is semidet.
+ *
+ * Look up the env var for enabling the insecure user header.
+ */
+check_insecure_user_header_enabled(Enabled) :-
+    check_insecure_user_header_enabled_(Enabled),
+    !.
+check_insecure_user_header_enabled(Enabled) :-
+    Env_Var = 'TERMINUSDB_INSECURE_USER_HEADER_ENABLED',
+    getenv_default(Env_Var, false, Enabled),
+    die_if(\+ memberchk(Enabled, [false, true]),
+           error(bad_env_var_value(Env_Var, Enabled), _)),
+    assertz(check_insecure_user_header_enabled_(Enabled)).
+
+:- dynamic insecure_user_header_key_/1.
+
+/* Retract the dynamic predicate for testing. */
+clear_insecure_user_header_key :-
+    retractall(insecure_user_header_key_(_)).
+
+/**
+ * insecure_user_header_key(-Header_Key) is semidet.
+ *
+ * Check if the insecure user header is enabled, look up the env var for the
+ * insecure user header, and convert it to a key for checking an HTTP request.
+ */
+insecure_user_header_key(Header_Key) :-
+    insecure_user_header_key_(Header_Key),
+    !.
+insecure_user_header_key(Header_Key) :-
+    check_insecure_user_header_enabled(true),
+    Env_Var = 'TERMINUSDB_INSECURE_USER_HEADER',
+    do_or_die(getenv(Env_Var, Value),
+              error(missing_env_var(Env_Var), _)),
+    die_if(\+ re_match("[A-Za-z0-9-]+", Value),
+           error(bad_env_var_value(Env_Var, Value), _)),
+    string_lower(Value, Lower_String),
+    re_replace("-"/g, "_", Lower_String, Lower_String_No_Dashes),
+    atom_string(Header_Key, Lower_String_No_Dashes),
+    assertz(insecure_user_header_key_(Header_Key)).
+
+/**
+ * check_all_env_vars is det.
+ *
+ * Load and check all env vars.
+ *
+ * This should be done at initialization, so that the error-checking is
+ * performed as soon as possible and the the user is notified of any errors.
+ *
+ * Note that nothing should go wrong if this is not called. All of the
+ * predicates referenced here can be called at any time. This is only done to
+ * improve the user experience.
+ */
+check_all_env_vars :-
+    ignore(insecure_user_header_key(_)).
+
+is_enterprise :-
+    current_prolog_flag(terminusdb_enterprise, true).
+
+parse_pinned_databases(Pinned_Env, Pinned) :-
+    merge_separator_split(Pinned_Env, ',', Pinned_Atoms),
+    maplist([Atom, Descriptor]>>(
+                do_or_die(resolve_absolute_string_descriptor(Atom, Descriptor),
+                          error(invalid_descriptor(Atom), _))
+            ),
+
+            Pinned_Atoms,
+            Pinned).
+
+:- table pinned_databases/1.
+pinned_databases(Pinned) :-
+    getenv('TERMINUSDB_PINNED_DATABASES', Pinned_Env),
+    !,
+    parse_pinned_databases(Pinned_Env, Pinned).
+pinned_databases([]).
+
+
+parse_pinned_organizations(Pinned_Env, Pinned) :-
+    merge_separator_split(Pinned_Env, ',', Pinned_Atoms),
+    maplist(atom_string, Pinned_Atoms, Pinned).
+
+:- table pinned_organizations/1.
+pinned_organizations(Pinned) :-
+    getenv('TERMINUSDB_PINNED_ORGANIZATIONS', Pinned_Env),
+    !,
+    parse_pinned_organizations(Pinned_Env, Pinned).
+pinned_organizations([]).
+
+:- table parallelize_enabled.
+parallelize_enabled :-
+    getenv_default('TERMINUSDB_PARALLELIZE_ENABLED', true, true).
+
+:- table grpc_label_endpoint/1.
+grpc_label_endpoint(Endpoint) :-
+    getenv('TERMINUSDB_GRPC_LABEL_ENDPOINT', Endpoint).
+
+crypto_password_cost(10).
+
+:- table lru_cache_size/1.
+lru_cache_size(Cache_Size) :-
+    getenv_default_number('TERMINUSDB_LRU_CACHE_SIZE', 512, Cache_Size).
+
+:- table trust_migrations/0.
+trust_migrations :-
+    getenv('TERMINUSDB_TRUST_MIGRATIONS', true).
+
+/**
+ * expose_stack_traces is semidet.
+ *
+ * Succeeds (returns true) if stack traces should be exposed in HTTP error responses.
+ * Default is FALSE (secure by default). Only enabled if env var is explicitly set to
+ * a truthy value.
+ *
+ * Security: Stack traces may contain sensitive information, so they should only be
+ * exposed in development/debug environments.
+ */
+:- table expose_stack_traces/0.
+expose_stack_traces :-
+    getenv('TERMINUSDB_EXPOSE_STACK_TRACES', Value),
+    atom_string(Value_Atom, Value),
+    memberchk(Value_Atom, [true, 'true', '1', 'yes']),
+    !.
+% Predicate fails (returns false) if env var not set or set to any other value
+
+:- table semantic_indexer_endpoint/1.
+semantic_indexer_endpoint(Endpoint) :-
+    getenv('TERMINUSDB_SEMANTIC_INDEXER_ENDPOINT', Endpoint).
+
+:- table doc_work_limit/1.
+doc_work_limit(Limit) :-
+    % This env var is actually read from rust so this default is ignored
+    getenv_default('TERMINUSDB_DOC_WORK_LIMIT', Limit, 500_000).
+
+/**
+ * is_memory_mode is semidet.
+ *
+ * Succeeds if the server was started in in-memory mode (--memory flag).
+ * This is set by set_memory_mode/0 during server initialization.
+ */
+:- dynamic memory_mode_enabled/0.
+
+is_memory_mode :-
+    memory_mode_enabled.
+
+/**
+ * set_memory_mode is det.
+ *
+ * Sets the memory mode flag. Called during server startup when --memory is used.
+ */
+set_memory_mode :-
+    assertz(memory_mode_enabled).
+
+/**
+ * cache_eviction_probability(-Probability) is det.
+ *
+ * Returns the probability (0.0 to 1.0) of triggering cache eviction on each operation.
+ * Default is 0.0 (disabled, opt-in behavior).
+ *
+ * Valid values:
+ * - 0.0 (default): Eviction disabled
+ * - 0.001: 0.1% probability (1 in 1000 operations)
+ * - 0.01: 1% probability (1 in 100 operations)
+ * - 0.1: 10% probability (1 in 10 operations)
+ *
+ * Environment variable: TERMINUSDB_CACHE_EVICTION_PROBABILITY
+ */
+:- table cache_eviction_probability/1 as shared.
+cache_eviction_probability(Probability) :-
+    (   getenv('TERMINUSDB_CACHE_EVICTION_PROBABILITY', Value)
+    ->  (   atom_number(Value, Num),
+            Num >= 0.0,
+            Num =< 1.0
+        ->  Probability = Num
+        ;   json_log_warning_formatted('Invalid TERMINUSDB_CACHE_EVICTION_PROBABILITY value: ~w (must be 0.0-1.0), using default 0.0', [Value]),
+            Probability = 0.0
+        )
+    ;   Probability = 0.0  % Default: disabled
+    ).

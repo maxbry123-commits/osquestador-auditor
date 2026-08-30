@@ -1,0 +1,58 @@
+{ "@id" : "Organization/admin",
+  "@type" : "Organization",
+  "name" : "admin",
+  "database" : [ "SystemDatabase/system" ] }
+
+{ "@id" : "Role/admin",
+  "@type" : "Role",
+  "name" : "Admin Role",
+  "action" : [ "create_database",
+               "delete_database",
+               "class_frame",
+               "clone",
+               "fetch",
+               "push",
+               "branch",
+               "rebase",
+               "instance_read_access",
+               "instance_write_access",
+               "schema_read_access",
+               "schema_write_access",
+               "meta_read_access",
+               "meta_write_access",
+               "commit_read_access",
+               "commit_write_access",
+               "manage_capabilities"
+             ]}
+
+{ "@id" : "Capability/server_access",
+  "@type" : "Capability",
+  "scope" : "Organization/admin",
+  "role" : "Role/admin" }
+
+{ "@id" : "User/anonymous",
+  "@type" : "User",
+  "name" : "anonymous",
+  "capability" : [] }
+
+{ "@id" : "Role/consumer",
+  "@type" : "Role",
+  "name" : "Consumer Role",
+  "action" : [ "class_frame",
+               "clone",
+               "fetch",
+               "meta_read_access",
+               "commit_read_access",
+               "instance_read_access",
+               "schema_read_access"
+             ]}
+
+{ "@id" : "User/admin",
+  "@type" : "User",
+  "name" : "admin",
+  "key_hash" : "~s",
+  "capability" : [ "Capability/server_access" ] }
+
+{ "@id" : "SystemDatabase/system",
+  "@type" : "SystemDatabase",
+  "name" : "_system"}
