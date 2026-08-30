@@ -1,8 +1,0 @@
-starlette
-asyncpg
-mcp
-pydantic
-uvicorn
-aiohttp
-stripe
-httpx

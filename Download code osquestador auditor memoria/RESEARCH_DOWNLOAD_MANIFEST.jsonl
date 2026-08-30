@@ -32,3 +32,8 @@
 {"number": 32, "slug": "MemOS", "source": "https://github.com/MemTensor/MemOS.git", "source_commit": "185ebdb925911b55c13b7efe666b74e2e292e484", "parts": 1, "status": "COMPLETE"}
 {"number": 33, "slug": "Acontext", "source": "https://github.com/memodb-io/Acontext.git", "source_commit": "259d73bfdebeed35ec2d4211ddc060a2d4126bc6", "parts": 2, "status": "COMPLETE"}
 {"number": 34, "slug": "mnemon", "source": "https://github.com/mnemon-dev/mnemon.git", "source_commit": "2ccd7b41c5562a194c666173db598509a528f033", "parts": 1, "status": "COMPLETE"}
+{"number": 35, "slug": "engram-memory", "source": "https://github.com/Agentscreator/engram-memory.git", "source_commit": "a8a38ce032064329b65f30bcf3f975037fb4dc34", "parts": 6, "status": "COMPLETE"}
+{"number": 36, "slug": "TencentDB-Agent-Memory", "source": "https://github.com/Tencent/TencentDB-Agent-Memory.git", "source_commit": "5299c00aaf65481703c180fd69df066d11254eb7", "parts": 4, "status": "COMPLETE"}
+{"number": 37, "slug": "graphology", "source": "https://github.com/graphology/graphology.git", "source_commit": "b6e4b31ac0d68aaff36600c19faa0c751db6d015", "parts": 1, "status": "COMPLETE"}
+{"number": 38, "slug": "tree-sitter", "source": "https://github.com/tree-sitter/tree-sitter.git", "source_commit": "efa0dd9a364dd19af7a5ad7fe5350f87fdc8c032", "parts": 1, "status": "COMPLETE"}
+{"number": 39, "slug": "ast-grep", "source": "https://github.com/ast-grep/ast-grep.git", "source_commit": "c6b32d74ad12cea690cb331c88f004764df6e985", "parts": 1, "status": "COMPLETE"}
