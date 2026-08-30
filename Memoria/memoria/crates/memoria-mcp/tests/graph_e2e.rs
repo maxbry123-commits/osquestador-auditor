@@ -1,0 +1,1469 @@
+mod support;
+
+use memoria_service::MemoryService;
+use memoria_storage::graph::types::{edge_type, GraphEdge, GraphNode, NodeType};
+/// Graph E2E tests: GraphStore CRUD, consolidation, entity extraction/linking.
+/// Requires real DB. Run with --test-threads=1 (rollback is account-level).
+use memoria_storage::{GraphConsolidator, GraphStore, SqlMemoryStore};
+use sqlx::mysql::MySqlPool;
+use std::sync::Arc;
+use uuid::Uuid;
+
+const TEST_DB_PREFIX: &str = "graph_e2e";
+
+fn test_dim() -> usize {
+    std::env::var("EMBEDDING_DIM")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1024)
+}
+
+async fn setup_user(
+    uid_prefix: &str,
+) -> (
+    support::multi_db::McpTestContext,
+    Arc<SqlMemoryStore>,
+    MySqlPool,
+    String,
+) {
+    let ctx = support::multi_db::setup_mcp_context(TEST_DB_PREFIX, test_dim(), None, None).await;
+    let uid = format!("{uid_prefix}_{}", Uuid::new_v4().simple());
+    let sql = ctx.user_store(&uid).await;
+    let pool = ctx.user_db_pool(&uid).await;
+    (ctx, sql, pool, uid)
+}
+
+async fn setup_graph() -> (GraphStore, String, support::multi_db::McpTestContext) {
+    let (ctx, sql, _pool, uid) = setup_user("graph_test").await;
+    (sql.graph_store(), uid, ctx)
+}
+
+async fn setup_sql(
+    uid_prefix: &str,
+) -> (
+    Arc<SqlMemoryStore>,
+    MySqlPool,
+    String,
+    support::multi_db::McpTestContext,
+) {
+    let (ctx, sql, pool, uid) = setup_user(uid_prefix).await;
+    (sql, pool, uid, ctx)
+}
+
+async fn setup_service(
+    uid_prefix: &str,
+) -> (
+    Arc<MemoryService>,
+    Arc<SqlMemoryStore>,
+    MySqlPool,
+    String,
+    support::multi_db::McpTestContext,
+) {
+    let (ctx, sql, pool, uid) = setup_user(uid_prefix).await;
+    (ctx.service(), sql, pool, uid, ctx)
+}
+
+fn extract_memory_id(text: &str) -> String {
+    text.split_whitespace()
+        .nth(2)
+        .unwrap_or("")
+        .trim_end_matches(':')
+        .to_string()
+}
+
+fn make_node(
+    user_id: &str,
+    node_type: NodeType,
+    content: &str,
+    memory_id: Option<&str>,
+) -> GraphNode {
+    GraphNode {
+        node_id: uuid::Uuid::new_v4().simple().to_string()[..32].to_string(),
+        user_id: user_id.to_string(),
+        node_type,
+        content: content.to_string(),
+        entity_type: None,
+        embedding: None,
+        memory_id: memory_id.map(String::from),
+        session_id: None,
+        confidence: 0.75,
+        trust_tier: "T3".to_string(),
+        importance: 0.5,
+        source_nodes: vec![],
+        conflicts_with: None,
+        conflict_resolution: None,
+        access_count: 0,
+        cross_session_count: 0,
+        is_active: true,
+        superseded_by: None,
+        created_at: Some(chrono::Utc::now().naive_utc()),
+    }
+}
+
+// ── 1. GraphStore: create and retrieve node ──────────────────────────────────
+
+#[tokio::test]
+async fn test_graph_create_and_get_node() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let node = make_node(
+        &uid,
+        NodeType::Semantic,
+        "Rust is a systems language",
+        Some("mem_001"),
+    );
+    let node_id = node.node_id.clone();
+
+    store.create_node(&node).await.expect("create_node");
+
+    let fetched = store
+        .get_node(&node_id)
+        .await
+        .expect("get_node")
+        .expect("should exist");
+    assert_eq!(fetched.content, "Rust is a systems language");
+    assert_eq!(fetched.node_type, NodeType::Semantic);
+    assert_eq!(fetched.memory_id.as_deref(), Some("mem_001"));
+    println!("✅ create and get node: {}", fetched.node_id);
+}
+
+// ── 2. GraphStore: get_node_by_memory_id ────────────────────────────────────
+
+#[tokio::test]
+async fn test_graph_get_by_memory_id() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+    let node = make_node(&uid, NodeType::Semantic, "test content", Some(&mid));
+    store.create_node(&node).await.expect("create");
+
+    let found = store
+        .get_node_by_memory_id(&mid)
+        .await
+        .expect("query")
+        .expect("found");
+    assert_eq!(found.content, "test content");
+    println!("✅ get_by_memory_id: {}", found.node_id);
+}
+
+// ── 3. GraphStore: get_user_nodes filters by type ───────────────────────────
+
+#[tokio::test]
+async fn test_graph_get_user_nodes_by_type() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    let semantic = make_node(&uid, NodeType::Semantic, "semantic node", None);
+    let scene = make_node(&uid, NodeType::Scene, "scene node", None);
+    store.create_node(&semantic).await.expect("create semantic");
+    store.create_node(&scene).await.expect("create scene");
+
+    let semantics = store
+        .get_user_nodes(&uid, &NodeType::Semantic, true)
+        .await
+        .expect("query");
+    let scenes = store
+        .get_user_nodes(&uid, &NodeType::Scene, true)
+        .await
+        .expect("query");
+
+    assert!(semantics.iter().any(|n| n.content == "semantic node"));
+    assert!(scenes.iter().any(|n| n.content == "scene node"));
+    assert!(
+        !semantics.iter().any(|n| n.content == "scene node"),
+        "scene should not appear in semantic list"
+    );
+    println!(
+        "✅ get_user_nodes by type: {} semantic, {} scene",
+        semantics.len(),
+        scenes.len()
+    );
+}
+
+// ── 4. GraphStore: deactivate_node ──────────────────────────────────────────
+
+#[tokio::test]
+async fn test_graph_deactivate_node() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let node = make_node(&uid, NodeType::Scene, "to be deactivated", None);
+    let node_id = node.node_id.clone();
+    store.create_node(&node).await.expect("create");
+
+    store.deactivate_node(&node_id).await.expect("deactivate");
+
+    let active = store
+        .get_user_nodes(&uid, &NodeType::Scene, true)
+        .await
+        .expect("query");
+    assert!(
+        !active.iter().any(|n| n.node_id == node_id),
+        "deactivated node should not appear"
+    );
+    println!("✅ deactivate_node works");
+}
+
+// ── 5. GraphStore: update_confidence_and_tier ───────────────────────────────
+
+#[tokio::test]
+async fn test_graph_update_tier() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let mut node = make_node(&uid, NodeType::Scene, "tier test", None);
+    node.trust_tier = "T4".to_string();
+    node.confidence = 0.6;
+    let node_id = node.node_id.clone();
+    store.create_node(&node).await.expect("create");
+
+    store
+        .update_confidence_and_tier(&node_id, 0.9, "T3")
+        .await
+        .expect("update");
+
+    let fetched = store
+        .get_node(&node_id)
+        .await
+        .expect("get")
+        .expect("exists");
+    assert_eq!(fetched.trust_tier, "T3");
+    assert!((fetched.confidence - 0.9).abs() < 0.001);
+    println!("✅ update_confidence_and_tier: T4 → T3");
+}
+
+// ── 6. GraphStore: add_edge and mark_conflict ────────────────────────────────
+
+#[tokio::test]
+async fn test_graph_edge_and_conflict() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let n1 = make_node(&uid, NodeType::Semantic, "node A", None);
+    let n2 = make_node(&uid, NodeType::Semantic, "node B", None);
+    let (id1, id2) = (n1.node_id.clone(), n2.node_id.clone());
+    store.create_node(&n1).await.expect("create n1");
+    store.create_node(&n2).await.expect("create n2");
+
+    let edge = GraphEdge {
+        source_id: id1.clone(),
+        target_id: id2.clone(),
+        edge_type: edge_type::ASSOCIATION.to_string(),
+        weight: 0.85,
+        user_id: uid.clone(),
+    };
+    store.add_edge(&edge).await.expect("add_edge");
+
+    // mark conflict: older=n1, newer=n2
+    store
+        .mark_conflict(&id1, &id2, 0.5, 0.75)
+        .await
+        .expect("mark_conflict");
+
+    let n1_updated = store.get_node(&id1).await.expect("get").expect("exists");
+    assert_eq!(n1_updated.conflicts_with.as_deref(), Some(id2.as_str()));
+    assert!(
+        (n1_updated.confidence - 0.375).abs() < 0.001,
+        "confidence should be 0.75 * 0.5"
+    );
+    println!(
+        "✅ edge + mark_conflict: confidence={}",
+        n1_updated.confidence
+    );
+}
+
+// ── 7. GraphStore: entity upsert (is_new flag) ───────────────────────────────
+
+#[tokio::test]
+async fn test_graph_entity_upsert() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    let (id1, is_new1) = store
+        .upsert_entity(&uid, "rust", "Rust", "tech")
+        .await
+        .expect("upsert");
+    assert!(is_new1, "first upsert should be new");
+
+    let (id2, is_new2) = store
+        .upsert_entity(&uid, "rust", "Rust", "tech")
+        .await
+        .expect("upsert again");
+    assert!(!is_new2, "second upsert should be reused");
+    assert_eq!(id1, id2, "same entity_id");
+    println!("✅ entity upsert: id={id1}, is_new={is_new1}/{is_new2}");
+}
+
+// ── 8. GraphStore: upsert_memory_entity_link idempotent ──────────────────────
+
+#[tokio::test]
+async fn test_graph_entity_link_idempotent() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (entity_id, _) = store
+        .upsert_entity(&uid, "matrixone", "MatrixOne", "tech")
+        .await
+        .expect("upsert");
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    store
+        .upsert_memory_entity_link(&mid, &entity_id, &uid, "manual")
+        .await
+        .expect("link 1");
+    store
+        .upsert_memory_entity_link(&mid, &entity_id, &uid, "manual")
+        .await
+        .expect("link 2 (idempotent)");
+
+    let entities = store.get_user_entities(&uid).await.expect("get entities");
+    assert!(entities.iter().any(|(n, _)| n == "matrixone"));
+    println!("✅ entity link idempotent");
+}
+
+// ── 9. GraphStore: get_unlinked_memories ─────────────────────────────────────
+
+#[tokio::test]
+async fn test_graph_unlinked_memories() {
+    let (store, uid, ctx) = setup_graph().await;
+
+    // Insert a memory directly into mem_memories
+    let pool = ctx.user_db_pool(&uid).await;
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+    sqlx::query(
+        "INSERT INTO mem_memories (memory_id, user_id, memory_type, content, source_event_ids, \
+         is_active, trust_tier, initial_confidence, observed_at, created_at) \
+         VALUES (?, ?, 'semantic', 'unlinked test memory', '[]', 1, 'T3', 0.75, NOW(), NOW())",
+    )
+    .bind(&mid)
+    .bind(&uid)
+    .execute(&pool)
+    .await
+    .expect("insert memory");
+
+    let unlinked = store
+        .get_unlinked_memories(&uid, 50)
+        .await
+        .expect("get unlinked");
+    assert!(
+        unlinked.iter().any(|(m, _)| m == &mid),
+        "should find unlinked memory"
+    );
+
+    // Link it
+    let (entity_id, _) = store
+        .upsert_entity(&uid, "testentity", "TestEntity", "tech")
+        .await
+        .expect("upsert");
+    store
+        .upsert_memory_entity_link(&mid, &entity_id, &uid, "manual")
+        .await
+        .expect("link");
+
+    let unlinked2 = store
+        .get_unlinked_memories(&uid, 50)
+        .await
+        .expect("get unlinked again");
+    assert!(
+        !unlinked2.iter().any(|(m, _)| m == &mid),
+        "linked memory should not appear"
+    );
+    println!(
+        "✅ get_unlinked_memories: before={}, after={}",
+        unlinked.len(),
+        unlinked2.len()
+    );
+}
+
+// ── 10. GraphConsolidator: trust tier lifecycle ──────────────────────────────
+
+#[tokio::test]
+async fn test_consolidator_trust_tier_lifecycle() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // T4 scene with high confidence and old age (simulate by setting created_at far back)
+    let mut scene = make_node(&uid, NodeType::Scene, "old high-confidence scene", None);
+    scene.trust_tier = "T4".to_string();
+    scene.confidence = 0.9;
+    // Set created_at to 10 days ago
+    scene.created_at = Some((chrono::Utc::now() - chrono::Duration::days(10)).naive_utc());
+    store.create_node(&scene).await.expect("create scene");
+
+    let consolidator = GraphConsolidator::new(&store);
+    let result = consolidator.consolidate(&uid).await;
+
+    assert_eq!(
+        result.promoted, 1,
+        "T4→T3 promotion expected, got: {:?}",
+        result
+    );
+    assert_eq!(result.demoted, 0);
+    assert_eq!(
+        result.errors.len(),
+        0,
+        "no errors expected: {:?}",
+        result.errors
+    );
+
+    let updated = store
+        .get_node(&scene.node_id)
+        .await
+        .expect("get")
+        .expect("exists");
+    assert_eq!(updated.trust_tier, "T3", "should be promoted to T3");
+    println!(
+        "✅ trust tier T4→T3 promotion: confidence={}",
+        updated.confidence
+    );
+}
+
+// ── 11. GraphConsolidator: orphaned scene deactivation ───────────────────────
+
+#[tokio::test]
+async fn test_consolidator_orphaned_scene() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // Scene with source_nodes pointing to non-existent nodes
+    let mut scene = make_node(&uid, NodeType::Scene, "orphaned scene", None);
+    scene.source_nodes = vec![
+        "nonexistent_node_id_1".to_string(),
+        "nonexistent_node_id_2".to_string(),
+    ];
+    store.create_node(&scene).await.expect("create scene");
+
+    let consolidator = GraphConsolidator::new(&store);
+    let result = consolidator.consolidate(&uid).await;
+
+    assert_eq!(
+        result.orphaned_scenes, 1,
+        "should detect 1 orphaned scene, got: {:?}",
+        result
+    );
+
+    let updated = store
+        .get_node(&scene.node_id)
+        .await
+        .expect("get")
+        .expect("exists");
+    assert!(!updated.is_active, "orphaned scene should be deactivated");
+    println!("✅ orphaned scene deactivated");
+}
+
+// ── 12. GraphConsolidator: T3 stale demotion ─────────────────────────────────
+
+#[tokio::test]
+async fn test_consolidator_t3_demotion() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // T3 scene with low confidence and very old age
+    let mut scene = make_node(&uid, NodeType::Scene, "stale T3 scene", None);
+    scene.trust_tier = "T3".to_string();
+    scene.confidence = 0.5; // below T4→T3 threshold of 0.8
+    scene.created_at = Some((chrono::Utc::now() - chrono::Duration::days(65)).naive_utc());
+    store.create_node(&scene).await.expect("create");
+
+    let consolidator = GraphConsolidator::new(&store);
+    let result = consolidator.consolidate(&uid).await;
+
+    assert_eq!(
+        result.demoted, 1,
+        "T3→T4 demotion expected, got: {:?}",
+        result
+    );
+    let updated = store
+        .get_node(&scene.node_id)
+        .await
+        .expect("get")
+        .expect("exists");
+    assert_eq!(updated.trust_tier, "T4");
+    println!("✅ T3→T4 demotion for stale low-confidence scene");
+}
+
+// ── 13. Full E2E: store memory → extract entities → link → re-extract ────────
+
+#[tokio::test]
+async fn test_graph_full_entity_workflow() {
+    let (store, uid, ctx) = setup_graph().await;
+
+    // Insert memory
+    let pool = ctx.user_db_pool(&uid).await;
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+    sqlx::query(
+        "INSERT INTO mem_memories (memory_id, user_id, memory_type, content, source_event_ids, \
+         is_active, trust_tier, initial_confidence, observed_at, created_at) \
+         VALUES (?, ?, 'semantic', 'Project uses Rust and MatrixOne', '[]', 1, 'T3', 0.75, NOW(), NOW())"
+    )
+    .bind(&mid).bind(&uid)
+    .execute(&pool).await.expect("insert");
+
+    // Step 1: get unlinked
+    let unlinked = store
+        .get_unlinked_memories(&uid, 50)
+        .await
+        .expect("unlinked");
+    assert!(unlinked.iter().any(|(m, _)| m == &mid));
+
+    // Step 2: link entities
+    let (rust_id, is_new_rust) = store
+        .upsert_entity(&uid, "rust", "Rust", "tech")
+        .await
+        .expect("upsert rust");
+    let (mo_id, is_new_mo) = store
+        .upsert_entity(&uid, "matrixone", "MatrixOne", "tech")
+        .await
+        .expect("upsert mo");
+    assert!(is_new_rust && is_new_mo);
+
+    store
+        .upsert_memory_entity_link(&mid, &rust_id, &uid, "manual")
+        .await
+        .expect("link rust");
+    store
+        .upsert_memory_entity_link(&mid, &mo_id, &uid, "manual")
+        .await
+        .expect("link mo");
+
+    // Step 3: re-extract — should be empty now
+    let unlinked2 = store
+        .get_unlinked_memories(&uid, 50)
+        .await
+        .expect("unlinked2");
+    assert!(
+        !unlinked2.iter().any(|(m, _)| m == &mid),
+        "linked memory should not appear"
+    );
+
+    // Step 4: get_user_entities
+    let entities = store.get_user_entities(&uid).await.expect("entities");
+    let names: Vec<&str> = entities.iter().map(|(n, _)| n.as_str()).collect();
+    assert!(names.contains(&"rust"), "rust entity should exist");
+    assert!(
+        names.contains(&"matrixone"),
+        "matrixone entity should exist"
+    );
+
+    println!(
+        "✅ full entity workflow: {} entities linked to memory {}",
+        entities.len(),
+        &mid[..8]
+    );
+}
+
+// ── 14. store → graph node auto-created ──────────────────────────────────────
+
+#[tokio::test]
+async fn test_store_creates_graph_node() {
+    let (svc, sql, _pool, uid, _ctx) = setup_service("gsync").await;
+
+    // Call memory_store via tools
+    let r = memoria_mcp::tools::call(
+        "memory_store",
+        serde_json::json!({"content": "Project uses Rust and MatrixOne database", "memory_type": "semantic"}),
+        &svc, &uid,
+    ).await.expect("call");
+    let text = r["content"][0]["text"].as_str().unwrap_or("");
+    assert!(text.contains("Stored memory"), "got: {text}");
+
+    // Extract memory_id from response
+    let mid = extract_memory_id(text);
+
+    // Verify graph node was created
+    let graph = sql.graph_store();
+    let node = graph.get_node_by_memory_id(&mid).await.expect("query");
+    assert!(
+        node.is_some(),
+        "graph node should be created for memory {mid}"
+    );
+    let node = node.unwrap();
+    assert_eq!(node.content, "Project uses Rust and MatrixOne database");
+    println!("✅ store creates graph node: {}", node.node_id);
+
+    // Verify entity extraction happened
+    let entities = graph.get_user_entities(&uid).await.expect("entities");
+    println!(
+        "✅ auto-extracted entities: {:?}",
+        entities.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>()
+    );
+    // Should have extracted "rust" and/or "matrixone"
+    let names: Vec<&str> = entities.iter().map(|(n, _)| n.as_str()).collect();
+    assert!(
+        names.contains(&"rust") || names.contains(&"matrixone"),
+        "expected rust or matrixone in {names:?}"
+    );
+}
+
+// ── 15. correct → graph node content updated ─────────────────────────────────
+
+#[tokio::test]
+async fn test_correct_updates_graph_node() {
+    let (svc, sql, _pool, uid, _ctx) = setup_service("gcorr").await;
+
+    // Store
+    let r = memoria_mcp::tools::call(
+        "memory_store",
+        serde_json::json!({"content": "Uses black for formatting"}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("store");
+    let text = r["content"][0]["text"].as_str().unwrap_or("");
+    let mid = extract_memory_id(text);
+
+    // Correct — creates new memory, deactivates old
+    let cr = memoria_mcp::tools::call(
+        "memory_correct",
+        serde_json::json!({"memory_id": mid, "new_content": "Uses ruff for formatting", "reason": "switched"}),
+        &svc, &uid,
+    ).await.expect("correct");
+    let ct = cr["content"][0]["text"].as_str().unwrap_or("");
+    let new_mid = extract_memory_id(ct);
+
+    // Verify old graph node deactivated, new graph node has updated content
+    let graph = sql.graph_store();
+    let old_node = graph.get_node_by_memory_id(&mid).await.expect("query");
+    assert!(
+        old_node.is_none() || !old_node.as_ref().unwrap().is_active,
+        "old graph node should be deactivated"
+    );
+
+    // New memory may or may not have a graph node (depends on store_memory creating one)
+    // The key assertion is that the old node is deactivated
+    println!("✅ correct deactivates old graph node, old={mid} → new={new_mid}");
+}
+
+// ── 16. purge → graph node deactivated ───────────────────────────────────────
+
+#[tokio::test]
+async fn test_purge_deactivates_graph_node() {
+    let (svc, sql, _pool, uid, _ctx) = setup_service("gpurge").await;
+
+    // Store
+    let r = memoria_mcp::tools::call(
+        "memory_store",
+        serde_json::json!({"content": "Temporary working memory"}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("store");
+    let text = r["content"][0]["text"].as_str().unwrap_or("");
+    let mid = extract_memory_id(text);
+
+    // Verify graph node exists
+    let graph = sql.graph_store();
+    assert!(graph
+        .get_node_by_memory_id(&mid)
+        .await
+        .expect("query")
+        .is_some());
+
+    // Purge
+    memoria_mcp::tools::call(
+        "memory_purge",
+        serde_json::json!({"memory_id": mid}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("purge");
+
+    // Verify graph node deactivated
+    let node = graph.get_node_by_memory_id(&mid).await.expect("query");
+    assert!(
+        node.is_none(),
+        "deactivated node should not appear in active query"
+    );
+    println!("✅ purge deactivates graph node");
+}
+
+// ── 17. NER: regex extraction unit test via tools ────────────────────────────
+
+#[test]
+fn test_ner_extract_entities() {
+    let entities = memoria_storage::extract_entities(
+        "Project uses Rust and MatrixOne. See matrixorigin/matrixone for details. The auth-service handles login."
+    );
+    let names: Vec<&str> = entities.iter().map(|e| e.name.as_str()).collect();
+    println!("extracted: {names:?}");
+    assert!(names.contains(&"rust"), "rust not found in {names:?}");
+    assert!(
+        names.contains(&"matrixone"),
+        "matrixone not found in {names:?}"
+    );
+    assert!(
+        names.contains(&"matrixorigin/matrixone"),
+        "repo not found in {names:?}"
+    );
+    assert!(
+        names.contains(&"auth-service"),
+        "auth-service not found in {names:?}"
+    );
+}
+
+// ── 18. Entity link weights by source ────────────────────────────────────────
+
+#[tokio::test]
+async fn test_entity_link_weights_by_source() {
+    let (sql, _pool, uid, _ctx) = setup_sql("elw").await;
+    let graph = sql.graph_store();
+
+    // Create entity
+    let (eid, _created) = graph
+        .upsert_entity(&uid, "test_entity", "test_entity", "tech")
+        .await
+        .expect("entity");
+
+    // Create links with different sources
+    let mid_regex = format!("mem_regex_{}", uuid::Uuid::new_v4().simple());
+    let mid_llm = format!("mem_llm_{}", uuid::Uuid::new_v4().simple());
+    let mid_manual = format!("mem_manual_{}", uuid::Uuid::new_v4().simple());
+
+    graph
+        .upsert_memory_entity_link(&mid_regex, &eid, &uid, "regex")
+        .await
+        .expect("link regex");
+    graph
+        .upsert_memory_entity_link(&mid_llm, &eid, &uid, "llm")
+        .await
+        .expect("link llm");
+    graph
+        .upsert_memory_entity_link(&mid_manual, &eid, &uid, "manual")
+        .await
+        .expect("link manual");
+
+    // Verify weights
+    let links_table = graph.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT memory_id, weight FROM {links_table} WHERE entity_id = ? AND user_id = ? ORDER BY weight"
+    ))
+    .bind(&eid)
+    .bind(&uid)
+    .fetch_all(graph.pool())
+    .await
+    .expect("query");
+
+    use sqlx::Row;
+    assert_eq!(rows.len(), 3);
+    let weights: Vec<(String, f32)> = rows
+        .iter()
+        .map(|r| {
+            (
+                r.try_get::<String, _>("memory_id").unwrap(),
+                r.try_get::<f32, _>("weight").unwrap(),
+            )
+        })
+        .collect();
+
+    for (mid, w) in &weights {
+        if mid == &mid_regex {
+            assert!(
+                (w - 0.8).abs() < 0.01,
+                "regex weight should be 0.8, got {w}"
+            );
+        }
+        if mid == &mid_llm {
+            assert!((w - 0.9).abs() < 0.01, "llm weight should be 0.9, got {w}");
+        }
+        if mid == &mid_manual {
+            assert!(
+                (w - 1.0).abs() < 0.01,
+                "manual weight should be 1.0, got {w}"
+            );
+        }
+    }
+    println!("✅ entity link weights: regex=0.8, llm=0.9, manual=1.0");
+}
+
+// ── batch_upsert_memory_entity_links tests ───────────────────────────────────
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_empty() {
+    let (store, uid, _ctx) = setup_graph().await;
+    store
+        .batch_upsert_memory_entity_links(&uid, &[])
+        .await
+        .expect("empty batch should succeed");
+    println!("✅ batch_upsert_memory_entity_links: empty input OK");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_basic() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (eid1, _) = store
+        .upsert_entity(&uid, "rust", "Rust", "tech")
+        .await
+        .unwrap();
+    let (eid2, _) = store.upsert_entity(&uid, "go", "Go", "tech").await.unwrap();
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    let links: Vec<(&str, &str, &str)> = vec![(&mid, &eid1, "regex"), (&mid, &eid2, "llm")];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .expect("batch upsert");
+
+    // Verify both links exist
+    let links_table = store.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT entity_id, source, weight FROM {links_table} WHERE user_id = ? AND memory_id = ? ORDER BY weight"
+    ))
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_all(store.pool())
+    .await
+    .unwrap();
+
+    use sqlx::Row;
+    assert_eq!(rows.len(), 2);
+    let w0: f32 = rows[0].get("weight");
+    let w1: f32 = rows[1].get("weight");
+    assert!((w0 - 0.8).abs() < 0.01, "regex weight should be 0.8");
+    assert!((w1 - 0.9).abs() < 0.01, "llm weight should be 0.9");
+    println!("✅ batch_upsert_memory_entity_links: 2 links with correct weights");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_idempotent() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (eid, _) = store
+        .upsert_entity(&uid, "matrixone", "MatrixOne", "tech")
+        .await
+        .unwrap();
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    let links: Vec<(&str, &str, &str)> = vec![(&mid, &eid, "regex")];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+    // Upsert again — should not fail (ON DUPLICATE KEY UPDATE)
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+
+    let links_table = store.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT COUNT(*) as cnt FROM {links_table} WHERE user_id = ? AND memory_id = ? AND entity_id = ?"
+    ))
+    .bind(&uid)
+    .bind(&mid)
+    .bind(&eid)
+    .fetch_one(store.pool())
+    .await
+    .unwrap();
+    use sqlx::Row;
+    let cnt: i64 = rows.get("cnt");
+    assert_eq!(cnt, 1, "should still be exactly 1 link");
+    println!("✅ batch_upsert_memory_entity_links: idempotent (no duplicates)");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_source_upgrade() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (eid, _) = store
+        .upsert_entity(&uid, "tokio", "Tokio", "tech")
+        .await
+        .unwrap();
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    // First insert with regex (weight 0.8)
+    let links: Vec<(&str, &str, &str)> = vec![(&mid, &eid, "regex")];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+
+    // Upsert with manual (weight 1.0) — should update
+    let links2: Vec<(&str, &str, &str)> = vec![(&mid, &eid, "manual")];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links2)
+        .await
+        .unwrap();
+
+    use sqlx::Row;
+    let links_table = store.t("mem_memory_entity_links");
+    let row = sqlx::query(&format!(
+        "SELECT source, weight FROM {links_table} WHERE memory_id = ? AND entity_id = ?"
+    ))
+    .bind(&mid)
+    .bind(&eid)
+    .fetch_one(store.pool())
+    .await
+    .unwrap();
+    let source: String = row.get("source");
+    let weight: f32 = row.get("weight");
+    assert_eq!(source, "manual");
+    assert!(
+        (weight - 1.0).abs() < 0.01,
+        "weight should be updated to 1.0"
+    );
+    println!("✅ batch_upsert_memory_entity_links: source/weight updated on conflict");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_large_batch() {
+    let (store, uid, _ctx) = setup_graph().await;
+    // Create 80 entities and link them all to one memory
+    let mut entity_ids = Vec::new();
+    for i in 0..80 {
+        let (eid, _) = store
+            .upsert_entity(&uid, &format!("ent_{i}"), &format!("Ent {i}"), "concept")
+            .await
+            .unwrap();
+        entity_ids.push(eid);
+    }
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+    let links: Vec<(&str, &str, &str)> = entity_ids
+        .iter()
+        .map(|eid| (mid.as_str(), eid.as_str(), "regex"))
+        .collect();
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .expect("large batch should succeed (chunked into 50+30)");
+
+    use sqlx::Row;
+    let links_table = store.t("mem_memory_entity_links");
+    let row = sqlx::query(&format!(
+        "SELECT COUNT(*) as cnt FROM {links_table} WHERE user_id = ? AND memory_id = ?"
+    ))
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_one(store.pool())
+    .await
+    .unwrap();
+    let cnt: i64 = row.get("cnt");
+    assert_eq!(cnt, 80);
+    println!("✅ batch_upsert_memory_entity_links: 80 links chunked correctly");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_mixed_sources() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (eid1, _) = store.upsert_entity(&uid, "a", "A", "tech").await.unwrap();
+    let (eid2, _) = store.upsert_entity(&uid, "b", "B", "tech").await.unwrap();
+    let (eid3, _) = store.upsert_entity(&uid, "c", "C", "tech").await.unwrap();
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    let links: Vec<(&str, &str, &str)> = vec![
+        (&mid, &eid1, "regex"),
+        (&mid, &eid2, "llm"),
+        (&mid, &eid3, "manual"),
+    ];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+
+    use sqlx::Row;
+    let links_table = store.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT source, weight FROM {links_table} WHERE user_id = ? AND memory_id = ? ORDER BY weight"
+    ))
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_all(store.pool())
+    .await
+    .unwrap();
+    assert_eq!(rows.len(), 3);
+    let sources: Vec<String> = rows.iter().map(|r| r.get("source")).collect();
+    assert_eq!(sources, vec!["regex", "llm", "manual"]);
+    println!("✅ batch_upsert_memory_entity_links: mixed sources with correct weights");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entity_links_multiple_memories() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let (eid, _) = store
+        .upsert_entity(&uid, "shared_entity", "SharedEntity", "concept")
+        .await
+        .unwrap();
+    let mid1 = format!("mem1_{}", uuid::Uuid::new_v4().simple());
+    let mid2 = format!("mem2_{}", uuid::Uuid::new_v4().simple());
+
+    // Same entity linked to two different memories in one batch
+    let links: Vec<(&str, &str, &str)> = vec![(&mid1, &eid, "regex"), (&mid2, &eid, "llm")];
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+
+    let links_table = store.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT memory_id, source FROM {links_table} WHERE user_id = ? AND entity_id = ? ORDER BY memory_id"
+    ))
+    .bind(&uid)
+    .bind(&eid)
+    .fetch_all(store.pool())
+    .await
+    .unwrap();
+    assert_eq!(rows.len(), 2, "entity should be linked to 2 memories");
+    println!("✅ batch_upsert_memory_entity_links: one entity linked to multiple memories");
+}
+
+// ── batch_upsert_entities tests ──────────────────────────────────────────────
+
+#[tokio::test]
+async fn test_batch_upsert_entities_empty() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let result = store.batch_upsert_entities(&uid, &[]).await.unwrap();
+    assert!(result.is_empty());
+    println!("✅ batch_upsert_entities: empty input OK");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_basic() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let entities: Vec<(&str, &str, &str)> = vec![
+        ("rust", "Rust", "tech"),
+        ("go", "Go", "tech"),
+        ("matrixone", "MatrixOne", "project"),
+    ];
+    let result = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+    assert_eq!(result.len(), 3, "should resolve all 3 entities");
+
+    let names: Vec<&str> = result.iter().map(|(n, _)| n.as_str()).collect();
+    assert!(names.contains(&"rust"));
+    assert!(names.contains(&"go"));
+    assert!(names.contains(&"matrixone"));
+
+    // All entity_ids should be non-empty and unique
+    let ids: Vec<&str> = result.iter().map(|(_, id)| id.as_str()).collect();
+    assert!(ids.iter().all(|id| !id.is_empty()));
+    let unique: std::collections::HashSet<&&str> = ids.iter().collect();
+    assert_eq!(unique.len(), 3, "entity_ids should be unique");
+    println!("✅ batch_upsert_entities: 3 new entities created");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_idempotent() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let entities: Vec<(&str, &str, &str)> = vec![("rust", "Rust", "tech"), ("go", "Go", "tech")];
+
+    let first = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+    let second = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+
+    // Same entity_ids returned on second call
+    let id_map1: std::collections::HashMap<&str, &str> = first
+        .iter()
+        .map(|(n, id)| (n.as_str(), id.as_str()))
+        .collect();
+    let id_map2: std::collections::HashMap<&str, &str> = second
+        .iter()
+        .map(|(n, id)| (n.as_str(), id.as_str()))
+        .collect();
+    assert_eq!(id_map1["rust"], id_map2["rust"]);
+    assert_eq!(id_map1["go"], id_map2["go"]);
+    println!("✅ batch_upsert_entities: idempotent — same IDs on re-insert");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_mixed_new_and_existing() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // Pre-create one entity via single upsert
+    let (existing_id, _) = store
+        .upsert_entity(&uid, "rust", "Rust", "tech")
+        .await
+        .unwrap();
+
+    // Batch with one existing + one new
+    let entities: Vec<(&str, &str, &str)> =
+        vec![("rust", "Rust", "tech"), ("python", "Python", "tech")];
+    let result = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+    assert_eq!(result.len(), 2);
+
+    let id_map: std::collections::HashMap<&str, &str> = result
+        .iter()
+        .map(|(n, id)| (n.as_str(), id.as_str()))
+        .collect();
+    assert_eq!(
+        id_map["rust"], existing_id,
+        "existing entity should keep its ID"
+    );
+    assert!(!id_map["python"].is_empty(), "new entity should get an ID");
+    assert_ne!(id_map["python"], existing_id);
+    println!("✅ batch_upsert_entities: mixed new + existing resolved correctly");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_duplicates_in_input() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // Same entity name appears twice in one batch
+    let entities: Vec<(&str, &str, &str)> =
+        vec![("rust", "Rust", "tech"), ("rust", "Rust", "tech")];
+    let result = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+
+    // SELECT returns deduplicated — one row for "rust"
+    // Both input entries map to the same entity_id
+    assert!(!result.is_empty());
+    let rust_ids: Vec<&str> = result
+        .iter()
+        .filter(|(n, _)| n == "rust")
+        .map(|(_, id)| id.as_str())
+        .collect();
+    assert_eq!(rust_ids.len(), 1, "deduplicated in SELECT result");
+    println!("✅ batch_upsert_entities: duplicate names in input handled");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_large_batch() {
+    let (store, uid, _ctx) = setup_graph().await;
+
+    // 120 entities — exceeds chunk size of 50, tests multi-chunk INSERT
+    let names: Vec<String> = (0..120).map(|i| format!("entity_{i}")).collect();
+    let entities: Vec<(&str, &str, &str)> = names
+        .iter()
+        .map(|n| (n.as_str(), n.as_str(), "concept"))
+        .collect();
+
+    let result = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+    assert_eq!(result.len(), 120, "all 120 entities should be resolved");
+
+    let unique_ids: std::collections::HashSet<&str> =
+        result.iter().map(|(_, id)| id.as_str()).collect();
+    assert_eq!(unique_ids.len(), 120, "all entity_ids should be unique");
+    println!("✅ batch_upsert_entities: 120 entities across multiple chunks");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_user_isolation() {
+    let (store, uid1, ctx) = setup_graph().await;
+    let uid2 = format!("graph_test_{}", uuid::Uuid::new_v4().simple());
+    let store2 = ctx.user_store(&uid2).await.graph_store();
+
+    let entities: Vec<(&str, &str, &str)> = vec![("rust", "Rust", "tech")];
+    let r1 = store.batch_upsert_entities(&uid1, &entities).await.unwrap();
+    let r2 = store2
+        .batch_upsert_entities(&uid2, &entities)
+        .await
+        .unwrap();
+
+    // Same name, different users → different entity_ids
+    assert_ne!(
+        r1[0].1, r2[0].1,
+        "different users should get different entity_ids"
+    );
+    println!("✅ batch_upsert_entities: user isolation — same name, different IDs");
+}
+
+#[tokio::test]
+async fn test_batch_upsert_entities_end_to_end_with_links() {
+    let (store, uid, _ctx) = setup_graph().await;
+    let mid = format!("mem_{}", uuid::Uuid::new_v4().simple());
+
+    // Simulate the full process_entity_batch flow
+    let entities: Vec<(&str, &str, &str)> = vec![
+        ("rust", "Rust", "tech"),
+        ("tokio", "Tokio", "tech"),
+        ("matrixone", "MatrixOne", "project"),
+    ];
+    let resolved = store.batch_upsert_entities(&uid, &entities).await.unwrap();
+    assert_eq!(resolved.len(), 3);
+
+    // Build links from resolved entities
+    let links: Vec<(&str, &str, &str)> = resolved
+        .iter()
+        .map(|(_, eid)| (mid.as_str(), eid.as_str(), "regex"))
+        .collect();
+    store
+        .batch_upsert_memory_entity_links(&uid, &links)
+        .await
+        .unwrap();
+
+    // Verify links exist
+    let links_table = store.t("mem_memory_entity_links");
+    let rows = sqlx::query(&format!(
+        "SELECT entity_id FROM {links_table} WHERE user_id = ? AND memory_id = ?"
+    ))
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_all(store.pool())
+    .await
+    .unwrap();
+    assert_eq!(rows.len(), 3, "all 3 entities should be linked to memory");
+    println!("✅ batch_upsert_entities + batch_upsert_memory_entity_links: end-to-end OK");
+}
+
+// ── 19. purge cleans up entity links across all tables ──────────────────────
+
+#[tokio::test]
+async fn test_purge_cleans_entity_links() {
+    let (svc, sql, pool, uid, _ctx) = setup_service("gpurge_el").await;
+
+    // Store a memory
+    let r = memoria_mcp::tools::call(
+        "memory_store",
+        serde_json::json!({"content": "Rust and Tokio are great for async programming"}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("store");
+    let text = r["content"][0]["text"].as_str().unwrap_or("");
+    let mid = extract_memory_id(text);
+    assert!(!mid.is_empty(), "should extract memory_id from response");
+
+    // Wait for async entity extraction
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+    // Manually insert entity links in mem_entity_links (legacy table)
+    let _ = sql
+        .insert_entity_links(&uid, &mid, &[("rust".into(), "tech".into())])
+        .await;
+
+    // Verify mem_entity_links has data
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT entity_name FROM mem_entity_links WHERE user_id = ? AND memory_id = ?",
+    )
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert!(!rows.is_empty(), "entity links should exist before purge");
+
+    // Purge via MCP
+    memoria_mcp::tools::call(
+        "memory_purge",
+        serde_json::json!({"memory_id": &mid}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("purge");
+
+    // Verify graph node deactivated
+    let graph = sql.graph_store();
+    assert!(
+        graph.get_node_by_memory_id(&mid).await.unwrap().is_none(),
+        "graph node should be deactivated"
+    );
+
+    // Verify mem_entity_links cleaned
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT entity_name FROM mem_entity_links WHERE user_id = ? AND memory_id = ?",
+    )
+    .bind(&uid)
+    .bind(&mid)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert!(
+        rows.is_empty(),
+        "mem_entity_links should be cleaned after purge"
+    );
+
+    // Verify mem_memory_entity_links cleaned
+    let memory_entity_links_table = sql.graph_store().t("mem_memory_entity_links");
+    let rows: Vec<(String,)> = sqlx::query_as(&format!(
+        "SELECT entity_id FROM {memory_entity_links_table} WHERE memory_id = ?"
+    ))
+    .bind(&mid)
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+    assert!(
+        rows.is_empty(),
+        "mem_memory_entity_links should be cleaned after purge"
+    );
+
+    println!("✅ purge cleans entity links across all tables");
+}
+
+// ── 20. purge_batch cleans graph + entity links ─────────────────────────────
+
+#[tokio::test]
+async fn test_purge_batch_cleans_graph_and_entity_links() {
+    let (svc, sql, _pool, uid, _ctx) = setup_service("gbatch").await;
+
+    // Store two memories
+    let mut mids = Vec::new();
+    for content in ["Memory about Rust", "Memory about Go"] {
+        let r = memoria_mcp::tools::call(
+            "memory_store",
+            serde_json::json!({"content": content}),
+            &svc,
+            &uid,
+        )
+        .await
+        .expect("store");
+        let text = r["content"][0]["text"].as_str().unwrap_or("");
+        let mid = extract_memory_id(text);
+        mids.push(mid);
+    }
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+    // Verify graph nodes exist
+    let graph = sql.graph_store();
+    for mid in &mids {
+        assert!(
+            graph.get_node_by_memory_id(mid).await.unwrap().is_some(),
+            "graph node should exist for {mid}"
+        );
+    }
+
+    // Purge batch via MCP (comma-separated)
+    let ids_str = mids.join(",");
+    memoria_mcp::tools::call(
+        "memory_purge",
+        serde_json::json!({"memory_id": ids_str}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("purge_batch");
+
+    // Verify all graph nodes deactivated
+    for mid in &mids {
+        assert!(
+            graph.get_node_by_memory_id(mid).await.unwrap().is_none(),
+            "graph node should be deactivated for {mid}"
+        );
+    }
+    println!("✅ purge_batch cleans graph + entity links");
+}
+
+// ── 21. correct cleans old graph node via service layer ──────────────────────
+
+#[tokio::test]
+async fn test_correct_cleans_old_graph_node_via_service() {
+    let (svc, sql, pool, uid, _ctx) = setup_service("gcorrect_svc").await;
+
+    // Store
+    let r = memoria_mcp::tools::call(
+        "memory_store",
+        serde_json::json!({"content": "Uses PostgreSQL for storage"}),
+        &svc,
+        &uid,
+    )
+    .await
+    .expect("store");
+    let text = r["content"][0]["text"].as_str().unwrap_or("");
+    let old_mid = extract_memory_id(text);
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+    // Verify old graph node exists
+    let graph = sql.graph_store();
+    assert!(graph
+        .get_node_by_memory_id(&old_mid)
+        .await
+        .unwrap()
+        .is_some());
+
+    // Correct directly via service layer (simulates REST API path)
+    let new_mem = svc
+        .correct(&uid, &old_mid, "Uses MatrixOne for storage")
+        .await
+        .expect("correct");
+
+    // Old graph node should be deactivated
+    assert!(
+        graph
+            .get_node_by_memory_id(&old_mid)
+            .await
+            .unwrap()
+            .is_none(),
+        "old graph node should be deactivated after correct"
+    );
+
+    // Old mem_entity_links should be cleaned
+    let rows: Vec<(String,)> =
+        sqlx::query_as("SELECT entity_name FROM mem_entity_links WHERE memory_id = ?")
+            .bind(&old_mid)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+    assert!(
+        rows.is_empty(),
+        "old mem_entity_links should be cleaned after correct"
+    );
+
+    // New memory should get entity extraction (async)
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    let _new_mid = &new_mem.memory_id;
+    println!("✅ correct cleans old graph node via service layer (REST API safe)");
+}
+
+// ── 22. governance fallback cleans orphaned graph data ───────────────────────
+
+#[tokio::test]
+async fn test_governance_cleans_orphan_graph_data() {
+    let (sql, pool, uid, _ctx) = setup_sql("gorphan").await;
+
+    // Insert a memory, then soft-delete it (simulating a crash mid-purge)
+    let mid = uuid::Uuid::new_v4().simple().to_string();
+    let mem = memoria_core::Memory {
+        memory_id: mid.clone(),
+        user_id: uid.clone(),
+        memory_type: memoria_core::MemoryType::Semantic,
+        content: "Orphan test memory".to_string(),
+        embedding: None,
+        session_id: None,
+        source_event_ids: vec![],
+        extra_metadata: None,
+        is_active: true,
+        superseded_by: None,
+        trust_tier: memoria_core::TrustTier::T1Verified,
+        initial_confidence: 0.95,
+        observed_at: Some(chrono::Utc::now()),
+        created_at: None,
+        updated_at: None,
+        access_count: 0,
+        retrieval_score: None,
+        author_id: None,
+        subject_id: None,
+    };
+    let memories_table = sql.t("mem_memories");
+    sql.insert_into(&memories_table, &mem)
+        .await
+        .expect("insert");
+
+    // Create graph node + entity links pointing to this memory
+    let graph = sql.graph_store();
+    let node = make_node(&uid, NodeType::Semantic, "Orphan test", Some(&mid));
+    graph.create_node(&node).await.expect("create node");
+
+    let _ = sql
+        .insert_entity_links(&uid, &mid, &[("orphan_entity".into(), "concept".into())])
+        .await;
+
+    let entities: Vec<(&str, &str, &str)> = vec![("orphan_entity", "Orphan Entity", "concept")];
+    let resolved = graph.batch_upsert_entities(&uid, &entities).await.unwrap();
+    let links: Vec<(&str, &str, &str)> = resolved
+        .iter()
+        .map(|(_, eid)| (mid.as_str(), eid.as_str(), "regex"))
+        .collect();
+    let _ = graph.batch_upsert_memory_entity_links(&uid, &links).await;
+
+    // Now soft-delete the memory (simulating crash: graph/entity cleanup didn't happen)
+    sql.soft_delete_from("mem_memories", &mid)
+        .await
+        .expect("soft_delete");
+
+    // Verify orphans exist
+    assert!(graph.get_node_by_memory_id(&mid).await.unwrap().is_some());
+    let el_rows: Vec<(String,)> =
+        sqlx::query_as("SELECT entity_name FROM mem_entity_links WHERE memory_id = ?")
+            .bind(&mid)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+    assert!(!el_rows.is_empty(), "orphan entity links should exist");
+
+    // Run governance cleanup
+    let cleaned_el = sql.cleanup_orphan_entity_links().await.expect("cleanup");
+    let cleaned_mel = graph
+        .cleanup_orphan_memory_entity_links()
+        .await
+        .expect("cleanup");
+    let cleaned_gn = graph.cleanup_orphan_graph_nodes().await.expect("cleanup");
+
+    assert!(cleaned_el > 0, "should clean orphan mem_entity_links");
+    assert!(cleaned_gn > 0, "should clean orphan graph nodes");
+
+    // Verify all cleaned
+    assert!(graph.get_node_by_memory_id(&mid).await.unwrap().is_none());
+    let el_rows: Vec<(String,)> =
+        sqlx::query_as("SELECT entity_name FROM mem_entity_links WHERE memory_id = ?")
+            .bind(&mid)
+            .fetch_all(&pool)
+            .await
+            .unwrap();
+    assert!(el_rows.is_empty(), "orphan entity links should be cleaned");
+
+    println!(
+        "✅ governance fallback cleans orphaned graph data (el={cleaned_el}, mel={cleaned_mel}, gn={cleaned_gn})"
+    );
+}

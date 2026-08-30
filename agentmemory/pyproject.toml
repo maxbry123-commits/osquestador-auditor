@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentmemory"
+version = "4.0.0"
+description = "Complete memory operating system for AI agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["ai", "agents", "memory", "llm", "rag", "knowledge-graph"]
+
+dependencies = []
+
+[project.optional-dependencies]
+dense = ["sentence-transformers>=2.0"]
+onnx = ["onnxruntime>=1.15", "tokenizers>=0.13"]
+server = ["fastapi>=0.100", "uvicorn>=0.22"]
+spacy = ["spacy>=3.5"]
+postgres = ["asyncpg>=0.28"]
+clip = ["transformers>=4.30", "Pillow>=9.0", "torch>=2.0"]
+whisper = ["openai-whisper>=20230918"]
+all = [
+    "sentence-transformers>=2.0",
+    "fastapi>=0.100",
+    "uvicorn>=0.22",
+    "spacy>=3.5",
+]
+
+[project.scripts]
+agentmemory = "agentmemory.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["agentmemory*"]

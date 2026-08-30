@@ -1,0 +1,20 @@
+name: Core Release
+
+on:
+  push:
+    tags:
+      - "core/v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/_reusable-docker-release.yaml
+    with:
+      image_name: acontext-core
+      context: ./src/server/core
+      tag_prefix: "core/v"
+      display_name: Core
+      source_dir: src/server/core

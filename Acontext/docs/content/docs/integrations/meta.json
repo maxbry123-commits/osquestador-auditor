@@ -1,0 +1,12 @@
+{
+  "title": "Integrations",
+  "description": "Framework integration guides",
+  "root": true,
+  "icon": "Plug",
+  "pages": [
+    "openclaw",
+    "claude-code",
+    "sdk",
+    "framework"
+  ]
+}

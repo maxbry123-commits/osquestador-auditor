@@ -1,0 +1,71 @@
+# Binaries
+acontext-cli
+acontext-cli.exe
+acontext-cli-*
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+*.out
+
+# Build directories
+dist/
+build/
+bin/
+out/
+
+# Go specific
+go.work
+go.work.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Coverage
+*.coverprofile
+coverage.html
+coverage.out
+
+# Temporary files
+*.tmp
+*.log
+tmp/
+temp/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+Thumbs.db
+
+# Test outputs
+test-results/
+my-acontext-app/
+
+# Release artifacts
+checksums.txt
+*.tar.gz
+*.zip
+
+# Distribution
+dist/**
+
+db/
+
+acontext_data/
+
+.docker-compose-*.yaml
+
+config.yaml
+
+sandbox/**

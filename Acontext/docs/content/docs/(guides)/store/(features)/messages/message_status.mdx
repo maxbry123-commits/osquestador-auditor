@@ -1,0 +1,94 @@
+---
+title: "Message Status"
+description: "Understand the session_task_process_status field on each message"
+---
+
+Every message has a `session_task_process_status` field that tells you where it is in the task extraction pipeline.
+
+## Status Values
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Message is queued for task extraction. The Task Agent hasn't processed it yet. |
+| `running` | The Task Agent is currently processing this message. |
+| `success` | Task extraction completed successfully. |
+| `failed` | Task extraction was attempted but failed (e.g., LLM error, timeout). |
+| `disable_tracking` | Task tracking is disabled for this session. The message was saved but never sent for extraction. |
+| `limit_exceed` | The project's task creation usage limit was reached. The message was saved but extraction was skipped. |
+
+## Lifecycle
+
+```
+store_message()
+       │
+       ├─ disable_task_tracking = true ──────► disable_tracking
+       │
+       ▼
+   ┌────────┐     usage limit hit
+   │pending │──────────────────────────────────► limit_exceed
+   └───┬────┘
+       │  Core picks up from MQ
+       ▼
+   ┌────────┐
+   │running │
+   └───┬────┘
+       │  Task Agent processes
+       ▼
+  success / failed
+```
+
+## Checking Status
+
+<CodeGroup>
+```python title="Python"
+import os
+from acontext import AcontextClient
+
+client = AcontextClient(api_key=os.getenv("ACONTEXT_API_KEY"))
+
+messages = client.sessions.get_messages(session_id="<session-id>", format="acontext")
+for msg, msg_id in zip(messages.items, messages.ids):
+    print(f"{msg_id}: {msg['session_task_process_status']}")
+```
+
+```typescript title="TypeScript"
+import { AcontextClient } from '@acontext/acontext';
+
+const client = new AcontextClient({ apiKey: process.env.ACONTEXT_API_KEY });
+
+const messages = await client.sessions.getMessages('<session-id>', { format: 'acontext' });
+for (const item of messages.items) {
+    console.log(`${item.id}: ${item.session_task_process_status}`);
+}
+```
+</CodeGroup>
+
+## Observing Status
+
+Use `messages_observing_status` to get aggregated counts of `observed` (success), `in_process` (running), and `pending` messages for a session. Messages with `disable_tracking` or `limit_exceed` are not included in these counts.
+
+<CodeGroup>
+```python title="Python"
+status = client.sessions.messages_observing_status(session_id="<session-id>")
+print(f"Observed: {status.observed}, In process: {status.in_process}, Pending: {status.pending}")
+```
+
+```typescript title="TypeScript"
+const status = await client.sessions.messagesObservingStatus('<session-id>');
+console.log(`Observed: ${status.observed}, In process: ${status.in_process}, Pending: ${status.pending}`);
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={3}>
+<Card title="Agent Tasks" icon="list-check" href="/observe/agent_tasks">
+How task extraction works
+</Card>
+<Card title="Disable Tracking" icon="toggle-off" href="/observe/disable_tasks">
+Skip extraction for specific sessions
+</Card>
+<Card title="Session Buffer" icon="clock" href="/observe/buffer">
+How message batching works
+</Card>
+</CardGroup>

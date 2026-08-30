@@ -1,0 +1,590 @@
+package handler
+
+import (
+	"archive/zip"
+	"bytes"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/bytedance/sonic"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/memodb-io/Acontext/internal/infra/httpclient"
+	"github.com/memodb-io/Acontext/internal/middleware"
+	"github.com/memodb-io/Acontext/internal/modules/model"
+	"github.com/memodb-io/Acontext/internal/modules/serializer"
+	"github.com/memodb-io/Acontext/internal/modules/service"
+	"golang.org/x/sync/errgroup"
+	"gorm.io/gorm"
+)
+
+type AgentSkillsHandler struct {
+	svc        service.AgentSkillsService
+	userSvc    service.UserService
+	coreClient *httpclient.CoreClient
+}
+
+func NewAgentSkillsHandler(s service.AgentSkillsService, userSvc service.UserService, coreClient *httpclient.CoreClient) *AgentSkillsHandler {
+	return &AgentSkillsHandler{svc: s, userSvc: userSvc, coreClient: coreClient}
+}
+
+// splitSkillPath converts a skill-relative file path into Artifact (Path, Filename) tuple.
+func splitSkillPath(relativePath string) (dir, filename string) {
+	idx := strings.LastIndex(relativePath, "/")
+	if idx == -1 {
+		return "/", relativePath
+	}
+	return "/" + relativePath[:idx] + "/", relativePath[idx+1:]
+}
+
+// joinSkillPath reconstructs a skill-relative file path from Artifact (Path, Filename).
+func joinSkillPath(artifactPath, filename string) string {
+	if artifactPath == "/" {
+		return filename
+	}
+	return strings.TrimPrefix(artifactPath, "/") + filename
+}
+
+// toASCII converts a string to ASCII by replacing non-ASCII characters with underscores.
+// Used for Content-Disposition ASCII fallback filename.
+func toASCII(s string) string {
+	var result strings.Builder
+	for _, r := range s {
+		if r < 128 && r != '"' && r != '\\' {
+			result.WriteRune(r)
+		} else {
+			result.WriteRune('_')
+		}
+	}
+	return result.String()
+}
+
+// buildContentDisposition builds a Content-Disposition header value for a ZIP download.
+// It includes an ASCII fallback filename and a RFC 5987 UTF-8 encoded filename.
+func buildContentDisposition(name string) string {
+	asciiName := toASCII(name)
+	escapedName := url.PathEscape(name)
+	return fmt.Sprintf("attachment; filename=\"%s.zip\"; filename*=UTF-8''%s.zip", asciiName, escapedName)
+}
+
+type CreateAgentSkillsReq struct {
+	User string `form:"user" json:"user" example:"alice@acontext.io"`
+	Meta string `form:"meta" json:"meta" example:"{\"version\":\"1.0\"}"`
+}
+
+// CreateAgentSkills godoc
+//
+//	@Summary		Create agent skill
+//	@Description	Upload a zip file containing agent skill. The zip file must contain a SKILL.md file (case-insensitive) with YAML format containing 'name' and 'description' fields. The name and description will be extracted from SKILL.md. Files are stored as Disk Artifacts. Optionally associate with a user identifier.
+//	@Tags			agent_skills
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			file	formData	file	true	"ZIP file containing agent skill. Must contain SKILL.md (case-insensitive) with YAML format: name and description fields."
+//	@Param			user	formData	string	false	"User identifier to associate with the skill"	example(alice@acontext.io)
+//	@Param			meta	formData	string	false	"Additional metadata (JSON string)"
+//	@Security		BearerAuth
+//	@Success		201	{object}	serializer.Response{data=model.AgentSkills}	"Returns agent skill with name and description extracted from SKILL.md"
+//	@Router			/agent_skills [post]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\nfrom acontext.uploads import FileUpload\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Upload a skill from a zip file\nwith open('my_skill.zip', 'rb') as f:\n    skill = client.skills.create(\n        file=FileUpload(filename='my_skill.zip', content=f.read(), content_type='application/zip'),\n        user='alice@example.com',\n        meta={'version': '1.0'}\n    )\nprint(f\"Created skill: {skill.name} (ID: {skill.id})\")\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\nimport fs from 'fs';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Upload a skill from a zip file\nconst fileBuffer = fs.readFileSync('my_skill.zip');\nconst skill = await client.skills.create({\n  file: ['my_skill.zip', fileBuffer, 'application/zip'],\n  user: 'alice@example.com',\n  meta: { version: '1.0' }\n});\nconsole.log(`Created skill: ${skill.name} (ID: ${skill.id})`);\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) CreateAgentSkill(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	var req CreateAgentSkillsReq
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", err))
+		return
+	}
+
+	// Get file from form
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("file is required")))
+		return
+	}
+
+	// Validate file is zip
+	if !strings.HasSuffix(strings.ToLower(fileHeader.Filename), ".zip") {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("file must be a zip archive")))
+		return
+	}
+
+	// Parse meta from JSON string if provided
+	var meta map[string]interface{}
+	if req.Meta != "" {
+		if err := sonic.Unmarshal([]byte(req.Meta), &meta); err != nil {
+			c.JSON(http.StatusBadRequest, serializer.ParamErr("invalid meta JSON format", err))
+			return
+		}
+	}
+
+	// If user identifier is provided, get or create the user
+	var userID *uuid.UUID
+	if req.User != "" {
+		user, err := h.userSvc.GetOrCreate(c.Request.Context(), project.ID, req.User)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, serializer.DBErr("failed to get or create user", err))
+			return
+		}
+		userID = &user.ID
+	}
+
+	agentSkills, err := h.svc.Create(c.Request.Context(), service.CreateAgentSkillsInput{
+		ProjectID: project.ID,
+		UserID:    userID,
+		ZipFile:   fileHeader,
+		Meta:      meta,
+		UserKEK:   middleware.GetUserKEKIfEncrypted(c),
+	})
+	if err != nil {
+		// Check if error is a validation error (SKILL.md related)
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "SKILL.md") || strings.Contains(errMsg, "name is required") || strings.Contains(errMsg, "description is required") {
+			c.JSON(http.StatusBadRequest, serializer.ParamErr("", err))
+		} else {
+			c.JSON(http.StatusInternalServerError, serializer.DBErr("", err))
+		}
+		return
+	}
+
+	c.JSON(http.StatusCreated, serializer.Response{Data: agentSkills})
+}
+
+// GetAgentSkills godoc
+//
+//	@Summary		Get agent skill by ID
+//	@Description	Get agent skill by its UUID
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Agent skill UUID"
+//	@Security		BearerAuth
+//	@Success		200	{object}	serializer.Response{data=model.AgentSkills}
+//	@Router			/agent_skills/{id} [get]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Get a skill by ID\nskill = client.skills.get('skill-uuid-here')\nprint(f\"Skill: {skill.name}\")\nprint(f\"Description: {skill.description}\")\nprint(f\"Files: {len(skill.file_index)} file(s)\")\nfor f in skill.file_index:\n    print(f\"  - {f.path} ({f.mime})\")\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Get a skill by ID\nconst skill = await client.skills.get('skill-uuid-here');\nconsole.log(`Skill: ${skill.name}`);\nconsole.log(`Description: ${skill.description}`);\nconsole.log(`Files: ${skill.file_index.length} file(s)`);\nskill.file_index.forEach(f => console.log(`  - ${f.path} (${f.mime})`));\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) GetAgentSkill(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("invalid id")))
+		return
+	}
+
+	agentSkills, err := h.svc.GetByID(c.Request.Context(), project.ID, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, serializer.DBErr("", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, serializer.Response{Data: agentSkills})
+}
+
+// DeleteAgentSkills godoc
+//
+//	@Summary		Delete agent skill
+//	@Description	Delete agent skill and all associated files
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path	string	true	"Agent skill UUID"
+//	@Security		BearerAuth
+//	@Success		200	{object}	serializer.Response
+//	@Router			/agent_skills/{id} [delete]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Delete a skill by ID\nclient.skills.delete('skill-uuid-here')\nprint('Skill deleted successfully')\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Delete a skill by ID\nawait client.skills.delete('skill-uuid-here');\nconsole.log('Skill deleted successfully');\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) DeleteAgentSkill(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("invalid id")))
+		return
+	}
+
+	if _, err := h.svc.GetByID(c.Request.Context(), project.ID, id); err != nil {
+		c.JSON(http.StatusNotFound, serializer.Err(http.StatusNotFound, "agent skill not found or access denied", nil))
+		return
+	}
+
+	if err := h.svc.Delete(c.Request.Context(), project.ID, id); err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.DBErr("", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, serializer.Response{})
+}
+
+type ListAgentSkillsReq struct {
+	User     string `form:"user" json:"user" example:"alice@acontext.io"`
+	Limit    int    `form:"limit,default=20" json:"limit" binding:"required,min=1,max=200" example:"20"`
+	Cursor   string `form:"cursor" json:"cursor" example:"cHJvdGVjdGVkIHZlcnNpb24gdG8gYmUgZXhjbHVkZWQgaW4gcGFyc2luZyB0aGUgY3Vyc29y"`
+	TimeDesc bool   `form:"time_desc,default=false" json:"time_desc" example:"false"`
+}
+
+// ListAgentSkills godoc
+//
+//	@Summary		List agent skills
+//	@Description	List all agent skills under a project
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		json
+//	@Param			user		query	string	false	"User identifier to filter skills"	example(alice@acontext.io)
+//	@Param			limit		query	integer	false	"Limit of agent skills to return, default 20. Max 200."
+//	@Param			cursor		query	string	false	"Cursor for pagination"
+//	@Param			time_desc	query	boolean	false	"Order by created_at descending if true"
+//	@Security		BearerAuth
+//	@Success		200	{object}	serializer.Response{data=service.ListAgentSkillsOutput}
+//	@Router			/agent_skills [get]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# List all skills with pagination\nresult = client.skills.list_catalog(limit=50)\nfor skill in result.items:\n    print(f\"{skill.name}: {skill.description}\")\n\n# Paginate through all skills\nif result.has_more:\n    next_page = client.skills.list_catalog(cursor=result.next_cursor)\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// List all skills with pagination\nconst result = await client.skills.list_catalog({ limit: 50 });\nresult.items.forEach(skill => {\n  console.log(`${skill.name}: ${skill.description}`);\n});\n\n// Paginate through all skills\nif (result.has_more) {\n  const nextPage = await client.skills.list_catalog({ cursor: result.next_cursor });\n}\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) ListAgentSkills(c *gin.Context) {
+	req := ListAgentSkillsReq{}
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", err))
+		return
+	}
+
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	out, err := h.svc.List(c.Request.Context(), service.ListAgentSkillsInput{
+		ProjectID: project.ID,
+		User:      req.User,
+		Limit:     req.Limit,
+		Cursor:    req.Cursor,
+		TimeDesc:  req.TimeDesc,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.DBErr("", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, serializer.Response{Data: out})
+}
+
+// GetAgentSkillFile godoc
+//
+//	@Summary		Get file from agent skill
+//	@Description	Get file content or download URL from agent skill. If the file is text-based (parseable), returns parsed content. Otherwise, returns a presigned download URL.
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		json
+//	@Param			id			path	string	true	"Agent skill UUID"
+//	@Param			file_path	query	string	true	"File path within the skill (e.g., 'scripts/extract_text.json')"
+//	@Param			expire		query	int		false	"URL expiration in seconds for presigned URL (default 900)"
+//	@Security		BearerAuth
+//	@Success		200	{object}	serializer.Response{data=service.GetFileOutput}
+//	@Router			/agent_skills/{id}/file [get]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Get a file from a skill (text files return content, binary files return URL)\nfile_resp = client.skills.get_file(\n    skill_id='skill-uuid-here',\n    file_path='scripts/main.py',\n    expire=1800  # URL expires in 30 minutes\n)\n\nprint(f\"File: {file_resp.path} ({file_resp.mime})\")\nif file_resp.content:\n    print(f\"Content: {file_resp.content.raw}\")\nif file_resp.url:\n    print(f\"Download URL: {file_resp.url}\")\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Get a file from a skill (text files return content, binary files return URL)\nconst fileResp = await client.skills.getFile({\n  skillId: 'skill-uuid-here',\n  filePath: 'scripts/main.py',\n  expire: 1800  // URL expires in 30 minutes\n});\n\nconsole.log(`File: ${fileResp.path} (${fileResp.mime})`);\nif (fileResp.content) {\n  console.log(`Content: ${fileResp.content.raw}`);\n}\nif (fileResp.url) {\n  console.log(`Download URL: ${fileResp.url}`);\n}\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) GetAgentSkillFile(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("invalid id")))
+		return
+	}
+
+	filePath := c.Query("file_path")
+	if filePath == "" {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("file_path is required")))
+		return
+	}
+
+	expire := 15 * time.Minute
+	if expireStr := c.Query("expire"); expireStr != "" {
+		if expireInt, err := time.ParseDuration(expireStr + "s"); err == nil {
+			expire = expireInt
+		}
+	}
+
+	output, err := h.svc.GetFile(c.Request.Context(), project.ID, id, filePath, expire, project.EncryptionEnabled, middleware.GetUserKEKIfEncrypted(c))
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, serializer.Err(http.StatusNotFound, "file not found", err))
+		} else {
+			c.JSON(http.StatusInternalServerError, serializer.DBErr("", err))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, serializer.Response{Data: output})
+}
+
+type DownloadSkillToSandboxReq struct {
+	SandboxID string `json:"sandbox_id" binding:"required"` // Target sandbox ID
+}
+
+type DownloadSkillToSandboxResp struct {
+	Success     bool   `json:"success"`     // Whether the download was successful
+	DirPath     string `json:"dir_path"`    // Full path to the skill directory in sandbox
+	Name        string `json:"name"`        // Skill name
+	Description string `json:"description"` // Skill description
+}
+
+// DownloadToSandbox godoc
+//
+//	@Summary		Download skill to sandbox
+//	@Description	Download all files from an agent skill to a sandbox environment. Files are placed at /skills/{skill_name}/.
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path	string								true	"Agent skill UUID"
+//	@Param			request	body	handler.DownloadSkillToSandboxReq	true	"Download to sandbox request"
+//	@Security		BearerAuth
+//	@Success		200	{object}	serializer.Response{data=handler.DownloadSkillToSandboxResp}
+//	@Failure		409	{object}	serializer.Response	"Skill directory already exists in sandbox"
+//	@Router			/agent_skills/{id}/download_to_sandbox [post]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Download skill to sandbox\nresult = client.skills.download_to_sandbox(\n    skill_id='skill-uuid',\n    sandbox_id='sandbox-uuid'\n)\nprint(f\"Success: {result.success}\")\nprint(f\"Skill installed at: {result.dir_path}\")\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Download skill to sandbox\nconst result = await client.skills.downloadToSandbox('skill-uuid', {\n  sandboxId: 'sandbox-uuid'\n});\nconsole.log(`Success: ${result.success}`);\nconsole.log(`Skill installed at: ${result.dir_path}`);\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) DownloadToSandbox(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	// Parse skill ID from path
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("invalid skill id", err))
+		return
+	}
+
+	// Bind request body
+	req := DownloadSkillToSandboxReq{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", err))
+		return
+	}
+
+	// Parse sandbox ID
+	sandboxID, err := uuid.Parse(req.SandboxID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("invalid sandbox_id", err))
+		return
+	}
+
+	// Get skill metadata + file list in a single query (no double artifact listing)
+	listResult, err := h.svc.ListFiles(c.Request.Context(), project.ID, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, serializer.DBErr("skill not found", err))
+		return
+	}
+
+	// Build the base destination path: /skills/skill_name
+	// Note: skill name is already sanitized at upload time
+	baseDirPath := "/skills/" + listResult.Name
+
+	if len(listResult.Files) == 0 {
+		// No files to download, just return success with the expected path
+		c.JSON(http.StatusOK, serializer.Response{Data: DownloadSkillToSandboxResp{
+			Success:     true,
+			DirPath:     baseDirPath,
+			Name:        listResult.Name,
+			Description: listResult.Description,
+		}})
+		return
+	}
+
+	// Check if the skill directory already exists in the sandbox
+	checkResult, err := h.coreClient.ExecSandboxCommand(c.Request.Context(), project.ID, sandboxID, fmt.Sprintf("test -d %s", baseDirPath))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to check skill directory", err))
+		return
+	}
+	if checkResult.ExitCode == 0 {
+		c.JSON(http.StatusConflict, serializer.Err(http.StatusConflict,
+			fmt.Sprintf("skill directory '%s' already exists in sandbox, please make sure you don't download the same skill again", baseDirPath), nil))
+		return
+	}
+
+	// Upload files to sandbox concurrently
+	g, gctx := errgroup.WithContext(c.Request.Context())
+	g.SetLimit(10)
+
+	for _, file := range listResult.Files {
+		file := file // capture loop variable
+		g.Go(func() error {
+			// Build destination path in sandbox: baseDirPath/relativePath
+			destPath := baseDirPath + "/" + file.Path
+
+			// Upload file to sandbox via CORE service using S3 key from artifact
+			result, err := h.coreClient.UploadSandboxFile(gctx, project.ID, sandboxID, file.S3Key, destPath, middleware.GetUserKEKIfEncrypted(c))
+			if err != nil {
+				return fmt.Errorf("failed to download file to sandbox: %s: %w", file.Path, err)
+			}
+			if !result.Success {
+				return fmt.Errorf("failed to download file to sandbox: %s", file.Path)
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, err.Error(), err))
+		return
+	}
+
+	c.JSON(http.StatusOK, serializer.Response{Data: DownloadSkillToSandboxResp{
+		Success:     true,
+		DirPath:     baseDirPath,
+		Name:        listResult.Name,
+		Description: listResult.Description,
+	}})
+}
+
+// DownloadZip godoc
+//
+//	@Summary		Download skill as ZIP file
+//	@Description	Download all files from an agent skill as a ZIP archive. Files are streamed directly with their relative paths preserved.
+//	@Tags			agent_skills
+//	@Accept			json
+//	@Produce		application/zip
+//	@Param			id	path	string	true	"Agent skill UUID"
+//	@Security		BearerAuth
+//	@Success		200	{file}	binary	"ZIP file containing all skill files"
+//	@Router			/agent_skills/{id}/download_zip [get]
+//	@x-code-samples	[{"lang":"python","source":"from acontext import AcontextClient\n\nclient = AcontextClient(api_key='sk_project_token')\n\n# Download skill as ZIP file\nwith open('my_skill.zip', 'wb') as f:\n    content = client.skills.download_zip('skill-uuid')\n    f.write(content)\nprint('Skill downloaded as ZIP')\n","label":"Python"},{"lang":"javascript","source":"import { AcontextClient } from '@acontext/acontext';\nimport fs from 'fs';\n\nconst client = new AcontextClient({ apiKey: 'sk_project_token' });\n\n// Download skill as ZIP file\nconst zipContent = await client.skills.downloadZip('skill-uuid');\nfs.writeFileSync('my_skill.zip', zipContent);\nconsole.log('Skill downloaded as ZIP');\n","label":"JavaScript"}]
+func (h *AgentSkillsHandler) DownloadZip(c *gin.Context) {
+	project, ok := c.MustGet("project").(*model.Project)
+	if !ok {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("", errors.New("project not found")))
+		return
+	}
+
+	// Parse skill ID from path
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializer.ParamErr("invalid skill id", err))
+		return
+	}
+
+	// Get skill metadata + file list
+	listResult, err := h.svc.ListFiles(c.Request.Context(), project.ID, id)
+	if err != nil {
+		// Distinguish "not found" from internal errors (fix: don't mask storage/DB failures as 404)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, serializer.Err(http.StatusNotFound, "skill not found", nil))
+		} else {
+			c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to list skill files", nil))
+		}
+		return
+	}
+
+	// Issue 4: Add size guard (50MB total, 200 files max)
+	const maxTotalSize = 50 * 1024 * 1024 // 50MB
+	const maxFileCount = 200
+	if len(listResult.Files) > maxFileCount {
+		c.JSON(http.StatusRequestEntityTooLarge, serializer.Err(http.StatusRequestEntityTooLarge,
+			fmt.Sprintf("skill has too many files (%d), maximum is %d", len(listResult.Files), maxFileCount), nil))
+		return
+	}
+
+	// Calculate total size from artifact metadata (no N+1 queries - use artifacts from ListFiles)
+	var totalSize int64
+	artifacts := listResult.Artifacts
+	for _, artifact := range artifacts {
+		assetData := artifact.AssetMeta.Data()
+		totalSize += assetData.SizeB
+	}
+
+	if totalSize > maxTotalSize {
+		c.JSON(http.StatusRequestEntityTooLarge, serializer.Err(http.StatusRequestEntityTooLarge,
+			fmt.Sprintf("skill total size (%d bytes) exceeds maximum (%d bytes)", totalSize, maxTotalSize), nil))
+		return
+	}
+
+	if len(artifacts) == 0 {
+		// No files to download, return empty ZIP
+		c.Header("Content-Type", "application/zip")
+		c.Header("Content-Disposition", buildContentDisposition(listResult.Name))
+		buf := new(bytes.Buffer)
+		zipWriter := zip.NewWriter(buf)
+		zipWriter.Close()
+		c.Data(http.StatusOK, "application/zip", buf.Bytes())
+		return
+	}
+
+	// Download all files in parallel using artifact objects (Issue 1: use DownloadRawContent pattern)
+	type fileData struct {
+		path    string
+		content []byte
+	}
+	fileContents := make([]*fileData, len(artifacts))
+
+	g, gctx := errgroup.WithContext(c.Request.Context())
+	g.SetLimit(10)
+
+	for i, artifact := range artifacts {
+		i, artifact := i, artifact
+		g.Go(func() error {
+			// Issue 1: Use DownloadRawContent instead of DownloadByS3Key
+			content, _, err := h.svc.DownloadRawContent(gctx, artifact, middleware.GetUserKEKIfEncrypted(c))
+			if err != nil {
+				// Reconstruct path from artifact
+				skillPath := joinSkillPath(artifact.Path, artifact.Filename)
+				return fmt.Errorf("failed to download file %s: %w", skillPath, err)
+			}
+			fileContents[i] = &fileData{
+				path:    joinSkillPath(artifact.Path, artifact.Filename),
+				content: content,
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to download files", nil))
+		return
+	}
+
+	// Create ZIP in memory
+	buf := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(buf)
+
+	for _, fd := range fileContents {
+		if fd == nil {
+			continue
+		}
+		w, err := zipWriter.Create(fd.path)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to create zip entry", err))
+			return
+		}
+		if _, err := w.Write(fd.content); err != nil {
+			c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to write zip entry", err))
+			return
+		}
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		c.JSON(http.StatusInternalServerError, serializer.Err(http.StatusInternalServerError, "failed to close zip", err))
+		return
+	}
+
+	// Stream ZIP to client
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", buildContentDisposition(listResult.Name))
+	c.Data(http.StatusOK, "application/zip", buf.Bytes())
+}

@@ -1,0 +1,35 @@
+name: Feature Request
+description: Suggest a new feature or capability
+title: "[Feature]: "
+labels: [kind/feature]
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for the same feature?
+      description: Please check if an issue already exists.
+      options:
+        - label: I have checked the existing issues.
+          required: true
+  - type: textarea
+    attributes:
+      label: Is your feature request related to a problem?
+      render: Markdown
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Describe the feature you'd like
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Implementation / design notes (optional)
+      render: Markdown
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional information
+    validations:
+      required: false

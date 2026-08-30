@@ -1,0 +1,80 @@
+package serializer
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
+
+var logger *zap.Logger
+
+// SetLogger initializes the logger for the serializer package
+func SetLogger(log *zap.Logger) {
+	logger = log
+}
+
+// Response
+type Response struct {
+	Code  int         `json:"code"`
+	Data  interface{} `json:"data,omitempty" swaggerignore:"true"`
+	Msg   string      `json:"msg"`
+	Error string      `json:"error,omitempty"`
+}
+
+// TraceErrorResponse
+type TrackedErrorResponse struct {
+	Response
+	TraceID string `json:"trace_id"`
+}
+
+// Err
+func Err(errCode int, msg string, err error) Response {
+	res := Response{
+		Code: errCode,
+		Msg:  msg,
+	}
+	// Log error if logger is available
+	if err != nil && logger != nil {
+		logger.Error("API error",
+			zap.Int("code", errCode),
+			zap.String("msg", msg),
+			zap.Error(err),
+		)
+	}
+	// development mode, show error detail
+	if err != nil && gin.Mode() != gin.ReleaseMode {
+		res.Error = fmt.Sprintf("%+v", err)
+	}
+	return res
+}
+
+// DBErr
+func DBErr(msg string, err error) Response {
+	if msg == "" {
+		msg = "database error"
+	}
+	return Err(http.StatusInternalServerError, msg, err)
+}
+
+// ParamErr
+func ParamErr(msg string, err error) Response {
+	if msg == "" {
+		msg = "parameter error"
+	}
+	return Err(http.StatusBadRequest, msg, err)
+}
+
+// EncryptionKeyRequiredErr returns a 403 response indicating that an API key is required for encrypted data.
+func EncryptionKeyRequiredErr() Response {
+	return Response{Code: http.StatusForbidden, Msg: "encryption enabled, API key required", Error: "ENCRYPTION_KEY_REQUIRED"}
+}
+
+// AuthErr
+func AuthErr(msg string) Response {
+	if msg == "" {
+		msg = "authentication error"
+	}
+	return Err(http.StatusUnauthorized, msg, nil)
+}

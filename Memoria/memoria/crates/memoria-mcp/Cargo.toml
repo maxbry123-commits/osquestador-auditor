@@ -1,0 +1,43 @@
+[package]
+name = "memoria-mcp"
+version.workspace = true
+edition = "2021"
+
+[features]
+default = []
+local-embedding = ["memoria-embedding/local-embedding"]
+
+[dependencies]
+memoria-core = { workspace = true }
+memoria-storage = { workspace = true }
+memoria-embedding = { workspace = true }
+memoria-service = { workspace = true }
+chrono = { workspace = true }
+memoria-git = { workspace = true }
+sqlx = { workspace = true }
+uuid = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+reqwest = { workspace = true }
+futures = { workspace = true }
+axum = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
+async-trait = { workspace = true }
+memoria-core = { workspace = true }
+memoria-storage = { workspace = true }
+memoria-embedding = { workspace = true }
+memoria-api = { path = "../memoria-api" }
+memoria-test-utils = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+sqlx = { workspace = true }
+reqwest = { workspace = true }
+axum = { workspace = true }
+serial_test = "3.4.0"

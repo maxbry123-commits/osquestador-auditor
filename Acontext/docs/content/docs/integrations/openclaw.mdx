@@ -1,0 +1,157 @@
+---
+title: "OpenClaw"
+description: "Skill memory plugin for OpenClaw agents — auto-capture, auto-learn, native skill sync"
+---
+
+The `@acontext/openclaw` plugin gives OpenClaw agents cross-session skill memory. It captures conversations, extracts tasks, distills reusable Markdown skills, and syncs them to OpenClaw's native skill directory for automatic loading.
+
+## Quick Start
+
+<Steps>
+<Step title="Install the plugin">
+```bash
+openclaw plugins install @acontext/openclaw
+```
+</Step>
+
+<Step title="Set your API key">
+
+Get an API key from [dash.acontext.io](https://dash.acontext.io/) and export it:
+
+```bash
+export ACONTEXT_API_KEY=sk-ac-your-api-key
+```
+</Step>
+
+<Step title="Configure openclaw.json">
+
+Add the Acontext plugin to your `openclaw.json` config:
+
+```json5
+{
+  plugins: {
+    // Select Acontext as the active memory plugin
+    slots: {
+      memory: "acontext"
+    },
+    entries: {
+      "acontext": {
+        enabled: true,
+        config: {
+          "apiKey": "${ACONTEXT_API_KEY}",
+          "userIdentifier": "your-identifier"
+        }
+      }
+    }
+  }
+}
+```
+
+<Note>
+OpenClaw only loads one memory plugin at a time. Setting `plugins.slots.memory` to `"acontext"` replaces the default (`memory-core`). To switch back, set it to `"memory-core"` or `"none"`.
+</Note>
+</Step>
+
+<Step title="Start the gateway">
+```bash
+openclaw gateway
+```
+
+Your agent now has skill memory. Every conversation is captured, tasks are extracted, and skills are distilled and synced to `~/.openclaw/skills/` for native loading.
+</Step>
+</Steps>
+
+## How It Works
+
+```
+Session 1: User talks to agent
+  └→ Messages stored to Acontext session (incremental capture)
+  └→ CORE extracts structured tasks
+  └→ Learning Space distills skills as Markdown
+
+  ── Compaction or reset occurs ──
+  └→ Learning triggered
+  └→ Message cursor resets for next capture
+
+Session 2: User returns
+  └→ Skills synced to ~/.openclaw/skills/ (native loading)
+  └→ OpenClaw auto-loads skill files from its skill directory
+  └→ New messages captured (incremental capture)
+  └→ Skills updated (auto-learn)
+```
+
+The plugin hooks into four OpenClaw lifecycle events:
+
+- **`before_agent_start`** — Ensures learned skills are synced to `~/.openclaw/skills/` so OpenClaw can load them natively
+- **`agent_end`** — Stores new conversation messages to Acontext incrementally, triggers task extraction, and conditionally triggers skill distillation
+- **`before_compaction`** — Triggers learning before OpenClaw compacts the conversation history, then flags the message cursor for reset
+- **`before_reset`** — Triggers learning before a session reset clears the transcript, then flags the message cursor for reset
+
+<Note>
+Message capture is incremental — the plugin tracks a cursor so only new messages are stored on each `agent_end`. When compaction or reset rewrites the transcript, the cursor resets automatically to avoid gaps or duplicates.
+</Note>
+
+## Configuration
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `apiKey` | `string` | — | **Required.** Acontext API key (supports `${ACONTEXT_API_KEY}`) |
+| `baseUrl` | `string` | `https://api.acontext.app/api/v1` | Acontext API base URL |
+| `userIdentifier` | `string` | `"openclaw"` | User identifier for session scoping |
+| `learningSpaceId` | `string` | auto-created | Explicit Learning Space ID |
+| `skillsDir` | `string` | `~/.openclaw/skills` | Directory where skills are synced for native loading |
+| `autoCapture` | `boolean` | `true` | Store messages after each turn |
+| `autoLearn` | `boolean` | `true` | Trigger skill distillation after sessions |
+| `minTurnsForLearn` | `number` | `4` | Minimum conversation turns before triggering auto-learn |
+
+<Tip>
+For self-hosted Acontext, set `baseUrl` to your local API endpoint (e.g. `http://localhost:8029/api/v1`).
+</Tip>
+
+## Agent Tools
+
+The plugin registers three tools your agent can call explicitly during conversations:
+
+| Tool | Description |
+|------|-------------|
+| `acontext_search_skills` | Search through learned skill files by keyword |
+| `acontext_session_history` | Get task summaries from recent past sessions |
+| `acontext_learn_now` | Trigger skill learning from the current session immediately |
+
+## CLI Commands
+
+```bash
+# List all learned skills in the Learning Space
+openclaw acontext skills
+
+# Show memory statistics (sessions, tasks, skills)
+openclaw acontext stats
+```
+
+## Skill Sync
+
+Skills are synced as Markdown files to OpenClaw's native skill directory (`~/.openclaw/skills/` by default). OpenClaw auto-loads them — no prompt injection needed.
+
+- **Incremental sync** — Only changed skills are re-downloaded, using server-side `updated_at` timestamps
+- **Sync triggers** — On service start, before each agent turn (if stale), and after learning
+
+<Note>
+Unlike plugins that inject context into prompts, Acontext syncs skills as files that OpenClaw loads natively. You can inspect, modify, and share these Markdown skill files directly in `~/.openclaw/skills/`.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+<Card title="Skill Memory" icon="brain" href="/learn/quick">
+How Learning Spaces distill skills from sessions
+</Card>
+<Card title="Session Storage" icon="database" href="/store/overview">
+Session persistence and message storage
+</Card>
+<Card title="Task Tracking" icon="radar" href="/observe/whatis">
+Automatic task extraction from conversations
+</Card>
+<Card title="Dashboard" icon="chart-simple" href="/observe/dashboard">
+View all agent interactions and skills
+</Card>
+</CardGroup>

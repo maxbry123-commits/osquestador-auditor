@@ -1,0 +1,97 @@
+---
+title: "Task Evaluation Criteria"
+description: "Configure custom success and failure standards for task tracking"
+---
+
+Define what "success" and "failure" mean for your project's tasks. By default, Acontext uses generic criteria — configure custom ones to match your agent's domain (e.g. customer support, coding, research).
+
+## Configure via SDK
+
+<CodeGroup>
+```python title="Python"
+import os
+from acontext import AcontextClient
+
+client = AcontextClient(api_key=os.getenv("ACONTEXT_API_KEY"))
+
+# Set custom task evaluation criteria
+client.project.update_configs({
+    "task_success_criteria": "The customer's issue is fully resolved and they confirm satisfaction, or the agent provides a verified solution with supporting documentation.",
+    "task_failure_criteria": "The agent cannot resolve the issue after exhausting available options, the customer explicitly reports dissatisfaction, or the conversation is abandoned without resolution.",
+})
+
+# View current config
+configs = client.project.get_configs()
+print(configs)
+```
+
+```typescript title="TypeScript"
+import { AcontextClient } from '@acontext/acontext';
+
+const client = new AcontextClient({
+    apiKey: process.env.ACONTEXT_API_KEY,
+});
+
+// Set custom task evaluation criteria
+await client.project.updateConfigs({
+  task_success_criteria: "The customer's issue is fully resolved and they confirm satisfaction, or the agent provides a verified solution with supporting documentation.",
+  task_failure_criteria: "The agent cannot resolve the issue after exhausting available options, the customer explicitly reports dissatisfaction, or the conversation is abandoned without resolution.",
+});
+
+// View current config
+const configs = await client.project.getConfigs();
+console.log(configs);
+```
+</CodeGroup>
+
+## Reset to Defaults
+
+Pass `null` to remove a custom criteria and revert to the built-in default.
+
+<CodeGroup>
+```python title="Python"
+client.project.update_configs({
+    "task_success_criteria": None,
+    "task_failure_criteria": None,
+})
+```
+
+```typescript title="TypeScript"
+await client.project.updateConfigs({
+  task_success_criteria: null,
+  task_failure_criteria: null,
+});
+```
+</CodeGroup>
+
+## Configure via Dashboard
+
+You can also set task evaluation criteria from the Dashboard UI.
+
+<Tabs>
+<Tab title="Hosted Dashboard">
+Go to **Project Settings → Task Tracking** tab. Edit the **Task Success Criteria** and **Task Failure Criteria** text fields, then click **Save**.
+</Tab>
+
+<Tab title="Self-Hosted (OSS)">
+Go to **Settings** in the sidebar. Edit the **Task Success Criteria** and **Task Failure Criteria** text fields, then click **Save**.
+</Tab>
+</Tabs>
+
+<Note>
+Custom criteria are injected into the task agent's input prompt. The system prompt stays identical across all projects, so LLM prompt caching (Anthropic and OpenAI) is fully preserved regardless of your custom criteria.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={3}>
+<Card title="Agent Tasks" icon="list-check" href="/observe/agent_tasks">
+How task extraction works
+</Card>
+<Card title="Disable Tasks" icon="circle-xmark" href="/observe/disable_tasks">
+Skip task tracking for specific sessions
+</Card>
+<Card title="Dashboard" icon="chart-simple" href="/observe/dashboard">
+View task analytics
+</Card>
+</CardGroup>

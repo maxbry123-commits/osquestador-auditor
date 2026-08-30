@@ -1,0 +1,14 @@
+{
+  "name": "memodb-io",
+  "owner": {
+    "name": "memodb-io"
+  },
+  "plugins": [
+    {
+      "name": "acontext",
+      "version": "0.1.3",
+      "source": "./src/packages/claude-code/plugin",
+      "description": "Skill memory layer for Claude Code - auto-capture, learn, and reuse skills"
+    }
+  ]
+}

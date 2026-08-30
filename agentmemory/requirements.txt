@@ -1,0 +1,13 @@
+# agentmemory V4 — Benchmark evaluation dependencies
+# For the LongMemEval world record configuration.
+# Install with: pip install -r requirements.txt
+
+# API clients
+openai>=1.0
+anthropic>=0.20
+
+# Dense embeddings (required for benchmark accuracy)
+sentence-transformers>=2.0
+
+# agentmemory library (install from source)
+-e .

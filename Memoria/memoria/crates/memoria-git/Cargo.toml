@@ -1,0 +1,18 @@
+[package]
+name = "memoria-git"
+version.workspace = true
+edition = "2021"
+
+[dependencies]
+memoria-core = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+memoria-storage = { path = "../memoria-storage" }
+uuid = { workspace = true }

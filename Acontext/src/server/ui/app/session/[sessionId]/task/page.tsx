@@ -1,0 +1,479 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PaginationBar } from "@/components/pagination-bar";
+import { Loader2, RefreshCw, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { getTasks, getSessionConfigs } from "@/app/session/actions";
+import { Task } from "@/types";
+import ReactCodeMirror from "@uiw/react-codemirror";
+import { okaidia } from "@uiw/codemirror-theme-okaidia";
+import { json } from "@codemirror/lang-json";
+import { EditorView } from "@codemirror/view";
+
+const PAGE_SIZE = 10;
+
+export default function TasksPage() {
+  const t = useTranslations("session");
+  const tp = useTranslations("pagination");
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = params.sessionId as string;
+  const { resolvedTheme } = useTheme();
+
+  const [sessionInfo, setSessionInfo] = useState<string>("");
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefreshingTasks, setIsRefreshingTasks] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isDataExpanded, setIsDataExpanded] = useState(false);
+
+  const totalPages = Math.ceil(allTasks.length / PAGE_SIZE);
+  const paginatedTasks = allTasks.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const loadSessionInfo = async () => {
+    try {
+      const res = await getSessionConfigs(sessionId);
+      if (res.code === 0 && res.data) {
+        setSessionInfo(sessionId);
+      } else {
+        setSessionInfo(sessionId);
+      }
+    } catch (error) {
+      console.error("Failed to load session info:", error);
+      setSessionInfo(sessionId);
+    }
+  };
+
+  const loadAllTasks = async () => {
+    try {
+      setIsLoadingTasks(true);
+
+      const first = await getTasks(sessionId, 50, undefined);
+      if (first.code !== 0) {
+        console.error(first.message);
+        setIsLoadingTasks(false);
+        return;
+      }
+      setAllTasks(first.data?.items || []);
+      setCurrentPage(1);
+      setIsLoadingTasks(false);
+
+      if (first.data?.has_more) {
+        setIsLoadingMore(true);
+        let cursor = first.data?.next_cursor;
+        while (cursor) {
+          const res = await getTasks(sessionId, 50, cursor);
+          if (res.code !== 0) {
+            console.error(res.message);
+            break;
+          }
+          setAllTasks(prev => [...prev, ...(res.data?.items || [])]);
+          cursor = res.data?.has_more ? res.data?.next_cursor : undefined;
+        }
+        setIsLoadingMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to load tasks:", error);
+      setIsLoadingTasks(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  const handleRefreshTasks = async () => {
+    setIsRefreshingTasks(true);
+    await loadAllTasks();
+    setIsRefreshingTasks(false);
+  };
+
+  useEffect(() => {
+    if (sessionId) {
+      loadSessionInfo();
+      loadAllTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  // Handle opening task dialog from URL parameter
+  useEffect(() => {
+    const taskId = searchParams.get("taskId");
+    if (taskId && allTasks.length > 0 && !isLoadingTasks) {
+      const task = allTasks.find((t) => t.id === taskId);
+      if (task) {
+        setSelectedTask(task);
+        setDetailDialogOpen(true);
+        // Clean up URL parameter after opening dialog
+        const newSearchParams = new URLSearchParams(searchParams.toString());
+        newSearchParams.delete("taskId");
+        const newUrl = newSearchParams.toString()
+          ? `${window.location.pathname}?${newSearchParams.toString()}`
+          : window.location.pathname;
+        router.replace(newUrl);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, allTasks, isLoadingTasks]);
+
+  const handleOpenDetailDialog = (task: Task) => {
+    setSelectedTask(task);
+    setDetailDialogOpen(true);
+  };
+
+  const handleGoBack = () => {
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo");
+    router.push(returnTo || "/session");
+  };
+
+  const getStatusColor = (status: Task["status"]) => {
+    switch (status) {
+      case "success":
+        return "bg-green-500/10 text-green-500 border-green-500/20";
+      case "failed":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "running":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "pending":
+        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
+      default:
+        return "bg-secondary";
+    }
+  };
+
+  return (
+    <div className="h-full bg-background p-6 flex flex-col overflow-hidden space-y-2">
+      <div className="shrink-0 space-y-4">
+        <div className="flex items-stretch gap-2">
+          <Button
+            variant="outline"
+            onClick={handleGoBack}
+            className="rounded-l-md rounded-r-none h-auto px-3"
+            title={t("backToSessions") || "Back to Sessions"}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{t("tasks") || "Tasks"}</h1>
+            <p className="text-sm text-muted-foreground">
+              Session: <span className="font-mono">{sessionInfo}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefreshTasks}
+              disabled={isRefreshingTasks || isLoadingTasks}
+            >
+              {isRefreshingTasks ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("loading")}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  {t("refresh")}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 rounded-md border overflow-hidden flex flex-col min-h-0">
+        {isLoadingTasks ? (
+          <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : allTasks.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-muted-foreground">{t("noData")}</p>
+          </div>
+        ) : (
+          <>
+              <div className="flex-1 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">
+                        {t("taskId") || "Task ID"}
+                      </TableHead>
+                      <TableHead className="w-[80px]">
+                        {t("order") || "Order"}
+                      </TableHead>
+                      <TableHead className="w-[100px]">
+                        {t("status")}
+                      </TableHead>
+                      <TableHead className="w-[100px]">
+                        {t("isPlanning") || "Planning"}
+                      </TableHead>
+                      <TableHead className="w-[180px]">
+                        {t("createdAt")}
+                      </TableHead>
+                      <TableHead className="w-[100px]">
+                        {t("actions")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-mono text-xs">
+                          {task.id}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center justify-center rounded-md bg-secondary border border-border px-2 py-1 text-xs font-medium">
+                            {task.order}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${getStatusColor(
+                              task.status
+                            )}`}
+                          >
+                            {task.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {task.is_planning ? (
+                            <span className="inline-flex items-center rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20 px-2 py-1 text-xs font-medium">
+                              Yes
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-md bg-secondary border border-border px-2 py-1 text-xs font-medium text-muted-foreground">
+                              No
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {new Date(task.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleOpenDetailDialog(task)}
+                          >
+                            {t("view")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={allTasks.length}
+                onPageChange={setCurrentPage}
+                itemLabel={tp("tasks")}
+                isLoading={isLoadingMore}
+              />
+          </>
+        )}
+      </div>
+
+      {/* Task Detail Dialog */}
+      <Dialog
+        open={detailDialogOpen}
+        onOpenChange={(open) => {
+          setDetailDialogOpen(open);
+          if (!open) {
+            setIsDataExpanded(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>
+              {t("taskDetail") || "Task Detail"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {/* Task header */}
+              <div className="border-b pb-4 space-y-3 mb-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center justify-center rounded-md bg-secondary border border-border px-2 py-1 text-xs font-medium">
+                    {t("order") || "Order"}: {selectedTask.order}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${getStatusColor(
+                      selectedTask.status
+                    )}`}
+                  >
+                    {selectedTask.status}
+                  </span>
+                  {selectedTask.is_planning && (
+                    <span className="inline-flex items-center rounded-md bg-purple-500/10 text-purple-500 border border-purple-500/20 px-2 py-1 text-xs font-medium">
+                      Planning
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Task details - reordered */}
+              <div className="space-y-4">
+                {/* 1. Task Description */}
+                {selectedTask.data?.task_description != null && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      Task Description
+                    </p>
+                    <p className="text-sm bg-muted px-2 py-1 rounded whitespace-pre-wrap">
+                      {typeof selectedTask.data.task_description === "string"
+                        ? selectedTask.data.task_description
+                        : JSON.stringify(selectedTask.data.task_description, null, 2)}
+                    </p>
+                  </div>
+                )}
+
+                {/* 2. Progresses */}
+                {selectedTask.data?.progresses != null &&
+                  Array.isArray(selectedTask.data.progresses) &&
+                  selectedTask.data.progresses.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">
+                        Progresses
+                      </p>
+                      <div className="space-y-1.5">
+                        {selectedTask.data.progresses.map(
+                          (progress: unknown, index: number) => (
+                            <div
+                              key={index}
+                              className="text-sm bg-muted px-3 py-1.5 rounded border-l-2 border-primary/30"
+                            >
+                              {typeof progress === "string" ? progress : String(progress)}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {/* 3. User Preferences */}
+                {selectedTask.data?.user_preferences != null &&
+                  Array.isArray(selectedTask.data.user_preferences) &&
+                  selectedTask.data.user_preferences.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">
+                        User Preferences
+                      </p>
+                      <div className="space-y-1">
+                        {selectedTask.data.user_preferences.map(
+                          (pref: unknown, index: number) => (
+                            <div
+                              key={index}
+                              className="text-sm bg-muted px-3 py-2 rounded border-l-2 border-primary/20"
+                            >
+                              {typeof pref === "string" ? pref : String(pref)}
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {/* 4. Created At & Updated At */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      {t("createdAt")}
+                    </p>
+                    <p className="text-sm bg-muted px-2 py-1 rounded">
+                      {new Date(selectedTask.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">
+                      {t("updatedAt")}
+                    </p>
+                    <p className="text-sm bg-muted px-2 py-1 rounded">
+                      {new Date(selectedTask.updated_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5. Task data - Collapsible */}
+                <div className="border-t pt-4 mt-4">
+                  <button
+                    onClick={() => setIsDataExpanded(!isDataExpanded)}
+                    className="flex items-center gap-2 w-full text-left mb-3 hover:opacity-80 transition-opacity"
+                  >
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {t("taskData") || "Task Data"}
+                    </p>
+                    {isDataExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                  {isDataExpanded && (
+                    <div className="border rounded-md overflow-hidden">
+                      <ReactCodeMirror
+                        value={JSON.stringify(selectedTask.data, null, 2)}
+                        height="400px"
+                        theme={resolvedTheme === "dark" ? okaidia : "light"}
+                        extensions={[json(), EditorView.lineWrapping]}
+                        editable={false}
+                        basicSetup={{
+                          lineNumbers: true,
+                          foldGutter: true,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDetailDialogOpen(false);
+                setIsDataExpanded(false);
+              }}
+            >
+              {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+

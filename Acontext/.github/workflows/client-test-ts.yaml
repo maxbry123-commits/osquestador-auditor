@@ -1,0 +1,53 @@
+name: TypeScript Client Test
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "src/client/acontext-ts/**"
+      - ".github/workflows/client-test-ts.yaml"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "src/client/acontext-ts/**"
+      - ".github/workflows/client-test-ts.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: '22'
+          cache: "npm"
+          cache-dependency-path: src/client/acontext-ts/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/client/acontext-ts
+        run: npm ci
+
+      - name: Run lint
+        working-directory: src/client/acontext-ts
+        run: npm run lint
+
+      - name: Build
+        working-directory: src/client/acontext-ts
+        run: npm run build
+
+      - name: Run tests
+        working-directory: src/client/acontext-ts
+        run: npm test
+        env:
+          CI: true

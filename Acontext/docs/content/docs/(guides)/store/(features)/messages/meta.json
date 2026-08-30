@@ -1,0 +1,10 @@
+{
+  "title": "Messages",
+  "pages": [
+    "multi-provider",
+    "multi-modal",
+    "filter-by-configs",
+    "message_status",
+    "special"
+  ]
+}

@@ -1,0 +1,914 @@
+/**
+ * Unit tests for the Acontext TypeScript SDK.
+ * These tests use mock data and do not require a running API server.
+ */
+
+import { MessagePart, FileUpload, buildAcontextMessage } from '../src/index';
+import { DiskEvent, TextEvent } from '../src/events';
+import {
+  createMockClient,
+  MockAcontextClient,
+  mockSession,
+  mockMessage,
+  mockGetMessagesOutput,
+  mockSessionEvent,
+  mockDisk,
+  mockArtifact,
+  mockGetArtifactResp,
+  mockFileContent,
+  mockUser,
+  mockTask,
+  mockPaginatedList,
+  resetMockIds,
+} from './mocks';
+
+describe('AcontextClient Unit Tests', () => {
+  let client: MockAcontextClient;
+
+  beforeEach(() => {
+    client = createMockClient();
+    resetMockIds();
+  });
+
+  afterEach(() => {
+    client.reset();
+  });
+
+  describe('Health Check', () => {
+    test('should ping the server', async () => {
+      const result = await client.ping();
+      expect(result).toBe('pong');
+    });
+  });
+
+  describe('Sessions API', () => {
+    test('should list sessions', async () => {
+      const sessions = [mockSession(), mockSession()];
+      client.mock().onGet('/session', () => mockPaginatedList(sessions, false));
+
+      const result = await client.sessions.list();
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.items.length).toBe(2);
+      expect(result.has_more).toBe(false);
+    });
+
+    test('should create a session', async () => {
+      const createdSession = mockSession({
+        configs: { mode: 'test' },
+      });
+      client.mock().onPost('/session', (options) => {
+        expect(options?.jsonData).toEqual({
+          configs: { mode: 'test' },
+        });
+        return createdSession;
+      });
+
+      const session = await client.sessions.create({
+        configs: { mode: 'test' },
+      });
+      expect(session).toBeDefined();
+      expect(session.id).toBeDefined();
+    });
+
+    test('should create a session with custom UUID', async () => {
+      const customUuid = '123e4567-e89b-12d3-a456-426614174000';
+      const createdSession = mockSession({
+        id: customUuid,
+      });
+      client.mock().onPost('/session', (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.use_uuid).toBe(customUuid);
+        return createdSession;
+      });
+
+      const session = await client.sessions.create({
+        useUuid: customUuid,
+      });
+      expect(session).toBeDefined();
+      expect(session.id).toBe(customUuid);
+    });
+
+    test('should create a session without custom UUID', async () => {
+      const createdSession = mockSession();
+      client.mock().onPost('/session', (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.use_uuid).toBeUndefined();
+        return createdSession;
+      });
+
+      const session = await client.sessions.create();
+      expect(session).toBeDefined();
+      expect(session.id).toBeDefined();
+    });
+
+    test('should create a session with custom UUID and other options', async () => {
+      const customUuid = '123e4567-e89b-12d3-a456-426614174000';
+      const createdSession = mockSession({
+        id: customUuid,
+        configs: { agent: 'bot1' },
+      });
+      client.mock().onPost('/session', (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.use_uuid).toBe(customUuid);
+        expect(data?.user).toBe('alice@acontext.io');
+        expect(data?.configs).toEqual({ agent: 'bot1' });
+        return createdSession;
+      });
+
+      const session = await client.sessions.create({
+        user: 'alice@acontext.io',
+        useUuid: customUuid,
+        configs: { agent: 'bot1' },
+      });
+      expect(session).toBeDefined();
+      expect(session.id).toBe(customUuid);
+    });
+
+    test('should store a message in acontext format', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({
+        session_id: sessionId,
+        role: 'user',
+        parts: [{ type: 'text', text: 'Hello from TypeScript!' }],
+      });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.format).toBe('acontext');
+        return storedMessage;
+      });
+
+      const message = await client.sessions.storeMessage(
+        sessionId,
+        {
+          role: 'user',
+          parts: [MessagePart.textPart('Hello from TypeScript!')],
+        },
+        { format: 'acontext' }
+      );
+      expect(message).toBeDefined();
+      expect(message.id).toBeDefined();
+      expect(message.session_id).toBe(sessionId);
+      expect(message.role).toBe('user');
+    });
+
+    test('should store a message in openai format', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({
+        session_id: sessionId,
+        role: 'user',
+      });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.format).toBe('openai');
+        expect(data?.blob).toEqual({
+          role: 'user',
+          content: 'Hello, how are you?',
+        });
+        return storedMessage;
+      });
+
+      const message = await client.sessions.storeMessage(
+        sessionId,
+        { role: 'user', content: 'Hello, how are you?' },
+        { format: 'openai' }
+      );
+      expect(message).toBeDefined();
+      expect(message.role).toBe('user');
+    });
+
+    test('should store message with file upload', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({ session_id: sessionId });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        expect(options?.files).toBeDefined();
+        expect(options?.files?.test_file).toBeDefined();
+        return storedMessage;
+      });
+
+      const fileField = 'test_file';
+      const blob = buildAcontextMessage({
+        role: 'user',
+        parts: [MessagePart.fileFieldPart(fileField)],
+      });
+      const message = await client.sessions.storeMessage(sessionId, blob, {
+        format: 'acontext',
+        fileField: fileField,
+        file: new FileUpload({
+          filename: 'test.txt',
+          content: Buffer.from('Hello, World!'),
+          contentType: 'text/plain',
+        }),
+      });
+      expect(message).toBeDefined();
+      expect(message.id).toBeDefined();
+    });
+
+    test('should get messages', async () => {
+      const sessionId = 'test-session-id';
+      const messageId = 'msg-1';
+      client.mock().onGet(`/session/${sessionId}/messages`, () =>
+        mockGetMessagesOutput({
+          items: [{ role: 'user', content: 'Hello' }],
+          ids: [messageId],
+          has_more: false,
+          this_time_tokens: 10,
+        })
+      );
+
+      const result = await client.sessions.getMessages(sessionId, {
+        format: 'acontext',
+      });
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.has_more).toBe(false);
+    });
+
+    test('should get messages with edit strategies', async () => {
+      const sessionId = 'test-session-id';
+      const messageId = 'msg-1';
+      client.mock().onGet(`/session/${sessionId}/messages`, (options) => {
+        expect(options?.params?.edit_strategies).toBeDefined();
+        const strategies = JSON.parse(options?.params?.edit_strategies as string);
+        expect(strategies[0].type).toBe('remove_tool_result');
+        return mockGetMessagesOutput({
+          items: [{ role: 'user', content: 'Hello' }],
+          ids: [messageId],
+          has_more: false,
+          this_time_tokens: 10,
+        });
+      });
+
+      const editStrategies = [
+        { type: 'remove_tool_result' as const, params: { keep_recent_n_tool_results: 3 } },
+      ];
+      const result = await client.sessions.getMessages(sessionId, {
+        format: 'openai',
+        editStrategies,
+      });
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+    });
+
+    test('should reject non-positive gt_token in edit strategies', async () => {
+      const sessionId = 'test-session-id';
+      await expect(
+        client.sessions.getMessages(sessionId, {
+          editStrategies: [
+            { type: 'remove_tool_result' as const, params: { gt_token: 0 } },
+          ],
+        })
+      ).rejects.toThrow();
+    });
+
+    test('should get tasks', async () => {
+      const sessionId = 'test-session-id';
+      const tasks = [mockTask({ session_id: sessionId })];
+      client.mock().onGet(`/session/${sessionId}/task`, () =>
+        mockPaginatedList(tasks, false)
+      );
+
+      const result = await client.sessions.getTasks(sessionId);
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.has_more).toBeDefined();
+    });
+
+    test('should get token counts', async () => {
+      const sessionId = 'test-session-id';
+      const tokenCounts = { total_tokens: 1234 };
+      client.mock().onGet(`/session/${sessionId}/token_counts`, () => tokenCounts);
+
+      const result = await client.sessions.getTokenCounts(sessionId);
+      expect(result).toBeDefined();
+      expect(result.total_tokens).toBe(1234);
+    });
+
+    test('should update session configs', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onPut(`/session/${sessionId}/configs`, (options) => {
+        expect(options?.jsonData).toEqual({ configs: { mode: 'test-updated' } });
+        return undefined;
+      });
+
+      await client.sessions.updateConfigs(sessionId, {
+        configs: { mode: 'test-updated' },
+      });
+      expect(client.requester.calls).toHaveLength(1);
+    });
+
+    test('should delete a session', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onDelete(`/session/${sessionId}`, () => undefined);
+
+      await client.sessions.delete(sessionId);
+      expect(client.requester.calls).toHaveLength(1);
+      expect(client.requester.calls[0].method).toBe('DELETE');
+    });
+
+    test('should list sessions with filterByConfigs', async () => {
+      const sessions = [mockSession({ configs: { agent: 'bot1' } })];
+      client.mock().onGet('/session', (options) => {
+        expect(options?.params?.filter_by_configs).toBeDefined();
+        const decoded = JSON.parse(options?.params?.filter_by_configs as string);
+        expect(decoded).toEqual({ agent: 'bot1' });
+        return mockPaginatedList(sessions, false);
+      });
+
+      const result = await client.sessions.list({ filterByConfigs: { agent: 'bot1' } });
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+    });
+
+    test('should not send empty filterByConfigs', async () => {
+      const sessions = [mockSession()];
+      client.mock().onGet('/session', (options) => {
+        expect(options?.params?.filter_by_configs).toBeUndefined();
+        return mockPaginatedList(sessions, false);
+      });
+
+      const result = await client.sessions.list({ filterByConfigs: {} });
+      expect(result).toBeDefined();
+    });
+
+    test('should list sessions with nested filterByConfigs', async () => {
+      const sessions = [mockSession()];
+      client.mock().onGet('/session', (options) => {
+        const decoded = JSON.parse(options?.params?.filter_by_configs as string);
+        expect(decoded).toEqual({ agent: { name: 'bot1', version: '2.0' } });
+        return mockPaginatedList(sessions, false);
+      });
+
+      const result = await client.sessions.list({
+        filterByConfigs: { agent: { name: 'bot1', version: '2.0' } },
+      });
+      expect(result).toBeDefined();
+    });
+
+    test('should combine filterByConfigs with user filter', async () => {
+      const sessions = [mockSession()];
+      client.mock().onGet('/session', (options) => {
+        expect(options?.params?.user).toBe('alice@example.com');
+        const decoded = JSON.parse(options?.params?.filter_by_configs as string);
+        expect(decoded).toEqual({ agent: 'bot1' });
+        return mockPaginatedList(sessions, false);
+      });
+
+      const result = await client.sessions.list({
+        user: 'alice@example.com',
+        filterByConfigs: { agent: 'bot1' },
+      });
+      expect(result).toBeDefined();
+    });
+
+    test('should store Anthropic response format messages', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({
+        session_id: sessionId,
+        role: 'assistant',
+      });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.format).toBe('openai');
+        return storedMessage;
+      });
+
+      // Simulate Anthropic API response format
+      const anthropicResponse = {
+        id: 'msg_01XFDUDYJgAACzvnptvVoYEL',
+        type: 'message',
+        role: 'assistant',
+        model: 'claude-sonnet-4-20250514',
+        content: [
+          {
+            type: 'text',
+            text: "Hello! I'm doing well, thank you for asking.",
+          },
+        ],
+        stop_reason: 'end_turn',
+        stop_sequence: null,
+        usage: { input_tokens: 10, output_tokens: 20 },
+      };
+
+      const message = await client.sessions.storeMessage(
+        sessionId,
+        anthropicResponse,
+        { format: 'openai' }
+      );
+      expect(message).toBeDefined();
+      expect(message.role).toBe('assistant');
+    });
+
+    test('should store message with meta option', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({
+        session_id: sessionId,
+        role: 'user',
+        meta: { source: 'web', request_id: 'abc123' },
+      });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.meta).toEqual({ source: 'web', request_id: 'abc123' });
+        return storedMessage;
+      });
+
+      const message = await client.sessions.storeMessage(
+        sessionId,
+        { role: 'user', content: 'Hello' },
+        { format: 'openai', meta: { source: 'web', request_id: 'abc123' } }
+      );
+      expect(message).toBeDefined();
+      expect(message.meta).toEqual({ source: 'web', request_id: 'abc123' });
+    });
+
+    test('should store message without meta option', async () => {
+      const sessionId = 'test-session-id';
+      const storedMessage = mockMessage({
+        session_id: sessionId,
+        role: 'user',
+        meta: {},
+      });
+      client.mock().onPost(`/session/${sessionId}/messages`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.meta).toBeUndefined();
+        return storedMessage;
+      });
+
+      const message = await client.sessions.storeMessage(
+        sessionId,
+        { role: 'user', content: 'Hello' },
+        { format: 'openai' }
+      );
+      expect(message).toBeDefined();
+      expect(message.meta).toEqual({});
+    });
+
+    test('should get messages with metas', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onGet(`/session/${sessionId}/messages`, () =>
+        mockGetMessagesOutput({
+          items: [{ role: 'user', content: 'Hello' }],
+          ids: ['msg-1'],
+          metas: [{ source: 'web', request_id: 'abc123' }],
+          has_more: false,
+          this_time_tokens: 10,
+        })
+      );
+
+      const result = await client.sessions.getMessages(sessionId, {
+        format: 'openai',
+      });
+      expect(result).toBeDefined();
+      expect(result.metas).toBeDefined();
+      expect(result.metas).toHaveLength(1);
+      expect(result.metas[0]).toEqual({ source: 'web', request_id: 'abc123' });
+      // Verify order matches items/ids
+      expect(result.metas.length).toBe(result.items.length);
+      expect(result.metas.length).toBe(result.ids.length);
+    });
+
+    test('should get messages with empty metas', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onGet(`/session/${sessionId}/messages`, () =>
+        mockGetMessagesOutput({
+          items: [{ role: 'user', content: 'Hello' }],
+          ids: ['msg-1'],
+          metas: [{}], // Empty meta for message without user meta
+          has_more: false,
+          this_time_tokens: 10,
+        })
+      );
+
+      const result = await client.sessions.getMessages(sessionId, {
+        format: 'openai',
+      });
+      expect(result.metas).toHaveLength(1);
+      expect(result.metas[0]).toEqual({});
+    });
+
+    test('should patch message meta - add new keys', async () => {
+      const sessionId = 'test-session-id';
+      const messageId = 'msg-1';
+      client.mock().onPatch(`/session/${sessionId}/messages/${messageId}/meta`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.meta).toEqual({ new_key: 'new_value' });
+        return { meta: { existing: 'value', new_key: 'new_value' } };
+      });
+
+      const result = await client.sessions.patchMessageMeta(
+        sessionId,
+        messageId,
+        { new_key: 'new_value' }
+      );
+      expect(result).toEqual({ existing: 'value', new_key: 'new_value' });
+    });
+
+    test('should patch message meta - update existing keys', async () => {
+      const sessionId = 'test-session-id';
+      const messageId = 'msg-1';
+      client.mock().onPatch(`/session/${sessionId}/messages/${messageId}/meta`, () => {
+        return { meta: { key: 'updated_value', other: 'preserved' } };
+      });
+
+      const result = await client.sessions.patchMessageMeta(
+        sessionId,
+        messageId,
+        { key: 'updated_value' }
+      );
+      expect(result).toEqual({ key: 'updated_value', other: 'preserved' });
+    });
+
+    test('should patch message meta - delete keys with null', async () => {
+      const sessionId = 'test-session-id';
+      const messageId = 'msg-1';
+      client.mock().onPatch(`/session/${sessionId}/messages/${messageId}/meta`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.meta).toEqual({ deleted_key: null });
+        return { meta: { remaining: 'value' } }; // deleted_key was removed
+      });
+
+      const result = await client.sessions.patchMessageMeta(
+        sessionId,
+        messageId,
+        { deleted_key: null }
+      );
+      expect(result).toEqual({ remaining: 'value' });
+      expect(result.deleted_key).toBeUndefined();
+    });
+
+    test('should patch configs - add new keys', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onPatch(`/session/${sessionId}/configs`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.configs).toEqual({ new_key: 'new_value' });
+        return { configs: { existing: 'value', new_key: 'new_value' } };
+      });
+
+      const result = await client.sessions.patchConfigs(
+        sessionId,
+        { new_key: 'new_value' }
+      );
+      expect(result).toEqual({ existing: 'value', new_key: 'new_value' });
+    });
+
+    test('should patch configs - update existing keys', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onPatch(`/session/${sessionId}/configs`, () => {
+        return { configs: { key: 'updated_value', other: 'preserved' } };
+      });
+
+      const result = await client.sessions.patchConfigs(
+        sessionId,
+        { key: 'updated_value' }
+      );
+      expect(result).toEqual({ key: 'updated_value', other: 'preserved' });
+    });
+
+    test('should patch configs - delete keys with null', async () => {
+      const sessionId = 'test-session-id';
+      client.mock().onPatch(`/session/${sessionId}/configs`, (options) => {
+        const data = options?.jsonData as Record<string, unknown>;
+        expect(data?.configs).toEqual({ deleted_key: null });
+        return { configs: { remaining: 'value' } }; // deleted_key was removed
+      });
+
+      const result = await client.sessions.patchConfigs(
+        sessionId,
+        { deleted_key: null }
+      );
+      expect(result).toEqual({ remaining: 'value' });
+      expect(result.deleted_key).toBeUndefined();
+    });
+  });
+
+  describe('Disks API', () => {
+    test('should list disks', async () => {
+      const disks = [mockDisk(), mockDisk()];
+      client.mock().onGet('/disk', () => mockPaginatedList(disks, false));
+
+      const result = await client.disks.list();
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.items.length).toBe(2);
+      expect(result.has_more).toBe(false);
+    });
+
+    test('should create a disk', async () => {
+      const createdDisk = mockDisk();
+      client.mock().onPost('/disk', () => createdDisk);
+
+      const disk = await client.disks.create();
+      expect(disk).toBeDefined();
+      expect(disk.id).toBeDefined();
+      expect(disk.project_id).toBeDefined();
+    });
+
+    test('should delete a disk', async () => {
+      const diskId = 'test-disk-id';
+      client.mock().onDelete(`/disk/${diskId}`, () => undefined);
+
+      await client.disks.delete(diskId);
+      expect(client.requester.calls).toHaveLength(1);
+      expect(client.requester.calls[0].method).toBe('DELETE');
+    });
+
+    test('should upsert an artifact', async () => {
+      const diskId = 'test-disk-id';
+      const artifact = mockArtifact({
+        disk_id: diskId,
+        path: '/',
+        filename: 'test.txt',
+        meta: { source: 'test' },
+      });
+      client.mock().onPost(`/disk/${diskId}/artifact`, (options) => {
+        expect(options?.files?.file).toBeDefined();
+        expect(options?.data?.file_path).toBe('/');
+        return artifact;
+      });
+
+      const result = await client.disks.artifacts.upsert(diskId, {
+        file: new FileUpload({
+          filename: 'test.txt',
+          content: Buffer.from('Hello, World!'),
+          contentType: 'text/plain',
+        }),
+        filePath: '/',
+        meta: { source: 'test' },
+      });
+      expect(result).toBeDefined();
+      expect(result.disk_id).toBe(diskId);
+      expect(result.filename).toBe('test.txt');
+    });
+
+    test('should get an artifact', async () => {
+      const diskId = 'test-disk-id';
+      const artifact = mockArtifact({
+        disk_id: diskId,
+        path: '/',
+        filename: 'test.txt',
+      });
+      client.mock().onGet(`/disk/${diskId}/artifact`, (options) => {
+        expect(options?.params?.file_path).toBe('/test.txt');
+        return mockGetArtifactResp({
+          artifact,
+          public_url: 'https://example.com/test.txt',
+          content: mockFileContent({ raw: 'Hello!' }),
+        });
+      });
+
+      const result = await client.disks.artifacts.get(diskId, {
+        filePath: '/',
+        filename: 'test.txt',
+        withPublicUrl: true,
+        withContent: true,
+      });
+      expect(result).toBeDefined();
+      expect(result.artifact).toBeDefined();
+      expect(result.artifact.filename).toBe('test.txt');
+    });
+
+    test('should update an artifact', async () => {
+      const diskId = 'test-disk-id';
+      const artifact = mockArtifact({
+        disk_id: diskId,
+        path: '/',
+        filename: 'test.txt',
+        meta: { source: 'test', updated: true },
+      });
+      client.mock().onPut(`/disk/${diskId}/artifact`, (options) => {
+        expect(options?.jsonData).toMatchObject({
+          file_path: '/test.txt',
+        });
+        return { artifact };
+      });
+
+      const result = await client.disks.artifacts.update(diskId, {
+        filePath: '/',
+        filename: 'test.txt',
+        meta: { source: 'test', updated: true },
+      });
+      expect(result).toBeDefined();
+      expect(result.artifact.meta).toMatchObject({ source: 'test', updated: true });
+    });
+
+    test('should list artifacts', async () => {
+      const diskId = 'test-disk-id';
+      const artifacts = [mockArtifact({ disk_id: diskId, path: '/' })];
+      client.mock().onGet(`/disk/${diskId}/artifact/ls`, (options) => {
+        expect(options?.params?.path).toBe('/');
+        return { artifacts, directories: [] };
+      });
+
+      const result = await client.disks.artifacts.list(diskId, { path: '/' });
+      expect(result).toBeDefined();
+      expect(result.artifacts).toBeInstanceOf(Array);
+      expect(result.directories).toBeInstanceOf(Array);
+    });
+
+    test('should delete an artifact', async () => {
+      const diskId = 'test-disk-id';
+      client.mock().onDelete(`/disk/${diskId}/artifact`, (options) => {
+        expect(options?.params?.file_path).toBe('/test.txt');
+        return undefined;
+      });
+
+      await client.disks.artifacts.delete(diskId, {
+        filePath: '/',
+        filename: 'test.txt',
+      });
+      expect(client.requester.calls).toHaveLength(1);
+    });
+  });
+
+  describe('Users API', () => {
+    test('should list users', async () => {
+      const users = [mockUser(), mockUser()];
+      client.mock().onGet('/user/ls', () => mockPaginatedList(users, false));
+
+      const result = await client.users.list();
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+      expect(result.items.length).toBe(2);
+      expect(result.has_more).toBe(false);
+    });
+
+    test('should list users with pagination options', async () => {
+      const users = [mockUser()];
+      client.mock().onGet('/user/ls', (options) => {
+        expect(options?.params?.limit).toBe(10);
+        expect(options?.params?.time_desc).toBe('true');
+        return mockPaginatedList(users, false);
+      });
+
+      const result = await client.users.list({ limit: 10, timeDesc: true });
+      expect(result).toBeDefined();
+      expect(result.items).toBeInstanceOf(Array);
+    });
+
+    test('should get user resources', async () => {
+      const identifier = 'user@test.com';
+      const resources = {
+        counts: {
+          sessions_count: 10,
+          disks_count: 3,
+          skills_count: 2,
+        },
+      };
+      client
+        .mock()
+        .onGet(`/user/${encodeURIComponent(identifier)}/resources`, () => resources);
+
+      const result = await client.users.getResources(identifier);
+      expect(result).toBeDefined();
+      expect(result.counts).toBeDefined();
+      expect(result.counts.sessions_count).toBe(10);
+      expect(result.counts.disks_count).toBe(3);
+      expect(result.counts.skills_count).toBe(2);
+    });
+
+    test('should delete a user', async () => {
+      const identifier = 'user@test.com';
+      client.mock().onDelete(`/user/${encodeURIComponent(identifier)}`, () => undefined);
+
+      await client.users.delete(identifier);
+      expect(client.requester.calls).toHaveLength(1);
+      expect(client.requester.calls[0].method).toBe('DELETE');
+    });
+  });
+
+  describe('Skills API', () => {
+    test('should download skill to sandbox', async () => {
+      const skillId = 'skill-123';
+      const sandboxId = 'sandbox-456';
+      const response = {
+        success: true,
+        dir_path: '/skills/my-skill',
+        name: 'my-skill',
+        description: 'A test skill',
+      };
+
+      client.mock().onPost(`/agent_skills/${skillId}/download_to_sandbox`, (options) => {
+        expect(options?.jsonData).toEqual({ sandbox_id: sandboxId });
+        return response;
+      });
+
+      const result = await client.skills.downloadToSandbox(skillId, {
+        sandboxId: sandboxId,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.dir_path).toBe('/skills/my-skill');
+      expect(result.name).toBe('my-skill');
+      expect(result.description).toBe('A test skill');
+      expect(client.requester.calls).toHaveLength(1);
+      expect(client.requester.calls[0].method).toBe('POST');
+      expect(client.requester.calls[0].path).toBe(`/agent_skills/${skillId}/download_to_sandbox`);
+    });
+  });
+
+  describe('Message Building Utilities', () => {
+    test('should create text parts correctly', () => {
+      const part = MessagePart.textPart('Hello, World!');
+      expect(part.type).toBe('text');
+      expect(part.text).toBe('Hello, World!');
+    });
+
+    test('should create file field parts correctly', () => {
+      const part = MessagePart.fileFieldPart('my_file');
+      expect(part.type).toBe('file');
+      expect(part.file_field).toBe('my_file');
+    });
+
+    test('should build acontext message', () => {
+      const message = buildAcontextMessage({
+        role: 'user',
+        parts: [MessagePart.textPart('Test message')],
+      });
+      expect(message).toBeDefined();
+      expect(message.role).toBe('user');
+      expect(message.parts).toHaveLength(1);
+    });
+  });
+
+  describe('Session Events', () => {
+    test('addEvent with DiskEvent', async () => {
+      const eventData = mockSessionEvent({ type: 'disk_event', data: { disk_id: 'disk-1', path: '/data/file.csv', note: 'Uploaded' } });
+      client.mock().onPost(/\/session\/.*\/events/, () => eventData);
+
+      const result = await client.sessions.addEvent(
+        'session-1',
+        new DiskEvent({ diskId: 'disk-1', path: '/data/file.csv', note: 'Uploaded' })
+      );
+
+      expect(result.type).toBe('disk_event');
+      expect(result.data).toEqual({ disk_id: 'disk-1', path: '/data/file.csv', note: 'Uploaded' });
+      expect(client.mock().calls).toHaveLength(1);
+      expect(client.mock().calls[0].method).toBe('POST');
+    });
+
+    test('addEvent with TextEvent', async () => {
+      const eventData = mockSessionEvent({ type: 'text_event', data: { text: 'User switched mode' } });
+      client.mock().onPost(/\/session\/.*\/events/, () => eventData);
+
+      const result = await client.sessions.addEvent(
+        'session-1',
+        new TextEvent({ text: 'User switched mode' })
+      );
+
+      expect(result.type).toBe('text_event');
+      expect(result.data).toEqual({ text: 'User switched mode' });
+    });
+
+    test('getEvents with pagination', async () => {
+      const events = [mockSessionEvent(), mockSessionEvent()];
+      client.mock().onGet(/\/session\/.*\/events/, () => ({
+        items: events,
+        next_cursor: 'cursor-123',
+        has_more: true,
+      }));
+
+      const result = await client.sessions.getEvents('session-1', { limit: 2 });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.has_more).toBe(true);
+      expect(result.next_cursor).toBe('cursor-123');
+    });
+
+    test('getMessages with withEvents', async () => {
+      const events = [mockSessionEvent()];
+      client.mock().onGet(/\/session\/.*\/messages/, () => ({
+        ...mockGetMessagesOutput(),
+        events,
+      }));
+
+      const result = await client.sessions.getMessages('session-1', { withEvents: true });
+
+      expect(result.events).toHaveLength(1);
+      const call = client.mock().calls[0];
+      expect((call.options as any)?.params?.with_events).toBe('true');
+    });
+
+    test('DiskEvent toPayload', () => {
+      const event = new DiskEvent({ diskId: 'disk-1', path: '/data/file.csv', note: 'Test' });
+      const payload = event.toPayload();
+      expect(payload.type).toBe('disk_event');
+      expect(payload.data).toEqual({ disk_id: 'disk-1', path: '/data/file.csv', note: 'Test' });
+    });
+
+    test('TextEvent toPayload', () => {
+      const event = new TextEvent({ text: 'Hello' });
+      const payload = event.toPayload();
+      expect(payload.type).toBe('text_event');
+      expect(payload.data).toEqual({ text: 'Hello' });
+    });
+  });
+
+  describe('Error Handling', () => {
+    test('should throw error when no mock handler found', async () => {
+      await expect(client.sessions.list()).rejects.toThrow(
+        'No mock handler found for GET /session'
+      );
+    });
+  });
+});

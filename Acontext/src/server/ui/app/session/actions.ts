@@ -1,0 +1,322 @@
+"use server";
+
+import { ApiResponse } from "@/lib/api-response";
+import { API_SERVER_URL, MESSAGE_FORMAT, getAuthHeaders, handleResponse, handleError } from "@/lib/api-config";
+import {
+  Session,
+  SessionEvent,
+  GetSessionsResp,
+  GetMessagesResp,
+  GetEventsResp,
+  GetTasksResp,
+  MessageRole,
+  MessagePartIn,
+} from "@/types";
+
+// Session APIs
+export async function getSessions(
+  user?: string,
+  filterByConfigs?: string,
+  limit: number = 20,
+  cursor?: string,
+  time_desc: boolean = false
+): Promise<ApiResponse<GetSessionsResp>> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      time_desc: time_desc.toString(),
+    });
+    if (user) {
+      params.append("user", user);
+    }
+    if (filterByConfigs) {
+      params.append("filter_by_configs", filterByConfigs);
+    }
+    if (cursor) {
+      params.append("cursor", cursor);
+    }
+
+    const queryString = params.toString();
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session${queryString ? `?${queryString}` : ""}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<GetSessionsResp>(response);
+  } catch (error) {
+    return handleError(error, "getSessions");
+  }
+}
+
+export async function createSession(
+  user?: string,
+  configs?: Record<string, unknown>,
+  disableTaskTracking?: boolean,
+  useUUID?: string
+): Promise<ApiResponse<Session>> {
+  try {
+    const body: Record<string, unknown> = {
+      configs: configs || {},
+    };
+    if (user) {
+      body.user = user;
+    }
+    if (disableTaskTracking !== undefined) {
+      body.disable_task_tracking = disableTaskTracking;
+    }
+    if (useUUID) {
+      body.use_uuid = useUUID;
+    }
+
+    const response = await fetch(`${API_SERVER_URL}/api/v1/session`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+    });
+
+    return await handleResponse<Session>(response);
+  } catch (error) {
+    return handleError(error, "createSession");
+  }
+}
+
+export async function deleteSession(
+  session_id: string
+): Promise<ApiResponse<null>> {
+  try {
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<null>(response);
+  } catch (error) {
+    return handleError(error, "deleteSession");
+  }
+}
+
+export async function getSessionConfigs(
+  session_id: string
+): Promise<ApiResponse<Session>> {
+  try {
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/configs`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<Session>(response);
+  } catch (error) {
+    return handleError(error, "getSessionConfigs");
+  }
+}
+
+export async function updateSessionConfigs(
+  session_id: string,
+  configs: Record<string, unknown>
+): Promise<ApiResponse<null>> {
+  try {
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/configs`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ configs }),
+      }
+    );
+
+    return await handleResponse<null>(response);
+  } catch (error) {
+    return handleError(error, "updateSessionConfigs");
+  }
+}
+
+// Message APIs
+export async function getMessages(
+  session_id: string,
+  limit: number = 20,
+  cursor?: string,
+  with_asset_public_url: boolean = true
+): Promise<ApiResponse<GetMessagesResp>> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+      with_asset_public_url: with_asset_public_url.toString(),
+      with_events: "true",
+      format: MESSAGE_FORMAT,
+    });
+    if (cursor) {
+      params.append("cursor", cursor);
+    }
+
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/messages?${params.toString()}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<GetMessagesResp>(response);
+  } catch (error) {
+    return handleError(error, "getMessages");
+  }
+}
+
+export async function downloadMessages(
+  session_id: string,
+  format: "acontext" | "openai" | "anthropic" | "gemini"
+): Promise<ApiResponse<string>> {
+  try {
+    let allItems: unknown[] = [];
+    let cursor: string | undefined;
+    let hasMore = true;
+
+    while (hasMore) {
+      const params = new URLSearchParams({
+        limit: "100",
+        format,
+      });
+      if (cursor) {
+        params.append("cursor", cursor);
+      }
+
+      const response = await fetch(
+        `${API_SERVER_URL}/api/v1/session/${session_id}/messages?${params.toString()}`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        return { code: 1, data: null, message: text };
+      }
+
+      const result = await response.json();
+      const items = result.items || result.messages || [];
+      allItems = allItems.concat(items);
+      cursor = result.next_cursor;
+      hasMore = result.has_more || false;
+    }
+
+    return { code: 0, data: JSON.stringify(allItems, null, 2), message: "success" };
+  } catch (error) {
+    return handleError(error, "downloadMessages");
+  }
+}
+
+export async function storeMessage(
+  session_id: string,
+  role: MessageRole,
+  parts: MessagePartIn[],
+): Promise<ApiResponse<null>> {
+  try {
+    const body = {
+      blob: {
+        role,
+        parts,
+      },
+      format: MESSAGE_FORMAT,
+    };
+
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/messages`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body),
+      }
+    );
+
+    return await handleResponse<null>(response);
+  } catch (error) {
+    return handleError(error, "storeMessage");
+  }
+}
+
+// Event APIs
+export async function addEvent(
+  session_id: string,
+  type: string,
+  data: Record<string, unknown>
+): Promise<ApiResponse<SessionEvent>> {
+  try {
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/events`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ type, data }),
+      }
+    );
+
+    return await handleResponse<SessionEvent>(response);
+  } catch (error) {
+    return handleError(error, "addEvent");
+  }
+}
+
+export async function getEvents(
+  session_id: string,
+  limit: number = 50,
+  cursor?: string
+): Promise<ApiResponse<GetEventsResp>> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+    });
+    if (cursor) {
+      params.append("cursor", cursor);
+    }
+
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/events?${params.toString()}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<GetEventsResp>(response);
+  } catch (error) {
+    return handleError(error, "getEvents");
+  }
+}
+
+// Task APIs
+export async function getTasks(
+  session_id: string,
+  limit: number = 20,
+  cursor?: string
+): Promise<ApiResponse<GetTasksResp>> {
+  try {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+    });
+    if (cursor) {
+      params.append("cursor", cursor);
+    }
+
+    const response = await fetch(
+      `${API_SERVER_URL}/api/v1/session/${session_id}/task?${params.toString()}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
+    );
+
+    return await handleResponse<GetTasksResp>(response);
+  } catch (error) {
+    return handleError(error, "getTasks");
+  }
+}

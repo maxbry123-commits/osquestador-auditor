@@ -1,0 +1,1462 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PaginationBar } from "@/components/pagination-bar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Loader2, Plus, RefreshCw, Upload, X, ArrowLeft, FileText, Image as ImageIcon, Video, Music, File, Code, CheckCircle2, ExternalLink, Brain, ShieldOff, HardDrive, StickyNote, Flag, Download, ListFilter } from "lucide-react";
+import Image from "next/image";
+import { getMessages, storeMessage, getSessionConfigs, downloadMessages, getTasks } from "@/app/session/actions";
+import {
+  Message,
+  SessionEvent,
+  TimelineItem,
+  MessageRole,
+  PartType,
+  UploadedFile,
+  ToolCall,
+  ToolResult,
+  Task,
+} from "@/types";
+import ReactCodeMirror from "@uiw/react-codemirror";
+import { okaidia } from "@uiw/codemirror-theme-okaidia";
+import { json } from "@codemirror/lang-json";
+import { EditorView } from "@codemirror/view";
+import {
+  getAllowedPartTypes,
+  generateTempId,
+  buildMessageParts,
+  buildFilesObject,
+  hasMessageContent,
+  filterFilesByRole,
+} from "@/lib/message-utils";
+import { Part } from "@/types";
+import { toast } from "sonner";
+
+const PAGE_SIZE = 10;
+const NO_TASK_SENTINEL = "__no_task__";
+
+// Component to render message content parts in table
+const MessageContentPreview = ({
+  parts,
+  messagePublicUrls
+}: {
+  parts: Part[];
+  messagePublicUrls: Record<string, { url: string; expire_at: string }>;
+}) => {
+  if (parts.length === 0) {
+    return <span className="text-xs text-muted-foreground italic">No content</span>;
+  }
+
+  return (
+    <div className="space-y-2.5 py-1 max-h-[300px] overflow-y-auto">
+      {parts.map((part, idx) => {
+        const assetKey = part.asset ? part.asset.sha256 : null;
+        const publicUrl = assetKey ? messagePublicUrls[assetKey]?.url : null;
+        const isImage = part.asset?.mime?.startsWith("image/");
+
+        return (
+          <div key={idx} className="flex items-start gap-2 text-xs">
+            {/* Part type icon */}
+            <div className="flex-shrink-0 mt-0.5">
+              {part.type === "text" && <FileText className="h-3.5 w-3.5 text-muted-foreground" />}
+              {part.type === "thinking" && <Brain className="h-3.5 w-3.5 text-amber-500" />}
+              {part.type === "redacted_thinking" && <ShieldOff className="h-3.5 w-3.5 text-amber-400" />}
+              {part.type === "tool-call" && <Code className="h-3.5 w-3.5 text-blue-500" />}
+              {part.type === "tool-result" && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
+              {part.type === "image" && <ImageIcon className="h-3.5 w-3.5 text-purple-500" />}
+              {part.type === "video" && <Video className="h-3.5 w-3.5 text-red-500" />}
+              {part.type === "audio" && <Music className="h-3.5 w-3.5 text-orange-500" />}
+              {(part.type === "file" || part.type === "data") && <File className="h-3.5 w-3.5 text-gray-500" />}
+            </div>
+
+            {/* Part content */}
+            <div className="flex-1 min-w-0 space-y-1">
+              {part.type === "text" && part.text && (
+                <div className="text-sm text-foreground whitespace-pre-wrap break-words bg-muted/30 rounded">
+                  {part.text}
+                </div>
+              )}
+
+              {part.type === "thinking" && part.text && (
+                <div className="text-sm text-foreground whitespace-pre-wrap break-words bg-amber-50 dark:bg-amber-950/20 rounded px-2 py-1.5 border border-amber-200 dark:border-amber-900 italic">
+                  {part.text}
+                </div>
+              )}
+
+              {part.type === "redacted_thinking" && (
+                <div className="text-sm text-muted-foreground italic bg-amber-50/50 dark:bg-amber-950/10 rounded px-2 py-1.5 border border-amber-200/50 dark:border-amber-900/50">
+                  [Redacted thinking]
+                </div>
+              )}
+
+              {part.type === "tool-call" && part.meta && (
+                <div className="space-y-1.5 bg-blue-50 dark:bg-blue-950/20 rounded px-2 py-1.5 border border-blue-200 dark:border-blue-900">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">Tool Call:</span>
+                    <span className="text-xs font-mono text-blue-600 dark:text-blue-400 font-medium">
+                      {part.meta.name as string || "unknown"}
+                    </span>
+                  </div>
+                  {part.meta.id != null && (
+                    <p className="text-xs text-muted-foreground font-mono">
+                      <span className="text-blue-600 dark:text-blue-400">ID:</span> {String(part.meta.id)}
+                    </p>
+                  )}
+                  {part.meta.arguments != null && (
+                    <div className="mt-1">
+                      <p className="text-xs text-muted-foreground mb-0.5 font-medium">Parameters:</p>
+                      <pre className="text-xs text-muted-foreground font-mono bg-muted/50 rounded p-1 overflow-x-auto whitespace-pre-wrap break-words">
+                        {typeof part.meta.arguments === 'string'
+                          ? part.meta.arguments
+                          : JSON.stringify(part.meta.arguments, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {part.type === "tool-result" && (
+                <div className="space-y-1.5 bg-green-50 dark:bg-green-950/20 rounded px-2 py-1.5 border border-green-200 dark:border-green-900">
+                  {part.meta?.tool_call_id != null && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold text-green-700 dark:text-green-300">Tool Result:</span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {String(part.meta.tool_call_id)}
+                      </span>
+                    </div>
+                  )}
+                  {(part.text || (part.meta?.result != null)) && (
+                    <div className="mt-1">
+                      <pre className="text-xs text-muted-foreground font-mono bg-muted/50 rounded p-1 overflow-x-auto whitespace-pre-wrap break-words">
+                        {part.text || (typeof part.meta?.result === "string"
+                          ? String(part.meta.result)
+                          : JSON.stringify(part.meta?.result || {}, null, 2))}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(part.type === "image" || part.type === "video" || part.type === "audio" || part.type === "file" || part.type === "data") && (
+                <div className="space-y-1 bg-muted/30 rounded px-2 py-1.5">
+                  <div className="flex items-start gap-2">
+                    {isImage && publicUrl && (
+                      <div className="w-16 h-16 rounded border overflow-hidden flex-shrink-0 bg-background relative">
+                        <Image
+                          src={publicUrl}
+                          alt={part.filename || "image"}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {part.filename && (
+                        <p className="text-xs font-medium break-words">{part.filename}</p>
+                      )}
+                      {part.asset && (
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs text-muted-foreground bg-background px-1.5 py-0.5 rounded">{part.asset.mime}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {(part.asset.size_b / 1024).toFixed(1)} KB
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export default function MessagesPage() {
+  const t = useTranslations("session");
+  const tp = useTranslations("pagination");
+  const params = useParams();
+  const router = useRouter();
+  const sessionId = params.sessionId as string;
+  const { resolvedTheme } = useTheme();
+
+  const [sessionInfo, setSessionInfo] = useState<string>("");
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [allEvents, setAllEvents] = useState<SessionEvent[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMoreMessages, setIsLoadingMoreMessages] = useState(false);
+  const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newMessageRole, setNewMessageRole] = useState<MessageRole>("user");
+  const [newMessageText, setNewMessageText] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isStoringMessage, setIsStoringMessage] = useState(false);
+
+  // Tool call/result specific states
+  const [toolCalls, setToolCalls] = useState<ToolCall[]>([]);
+  const [toolResults, setToolResults] = useState<ToolResult[]>([]);
+
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [messagePublicUrls, setMessagePublicUrls] = useState<
+    Record<string, { url: string; expire_at: string }>
+  >({});
+
+  const timelineItems = useMemo(() => [
+    ...allMessages.map((m): TimelineItem => ({ kind: 'message', data: m })),
+    ...allEvents.map((e): TimelineItem => ({ kind: 'event', data: e })),
+  ].sort((a, b) => new Date(a.data.created_at).getTime() - new Date(b.data.created_at).getTime()),
+  [allMessages, allEvents]);
+
+  const filteredTimelineItems = useMemo(() => {
+    if (selectedTaskIds.size === 0) return timelineItems;
+    return timelineItems.filter((item) => {
+      if (item.kind === 'event') return true;
+      const msg = item.data as Message;
+      if (!msg.task_id) return selectedTaskIds.has(NO_TASK_SENTINEL);
+      return selectedTaskIds.has(msg.task_id);
+    });
+  }, [timelineItems, selectedTaskIds]);
+
+  const hasUntaggedMessages = useMemo(() => allMessages.some(m => !m.task_id), [allMessages]);
+
+  const totalPages = Math.ceil(filteredTimelineItems.length / PAGE_SIZE);
+  const paginatedItems = filteredTimelineItems.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+  const loadSessionInfo = async () => {
+    try {
+      const res = await getSessionConfigs(sessionId);
+      if (res.code === 0 && res.data) {
+        setSessionInfo(sessionId);
+      } else {
+        setSessionInfo(sessionId);
+      }
+    } catch (error) {
+      console.error("Failed to load session info:", error);
+      setSessionInfo(sessionId);
+    }
+  };
+
+  const loadAllMessages = async () => {
+    try {
+      setIsLoadingMessages(true);
+      const allEvts: SessionEvent[] = [];
+      const allPublicUrls: Record<string, { url: string; expire_at: string }> =
+        {};
+
+      const first = await getMessages(sessionId, 50, undefined);
+      if (first.code !== 0) {
+        console.error(first.message);
+        setIsLoadingMessages(false);
+        return;
+      }
+      setAllMessages(first.data?.items || []);
+      if (first.data?.events) allEvts.push(...first.data.events);
+      if (first.data?.public_urls) Object.assign(allPublicUrls, first.data.public_urls);
+      setMessagePublicUrls({ ...allPublicUrls });
+      setCurrentPage(1);
+      setIsLoadingMessages(false);
+
+      if (first.data?.has_more) {
+        setIsLoadingMoreMessages(true);
+        let cursor = first.data?.next_cursor;
+        while (cursor) {
+          const res = await getMessages(sessionId, 50, cursor);
+          if (res.code !== 0) {
+            console.error(res.message);
+            break;
+          }
+          setAllMessages(prev => [...prev, ...(res.data?.items || [])]);
+          if (res.data?.events) allEvts.push(...res.data.events);
+          if (res.data?.public_urls) {
+            Object.assign(allPublicUrls, res.data.public_urls);
+            setMessagePublicUrls({ ...allPublicUrls });
+          }
+          cursor = res.data?.has_more ? res.data?.next_cursor : undefined;
+        }
+        setIsLoadingMoreMessages(false);
+      }
+
+      const seenIds = new Set<string>();
+      const dedupedEvts = allEvts.filter((e) => {
+        if (seenIds.has(e.id)) return false;
+        seenIds.add(e.id);
+        return true;
+      });
+      setAllEvents(dedupedEvts);
+      setMessagePublicUrls(allPublicUrls);
+    } catch (error) {
+      console.error("Failed to load messages:", error);
+      setIsLoadingMessages(false);
+      setIsLoadingMoreMessages(false);
+    }
+  };
+
+  const loadAllTasks = async () => {
+    try {
+      setIsLoadingTasks(true);
+      const tasks: Task[] = [];
+      let cursor: string | undefined = undefined;
+      let hasMore = true;
+      while (hasMore) {
+        const res = await getTasks(sessionId, 50, cursor);
+        if (res.code !== 0) break;
+        tasks.push(...(res.data?.items || []));
+        cursor = res.data?.next_cursor;
+        hasMore = res.data?.has_more || false;
+      }
+      setAllTasks(tasks.sort((a, b) => a.order - b.order));
+    } catch (error) {
+      console.error("Failed to load tasks:", error);
+    } finally {
+      setIsLoadingTasks(false);
+    }
+  };
+
+  const handleRefreshMessages = async () => {
+    setIsRefreshingMessages(true);
+    await Promise.all([loadAllMessages(), loadAllTasks()]);
+    setIsRefreshingMessages(false);
+  };
+
+  const handleToggleTaskFilter = (taskId: string) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+    setCurrentPage(1);
+  };
+
+  const handleClearTaskFilter = () => {
+    setSelectedTaskIds(new Set());
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    if (sessionId) {
+      loadSessionInfo();
+      loadAllMessages();
+      loadAllTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  const handleOpenCreateDialog = () => {
+    setNewMessageRole("user");
+    setNewMessageText("");
+    setUploadedFiles([]);
+    setToolCalls([]);
+    setToolResults([]);
+    setCreateDialogOpen(true);
+  };
+
+  const handleRoleChange = (role: MessageRole) => {
+    setNewMessageRole(role);
+    // Clear files that are not allowed for this role
+    setUploadedFiles((prev) => filterFilesByRole(prev, role));
+    // Clear tool calls when switching away from assistant
+    if (role !== "assistant") {
+      setToolCalls([]);
+    }
+    // Clear tool results when switching away from user
+    if (role !== "user") {
+      setToolResults([]);
+    }
+  };
+
+  const handleOpenDetailDialog = (message: Message) => {
+    setSelectedMessage(message);
+    setDetailDialogOpen(true);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const newFiles: UploadedFile[] = Array.from(files).map((file) => ({
+      id: generateTempId("file"),
+      file,
+      type: "file",
+    }));
+
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleFileTypeChange = (fileId: string, newType: PartType) => {
+    setUploadedFiles((prev) =>
+      prev.map((f) => (f.id === fileId ? { ...f, type: newType } : f))
+    );
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setUploadedFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleAddToolCall = () => {
+    setToolCalls((prev) => [
+      ...prev,
+      {
+        id: generateTempId("tool_call"),
+        name: "",
+        call_id: "",
+        parameters: "{}",
+      },
+    ]);
+  };
+
+  const handleUpdateToolCall = (
+    id: string,
+    field: "name" | "call_id" | "parameters",
+    value: string
+  ) => {
+    setToolCalls((prev) =>
+      prev.map((tc) => (tc.id === id ? { ...tc, [field]: value } : tc))
+    );
+  };
+
+  const handleRemoveToolCall = (id: string) => {
+    setToolCalls((prev) => prev.filter((tc) => tc.id !== id));
+  };
+
+  const handleAddToolResult = () => {
+    setToolResults((prev) => [
+      ...prev,
+      {
+        id: generateTempId("tool_result"),
+        tool_call_id: "",
+        result: "",
+      },
+    ]);
+  };
+
+  const handleUpdateToolResult = (
+    id: string,
+    field: "tool_call_id" | "result",
+    value: string
+  ) => {
+    setToolResults((prev) =>
+      prev.map((tr) => (tr.id === id ? { ...tr, [field]: value } : tr))
+    );
+  };
+
+  const handleRemoveToolResult = (id: string) => {
+    setToolResults((prev) => prev.filter((tr) => tr.id !== id));
+  };
+
+  const handleStoreMessage = async () => {
+    if (!hasMessageContent(newMessageText, uploadedFiles, toolCalls, toolResults)) {
+      return;
+    }
+
+    try {
+      setIsStoringMessage(true);
+
+      // Build parts array
+      const parts = buildMessageParts(
+        newMessageText,
+        uploadedFiles,
+        toolCalls,
+        toolResults
+      );
+
+      // Build files object
+      const files = buildFilesObject(uploadedFiles);
+      const hasFiles = Object.keys(files).length > 0;
+
+      let res;
+      if (hasFiles) {
+        // Use Route Handler for file uploads (avoids server action File serialization issues)
+        const formData = new FormData();
+        formData.append("session_id", sessionId);
+        const payload = {
+          blob: { role: newMessageRole, parts },
+          format: "acontext",
+        };
+        formData.append("payload", JSON.stringify(payload));
+        for (const [fieldName, file] of Object.entries(files)) {
+          formData.append(fieldName, file);
+        }
+        const response = await fetch("/api/session/messages", {
+          method: "POST",
+          body: formData,
+        });
+        res = await response.json();
+      } else {
+        // Use server action for JSON-only messages
+        res = await storeMessage(sessionId, newMessageRole, parts);
+      }
+
+      if (res.code !== 0) {
+        console.error(res.msg || res.message);
+        return;
+      }
+
+      await loadAllMessages();
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to store message:", error);
+    } finally {
+      setIsStoringMessage(false);
+    }
+  };
+
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const getFilteredMessageIndices = (): Set<number> => {
+    const indices = new Set<number>();
+    allMessages.forEach((msg, idx) => {
+      if (!msg.task_id) {
+        if (selectedTaskIds.has(NO_TASK_SENTINEL)) indices.add(idx);
+      } else {
+        if (selectedTaskIds.has(msg.task_id)) indices.add(idx);
+      }
+    });
+    return indices;
+  };
+
+  const downloadJsonBlob = (data: string, filename: string) => {
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownload = async (format: "acontext" | "openai" | "anthropic" | "gemini") => {
+    setIsDownloading(true);
+    try {
+      const isFiltered = selectedTaskIds.size > 0;
+      const suffix = isFiltered ? "-filtered" : "";
+      const filename = `messages-${sessionId}${suffix}-${format}.json`;
+
+      if (isFiltered && format === "acontext") {
+        const filtered = allMessages.filter((msg) => {
+          if (!msg.task_id) return selectedTaskIds.has(NO_TASK_SENTINEL);
+          return selectedTaskIds.has(msg.task_id);
+        });
+        downloadJsonBlob(JSON.stringify(filtered, null, 2), filename);
+      } else if (isFiltered) {
+        const result = await downloadMessages(sessionId, format);
+        if (result.code !== 0 || !result.data) {
+          toast.error(t("downloadFailed"));
+          return;
+        }
+        const parsed = JSON.parse(result.data);
+        const indices = getFilteredMessageIndices();
+        const filtered = Array.isArray(parsed)
+          ? parsed.filter((_: unknown, idx: number) => indices.has(idx))
+          : parsed;
+        downloadJsonBlob(JSON.stringify(filtered, null, 2), filename);
+      } else {
+        const result = await downloadMessages(sessionId, format);
+        if (result.code !== 0 || !result.data) {
+          toast.error(t("downloadFailed"));
+          return;
+        }
+        downloadJsonBlob(result.data, filename);
+      }
+      toast.success(t("downloadSuccess"));
+    } catch (error) {
+      console.error("Failed to download messages:", error);
+      toast.error(t("downloadFailed"));
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo");
+    router.push(returnTo || "/session");
+  };
+
+  return (
+    <div className="h-full bg-background p-6 flex flex-col overflow-hidden space-y-2">
+      <div className="shrink-0 space-y-4">
+        <div className="flex items-stretch gap-2">
+          <Button
+            variant="outline"
+            onClick={handleGoBack}
+            className="rounded-l-md rounded-r-none h-auto px-3"
+            title={t("backToSessions") || "Back to Sessions"}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{t("messages")}</h1>
+            <p className="text-sm text-muted-foreground">
+              Session: <span className="font-mono">{sessionInfo}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleOpenCreateDialog}
+              disabled={isLoadingMessages}
+            >
+              <Plus className="h-4 w-4" />
+              {t("createMessage")}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isLoadingMessages || isDownloading || allMessages.length === 0}
+                >
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  {t("download")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownload("openai")}>
+                  OpenAI
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload("anthropic")}>
+                  Anthropic
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload("gemini")}>
+                  Gemini
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownload("acontext")}>
+                  Acontext
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="outline"
+              onClick={handleRefreshMessages}
+              disabled={isRefreshingMessages || isLoadingMessages}
+            >
+              {isRefreshingMessages ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("loading")}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  {t("refresh")}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {(allTasks.length > 0 || hasUntaggedMessages || isLoadingTasks) && (
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mr-1">
+              <ListFilter className="h-4 w-4" />
+              <span>{t("filterByTask")}</span>
+            </div>
+            {isLoadingTasks ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (
+              <>
+                <Button
+                  variant={selectedTaskIds.size === 0 ? "default" : "outline"}
+                  size="sm"
+                  onClick={handleClearTaskFilter}
+                  className="h-7 text-xs"
+                >
+                  {t("allTasks")}
+                </Button>
+                {allTasks.map((task) => {
+                  const isSelected = selectedTaskIds.has(task.id);
+                  const statusColor = task.status === "success" ? "bg-green-500"
+                    : task.status === "failed" ? "bg-red-500"
+                    : task.status === "running" ? "bg-yellow-500"
+                    : "bg-gray-400";
+                  return (
+                    <Button
+                      key={task.id}
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleToggleTaskFilter(task.id)}
+                      className="h-7 text-xs gap-1.5"
+                    >
+                      <span className={`inline-block h-2 w-2 rounded-full ${statusColor}`} />
+                      {t("taskChipLabel", { order: task.order })}
+                    </Button>
+                  );
+                })}
+                {hasUntaggedMessages && (
+                  <Button
+                    variant={selectedTaskIds.has(NO_TASK_SENTINEL) ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleTaskFilter(NO_TASK_SENTINEL)}
+                    className="h-7 text-xs"
+                  >
+                    {t("noTask")}
+                  </Button>
+                )}
+              </>
+            )}
+            {selectedTaskIds.size > 0 && (
+              <span className="text-xs text-muted-foreground ml-2">
+                {t("showingFiltered", {
+                  shown: filteredTimelineItems.filter(i => i.kind === 'message').length,
+                  total: allMessages.length,
+                  count: selectedTaskIds.size,
+                })}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+        <div className="flex-1 rounded-md border overflow-hidden flex flex-col min-h-0">
+          {isLoadingMessages ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : allMessages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-sm text-muted-foreground">
+                {t("noData")}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[400px]">
+                        {t("content")}
+                      </TableHead>
+                      <TableHead className="w-[100px]">
+                        {t("role")}
+                      </TableHead>
+                      <TableHead className="w-[120px]">
+                        {t("status")}
+                      </TableHead>
+                      <TableHead className="w-[180px]">
+                        {t("createdAt")}
+                      </TableHead>
+                      <TableHead className="w-[150px]">
+                        {t("actions")}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedItems.map((item) => {
+                      if (item.kind === 'event') {
+                        const event = item.data;
+                        const EventIcon = event.type === 'disk_event' ? HardDrive
+                          : event.type === 'text_event' ? StickyNote
+                          : Flag;
+                        return (
+                          <TableRow key={`event-${event.id}`} className="border-dashed bg-muted/30">
+                            <TableCell className="max-w-[400px]">
+                              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <EventIcon className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                <div className="min-w-0">
+                                  <span className="font-medium">{event.type}</span>
+                                  {event.type === 'text_event' && typeof event.data.text === 'string' ? (
+                                    <p className="mt-0.5 text-sm text-foreground whitespace-pre-wrap break-words">{event.data.text}</p>
+                                  ) : event.type === 'disk_event' ? (
+                                    <div className="mt-0.5 space-y-0.5">
+                                      {typeof event.data.path === 'string' && (
+                                        <p className="text-sm font-mono text-foreground truncate">{event.data.path}</p>
+                                      )}
+                                      {typeof event.data.note === 'string' && (
+                                        <p className="text-xs text-muted-foreground italic">{event.data.note}</p>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <pre className="mt-0.5 text-xs font-mono bg-muted/50 rounded px-1.5 py-1 whitespace-pre-wrap break-all">
+                                      {JSON.stringify(event.data, null, 2)}
+                                    </pre>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                                event
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-xs text-muted-foreground">—</span>
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {new Date(event.created_at).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              {event.type === 'disk_event' && typeof event.data.disk_id === 'string' && (
+                                <Button variant="outline" size="sm" asChild>
+                                  <Link href={`/disk?diskId=${event.data.disk_id}`}>
+                                    <HardDrive className="h-3.5 w-3.5" />
+                                    Disk
+                                  </Link>
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      }
+                      const message = item.data;
+                      return (
+                      <TableRow key={message.id}>
+                        <TableCell className="max-w-[400px]">
+                          <MessageContentPreview
+                            parts={message.parts}
+                            messagePublicUrls={messagePublicUrls}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                            {message.role}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+                            {message.session_task_process_status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {new Date(message.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() =>
+                                handleOpenDetailDialog(message)
+                              }
+                            >
+                              {t("view")}
+                            </Button>
+                            {message.task_id ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                title={`${t("viewTask")} ${message.task_id.substring(0, 8)}...`}
+                              >
+                                <Link href={`/session/${sessionId}/task?taskId=${message.task_id}`}>
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  {t("task")}
+                                </Link>
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                title={t("noTaskAssociated")}
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {t("task")}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={filteredTimelineItems.length}
+                onPageChange={setCurrentPage}
+                itemLabel={tp("messages")}
+                isLoading={isLoadingMoreMessages}
+              />
+            </>
+          )}
+        </div>
+
+      {/* Create Message Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t("createMessageTitle")}</DialogTitle>
+            <DialogDescription>
+              {t("createMessageDescription")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4 overflow-y-auto flex-1">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("role")}</label>
+              <Select
+                value={newMessageRole}
+                onValueChange={(value) => handleRoleChange(value as MessageRole)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">user</SelectItem>
+                  <SelectItem value="assistant">assistant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("content")}</label>
+              <textarea
+                className="w-full h-40 p-2 text-sm border rounded-md"
+                value={newMessageText}
+                onChange={(e) => setNewMessageText(e.target.value)}
+                placeholder={t("messageContentPlaceholder")}
+              />
+            </div>
+            {/* File attachments */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  {t("attachFiles")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      document.getElementById("file-upload")?.click()
+                    }
+                    disabled={isStoringMessage}
+                  >
+                    <Upload className="h-4 w-4" />
+                    {t("selectFiles")}
+                  </Button>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-2 space-y-3">
+                    {uploadedFiles.map((fileItem) => {
+                      const allowedTypes = getAllowedPartTypes(newMessageRole);
+                      return (
+                        <div
+                          key={fileItem.id}
+                          className="flex items-start gap-2 p-3 border rounded-md bg-secondary/20"
+                        >
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <span
+                              className="text-sm font-medium truncate block"
+                              title={fileItem.file.name}
+                            >
+                              {fileItem.file.name}
+                            </span>
+                            <Select
+                              value={fileItem.type}
+                              onValueChange={(value) =>
+                                handleFileTypeChange(fileItem.id, value as PartType)
+                              }
+                              disabled={isStoringMessage}
+                            >
+                              <SelectTrigger className="w-full h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allowedTypes.includes("text") && (
+                                  <SelectItem value="text">text</SelectItem>
+                                )}
+                                {allowedTypes.includes("image") && (
+                                  <SelectItem value="image">image</SelectItem>
+                                )}
+                                {allowedTypes.includes("audio") && (
+                                  <SelectItem value="audio">audio</SelectItem>
+                                )}
+                                {allowedTypes.includes("video") && (
+                                  <SelectItem value="video">video</SelectItem>
+                                )}
+                                {allowedTypes.includes("file") && (
+                                  <SelectItem value="file">file</SelectItem>
+                                )}
+                                {allowedTypes.includes("data") && (
+                                  <SelectItem value="data">data</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => handleRemoveFile(fileItem.id)}
+                            disabled={isStoringMessage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            {/* Tool Calls - only for assistant role */}
+            {newMessageRole === "assistant" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Tool Calls</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddToolCall}
+                    disabled={isStoringMessage}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Tool Call
+                  </Button>
+                </div>
+                {toolCalls.length > 0 && (
+                  <div className="space-y-3">
+                    {toolCalls.map((tc) => (
+                      <div
+                        key={tc.id}
+                        className="p-3 border rounded-md bg-secondary/20 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Tool Call
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleRemoveToolCall(tc.id)}
+                            disabled={isStoringMessage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Tool Name"
+                          value={tc.name}
+                          onChange={(e) =>
+                            handleUpdateToolCall(
+                              tc.id,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-2 py-1 text-sm border rounded"
+                          disabled={isStoringMessage}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Tool Call ID"
+                          value={tc.call_id}
+                          onChange={(e) =>
+                            handleUpdateToolCall(
+                              tc.id,
+                              "call_id",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-2 py-1 text-sm border rounded"
+                          disabled={isStoringMessage}
+                        />
+                        <div className="border rounded overflow-hidden">
+                          <ReactCodeMirror
+                            value={tc.parameters}
+                            height="100px"
+                            theme={resolvedTheme === "dark" ? okaidia : "light"}
+                            extensions={[json(), EditorView.lineWrapping]}
+                            onChange={(value) =>
+                              handleUpdateToolCall(tc.id, "parameters", value)
+                            }
+                            editable={!isStoringMessage}
+                            basicSetup={{
+                              lineNumbers: true,
+                              foldGutter: false,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tool Results - only for user role */}
+            {newMessageRole === "user" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Tool Results</label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddToolResult}
+                    disabled={isStoringMessage}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Tool Result
+                  </Button>
+                </div>
+                {toolResults.length > 0 && (
+                  <div className="space-y-3">
+                    {toolResults.map((tr) => (
+                      <div
+                        key={tr.id}
+                        className="p-3 border rounded-md bg-secondary/20 space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Tool Result
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleRemoveToolResult(tr.id)}
+                            disabled={isStoringMessage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Tool Call ID"
+                          value={tr.tool_call_id}
+                          onChange={(e) =>
+                            handleUpdateToolResult(
+                              tr.id,
+                              "tool_call_id",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-2 py-1 text-sm border rounded"
+                          disabled={isStoringMessage}
+                        />
+                        <div className="border rounded overflow-hidden">
+                          <ReactCodeMirror
+                            value={tr.result}
+                            height="120px"
+                            theme={resolvedTheme === "dark" ? okaidia : "light"}
+                            extensions={[json(), EditorView.lineWrapping]}
+                            onChange={(value) =>
+                              handleUpdateToolResult(tr.id, "result", value)
+                            }
+                            editable={!isStoringMessage}
+                            basicSetup={{
+                              lineNumbers: true,
+                              foldGutter: false,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+              disabled={isStoringMessage}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={handleStoreMessage}
+              disabled={
+                isStoringMessage ||
+                !hasMessageContent(
+                  newMessageText,
+                  uploadedFiles,
+                  toolCalls,
+                  toolResults
+                )
+              }
+            >
+              {isStoringMessage ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("storing")}
+                </>
+              ) : (
+                t("store")
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{t("messageDetail")}</DialogTitle>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="rounded-md border bg-card p-6 overflow-y-auto flex-1">
+              {/* Message header */}
+              <div className="border-b pb-4">
+                <h3 className="text-xl font-semibold mb-2">
+                  {selectedMessage.id}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                    {selectedMessage.role}
+                  </span>
+                  <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+                    {selectedMessage.session_task_process_status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Message details in grid */}
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    {t("createdAt")}
+                  </p>
+                  <p className="text-sm bg-muted px-2 py-1 rounded">
+                    {new Date(selectedMessage.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    {t("updatedAt")}
+                  </p>
+                  <p className="text-sm bg-muted px-2 py-1 rounded">
+                    {new Date(selectedMessage.updated_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Message content */}
+              <div className="border-t pt-6 mt-6">
+                <p className="text-sm font-medium text-muted-foreground mb-3">
+                  {t("content")}
+                </p>
+                <div className="space-y-6">
+                  {selectedMessage.parts.map((part, idx) => {
+                    // Generate asset key for public_urls lookup
+                    const assetKey = part.asset ? part.asset.sha256 : null;
+                    const publicUrl = assetKey
+                      ? messagePublicUrls[assetKey]?.url
+                      : null;
+                    const isImage = part.asset?.mime?.startsWith("image/");
+
+                    return (
+                      <div
+                        key={idx}
+                        className="border rounded-md p-4 bg-muted/50"
+                      >
+                        {part.type === "text" && (
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-muted-foreground uppercase">
+                              Text
+                            </div>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {part.text}
+                            </p>
+                          </div>
+                        )}
+                        {part.type === "tool-call" && part.meta && (
+                          <div className="space-y-3">
+                            <div className="text-xs font-medium text-muted-foreground uppercase">
+                              Tool Call
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Tool Name
+                                </p>
+                                <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                  {part.meta.name as string}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Tool Call ID
+                                </p>
+                                <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                  {part.meta.id as string}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Parameters
+                                </p>
+                                <pre className="text-sm font-mono bg-muted px-2 py-1 rounded overflow-x-auto">
+                                  {typeof part.meta.arguments === 'string'
+                                    ? part.meta.arguments
+                                    : JSON.stringify(part.meta.arguments, null, 2)}
+                                </pre>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {part.type === "tool-result" && part.meta && (
+                          <div className="space-y-3">
+                            <div className="text-xs font-medium text-muted-foreground uppercase">
+                              Tool Result
+                            </div>
+                            <div className="space-y-2">
+                              <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Tool Call ID
+                                </p>
+                                <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                  {part.meta.tool_call_id as string}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-muted-foreground mb-1">
+                                  Result
+                                </p>
+                                <pre className="text-sm font-mono bg-muted px-2 py-1 rounded overflow-x-auto whitespace-pre-wrap">
+                                  {part.text || (typeof part.meta.result === "string"
+                                    ? part.meta.result
+                                    : JSON.stringify(part.meta.result, null, 2))}
+                                </pre>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {part.type !== "text" && part.type !== "tool-call" && part.type !== "tool-result" && (
+                          <div className="space-y-3">
+                            <div className="text-xs font-medium text-muted-foreground uppercase">
+                              {part.type}
+                            </div>
+                            {part.filename && (
+                              <p className="text-sm font-semibold">
+                                {part.filename}
+                              </p>
+                            )}
+                            {part.asset && (
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                                    {t("mimeType")}
+                                  </p>
+                                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                    {part.asset.mime}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                                    {t("size")}
+                                  </p>
+                                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                    {part.asset.size_b}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            {/* Only show preview for images based on mimeType */}
+                            {isImage && publicUrl && (
+                              <div className="border-t pt-3">
+                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                  {t("preview")}
+                                </p>
+                                <div className="rounded-md border bg-muted p-4">
+                                  <div className="relative w-full min-h-[200px]">
+                                    <Image
+                                      src={publicUrl}
+                                      alt={part.filename || "image"}
+                                      width={800}
+                                      height={600}
+                                      className="max-w-full h-auto rounded-md shadow-sm"
+                                      style={{ objectFit: "contain" }}
+                                      unoptimized
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDetailDialogOpen(false)}
+            >
+              {t("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+

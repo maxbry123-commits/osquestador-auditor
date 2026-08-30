@@ -1,0 +1,419 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2, Upload, RefreshCw } from "lucide-react";
+import { PaginationBar } from "@/components/pagination-bar";
+import {
+  getAgentSkills,
+  deleteAgentSkill,
+} from "@/app/agent_skills/actions";
+import { AgentSkill } from "@/types";
+
+const PAGE_SIZE = 20;
+
+export default function AgentSkillsPage() {
+  const t = useTranslations("agentSkills");
+  const tp = useTranslations("pagination");
+  const [skills, setSkills] = useState<AgentSkill[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filterText, setFilterText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [skillToDelete, setSkillToDelete] = useState<AgentSkill | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadUser, setUploadUser] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredSkills = skills.filter((skill) =>
+    skill.name.toLowerCase().includes(filterText.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredSkills.length / PAGE_SIZE);
+  const paginatedSkills = filteredSkills.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const loadSkills = async () => {
+    try {
+      setIsLoading(true);
+
+      const first = await getAgentSkills(50, undefined, true);
+      if (first.code !== 0) {
+        console.error(first.message);
+        setIsLoading(false);
+        return;
+      }
+      setSkills(first.data?.items || []);
+      setCurrentPage(1);
+      setIsLoading(false);
+
+      if (first.data?.has_more) {
+        setIsLoadingMore(true);
+        let cursor = first.data?.next_cursor;
+        while (cursor) {
+          const res = await getAgentSkills(50, cursor, true);
+          if (res.code !== 0) {
+            console.error(res.message);
+            break;
+          }
+          setSkills(prev => [...prev, ...(res.data?.items || [])]);
+          cursor = res.data?.has_more ? res.data?.next_cursor : undefined;
+        }
+        setIsLoadingMore(false);
+      }
+    } catch (error) {
+      console.error("Failed to load agent skills:", error);
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSkills();
+  }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadSkills();
+    setIsRefreshing(false);
+  };
+
+  const handleOpenUpload = () => {
+    setUploadFile(null);
+    setUploadUser("");
+    setUploadError("");
+    setUploadDialogOpen(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadFile(file);
+      setUploadError("");
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) return;
+
+    try {
+      setIsUploading(true);
+      setUploadError("");
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      if (uploadUser) {
+        formData.append("user", uploadUser);
+      }
+
+      const response = await fetch("/api/agent_skills/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const res = await response.json();
+
+      if (res.code !== 0) {
+        setUploadError(res.msg || res.message);
+        return;
+      }
+      await loadSkills();
+      setUploadDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to upload agent skill:", error);
+      setUploadError(String(error));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!skillToDelete) return;
+    try {
+      setIsDeleting(true);
+      const res = await deleteAgentSkill(skillToDelete.id);
+      if (res.code !== 0) {
+        console.error(res.message);
+        return;
+      }
+      await loadSkills();
+    } catch (error) {
+      console.error("Failed to delete agent skill:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setSkillToDelete(null);
+    }
+  };
+
+  return (
+    <div className="h-full bg-background p-6 flex flex-col overflow-hidden space-y-2">
+      <div className="shrink-0 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("description")}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleOpenUpload}>
+              <Upload className="h-4 w-4" />
+              {t("upload")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("loading")}
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  {t("refresh")}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder={t("filterById")}
+            value={filterText}
+            onChange={(e) => {
+              setFilterText(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="max-w-sm"
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 rounded-md border overflow-hidden flex flex-col min-h-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredSkills.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-muted-foreground">
+              {skills.length === 0 ? t("noData") : t("noMatching")}
+            </p>
+          </div>
+        ) : (
+          <>
+          <div className="overflow-auto flex-1">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("name")}</TableHead>
+                  <TableHead>{t("skillDescription")}</TableHead>
+                  <TableHead>{t("files")}</TableHead>
+                  <TableHead>{t("createdAt")}</TableHead>
+                  <TableHead>{t("actions")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedSkills.map((skill) => (
+                  <TableRow key={skill.id}>
+                    <TableCell className="font-medium">
+                      {skill.name}
+                    </TableCell>
+                    <TableCell className="max-w-[300px] truncate">
+                      {skill.description || (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-md bg-secondary border border-border px-2 py-1 text-xs font-medium">
+                        {skill.file_index?.length || 0}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(skill.created_at).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="secondary" size="sm" asChild>
+                          <Link href={`/agent_skills/${skill.id}`}>
+                            {t("viewDetails")}
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setSkillToDelete(skill);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          {t("delete")}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredSkills.length}
+            onPageChange={setCurrentPage}
+            itemLabel={tp("skills")}
+            isLoading={isLoadingMore}
+          />
+          </>
+        )}
+      </div>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("deleteConfirmDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("deleting")}
+                </>
+              ) : (
+                t("delete")
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Upload Dialog */}
+      <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("uploadTitle")}</DialogTitle>
+            <DialogDescription>{t("uploadDescription")}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t("selectFile")}
+              </label>
+              <div className="flex gap-2 items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {t("selectFile")}
+                </Button>
+                <span className="text-sm text-muted-foreground truncate">
+                  {uploadFile?.name || t("noFileSelected")}
+                </span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".zip"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t("userOptional")}
+              </label>
+              <Input
+                type="text"
+                placeholder={t("userPlaceholder")}
+                value={uploadUser}
+                onChange={(e) => setUploadUser(e.target.value)}
+              />
+            </div>
+            {uploadError && (
+              <p className="text-sm text-destructive">{uploadError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setUploadDialogOpen(false)}
+              disabled={isUploading}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={handleUpload}
+              disabled={isUploading || !uploadFile}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t("uploading")}
+                </>
+              ) : (
+                t("upload")
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

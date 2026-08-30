@@ -1,0 +1,20 @@
+name: UI Release
+
+on:
+  push:
+    tags:
+      - "ui/v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/_reusable-docker-release.yaml
+    with:
+      image_name: acontext-ui
+      context: ./src/server/ui
+      tag_prefix: "ui/v"
+      display_name: UI
+      source_dir: src/server/ui

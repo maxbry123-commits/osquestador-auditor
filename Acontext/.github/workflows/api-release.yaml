@@ -1,0 +1,20 @@
+name: API Release
+
+on:
+  push:
+    tags:
+      - "api/v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/_reusable-docker-release.yaml
+    with:
+      image_name: acontext-api
+      context: ./src/server/api/go
+      tag_prefix: "api/v"
+      display_name: API
+      source_dir: src/server/api/go

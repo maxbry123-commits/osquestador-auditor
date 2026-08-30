@@ -1,0 +1,52 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Claude Code artifacts
+.claude/
+mnt/
+
+# LongMemEval dataset (users download separately)
+LongMemEval/
+
+# SQLite working files
+*.db
+*.db-shm
+*.db-wal
+
+# Evaluation run artifacts — logs and intermediate results (archived in /logs)
+logs/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,21 @@
+name: Admin API Release
+
+on:
+  push:
+    tags:
+      - "admin/v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    uses: ./.github/workflows/_reusable-docker-release.yaml
+    with:
+      image_name: acontext-admin
+      context: ./src/server/api/go
+      file: ./src/server/api/go/Dockerfile.admin
+      tag_prefix: "admin/v"
+      display_name: Admin API
+      source_dir: src/server/api/go

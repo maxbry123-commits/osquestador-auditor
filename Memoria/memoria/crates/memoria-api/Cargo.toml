@@ -1,0 +1,55 @@
+[package]
+name = "memoria-api"
+version.workspace = true
+edition = "2021"
+
+[features]
+default = []
+local-embedding = ["memoria-embedding/local-embedding"]
+otel = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-otlp", "tracing-opentelemetry"]
+
+[lib]
+name = "memoria_api"
+path = "src/lib.rs"
+
+[dependencies]
+memoria-core = { workspace = true }
+memoria-storage = { workspace = true }
+memoria-embedding = { workspace = true }
+memoria-service = { workspace = true }
+memoria-git = { workspace = true }
+memoria-mcp = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_urlencoded = "0.7"
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+opentelemetry = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
+tower-http = { workspace = true }
+anyhow = { workspace = true }
+clap = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+sqlx = { workspace = true }
+sha2 = "0.10"
+subtle = "2.6"
+base64 = "0.22"
+async-trait = { workspace = true }
+tempfile = "3.14"
+moka = { version = "0.12", features = ["future", "sync"] }
+
+[dev-dependencies]
+tokio = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+memoria-mcp = { workspace = true }
+memoria-service = { workspace = true }
+memoria-test-utils = { workspace = true }
+ed25519-dalek = { version = "2.1", default-features = false, features = ["std"] }
+uuid = { workspace = true }
+serial_test = "3.4.0"

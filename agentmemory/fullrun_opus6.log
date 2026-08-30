@@ -1,0 +1,806 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading dataset from C:/Agentmemory V4/LongMemEval/data/longmemeval_oracle.json ...
+Total cases to evaluate: 500
+Pre-loading dense embedder (once) ...
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 11245.54it/s]
+[1mMPNetModel LOAD REPORT[0m from: sentence-transformers/all-mpnet-base-v2
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+Embedder mode: sentence_transformers
+Pre-loading CrossEncoder reranker (once) ...
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|██████████| 105/105 [00:00<00:00, 9516.44it/s]
+[1mBertForSequenceClassification LOAD REPORT[0m from: cross-encoder/ms-marco-MiniLM-L-6-v2
+Key                          | Status     |  | 
+-----------------------------+------------+--+-
+bert.embeddings.position_ids | UNEXPECTED |  | 
+
+[3mNotes:
+- UNEXPECTED[3m	:can be ignored when loading from different task/architecture; not ok if you expect identical arch.[0m
+Reranker loaded.
+Generator model: claude-opus-4-6  |  Judge model: gpt-4o
+Using Anthropic client for generation (claude-opus-4-6)
+
+======================================================================
+Starting evaluation with GEN_MODEL=claude-opus-4-6, JUDGE_MODEL=gpt-4o
+concurrency=1, fast_recall=False
+TOKEN_BUDGETS={'single-session-user': 1500, 'single-session-assistant': 3500, 'single-session-preference': 3500, 'knowledge-update': 2500, 'multi-session': 7500, 'temporal-reasoning': 5000}
+======================================================================
+
+[   1/500] CORRECT | acc=100.0% | tokens=8,982 | Q: What was the first issue I had with my new car after its fir
+[   2/500] CORRECT | acc=100.0% | tokens=19,108 | Q: Which event did I attend first, the 'Effective Time Manageme
+[   3/500] CORRECT | acc=100.0% | tokens=29,258 | Q: Which vehicle did I take care of first in February, the bike
+[   4/500] CORRECT | acc=100.0% | tokens=39,196 | Q: Which device did I got first, the Samsung Galaxy S22 or the 
+[   5/500] CORRECT | acc=100.0% | tokens=48,254 | Q: How many days before the team meeting I was preparing for di
+[   6/500] WRONG   | acc= 83.3% | tokens=58,129 | Q: How many days had passed between the Sunday mass at St. Mary
+[   7/500] CORRECT | acc= 85.7% | tokens=67,128 | Q: How many days did it take for me to find a house I loved aft
+[   8/500] CORRECT | acc= 87.5% | tokens=76,586 | Q: Which seeds were started first, the tomatoes or the marigold
+[   9/500] CORRECT | acc= 88.9% | tokens=86,492 | Q: How many days had passed between the Hindu festival of Holi 
+[  10/500] CORRECT | acc= 90.0% | tokens=96,504 | Q: How many days before the 'Rack Fest' did I participate in th
+[  11/500] CORRECT | acc= 90.9% | tokens=105,874 | Q: Which pair of shoes did I clean last month?
+[  12/500] CORRECT | acc= 91.7% | tokens=115,545 | Q: Which event happened first, the purchase of the coffee maker
+[  13/500] CORRECT | acc= 92.3% | tokens=125,045 | Q: How many days had passed between the 'Walk for Hunger' event
+[  14/500] CORRECT | acc= 92.9% | tokens=135,467 | Q: Which item did I purchase first, the dog bed for Max or the 
+[  15/500] CORRECT | acc= 93.3% | tokens=144,600 | Q: Which task did I complete first, fixing the fence or trimmin
+[  16/500] CORRECT | acc= 93.8% | tokens=154,290 | Q: How many charity events did I participate in before the 'Run
+[  17/500] CORRECT | acc= 94.1% | tokens=163,525 | Q: How long have I been working before I started my current job
+[  18/500] CORRECT | acc= 94.4% | tokens=174,758 | Q: Which book did I finish reading first, 'The Hate U Give' or 
+[  19/500] CORRECT | acc= 94.7% | tokens=185,226 | Q: Which device did I set up first, the smart thermostat or the
+[  20/500] CORRECT | acc= 95.0% | tokens=194,693 | Q: How many months ago did I book the Airbnb in San Francisco?
+[  21/500] CORRECT | acc= 95.2% | tokens=204,666 | Q: How long did I take to finish 'The Seven Husbands of Evelyn 
+[  22/500] CORRECT | acc= 95.5% | tokens=213,700 | Q: What was the date on which I attended the first BBQ event in
+[  23/500] CORRECT | acc= 95.7% | tokens=223,073 | Q: How many days before I bought the iPhone 13 Pro did I attend
+[  24/500] CORRECT | acc= 95.8% | tokens=234,211 | Q: Which show did I start watching first, 'The Crown' or 'Game 
+[  25/500] CORRECT | acc= 96.0% | tokens=243,649 | Q: How long had I been a member of 'Book Lovers Unite' when I a
+
+  [Progress @ 25 cases] acc=96.0% | tokens=243,649 | projected=4,872,980
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  temporal-reasoning                       24      25   96.0%
+  OVERALL                                  24      25   96.0%
+  ctx_abstained this run: 0
+
+[  26/500] CORRECT | acc= 96.2% | tokens=252,787 | Q: How long had I been watching stand-up comedy specials regula
+[  27/500] CORRECT | acc= 96.3% | tokens=261,552 | Q: What time do I wake up on Tuesdays and Thursdays?
+[  28/500] CORRECT | acc= 96.4% | tokens=271,797 | Q: How many days had passed since I bought my Adidas running sh
+[  29/500] CORRECT | acc= 96.6% | tokens=282,639 | Q: Which event happened first, the road trip to the coast or th
+[  30/500] CORRECT | acc= 96.7% | tokens=292,503 | Q: Which airline did I fly with the most in March and April?
+[  31/500] CORRECT | acc= 96.8% | tokens=301,631 | Q: How long had I been bird watching when I attended the bird w
+[  32/500] CORRECT | acc= 96.9% | tokens=311,621 | Q: Which trip did I take first, the one to Europe with family o
+[  33/500] CORRECT | acc= 97.0% | tokens=321,912 | Q: Which device did I set up first, the smart thermostat or the
+[  34/500] CORRECT | acc= 97.1% | tokens=332,182 | Q: Which health issue did I deal with first, the persistent cou
+[  35/500] CORRECT | acc= 97.1% | tokens=341,684 | Q: How old was I when I moved to the United States?
+[  36/500] CORRECT | acc= 97.2% | tokens=351,110 | Q: How long had I been using the new area rug when I rearranged
+[  37/500] CORRECT | acc= 97.3% | tokens=360,207 | Q: How many days before my best friend's birthday party did I o
+[  38/500] CORRECT | acc= 97.4% | tokens=369,243 | Q: Which trip did the narrator take first, the solo trip to Eur
+[  39/500] WRONG   | acc= 94.9% | tokens=379,059 | Q: How long did I use my new binoculars before I saw the Americ
+[  40/500] CORRECT | acc= 95.0% | tokens=389,251 | Q: Who did I meet first, Mark and Sarah or Tom?
+[  41/500] CORRECT | acc= 95.1% | tokens=398,708 | Q: How many weeks have I been accepted into the exchange progra
+[  42/500] CORRECT | acc= 95.2% | tokens=408,534 | Q: Which group did I join first, 'Page Turners' or 'Marketing P
+[  43/500] CORRECT | acc= 95.3% | tokens=418,190 | Q: How long had I been taking guitar lessons when I bought the 
+[  44/500] CORRECT | acc= 95.5% | tokens=427,734 | Q: Which streaming service did I start using most recently?
+[  45/500] CORRECT | acc= 95.6% | tokens=436,868 | Q: How many months before my anniversary did Rachel get engaged
+[  46/500] CORRECT | acc= 95.7% | tokens=446,627 | Q: Which event happened first, the narrator losing their phone 
+[  47/500] CORRECT | acc= 95.7% | tokens=455,904 | Q: Who did I meet first, the woman selling jam at the farmer's 
+[  48/500] CORRECT | acc= 95.8% | tokens=465,907 | Q: Which event happened first, the meeting with Rachel or the p
+[  49/500] CORRECT | acc= 95.9% | tokens=476,184 | Q: Which gift did I buy first, the necklace for my sister or th
+[  50/500] CORRECT | acc= 96.0% | tokens=485,433 | Q: Which event did I participate in first, the volleyball leagu
+
+  [Progress @ 50 cases] acc=96.0% | tokens=485,433 | projected=4,854,330
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  temporal-reasoning                       48      50   96.0%
+  OVERALL                                  48      50   96.0%
+  ctx_abstained this run: 0
+
+[  51/500] CORRECT | acc= 96.1% | tokens=494,580 | Q: Which event happened first, my attendance at a cultural fest
+[  52/500] CORRECT | acc= 96.2% | tokens=504,770 | Q: Which project did I start first, the Ferrari model or the Ja
+[  53/500] CORRECT | acc= 96.2% | tokens=514,499 | Q: Who became a parent first, Rachel or Alex?
+[  54/500] CORRECT | acc= 96.3% | tokens=524,237 | Q: How many days had passed between the day I bought a gift for
+[  55/500] CORRECT | acc= 96.4% | tokens=533,515 | Q: Which task did I complete first, fixing the fence or purchas
+[  56/500] CORRECT | acc= 96.4% | tokens=542,624 | Q: How long have I been working before I started my current job
+[  57/500] CORRECT | acc= 96.5% | tokens=551,197 | Q: When did I book the Airbnb in Sacramento?
+[  58/500] CORRECT | acc= 96.6% | tokens=560,365 | Q: How many days before I bought my iPad did I attend the Holid
+[  59/500] CORRECT | acc= 96.6% | tokens=570,415 | Q: Which project did I start first, the Ferrari model or the Po
+[  60/500] CORRECT | acc= 96.7% | tokens=579,956 | Q: Who became a parent first, Tom or Alex?
+[  61/500] WRONG   | acc= 95.1% | tokens=591,545 | Q: How many items of clothing do I need to pick up or return fr
+[  62/500] CORRECT | acc= 95.2% | tokens=602,455 | Q: How many projects have I led or am currently leading?
+[  63/500] CORRECT | acc= 95.2% | tokens=613,696 | Q: How many model kits have I worked on or bought?
+[  64/500] CORRECT | acc= 95.3% | tokens=624,544 | Q: How many days did I spend on camping trips in the United Sta
+[  65/500] CORRECT | acc= 95.4% | tokens=635,612 | Q: How many weeks did it take me to watch all the Marvel Cinema
+[  66/500] CORRECT | acc= 95.5% | tokens=646,735 | Q: How many plants did I acquire in the last month?
+[  67/500] CORRECT | acc= 95.5% | tokens=658,403 | Q: How much total money have I spent on bike-related expenses s
+[  68/500] CORRECT | acc= 95.6% | tokens=669,048 | Q: How many hours in total did I spend driving to my three road
+[  69/500] CORRECT | acc= 95.7% | tokens=680,789 | Q: How many different doctors did I visit?
+[  70/500] CORRECT | acc= 95.7% | tokens=690,045 | Q: What time did I go to bed on the day before I had a doctor's
+[  71/500] CORRECT | acc= 95.8% | tokens=701,208 | Q: How many different types of citrus fruits have I used in my 
+[  72/500] CORRECT | acc= 95.8% | tokens=713,596 | Q: How many movie festivals that I attended?
+[  73/500] CORRECT | acc= 95.9% | tokens=723,808 | Q: How many days did I take social media breaks in total?
+[  74/500] CORRECT | acc= 95.9% | tokens=735,282 | Q: How many tanks do I currently have, including the one I set 
+[  75/500] CORRECT | acc= 96.0% | tokens=745,430 | Q: What is the total amount I spent on luxury items in the past
+
+  [Progress @ 75 cases] acc=96.0% | tokens=745,430 | projected=4,969,533
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  multi-session                            14      15   93.3%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                  72      75   96.0%
+  ctx_abstained this run: 0
+
+[  76/500] WRONG   | acc= 94.7% | tokens=756,809 | Q: How many hours have I spent playing games in total?
+[  77/500] WRONG   | acc= 93.5% | tokens=769,268 | Q: How many weddings have I attended in this year?
+[  78/500] CORRECT | acc= 93.6% | tokens=781,846 | Q: How many babies were born to friends and family members in t
+[  79/500] CORRECT | acc= 93.7% | tokens=793,895 | Q: How many pieces of furniture did I buy, assemble, sell, or f
+[  80/500] CORRECT | acc= 93.8% | tokens=805,473 | Q: How many times did I bake something in the past two weeks?
+[  81/500] CORRECT | acc= 93.8% | tokens=816,945 | Q: How many different museums or galleries did I visit in the m
+[  82/500] CORRECT | acc= 93.9% | tokens=828,836 | Q: How many different cuisines have I learned to cook or tried 
+[  83/500] CORRECT | acc= 94.0% | tokens=840,486 | Q: How many properties did I view before making an offer on the
+[  84/500] CORRECT | acc= 94.0% | tokens=850,862 | Q: How many different types of food delivery services have I us
+[  85/500] CORRECT | acc= 94.1% | tokens=861,745 | Q: How many hours of jogging and yoga did I do last week?
+[  86/500] CORRECT | acc= 94.2% | tokens=871,421 | Q: Which social media platform did I gain the most followers on
+[  87/500] CORRECT | acc= 94.3% | tokens=882,455 | Q: Which grocery store did I spend the most money at in the pas
+[  88/500] CORRECT | acc= 94.3% | tokens=891,990 | Q: How much more did I spend on accommodations per night in Haw
+[  89/500] CORRECT | acc= 94.4% | tokens=903,056 | Q: How many different art-related events did I attend in the pa
+[  90/500] CORRECT | acc= 94.4% | tokens=912,748 | Q: What is the average age of me, my parents, and my grandparen
+[  91/500] CORRECT | acc= 94.5% | tokens=923,771 | Q: How many doctor's appointments did I go to in March?
+[  92/500] CORRECT | acc= 94.6% | tokens=934,409 | Q: How many days did it take for me to receive the new remote s
+[  93/500] CORRECT | acc= 94.6% | tokens=945,576 | Q: How many health-related devices do I use in a day?
+[  94/500] CORRECT | acc= 94.7% | tokens=956,778 | Q: How many fish are there in total in both of my aquariums?
+[  95/500] CORRECT | acc= 94.7% | tokens=967,915 | Q: How many fitness classes do I attend in a typical week?
+[  96/500] CORRECT | acc= 94.8% | tokens=978,622 | Q: How many days did it take for my laptop backpack to arrive a
+[  97/500] CORRECT | acc= 94.8% | tokens=989,789 | Q: How many pieces of jewelry did I acquire in the last two mon
+[  98/500] CORRECT | acc= 94.9% | tokens=1,000,126 | Q: How much money did I raise in total through all the charity 
+[  99/500] CORRECT | acc= 94.9% | tokens=1,011,018 | Q: How many projects have I been working on simultaneously, exc
+[ 100/500] CORRECT | acc= 95.0% | tokens=1,022,474 | Q: How many musical instruments do I currently own?
+
+  [Progress @ 100 cases] acc=95.0% | tokens=1,022,474 | projected=5,112,370
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  multi-session                            37      40   92.5%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                  95     100   95.0%
+  ctx_abstained this run: 0
+
+[ 101/500] CORRECT | acc= 95.0% | tokens=1,034,343 | Q: How many bikes did I service or plan to service in March?
+[ 102/500] CORRECT | acc= 95.1% | tokens=1,045,499 | Q: How much money did I raise for charity in total?
+[ 103/500] CORRECT | acc= 95.1% | tokens=1,056,697 | Q: How many days did I spend participating in faith-related act
+[ 104/500] CORRECT | acc= 95.2% | tokens=1,068,286 | Q: How many kitchen items did I replace or fix?
+[ 105/500] CORRECT | acc= 95.2% | tokens=1,080,325 | Q: How many times did I ride rollercoasters across all the even
+[ 106/500] WRONG   | acc= 94.3% | tokens=1,092,696 | Q: How much total money did I spend on attending workshops in t
+[ 107/500] CORRECT | acc= 94.4% | tokens=1,102,992 | Q: How many days did I spend in total traveling in Hawaii and i
+[ 108/500] CORRECT | acc= 94.4% | tokens=1,113,547 | Q: How many days did I spend attending workshops, lectures, and
+[ 109/500] CORRECT | acc= 94.5% | tokens=1,124,564 | Q: How many rare items do I have in total?
+[ 110/500] CORRECT | acc= 94.5% | tokens=1,134,498 | Q: What is the total amount of money I earned from selling my p
+[ 111/500] CORRECT | acc= 94.6% | tokens=1,145,476 | Q: How many magazine subscriptions do I currently have?
+[ 112/500] CORRECT | acc= 94.6% | tokens=1,155,797 | Q: How many online courses have I completed in total?
+[ 113/500] CORRECT | acc= 94.7% | tokens=1,167,315 | Q: How many music albums or EPs have I purchased or downloaded?
+[ 114/500] CORRECT | acc= 94.7% | tokens=1,178,748 | Q: How many years in total did I spend in formal education from
+[ 115/500] CORRECT | acc= 94.8% | tokens=1,190,316 | Q: How many total pieces of writing have I completed since I st
+[ 116/500] CORRECT | acc= 94.8% | tokens=1,201,609 | Q: How many graduation ceremonies have I attended in the past t
+[ 117/500] CORRECT | acc= 94.9% | tokens=1,212,379 | Q: How many times did I bake egg tarts in the past two weeks?
+[ 118/500] CORRECT | acc= 94.9% | tokens=1,223,249 | Q: How many different museums or galleries did I visit in Decem
+[ 119/500] CORRECT | acc= 95.0% | tokens=1,233,697 | Q: How many fish are there in my 30-gallon tank?
+[ 120/500] CORRECT | acc= 95.0% | tokens=1,244,593 | Q: How many days did it take for my iPad case to arrive after I
+[ 121/500] CORRECT | acc= 95.0% | tokens=1,255,195 | Q: How many days did I spend in total traveling in Hawaii and i
+[ 122/500] CORRECT | acc= 95.1% | tokens=1,266,738 | Q: How many years in total did I spend in formal education from
+[ 123/500] CORRECT | acc= 95.1% | tokens=1,272,567 | Q: What was my personal best time in the charity 5K run?
+[ 124/500] CORRECT | acc= 95.2% | tokens=1,283,723 | Q: How many Korean restaurants have I tried in my city?
+[ 125/500] CORRECT | acc= 95.2% | tokens=1,289,251 | Q: Where did Rachel move to after her recent relocation?
+
+  [Progress @ 125 cases] acc=95.2% | tokens=1,289,251 | projected=5,157,004
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                          3       3  100.0%
+  multi-session                            58      62   93.5%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 119     125   95.2%
+  ctx_abstained this run: 0
+
+[ 126/500] WRONG   | acc= 94.4% | tokens=1,294,906 | Q: What was the amount I was pre-approved for when I got my mor
+[ 127/500] CORRECT | acc= 94.5% | tokens=1,301,129 | Q: How often do I attend yoga classes to help with my anxiety?
+[ 128/500] CORRECT | acc= 94.5% | tokens=1,306,939 | Q: Is my mom using the same grocery list method as me?
+[ 129/500] CORRECT | acc= 94.6% | tokens=1,317,756 | Q: How many hours have I spent on my abstract ocean sculpture?
+[ 130/500] CORRECT | acc= 94.6% | tokens=1,329,361 | Q: How many bikes do I currently own?
+[ 131/500] CORRECT | acc= 94.7% | tokens=1,335,087 | Q: What day of the week do I take a cocktail-making class?
+[ 132/500] CORRECT | acc= 94.7% | tokens=1,340,956 | Q: Where did I go on my most recent family trip?
+[ 133/500] CORRECT | acc= 94.7% | tokens=1,346,641 | Q: Where do I initially keep my old sneakers?
+[ 134/500] CORRECT | acc= 94.8% | tokens=1,357,083 | Q: How many short stories have I written since I started writin
+[ 135/500] CORRECT | acc= 94.8% | tokens=1,368,628 | Q: How many pages of 'A Short History of Nearly Everything' hav
+[ 136/500] CORRECT | acc= 94.9% | tokens=1,374,658 | Q: How many engineers do I lead when I just started my new role
+[ 137/500] CORRECT | acc= 94.9% | tokens=1,386,147 | Q: How many titles are currently on my to-watch list?
+[ 138/500] CORRECT | acc= 94.9% | tokens=1,396,921 | Q: How many stars do I need to reach the gold level on my Starb
+[ 139/500] CORRECT | acc= 95.0% | tokens=1,403,051 | Q: How long have I been using my Fitbit Charge 3?
+[ 140/500] WRONG   | acc= 94.3% | tokens=1,414,626 | Q: How many sessions of the bereavement support group did I att
+[ 141/500] CORRECT | acc= 94.3% | tokens=1,420,743 | Q: What type of camera lens did I purchase most recently?
+[ 142/500] CORRECT | acc= 94.4% | tokens=1,426,680 | Q: How often do I see my therapist, Dr. Smith?
+[ 143/500] CORRECT | acc= 94.4% | tokens=1,437,781 | Q: How many MCU films did I watch in the last 3 months?
+[ 144/500] CORRECT | acc= 94.4% | tokens=1,448,547 | Q: How many of Emma's recipes have I tried out?
+[ 145/500] CORRECT | acc= 94.5% | tokens=1,454,478 | Q: What company is Rachel, an old colleague from my previous co
+[ 146/500] CORRECT | acc= 94.5% | tokens=1,460,196 | Q: For the coffee-to-water ratio in my French press, did I swit
+[ 147/500] CORRECT | acc= 94.6% | tokens=1,466,293 | Q: Where is the painting 'Ethereal Dreams' by Emma Taylor curre
+[ 148/500] CORRECT | acc= 94.6% | tokens=1,477,504 | Q: How many times have I worn my new black Converse Chuck Taylo
+[ 149/500] CORRECT | acc= 94.6% | tokens=1,488,067 | Q: How many episodes of the Science series have I completed on 
+[ 150/500] CORRECT | acc= 94.7% | tokens=1,493,938 | Q: Do I go to the gym more frequently than I did previously?
+
+  [Progress @ 150 cases] acc=94.7% | tokens=1,493,938 | projected=4,979,793
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         26      28   92.9%
+  multi-session                            58      62   93.5%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 142     150   94.7%
+  ctx_abstained this run: 0
+
+[ 151/500] CORRECT | acc= 94.7% | tokens=1,505,730 | Q: How many new postcards have I added to my collection since I
+[ 152/500] CORRECT | acc= 94.7% | tokens=1,516,351 | Q: How many videos of Corey Schafer's Python programming series
+[ 153/500] CORRECT | acc= 94.8% | tokens=1,522,575 | Q: How long have I been living in my current apartment in Haraj
+[ 154/500] CORRECT | acc= 94.8% | tokens=1,528,200 | Q: What brand of BBQ sauce am I currently obsessed with?
+[ 155/500] CORRECT | acc= 94.8% | tokens=1,533,734 | Q: How long have my parents been staying with me in the US?
+[ 156/500] CORRECT | acc= 94.9% | tokens=1,539,656 | Q: How long have I been sticking to my daily tidying routine?
+[ 157/500] CORRECT | acc= 94.9% | tokens=1,545,429 | Q: How long have I had my cat, Luna?
+[ 158/500] CORRECT | acc= 94.9% | tokens=1,555,975 | Q: How many Instagram followers do I currently have?
+[ 159/500] CORRECT | acc= 95.0% | tokens=1,566,444 | Q: How many dozen eggs do we currently have stocked up in our r
+[ 160/500] CORRECT | acc= 95.0% | tokens=1,577,186 | Q: How many issues of National Geographic have I finished readi
+[ 161/500] CORRECT | acc= 95.0% | tokens=1,583,364 | Q: Did I finish reading 'The Nightingale' by Kristin Hannah?
+[ 162/500] CORRECT | acc= 95.1% | tokens=1,589,153 | Q: Where did I get my guitar serviced?
+[ 163/500] CORRECT | acc= 95.1% | tokens=1,594,949 | Q: What is my current highest score in Ticket to Ride?
+[ 164/500] CORRECT | acc= 95.1% | tokens=1,605,235 | Q: How many tops have I bought from H&M so far?
+[ 165/500] CORRECT | acc= 95.2% | tokens=1,615,762 | Q: How much did I earn at the Downtown Farmers Market on my mos
+[ 166/500] CORRECT | acc= 95.2% | tokens=1,627,508 | Q: How many times have I tried making a Negroni at home since m
+[ 167/500] CORRECT | acc= 95.2% | tokens=1,633,312 | Q: What time do I usually go to the gym?
+[ 168/500] CORRECT | acc= 95.2% | tokens=1,644,737 | Q: How many Crash Course videos have I watched in the past few 
+[ 169/500] CORRECT | acc= 95.3% | tokens=1,650,178 | Q: Where am I planning to stay for my birthday trip to Hawaii?
+[ 170/500] CORRECT | acc= 95.3% | tokens=1,660,551 | Q: How many different species of birds have I seen in my local 
+[ 171/500] CORRECT | acc= 95.3% | tokens=1,666,206 | Q: What was my previous frequent flyer status on United Airline
+[ 172/500] CORRECT | acc= 95.3% | tokens=1,672,334 | Q: What was my previous personal best time for the charity 5K r
+[ 173/500] CORRECT | acc= 95.4% | tokens=1,683,337 | Q: How many autographed baseballs have I added to my collection
+[ 174/500] CORRECT | acc= 95.4% | tokens=1,689,092 | Q: How often do I play tennis with my friends at the local park
+[ 175/500] CORRECT | acc= 95.4% | tokens=1,699,844 | Q: How much time do I dedicate to coding exercises each day?
+
+  [Progress @ 175 cases] acc=95.4% | tokens=1,699,844 | projected=4,856,697
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         51      53   96.2%
+  multi-session                            58      62   93.5%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 167     175   95.4%
+  ctx_abstained this run: 0
+
+[ 176/500] CORRECT | acc= 95.5% | tokens=1,705,357 | Q: What day of the week did I meet with my previous language ex
+[ 177/500] CORRECT | acc= 95.5% | tokens=1,715,879 | Q: How many pre-1920 American coins do I have in my collection?
+[ 178/500] CORRECT | acc= 95.5% | tokens=1,726,768 | Q: How many free night's stays can I redeem at any Hilton prope
+[ 179/500] CORRECT | acc= 95.5% | tokens=1,737,841 | Q: How much weight have I lost since I started going to the gym
+[ 180/500] CORRECT | acc= 95.6% | tokens=1,748,501 | Q: How many followers do I have on Instagram now?
+[ 181/500] CORRECT | acc= 95.6% | tokens=1,754,237 | Q: What is my current record in the recreational volleyball lea
+[ 182/500] CORRECT | acc= 95.6% | tokens=1,765,020 | Q: How many projects have I completed since starting painting c
+[ 183/500] CORRECT | acc= 95.6% | tokens=1,770,787 | Q: What type of vehicle model am I currently working on?
+[ 184/500] CORRECT | acc= 95.7% | tokens=1,776,315 | Q: What was my previous goal for my Apex Legends level before I
+[ 185/500] CORRECT | acc= 95.7% | tokens=1,786,829 | Q: How many largemouth bass did I catch with Alex on the earlie
+[ 186/500] CORRECT | acc= 95.7% | tokens=1,792,752 | Q: What time do I wake up on Saturday mornings?
+[ 187/500] CORRECT | acc= 95.7% | tokens=1,803,712 | Q: How many women are on the team led by my former manager Rach
+[ 188/500] CORRECT | acc= 95.7% | tokens=1,809,316 | Q: Do I have a spare screwdriver for opening up my laptop?
+[ 189/500] CORRECT | acc= 95.8% | tokens=1,820,511 | Q: How many times have I met up with Alex from Germany?
+[ 190/500] CORRECT | acc= 95.8% | tokens=1,826,126 | Q: Did I mostly recently increase or decrease the limit on the 
+[ 191/500] CORRECT | acc= 95.8% | tokens=1,837,442 | Q: How many trips have I taken my Canon EOS 80D camera on?
+[ 192/500] CORRECT | acc= 95.8% | tokens=1,843,082 | Q: What new kitchen gadget did I invest in before getting the A
+[ 193/500] CORRECT | acc= 95.9% | tokens=1,853,306 | Q: How many Italian restaurants have I tried in my city?
+[ 194/500] CORRECT | acc= 95.9% | tokens=1,864,056 | Q: How many engineers do I lead when I just started my new role
+[ 195/500] CORRECT | acc= 95.9% | tokens=1,869,912 | Q: How often do I see Dr. Johnson?
+[ 196/500] CORRECT | acc= 95.9% | tokens=1,875,898 | Q: How long have I been living in my current apartment in Shinj
+[ 197/500] CORRECT | acc= 95.9% | tokens=1,886,454 | Q: How many autographed football have I added to my collection 
+[ 198/500] CORRECT | acc= 96.0% | tokens=1,892,126 | Q: How often do I play table tennis with my friends at the loca
+[ 199/500] CORRECT | acc= 96.0% | tokens=1,898,466 | Q: Before I purchased the gravel bike, do I have other bikes in
+[ 200/500] CORRECT | acc= 96.0% | tokens=1,904,336 | Q: Where do I currently keep my old sneakers?
+
+  [Progress @ 200 cases] acc=96.0% | tokens=1,904,336 | projected=4,760,840
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 192     200   96.0%
+  ctx_abstained this run: 0
+
+[ 201/500] CORRECT | acc= 96.0% | tokens=1,913,071 | Q: Can you recommend some resources where I can learn more abou
+[ 202/500] CORRECT | acc= 96.0% | tokens=1,922,339 | Q: Can you suggest some accessories that would complement my cu
+[ 203/500] CORRECT | acc= 96.1% | tokens=1,931,271 | Q: Can you recommend some recent publications or conferences th
+[ 204/500] CORRECT | acc= 96.1% | tokens=1,940,231 | Q: Can you suggest a hotel for my upcoming trip to Miami?
+[ 205/500] CORRECT | acc= 96.1% | tokens=1,948,770 | Q: Can you recommend some interesting cultural events happening
+[ 206/500] CORRECT | acc= 96.1% | tokens=1,957,451 | Q: Can you recommend a show or movie for me to watch tonight?
+[ 207/500] CORRECT | acc= 96.1% | tokens=1,966,645 | Q: Can you suggest some activities that I can do in the evening
+[ 208/500] CORRECT | acc= 96.2% | tokens=1,976,012 | Q: My kitchen's becoming a bit of a mess again. Any tips for ke
+[ 209/500] WRONG   | acc= 95.7% | tokens=1,985,485 | Q: I've been struggling with my slow cooker recipes. Any advice
+[ 210/500] CORRECT | acc= 95.7% | tokens=1,993,944 | Q: I've been thinking about ways to stay connected with my coll
+[ 211/500] CORRECT | acc= 95.7% | tokens=2,003,083 | Q: What should I serve for dinner this weekend with my homegrow
+[ 212/500] CORRECT | acc= 95.8% | tokens=2,012,110 | Q: I've been feeling a bit stuck with my paintings lately. Do y
+[ 213/500] CORRECT | acc= 95.8% | tokens=2,021,701 | Q: I've been thinking about making a cocktail for an upcoming g
+[ 214/500] CORRECT | acc= 95.8% | tokens=2,030,775 | Q: I've been having trouble with the battery life on my phone l
+[ 215/500] CORRECT | acc= 95.8% | tokens=2,040,218 | Q: I've been feeling like my chocolate chip cookies need someth
+[ 216/500] CORRECT | acc= 95.8% | tokens=2,049,882 | Q: I'm thinking of inviting my colleagues over for a small gath
+[ 217/500] CORRECT | acc= 95.9% | tokens=2,058,943 | Q: I was thinking about rearranging the furniture in my bedroom
+[ 218/500] CORRECT | acc= 95.9% | tokens=2,067,998 | Q: I'm getting excited about my visit to the music store this w
+[ 219/500] CORRECT | acc= 95.9% | tokens=2,077,286 | Q: I was thinking of trying a new coffee creamer recipe. Any re
+[ 220/500] CORRECT | acc= 95.9% | tokens=2,086,564 | Q: I've been sneezing quite a bit lately. Do you think it might
+[ 221/500] CORRECT | acc= 95.9% | tokens=2,094,258 | Q: I've been feeling nostalgic lately. Do you think it would be
+[ 222/500] CORRECT | acc= 95.9% | tokens=2,103,389 | Q: I'm trying to decide whether to buy a NAS device now or wait
+[ 223/500] CORRECT | acc= 96.0% | tokens=2,112,446 | Q: I am planning another theme park weekend; do you have any su
+[ 224/500] CORRECT | acc= 96.0% | tokens=2,121,303 | Q: I'm planning my meal prep next week, any suggestions for new
+[ 225/500] CORRECT | acc= 96.0% | tokens=2,129,980 | Q: I'm planning a trip to Denver soon. Any suggestions on what 
+
+  [Progress @ 225 cases] acc=96.0% | tokens=2,129,980 | projected=4,733,289
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-preference                24      25   96.0%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 216     225   96.0%
+  ctx_abstained this run: 0
+
+[ 226/500] CORRECT | acc= 96.0% | tokens=2,138,949 | Q: I've got some free time tonight, any documentary recommendat
+[ 227/500] CORRECT | acc= 96.0% | tokens=2,147,995 | Q: I noticed my bike seems to be performing even better during 
+[ 228/500] CORRECT | acc= 96.1% | tokens=2,156,770 | Q: Can you suggest some useful accessories for my phone?
+[ 229/500] CORRECT | acc= 96.1% | tokens=2,165,850 | Q: Can you suggest some activities I can do during my commute t
+[ 230/500] CORRECT | acc= 96.1% | tokens=2,175,237 | Q: I’m a bit anxious about getting around Tokyo. Do you have an
+[ 231/500] CORRECT | acc= 96.1% | tokens=2,182,339 | Q: I'm checking our previous chat about the shift rotation shee
+[ 232/500] CORRECT | acc= 96.1% | tokens=2,189,225 | Q: I'm planning to visit Bandung again and I was wondering if y
+[ 233/500] CORRECT | acc= 96.1% | tokens=2,195,051 | Q: I'm going back to our previous conversation about the childr
+[ 234/500] CORRECT | acc= 96.2% | tokens=2,202,023 | Q: I'm planning to revisit Orlando. I was wondering if you coul
+[ 235/500] CORRECT | acc= 96.2% | tokens=2,207,693 | Q: Can you remind me of the name of the romantic Italian restau
+[ 236/500] CORRECT | acc= 96.2% | tokens=2,214,803 | Q: I remember you told me about the refining processes at CITGO
+[ 237/500] CORRECT | acc= 96.2% | tokens=2,220,582 | Q: I'm planning my trip to Amsterdam again and I was wondering,
+[ 238/500] WRONG   | acc= 95.8% | tokens=2,226,162 | Q: I think we discussed work from home jobs for seniors earlier
+[ 239/500] CORRECT | acc= 95.8% | tokens=2,231,608 | Q: In our previous chat, you suggested 'sexual compulsions' and
+[ 240/500] CORRECT | acc= 95.8% | tokens=2,237,332 | Q: I wanted to check back on our previous conversation about Ne
+[ 241/500] CORRECT | acc= 95.9% | tokens=2,242,947 | Q: I wanted to follow up on our previous conversation about bin
+[ 242/500] CORRECT | acc= 95.9% | tokens=2,249,542 | Q: I was thinking about our previous conversation about the Fif
+[ 243/500] CORRECT | acc= 95.9% | tokens=2,255,736 | Q: I wanted to follow up on our previous conversation about fro
+[ 244/500] CORRECT | acc= 95.9% | tokens=2,261,822 | Q: I was looking back at our previous conversation about Native
+[ 245/500] CORRECT | acc= 95.9% | tokens=2,267,775 | Q: I'm going back to our previous chat about the Lost Temple of
+[ 246/500] CORRECT | acc= 95.9% | tokens=2,274,188 | Q: I'm planning to go back to the Natural Park of Moncayo mount
+[ 247/500] CORRECT | acc= 96.0% | tokens=2,280,533 | Q: I was going through our previous conversation about The Libr
+[ 248/500] CORRECT | acc= 96.0% | tokens=2,286,118 | Q: I'm going back to our previous conversation about the grant 
+[ 249/500] CORRECT | acc= 96.0% | tokens=2,291,867 | Q: I was thinking about our previous conversation about data pr
+[ 250/500] CORRECT | acc= 96.0% | tokens=2,297,938 | Q: I'm planning to visit the Vatican again and I was wondering 
+
+  [Progress @ 250 cases] acc=96.0% | tokens=2,297,938 | projected=4,595,876
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 19      20   95.0%
+  single-session-preference                29      30   96.7%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 240     250   96.0%
+  ctx_abstained this run: 0
+
+[ 251/500] CORRECT | acc= 96.0% | tokens=2,303,774 | Q: I'm going back to our previous conversation about DIY home d
+[ 252/500] CORRECT | acc= 96.0% | tokens=2,309,255 | Q: I'm planning my trip to Speyer again and I wanted to confirm
+[ 253/500] CORRECT | acc= 96.0% | tokens=2,316,650 | Q: I was going through our previous chat and I wanted to clarif
+[ 254/500] CORRECT | acc= 96.1% | tokens=2,323,744 | Q: I was going through our previous conversation about the impa
+[ 255/500] WRONG   | acc= 95.7% | tokens=2,331,392 | Q: I remember you provided a list of 100 prompt parameters that
+[ 256/500] CORRECT | acc= 95.7% | tokens=2,337,272 | Q: I'm looking back at our previous conversation about building
+[ 257/500] CORRECT | acc= 95.7% | tokens=2,343,284 | Q: I wanted to follow up on our previous conversation about min
+[ 258/500] CORRECT | acc= 95.7% | tokens=2,348,546 | Q: I'm looking back at our previous chess game and I was wonder
+[ 259/500] CORRECT | acc= 95.8% | tokens=2,355,809 | Q: I was going through our previous conversation about atmosphe
+[ 260/500] CORRECT | acc= 95.8% | tokens=2,361,820 | Q: I was going through our previous conversation about making a
+[ 261/500] CORRECT | acc= 95.8% | tokens=2,368,047 | Q: I'm planning another trip to New York City and I was wonderi
+[ 262/500] CORRECT | acc= 95.8% | tokens=2,374,209 | Q: I wanted to follow up on our previous conversation about the
+[ 263/500] CORRECT | acc= 95.8% | tokens=2,380,599 | Q: I was going through our previous conversation about politica
+[ 264/500] CORRECT | acc= 95.8% | tokens=2,386,219 | Q: I wanted to follow up on our previous conversation about nat
+[ 265/500] CORRECT | acc= 95.8% | tokens=2,391,731 | Q: I was going through our previous chat. Can you remind me of 
+[ 266/500] CORRECT | acc= 95.9% | tokens=2,398,658 | Q: Can you remind me what was the average improvement in framer
+[ 267/500] CORRECT | acc= 95.9% | tokens=2,404,221 | Q: I wanted to follow up on our previous conversation about lan
+[ 268/500] CORRECT | acc= 95.9% | tokens=2,411,446 | Q: I'm looking back at our previous chat about the DHL Wellness
+[ 269/500] CORRECT | acc= 95.9% | tokens=2,417,620 | Q: I was going through our previous conversation and I was wond
+[ 270/500] CORRECT | acc= 95.9% | tokens=2,423,497 | Q: I wanted to follow up on our previous conversation about pri
+[ 271/500] CORRECT | acc= 95.9% | tokens=2,430,297 | Q: I'm looking back at our previous conversation about the Baji
+[ 272/500] CORRECT | acc= 96.0% | tokens=2,435,777 | Q: I wanted to follow up on our previous conversation about You
+[ 273/500] CORRECT | acc= 96.0% | tokens=2,441,959 | Q: I was going through our previous chat and I was wondering, w
+[ 274/500] CORRECT | acc= 96.0% | tokens=2,448,452 | Q: I was looking back at our previous chat and I wanted to conf
+[ 275/500] CORRECT | acc= 96.0% | tokens=2,455,488 | Q: I was thinking back to our previous conversation about the R
+
+  [Progress @ 275 cases] acc=96.0% | tokens=2,455,488 | projected=4,464,524
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 43      45   95.6%
+  single-session-preference                29      30   96.7%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 264     275   96.0%
+  ctx_abstained this run: 0
+
+[ 276/500] CORRECT | acc= 96.0% | tokens=2,461,124 | Q: I was looking back at our previous conversation about buying
+[ 277/500] CORRECT | acc= 96.0% | tokens=2,467,725 | Q: I'm trying to recall what the designation on my jumpsuit was
+[ 278/500] CORRECT | acc= 96.0% | tokens=2,473,340 | Q: I'm going back to our previous conversation about music theo
+[ 279/500] CORRECT | acc= 96.1% | tokens=2,479,991 | Q: I'm looking back at our previous conversation about the Seco
+[ 280/500] CORRECT | acc= 96.1% | tokens=2,485,987 | Q: I wanted to follow up on our previous conversation about fra
+[ 281/500] CORRECT | acc= 96.1% | tokens=2,492,159 | Q: I'm looking back at our previous conversation where you crea
+[ 282/500] CORRECT | acc= 96.1% | tokens=2,499,140 | Q: I'm going back to our previous conversation about traditiona
+[ 283/500] CORRECT | acc= 96.1% | tokens=2,504,950 | Q: I was looking back at our previous conversation about enviro
+[ 284/500] CORRECT | acc= 96.1% | tokens=2,511,171 | Q: I was going through our previous conversation about high-end
+[ 285/500] CORRECT | acc= 96.1% | tokens=2,517,992 | Q: I remember you told me to dilute tea tree oil with a carrier
+[ 286/500] CORRECT | acc= 96.2% | tokens=2,524,282 | Q: I was looking back at our previous conversation about Caribb
+[ 287/500] CORRECT | acc= 96.2% | tokens=2,529,519 | Q: What degree did I graduate with?
+[ 288/500] CORRECT | acc= 96.2% | tokens=2,534,922 | Q: How long is my daily commute to work?
+[ 289/500] CORRECT | acc= 96.2% | tokens=2,540,502 | Q: Where did I redeem a $5 coupon on coffee creamer?
+[ 290/500] CORRECT | acc= 96.2% | tokens=2,545,915 | Q: What play did I attend at the local community theater?
+[ 291/500] CORRECT | acc= 96.2% | tokens=2,551,186 | Q: What is the name of the playlist I created on Spotify?
+[ 292/500] CORRECT | acc= 96.2% | tokens=2,556,425 | Q: What was my last name before I changed it?
+[ 293/500] CORRECT | acc= 96.2% | tokens=2,561,920 | Q: Where do I take yoga classes?
+[ 294/500] CORRECT | acc= 96.3% | tokens=2,567,195 | Q: What color did I repaint my bedroom walls?
+[ 295/500] CORRECT | acc= 96.3% | tokens=2,572,600 | Q: When did I volunteer at the local animal shelter's fundraisi
+[ 296/500] CORRECT | acc= 96.3% | tokens=2,577,695 | Q: Where did I buy my new tennis racket from?
+[ 297/500] CORRECT | acc= 96.3% | tokens=2,583,179 | Q: What was my previous occupation?
+[ 298/500] CORRECT | acc= 96.3% | tokens=2,588,673 | Q: How much did I spend on a designer handbag?
+[ 299/500] CORRECT | acc= 96.3% | tokens=2,594,195 | Q: How many playlists do I have on Spotify?
+[ 300/500] CORRECT | acc= 96.3% | tokens=2,599,541 | Q: Where did I attend for my study abroad program?
+
+  [Progress @ 300 cases] acc=96.3% | tokens=2,599,541 | projected=4,332,568
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      14      14  100.0%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 289     300   96.3%
+  ctx_abstained this run: 0
+
+[ 301/500] CORRECT | acc= 96.3% | tokens=2,604,801 | Q: What was the discount I got on my first purchase from the ne
+[ 302/500] CORRECT | acc= 96.4% | tokens=2,610,057 | Q: How long did it take me to assemble the IKEA bookshelf?
+[ 303/500] CORRECT | acc= 96.4% | tokens=2,615,783 | Q: What did I buy for my sister's birthday gift?
+[ 304/500] CORRECT | acc= 96.4% | tokens=2,620,981 | Q: What speed is my new internet plan?
+[ 305/500] CORRECT | acc= 96.4% | tokens=2,626,823 | Q: How many shirts did I pack for my 5-day trip to Costa Rica?
+[ 306/500] CORRECT | acc= 96.4% | tokens=2,632,325 | Q: What was my previous stance on spirituality?
+[ 307/500] CORRECT | acc= 96.4% | tokens=2,637,929 | Q: What brand are my favorite running shoes?
+[ 308/500] CORRECT | acc= 96.4% | tokens=2,643,167 | Q: What certification did I complete last month?
+[ 309/500] CORRECT | acc= 96.4% | tokens=2,648,469 | Q: How many bikes do I own?
+[ 310/500] CORRECT | acc= 96.5% | tokens=2,653,785 | Q: What breed is my dog?
+[ 311/500] CORRECT | acc= 96.5% | tokens=2,658,969 | Q: How many largemouth bass did I catch on my fishing trip to L
+[ 312/500] CORRECT | acc= 96.5% | tokens=2,664,440 | Q: How many amateur comedians did I watch perform at the open m
+[ 313/500] CORRECT | acc= 96.5% | tokens=2,669,749 | Q: What is the name of my cat?
+[ 314/500] CORRECT | acc= 96.5% | tokens=2,675,357 | Q: How old was I when my grandma gave me the silver necklace?
+[ 315/500] CORRECT | acc= 96.5% | tokens=2,680,686 | Q: What is my preferred gin-to-vermouth ratio for a classic gin
+[ 316/500] CORRECT | acc= 96.5% | tokens=2,686,025 | Q: How much RAM did I upgrade my laptop to?
+[ 317/500] CORRECT | acc= 96.5% | tokens=2,691,450 | Q: How much is the painting of a sunset worth in terms of the a
+[ 318/500] CORRECT | acc= 96.5% | tokens=2,696,715 | Q: Where did I attend my cousin's wedding?
+[ 319/500] CORRECT | acc= 96.6% | tokens=2,702,073 | Q: Where did I complete my Bachelor's degree in Computer Scienc
+[ 320/500] CORRECT | acc= 96.6% | tokens=2,707,550 | Q: How long did it take to move to the new apartment?
+[ 321/500] CORRECT | acc= 96.6% | tokens=2,713,437 | Q: What type of cocktail recipe did I try last weekend?
+[ 322/500] CORRECT | acc= 96.6% | tokens=2,718,571 | Q: What type of rice is my favorite?
+[ 323/500] CORRECT | acc= 96.6% | tokens=2,724,093 | Q: Who did I have a conversation with about destiny?
+[ 324/500] CORRECT | acc= 96.6% | tokens=2,729,387 | Q: Where did I buy my new bookshelf from?
+[ 325/500] CORRECT | acc= 96.6% | tokens=2,734,855 | Q: What time do I stop checking work emails and messages?
+
+  [Progress @ 325 cases] acc=96.6% | tokens=2,734,855 | projected=4,207,469
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      39      39  100.0%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 314     325   96.6%
+  ctx_abstained this run: 0
+
+[ 326/500] CORRECT | acc= 96.6% | tokens=2,740,127 | Q: How many copies of my favorite artist's debut album were rel
+[ 327/500] CORRECT | acc= 96.6% | tokens=2,745,458 | Q: How long have I been collecting vintage cameras?
+[ 328/500] CORRECT | acc= 96.6% | tokens=2,751,295 | Q: Where did I go on a week-long trip with my family?
+[ 329/500] CORRECT | acc= 96.7% | tokens=2,756,785 | Q: What did I bake for my niece's birthday party?
+[ 330/500] CORRECT | acc= 96.7% | tokens=2,762,075 | Q: What is the name of the music streaming service have I been 
+[ 331/500] CORRECT | acc= 96.7% | tokens=2,767,474 | Q: How long did I wait for the decision on my asylum applicatio
+[ 332/500] CORRECT | acc= 96.7% | tokens=2,773,024 | Q: What type of action figure did I buy from a thrift store?
+[ 333/500] CORRECT | acc= 96.7% | tokens=2,778,296 | Q: How long was I in Japan for?
+[ 334/500] CORRECT | acc= 96.7% | tokens=2,784,081 | Q: Where did I attend the Imagine Dragons concert?
+[ 335/500] CORRECT | acc= 96.7% | tokens=2,789,692 | Q: How much screen time have I been averaging on Instagram per 
+[ 336/500] CORRECT | acc= 96.7% | tokens=2,795,038 | Q: What type of bulb did I replace in my bedside lamp?
+[ 337/500] CORRECT | acc= 96.7% | tokens=2,800,228 | Q: What size is my new Samsung TV?
+[ 338/500] CORRECT | acc= 96.7% | tokens=2,806,039 | Q: What book am I currently reading?
+[ 339/500] CORRECT | acc= 96.8% | tokens=2,811,402 | Q: How many skeins of worsted weight yarn did I find in my stas
+[ 340/500] CORRECT | acc= 96.8% | tokens=2,816,882 | Q: How many hours did I spend watching documentaries on Netflix
+[ 341/500] CORRECT | acc= 96.8% | tokens=2,822,178 | Q: What time do I usually get home from work on weeknights?
+[ 342/500] CORRECT | acc= 96.8% | tokens=2,827,620 | Q: What is my ethnicity?
+[ 343/500] CORRECT | acc= 96.8% | tokens=2,832,941 | Q: How much time do I dedicate to practicing guitar every day?
+[ 344/500] CORRECT | acc= 96.8% | tokens=2,838,141 | Q: Where does my sister Emily live?
+[ 345/500] CORRECT | acc= 96.8% | tokens=2,843,439 | Q: How long did Alex marinate the BBQ ribs in special sauce?
+[ 346/500] CORRECT | acc= 96.8% | tokens=2,848,779 | Q: Who gave me a new stand mixer as a birthday gift?
+[ 347/500] CORRECT | acc= 96.8% | tokens=2,854,030 | Q: What brand of shampoo do I currently use?
+[ 348/500] CORRECT | acc= 96.8% | tokens=2,859,307 | Q: What health issue did I initially think was just a cold?
+[ 349/500] CORRECT | acc= 96.8% | tokens=2,864,928 | Q: Where did I meet Sophia?
+[ 350/500] CORRECT | acc= 96.9% | tokens=2,870,179 | Q: What game did I finally beat last weekend?
+
+  [Progress @ 350 cases] acc=96.9% | tokens=2,870,179 | projected=4,100,256
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      64      64  100.0%
+  temporal-reasoning                       58      60   96.7%
+  OVERALL                                 339     350   96.9%
+  ctx_abstained this run: 0
+
+[ 351/500] CORRECT | acc= 96.9% | tokens=2,875,534 | Q: What is the name of my hamster?
+[ 352/500] CORRECT | acc= 96.9% | tokens=2,880,853 | Q: How long have I been collecting vintage films?
+[ 353/500] CORRECT | acc= 96.9% | tokens=2,886,393 | Q: What did I bake for my uncle's birthday party?
+[ 354/500] CORRECT | acc= 96.9% | tokens=2,891,725 | Q: How long was I in Korea for?
+[ 355/500] CORRECT | acc= 96.9% | tokens=2,896,883 | Q: How much time do I dedicate to practicing violin every day?
+[ 356/500] CORRECT | acc= 96.9% | tokens=2,902,322 | Q: What did my dad gave me as a birthday gift?
+[ 357/500] CORRECT | acc= 96.9% | tokens=2,912,126 | Q: How many days passed between my visit to the Museum of Moder
+[ 358/500] CORRECT | acc= 96.9% | tokens=2,921,530 | Q: Which three events happened in the order from first to last:
+[ 359/500] CORRECT | acc= 96.9% | tokens=2,930,371 | Q: How many weeks ago did I meet up with my aunt and receive th
+[ 360/500] CORRECT | acc= 96.9% | tokens=2,940,101 | Q: How many months have passed since I participated in two char
+[ 361/500] CORRECT | acc= 97.0% | tokens=2,949,884 | Q: How many days passed between the day I started playing along
+[ 362/500] CORRECT | acc= 97.0% | tokens=2,959,288 | Q: How many months have passed since I last visited a museum wi
+[ 363/500] CORRECT | acc= 97.0% | tokens=2,968,441 | Q: How many weeks ago did I attend the friends and family sale 
+[ 364/500] CORRECT | acc= 97.0% | tokens=2,977,481 | Q: Which event happened first, my cousin's wedding or Michael's
+[ 365/500] CORRECT | acc= 97.0% | tokens=2,986,262 | Q: How many days ago did I attend the Maundy Thursday service a
+[ 366/500] CORRECT | acc= 97.0% | tokens=2,997,030 | Q: How many days ago did I attend a baking class at a local cul
+[ 367/500] CORRECT | acc= 97.0% | tokens=3,006,865 | Q: How many days passed between the day I started watering my h
+[ 368/500] CORRECT | acc= 97.0% | tokens=3,015,814 | Q: How many weeks ago did I start using the cashback app 'Ibott
+[ 369/500] CORRECT | acc= 97.0% | tokens=3,026,289 | Q: How many days had passed since I finished reading 'The Seven
+[ 370/500] CORRECT | acc= 97.0% | tokens=3,035,426 | Q: How many days did I spend on my solo camping trip to Yosemit
+[ 371/500] CORRECT | acc= 97.0% | tokens=3,046,010 | Q: What is the order of the three trips I took in the past thre
+[ 372/500] CORRECT | acc= 97.0% | tokens=3,054,963 | Q: How many months ago did I attend the Seattle International F
+[ 373/500] CORRECT | acc= 97.1% | tokens=3,063,664 | Q: How many days ago did I buy a smoker?
+[ 374/500] CORRECT | acc= 97.1% | tokens=3,074,005 | Q: What is the order of the three events: 'I signed up for the 
+[ 375/500] CORRECT | acc= 97.1% | tokens=3,084,817 | Q: How many weeks in total do I spent on reading 'The Nightinga
+
+  [Progress @ 375 cases] acc=97.1% | tokens=3,084,817 | projected=4,113,089
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                       77      79   97.5%
+  OVERALL                                 364     375   97.1%
+  ctx_abstained this run: 0
+
+[ 376/500] CORRECT | acc= 97.1% | tokens=3,095,225 | Q: How many days passed between the day I cancelled my FarmFres
+[ 377/500] CORRECT | acc= 97.1% | tokens=3,104,864 | Q: How many weeks passed between the day I bought my new tennis
+[ 378/500] CORRECT | acc= 97.1% | tokens=3,113,612 | Q: How many days ago did I meet Emma?
+[ 379/500] WRONG   | acc= 96.8% | tokens=3,125,638 | Q: What is the order of the six museums I visited from earliest
+[ 380/500] CORRECT | acc= 96.8% | tokens=3,135,368 | Q: How many days passed between the day I attended the gardenin
+[ 381/500] CORRECT | acc= 96.9% | tokens=3,145,508 | Q: How many days passed between the day I received feedback abo
+[ 382/500] CORRECT | acc= 96.9% | tokens=3,156,433 | Q: How many days had passed since I started taking ukulele less
+[ 383/500] CORRECT | acc= 96.9% | tokens=3,166,552 | Q: How many weeks passed between the time I sold homemade baked
+[ 384/500] CORRECT | acc= 96.9% | tokens=3,178,031 | Q: What is the order of the sports events I watched in January?
+[ 385/500] CORRECT | acc= 96.9% | tokens=3,186,973 | Q: How many days did it take me to finish 'The Nightingale' by 
+[ 386/500] CORRECT | acc= 96.9% | tokens=3,197,146 | Q: What is the order of the three sports events I participated 
+[ 387/500] WRONG   | acc= 96.6% | tokens=3,206,894 | Q: How many weeks had passed since I recovered from the flu whe
+[ 388/500] CORRECT | acc= 96.6% | tokens=3,218,081 | Q: What is the order of the concerts and musical events I atten
+[ 389/500] CORRECT | acc= 96.7% | tokens=3,227,946 | Q: How many days passed between the day I finished reading 'The
+[ 390/500] CORRECT | acc= 96.7% | tokens=3,237,030 | Q: Which mode of transport did I use most recently, a bus or a 
+[ 391/500] CORRECT | acc= 96.7% | tokens=3,246,792 | Q: How many weeks have I been taking sculpting classes when I i
+[ 392/500] CORRECT | acc= 96.7% | tokens=3,255,562 | Q: How many days ago did I attend a networking event?
+[ 393/500] CORRECT | acc= 96.7% | tokens=3,267,291 | Q: What is the order of airlines I flew with from earliest to l
+[ 394/500] CORRECT | acc= 96.7% | tokens=3,277,299 | Q: How many days passed between the day I repotted the previous
+[ 395/500] CORRECT | acc= 96.7% | tokens=3,287,225 | Q: How many days passed between the day I replaced my spark plu
+[ 396/500] CORRECT | acc= 96.7% | tokens=3,296,074 | Q: How many weeks ago did I attend a bird watching workshop at 
+[ 397/500] CORRECT | acc= 96.7% | tokens=3,305,599 | Q: How many months passed between the completion of my undergra
+[ 398/500] CORRECT | acc= 96.7% | tokens=3,314,240 | Q: How many months ago did I attend the photography workshop?
+[ 399/500] CORRECT | acc= 96.7% | tokens=3,323,939 | Q: Which event did I participate in first, the charity gala or 
+[ 400/500] CORRECT | acc= 96.8% | tokens=3,332,741 | Q: How many days ago did I watch the Super Bowl?
+
+  [Progress @ 400 cases] acc=96.8% | tokens=3,332,741 | projected=4,165,926
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                      100     104   96.2%
+  OVERALL                                 387     400   96.8%
+  ctx_abstained this run: 0
+
+[ 401/500] CORRECT | acc= 96.8% | tokens=3,342,974 | Q: How many days ago did I launch my website when I signed a co
+[ 402/500] CORRECT | acc= 96.8% | tokens=3,351,720 | Q: How many days ago did I go on a whitewater rafting trip in t
+[ 403/500] CORRECT | acc= 96.8% | tokens=3,360,575 | Q: How many days ago did I harvest my first batch of fresh herb
+[ 404/500] CORRECT | acc= 96.8% | tokens=3,369,601 | Q: How many weeks ago did I attend the 'Summer Nights' festival
+[ 405/500] CORRECT | acc= 96.8% | tokens=3,378,477 | Q: How many days ago did I participate in the 5K charity run?
+[ 406/500] CORRECT | acc= 96.8% | tokens=3,387,357 | Q: Which event happened first, my participation in the #PlankCh
+[ 407/500] CORRECT | acc= 96.8% | tokens=3,397,423 | Q: How many days passed between the day I fixed my mountain bik
+[ 408/500] CORRECT | acc= 96.8% | tokens=3,407,683 | Q: Who graduated first, second and third among Emma, Rachel and
+[ 409/500] CORRECT | acc= 96.8% | tokens=3,416,846 | Q: How many days ago did I read the March 15th issue of The New
+[ 410/500] CORRECT | acc= 96.8% | tokens=3,425,908 | Q: Which book did I finish a week ago?
+[ 411/500] CORRECT | acc= 96.8% | tokens=3,435,123 | Q: I mentioned participating in a sports event two weeks ago. W
+[ 412/500] WRONG   | acc= 96.6% | tokens=3,444,125 | Q: I received a piece of jewelry last Saturday from whom?
+[ 413/500] CORRECT | acc= 96.6% | tokens=3,453,739 | Q: What charity event did I participate in a month ago?
+[ 414/500] CORRECT | acc= 96.6% | tokens=3,463,052 | Q: Who did I go with to the music event last Saturday?
+[ 415/500] CORRECT | acc= 96.6% | tokens=3,472,287 | Q: What gardening-related activity did I do two weeks ago?
+[ 416/500] CORRECT | acc= 96.6% | tokens=3,482,243 | Q: What was the airline that I flied with on Valentine's day?
+[ 417/500] CORRECT | acc= 96.6% | tokens=3,491,603 | Q: I mentioned that I participated in an art-related event two 
+[ 418/500] CORRECT | acc= 96.7% | tokens=3,500,681 | Q: Which bike did I fixed or serviced the past weekend?
+[ 419/500] CORRECT | acc= 96.7% | tokens=3,509,836 | Q: What was the the life event of one of my relatives that I pa
+[ 420/500] CORRECT | acc= 96.7% | tokens=3,518,588 | Q: Who did I meet with during the lunch last Tuesday?
+[ 421/500] CORRECT | acc= 96.7% | tokens=3,527,731 | Q: What is the artist that I started to listen to last Friday?
+[ 422/500] CORRECT | acc= 96.7% | tokens=3,536,852 | Q: I mentioned cooking something for my friend a couple of days
+[ 423/500] CORRECT | acc= 96.7% | tokens=3,546,395 | Q: What was the significant buisiness milestone I mentioned fou
+[ 424/500] CORRECT | acc= 96.7% | tokens=3,555,934 | Q: What did I do with Rachel on the Wednesday two months ago?
+[ 425/500] CORRECT | acc= 96.7% | tokens=3,565,448 | Q: I mentioned visiting a museum two months ago. Did I visit wi
+
+  [Progress @ 425 cases] acc=96.7% | tokens=3,565,448 | projected=4,194,645
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            58      62   93.5%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                      124     129   96.1%
+  OVERALL                                 411     425   96.7%
+  ctx_abstained this run: 0
+
+[ 426/500] CORRECT | acc= 96.7% | tokens=3,574,666 | Q: I mentioned an investment for a competition four weeks ago? 
+[ 427/500] CORRECT | acc= 96.7% | tokens=3,583,263 | Q: What kitchen appliance did I buy 10 days ago?
+[ 428/500] CORRECT | acc= 96.7% | tokens=3,592,049 | Q: Where did I attend the religious activity last week?
+[ 429/500] CORRECT | acc= 96.7% | tokens=3,600,904 | Q: What was the social media activity I participated 5 days ago
+[ 430/500] CORRECT | acc= 96.7% | tokens=3,610,438 | Q: What is the total distance of the hikes I did on two consecu
+[ 431/500] CORRECT | acc= 96.8% | tokens=3,620,783 | Q: How many pages do I have left to read in 'The Nightingale'?
+[ 432/500] CORRECT | acc= 96.8% | tokens=3,630,037 | Q: For my daily commute, how much more expensive was the taxi r
+[ 433/500] CORRECT | acc= 96.8% | tokens=3,639,352 | Q: What was the approximate increase in Instagram followers I e
+[ 434/500] WRONG   | acc= 96.5% | tokens=3,650,047 | Q: How many antique items did I inherit or acquire from my fami
+[ 435/500] WRONG   | acc= 96.3% | tokens=3,659,852 | Q: What is the total cost of the new food bowl, measuring cup, 
+[ 436/500] CORRECT | acc= 96.3% | tokens=3,670,027 | Q: How much cashback did I earn at SaveMart last Thursday?
+[ 437/500] CORRECT | acc= 96.3% | tokens=3,679,214 | Q: What is the difference in price between my luxury boots and 
+[ 438/500] CORRECT | acc= 96.3% | tokens=3,688,787 | Q: What percentage of packed shoes did I wear on my last trip?
+[ 439/500] CORRECT | acc= 96.4% | tokens=3,697,871 | Q: When did I submit my research paper on sentiment analysis?
+[ 440/500] CORRECT | acc= 96.4% | tokens=3,707,068 | Q: What percentage discount did I get on the book from my favor
+[ 441/500] CORRECT | acc= 96.4% | tokens=3,716,355 | Q: Did I receive a higher percentage discount on my first order
+[ 442/500] CORRECT | acc= 96.4% | tokens=3,725,969 | Q: What is the total number of episodes I've listened to from '
+[ 443/500] CORRECT | acc= 96.4% | tokens=3,736,116 | Q: How many plants did I initially plant for tomatoes and cucum
+[ 444/500] CORRECT | acc= 96.4% | tokens=3,746,634 | Q: How many hours do I work in a typical week during peak campa
+[ 445/500] CORRECT | acc= 96.4% | tokens=3,756,776 | Q: How much older am I than the average age of employees in my 
+[ 446/500] CORRECT | acc= 96.4% | tokens=3,766,405 | Q: What was the total number of people reached by my Facebook a
+[ 447/500] CORRECT | acc= 96.4% | tokens=3,777,222 | Q: How many Marvel movies did I re-watch?
+[ 448/500] CORRECT | acc= 96.4% | tokens=3,787,924 | Q: How much did I save on the designer handbag at TK Maxx?
+[ 449/500] CORRECT | acc= 96.4% | tokens=3,797,479 | Q: What is the total number of goals and assists I have in the 
+[ 450/500] CORRECT | acc= 96.4% | tokens=3,807,436 | Q: How much did I spend on car wash and parking ticket?
+
+  [Progress @ 450 cases] acc=96.4% | tokens=3,807,436 | projected=4,230,484
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                            77      83   92.8%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                      128     133   96.2%
+  OVERALL                                 434     450   96.4%
+  ctx_abstained this run: 0
+
+[ 451/500] WRONG   | acc= 96.2% | tokens=3,818,166 | Q: How many sports have I played competitively in the past?
+[ 452/500] CORRECT | acc= 96.2% | tokens=3,827,379 | Q: What are the two hobbies that led me to join online communit
+[ 453/500] CORRECT | acc= 96.2% | tokens=3,837,022 | Q: How old was I when Alex was born?
+[ 454/500] CORRECT | acc= 96.3% | tokens=3,847,151 | Q: How many points do I need to earn to redeem a free skincare 
+[ 455/500] CORRECT | acc= 96.3% | tokens=3,856,790 | Q: What is the total number of days I spent in Japan and Chicag
+[ 456/500] CORRECT | acc= 96.3% | tokens=3,866,168 | Q: What is the minimum amount I could get if I sold the vintage
+[ 457/500] WRONG   | acc= 96.1% | tokens=3,875,289 | Q: What percentage of the countryside property's price is the c
+[ 458/500] CORRECT | acc= 96.1% | tokens=3,884,822 | Q: What is the total cost of Lola's vet visit and flea medicati
+[ 459/500] CORRECT | acc= 96.1% | tokens=3,894,043 | Q: How much more did I have to pay for the trip after the initi
+[ 460/500] CORRECT | acc= 96.1% | tokens=3,903,563 | Q: What is the total number of lunch meals I got from the chick
+[ 461/500] CORRECT | acc= 96.1% | tokens=3,913,620 | Q: How much did I spend on each coffee mug for my coworkers?
+[ 462/500] CORRECT | acc= 96.1% | tokens=3,923,072 | Q: At which university did I present a poster on my thesis rese
+[ 463/500] CORRECT | acc= 96.1% | tokens=3,932,867 | Q: How long have I been working in my current role?
+[ 464/500] CORRECT | acc= 96.1% | tokens=3,941,838 | Q: How much more was the pre-approval amount than the final sal
+[ 465/500] CORRECT | acc= 96.1% | tokens=3,951,464 | Q: What is the total cost of the car cover and detailing spray 
+[ 466/500] CORRECT | acc= 96.1% | tokens=3,961,450 | Q: What is the total distance I covered in my four road trips?
+[ 467/500] CORRECT | acc= 96.1% | tokens=3,970,669 | Q: What is the total time it takes I to get ready and commute t
+[ 468/500] CORRECT | acc= 96.2% | tokens=3,979,955 | Q: How much more miles per gallon was my car getting a few mont
+[ 469/500] CORRECT | acc= 96.2% | tokens=3,989,562 | Q: What is the total number of online courses I've completed?
+[ 470/500] CORRECT | acc= 96.2% | tokens=3,999,907 | Q: How much did I save on the Jimmy Choo heels?
+[ 471/500] CORRECT | acc= 96.2% | tokens=4,010,298 | Q: How many years will I be when my friend Rachel gets married?
+[ 472/500] CORRECT | acc= 96.2% | tokens=4,020,580 | Q: How much faster did I finish the 5K run compared to my previ
+[ 473/500] CORRECT | acc= 96.2% | tokens=4,031,458 | Q: How many dinner parties have I attended in the past month?
+[ 474/500] CORRECT | acc= 96.2% | tokens=4,042,717 | Q: How much did I spend on gifts for my sister?
+[ 475/500] CORRECT | acc= 96.2% | tokens=4,051,939 | Q: What time did I reach the clinic on Monday?
+
+  [Progress @ 475 cases] acc=96.2% | tokens=4,051,939 | projected=4,265,199
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                           100     108   92.6%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                      128     133   96.2%
+  OVERALL                                 457     475   96.2%
+  ctx_abstained this run: 0
+
+[ 476/500] CORRECT | acc= 96.2% | tokens=4,061,587 | Q: What is the total weight of the new feed I purchased in the 
+[ 477/500] CORRECT | acc= 96.2% | tokens=4,076,619 | Q: What percentage of leadership positions do women hold in the
+[ 478/500] CORRECT | acc= 96.2% | tokens=4,087,323 | Q: How much will I save by taking the train from the airport to
+[ 479/500] CORRECT | acc= 96.2% | tokens=4,097,002 | Q: What is the total number of views on my most popular videos 
+[ 480/500] WRONG   | acc= 96.0% | tokens=4,107,967 | Q: How many years older is my grandma than me?
+[ 481/500] CORRECT | acc= 96.0% | tokens=4,118,518 | Q: How many years older am I than when I graduated from college
+[ 482/500] CORRECT | acc= 96.1% | tokens=4,128,292 | Q: What is the total amount I spent on gifts for my coworker an
+[ 483/500] CORRECT | acc= 96.1% | tokens=4,137,656 | Q: What is the total number of comments on my recent Facebook L
+[ 484/500] CORRECT | acc= 96.1% | tokens=4,148,115 | Q: How many days a week do I attend fitness classes?
+[ 485/500] CORRECT | acc= 96.1% | tokens=4,157,834 | Q: What is the total amount I spent on the designer handbag and
+[ 486/500] CORRECT | acc= 96.1% | tokens=4,167,013 | Q: How much more money did I raise than my initial goal in the 
+[ 487/500] CORRECT | acc= 96.1% | tokens=4,176,537 | Q: What is the average GPA of my undergraduate and graduate stu
+[ 488/500] CORRECT | acc= 96.1% | tokens=4,186,751 | Q: How many minutes did I exceed my target time by in the marat
+[ 489/500] CORRECT | acc= 96.1% | tokens=4,196,616 | Q: What was the page count of the two novels I finished in Janu
+[ 490/500] CORRECT | acc= 96.1% | tokens=4,205,942 | Q: What is the total number of siblings I have?
+[ 491/500] CORRECT | acc= 96.1% | tokens=4,216,021 | Q: How much have I made from selling eggs this month?
+[ 492/500] CORRECT | acc= 96.1% | tokens=4,226,691 | Q: How much discount will I get on my next purchase at FreshMar
+[ 493/500] CORRECT | acc= 96.1% | tokens=4,236,880 | Q: How much earlier do I wake up on Fridays compared to other w
+[ 494/500] CORRECT | acc= 96.2% | tokens=4,247,310 | Q: How many fun runs did I miss in March due to work commitment
+[ 495/500] CORRECT | acc= 96.2% | tokens=4,257,839 | Q: How many pages do I have left to read in 'Sapiens'?
+[ 496/500] CORRECT | acc= 96.2% | tokens=4,268,725 | Q: How many plants did I initially plant for tomatoes and chili
+[ 497/500] CORRECT | acc= 96.2% | tokens=4,278,633 | Q: What is the total cost of my recently purchased headphones a
+[ 498/500] CORRECT | acc= 96.2% | tokens=4,288,307 | Q: At which university did I present a poster for my undergrad 
+[ 499/500] CORRECT | acc= 96.2% | tokens=4,297,745 | Q: How old will Rachel be when I get married?
+[ 500/500] CORRECT | acc= 96.2% | tokens=4,308,380 | Q: How much will I save by taking the bus from the airport to m
+
+  [Progress @ 500 cases] acc=96.2% | tokens=4,308,380 | projected=4,308,380
+  *** WARNING: projected total exceeds 850,000 tokens ***
+  Type                                Correct   Total     Acc
+  ----------------------------------- ------- ------- -------
+  knowledge-update                         76      78   97.4%
+  multi-session                           124     133   93.2%
+  single-session-assistant                 54      56   96.4%
+  single-session-preference                29      30   96.7%
+  single-session-user                      70      70  100.0%
+  temporal-reasoning                      128     133   96.2%
+  OVERALL                                 481     500   96.2%
+  ctx_abstained this run: 0
+
+
+======================================================================
+FINAL RESULTS — agentmemory V4 | ITER-36 | safe-regression-fixes: wedding-couple-id, cuisine-fermentation-exclusion, session-date-anchor-relative-only, concert-vinyl, entity-count-reverted
+======================================================================
+Final J-score:          96.20%
+Total cases evaluated:  500
+Total correct:          481
+Total incorrect:        19
+Total errors (skipped): 0
+Total tokens consumed:  4,308,380
+Context abstentions:    0
+Reranker calls total:   1236
+
+Per question-type accuracy:
+  knowledge-update                   : 97.4%  (76/78)
+  multi-session                      : 93.2%  (124/133)
+  single-session-assistant           : 96.4%  (54/56)
+  single-session-preference          : 96.7%  (29/30)
+  single-session-user                : 100.0%  (70/70)
+  temporal-reasoning                 : 96.2%  (128/133)
+
+Abstention cases:  30/30 correct  (100.0%)
+
+agentmemory V4+: 96.20%  vs  OMEGA published: 95.40%  —  gap: +0.80 pp
+======================================================================
+
+Full results written to longmemeval_results_opus6.json
+Progress log at longmemeval_progress_opus6.json

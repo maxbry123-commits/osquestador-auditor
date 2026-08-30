@@ -1,0 +1,27 @@
+{
+  "title": "Guides",
+  "description": "Learn how to use Acontext",
+  "root": true,
+  "icon": "BookOpen",
+  "pages": [
+    "---[Rocket]Getting Started---",
+    "index",
+    "quick",
+    "llm_quick",
+    "skill_setup",
+    "---[Database]Session Storage---",
+    "...store",
+    "---[Radar]Task Tracking---",
+    "...observe",
+    "---[Brain]Skill Memory---",
+    "...learn",
+    "---[Sparkles]Agent Tools---",
+    "...tool",
+    "---[Ellipsis]Miscellaneous---",
+    "...chore",
+    "---[Shield]Security---",
+    "...security",
+    "---[Settings]Customization---",
+    "...settings"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Features",
+  "pages": [
+    "agent_tasks",
+    "buffer",
+    "disable_tasks",
+    "task_eval_criteria",
+    "dashboard",
+    "traces"
+  ]
+}

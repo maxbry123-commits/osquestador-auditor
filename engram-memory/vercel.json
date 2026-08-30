@@ -1,0 +1,51 @@
+{
+  "framework": null,
+  "installCommand": "pip install starlette asyncpg mcp pydantic uvicorn stripe",
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,.pytest_cache/**}"
+    },
+    "api/mcp.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}",
+      "maxDuration": 60
+    },
+    "api/workspace.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    },
+    "api/install.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    },
+    "api/dashboard_page.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    },
+    "api/auth.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    },
+    "api/billing.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    },
+    "api/conflicts.py": {
+      "excludeFiles": "{src/**,tests/**,docs/**,assets/**,.pytest_cache/**}"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/conflicts", "destination": "/api/conflicts" },
+    { "source": "/api/conflicts/(.*)", "destination": "/api/conflicts" },
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/mcp/(.*)", "destination": "/api/mcp" },
+    { "source": "/auth", "destination": "/api/auth" },
+    { "source": "/auth/(.*)", "destination": "/api/auth" },
+    { "source": "/billing", "destination": "/api/billing" },
+    { "source": "/billing/(.*)", "destination": "/api/billing" },
+    { "source": "/stripe/webhook", "destination": "/api/billing" },
+    { "source": "/workspace", "destination": "/api/workspace" },
+    { "source": "/workspace/(.*)", "destination": "/api/workspace" },
+    { "source": "/install", "destination": "/api/install" },
+    { "source": "/install.ps1", "destination": "/api/install" },
+    { "source": "/install.cmd", "destination": "/api/install" },
+    { "source": "/dashboard", "destination": "/api/dashboard_page" },
+    { "source": "/(.*)", "destination": "/api/index" }
+  ]
+}

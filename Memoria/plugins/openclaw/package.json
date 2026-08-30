@@ -1,0 +1,57 @@
+{
+  "name": "@matrixorigin/thememoria",
+  "version": "0.4.3",
+  "description": "OpenClaw memory plugin that uses the Memoria cloud API.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matrixorigin/Memoria.git"
+  },
+  "homepage": "https://github.com/matrixorigin/Memoria/tree/main/plugins/openclaw",
+  "bugs": {
+    "url": "https://github.com/matrixorigin/Memoria/issues"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "memory",
+    "memoria",
+    "matrixone",
+    "local-first"
+  ],
+  "license": "Apache-2.0",
+  "type": "module",
+  "files": [
+    "README.md",
+    "skills/",
+    "openclaw/",
+    "openclaw.plugin.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.3.0"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  },
+  "openclaw": {
+    "extensions": [
+      "./openclaw/index.ts"
+    ]
+  }
+}

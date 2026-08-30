@@ -1,0 +1,87 @@
+---
+title: Runtime
+description: Runtime settings are used to configure the runtime behavior of the Acontext Agent.
+---
+
+
+### Session Message Buffer
+Acontext will track the agent task and user feedback in the session, 
+the following settings control how and when tracking is conducted.
+
+<ParamField path="PROJECT_SESSION_MESSAGE_USE_PREVIOUS_MESSAGES_TURNS" type="integer" default="3">
+Number of previous message turns to include in the context when processing new incoming messages. 
+
+Higher values provide more context for task maintaining but consume more tokens.
+</ParamField>
+
+<ParamField path="PROJECT_SESSION_MESSAGE_BUFFER_MAX_TURNS" type="integer" default="16">
+Maximum number of untracked message turns to keep in the session buffer. 
+
+This controls the size of the messages we want to process at the same time, the larger the buffer, 
+the longer context we can use for once for task maintaining, 
+and the less total token costs.
+</ParamField>
+
+### Agent Iteration Limits
+
+<ParamField path="DEFAULT_TASK_AGENT_MAX_ITERATIONS" type="integer" default="4">
+Maximum number of iterations a task agent can perform before stopping. Prevents infinite loops in task execution.
+</ParamField>
+
+## `.env` Examples
+
+<CodeGroup>
+```bash title="Default Configuration"
+# Session Management
+PROJECT_SESSION_MESSAGE_USE_PREVIOUS_MESSAGES_TURNS=3
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_TURNS=16
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_OVERFLOW=16
+
+# Agent Limits
+DEFAULT_TASK_AGENT_MAX_ITERATIONS=4
+```
+
+```bash title="High-Context Setup"
+# Increased context for complex conversations
+PROJECT_SESSION_MESSAGE_USE_PREVIOUS_MESSAGES_TURNS=8
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_TURNS=32
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_OVERFLOW=24
+
+# More iterations for complex tasks
+DEFAULT_TASK_AGENT_MAX_ITERATIONS=8
+```
+
+```bash title="Performance Optimized"
+# Reduced context for faster processing
+PROJECT_SESSION_MESSAGE_USE_PREVIOUS_MESSAGES_TURNS=2
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_TURNS=8
+PROJECT_SESSION_MESSAGE_BUFFER_MAX_OVERFLOW=8
+
+# Lower iteration limits for speed
+DEFAULT_TASK_AGENT_MAX_ITERATIONS=3
+```
+</CodeGroup>
+
+<Warning>
+Setting iteration limits too high may lead to excessive API usage and longer response times. Setting them too low may prevent agents from completing complex tasks.
+</Warning>
+
+## Message Buffer Tuning
+
+### Buffer Size Impact
+
+- **Small buffers** (8-16 turns): 
+  - ✅ **Lower update latency** - Tasks and skills update faster
+  - ❌ **Higher token cost** - More frequent processing with less context sharing
+  
+- **Large buffers** (32+ turns): 
+  - ✅ **Lower token cost** - Batch processing with shared context
+  - ❌ **Higher update latency** - Tasks and skills update less frequently
+
+<Note>
+The buffer idle timeout is fixed at 8 seconds and is not configurable per project. The buffer flushes when it reaches `BUFFER_MAX_TURNS` or when no new messages arrive for 8 seconds, whichever comes first.
+</Note>
+
+<Tip>
+For **development**: Use smaller buffers (8-16) for faster feedback loops. For **production**: Use larger buffers (24-32) to optimize costs.
+</Tip>

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" role="img" aria-label="AgenticMemory cognitive event graph">
+  <defs>
+    <pattern id="dot-grid" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="#c9c6bb"/>
+    </pattern>
+    <marker id="arrow-ink" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#1f1f1f"/>
+    </marker>
+    <marker id="arrow-signal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#ea580c"/>
+    </marker>
+    <style><![CDATA[
+      .mono { font-family:'IBM Plex Mono','JetBrains Mono',monospace; }
+      .ink { fill:#111111; }
+      .muted { fill:#6d6a63; }
+      .signal { fill:#ea580c; }
+      .frame { fill:#fffdf7; stroke:#1f1f1f; stroke-width:2; }
+      .panel { fill:#fff8ea; stroke:#1f1f1f; stroke-width:1.5; }
+      .event { fill:#fffdf7; stroke:#1f1f1f; stroke-width:1.5; }
+      .edge { stroke:#1f1f1f; stroke-width:1.4; fill:none; marker-end:url(#arrow-ink); }
+      .edge-signal { stroke:#ea580c; stroke-width:1.8; fill:none; marker-end:url(#arrow-signal); }
+      .edge-dashed { stroke:#1f1f1f; stroke-width:1.4; fill:none; stroke-dasharray:5 4; marker-end:url(#arrow-ink); }
+    ]]></style>
+  </defs>
+
+  <rect width="900" height="500" fill="#f2f1ea"/>
+  <rect width="900" height="500" fill="url(#dot-grid)"/>
+
+  <line x1="18" y1="28" x2="882" y2="28" stroke="#1f1f1f"/>
+  <text x="18" y="20" class="mono muted" font-size="11" letter-spacing="2">// SECTION: COGNITIVE_EVENT_GRAPH</text>
+  <text x="882" y="20" class="mono muted" font-size="11" letter-spacing="2" text-anchor="end">TICK:0202</text>
+
+  <rect x="20" y="44" width="860" height="436" class="frame"/>
+
+  <text x="450" y="80" class="mono ink" font-size="17" letter-spacing="2" text-anchor="middle">COGNITIVE EVENT GRAPH</text>
+  <text x="450" y="100" class="mono muted" font-size="10" letter-spacing="1.2" text-anchor="middle">Typed nodes + causal edges + correction chains + belief revision</text>
+
+  <path d="M170 140 L364 182" class="edge"/>
+  <path d="M380 140 L395 178" class="edge"/>
+  <path d="M588 140 L435 182" class="edge"/>
+  <path d="M442 200 L630 140" class="edge"/>
+  <path d="M168 222 L170 158" class="edge-dashed"/>
+  <path d="M120 286 L160 158" class="edge"/>
+  <path d="M718 224 L438 214" class="edge"/>
+
+  <rect x="104" y="118" width="132" height="40" rx="8" class="event"/>
+  <text x="170" y="134" class="mono muted" font-size="9" letter-spacing="1.2" text-anchor="middle">FACT</text>
+  <text x="170" y="149" class="mono ink" font-size="9" text-anchor="middle">Team has no Go exp</text>
+
+  <rect x="314" y="118" width="132" height="40" rx="8" class="event"/>
+  <text x="380" y="134" class="mono muted" font-size="9" letter-spacing="1.2" text-anchor="middle">FACT</text>
+  <text x="380" y="149" class="mono ink" font-size="9" text-anchor="middle">Deadline is 2 weeks</text>
+
+  <rect x="522" y="118" width="132" height="40" rx="8" class="event"/>
+  <text x="588" y="134" class="mono muted" font-size="9" letter-spacing="1.2" text-anchor="middle">INFERENCE</text>
+  <text x="588" y="149" class="mono ink" font-size="9" text-anchor="middle">Team is Rust-only</text>
+
+  <rect x="352" y="178" width="152" height="44" rx="8" class="panel"/>
+  <text x="428" y="195" class="mono signal" font-size="9" letter-spacing="1.2" text-anchor="middle">DECISION</text>
+  <text x="428" y="211" class="mono ink" font-size="9" text-anchor="middle">Chose Rust for project</text>
+
+  <rect x="88" y="204" width="158" height="44" rx="8" class="event"/>
+  <text x="167" y="221" class="mono signal" font-size="9" letter-spacing="1.2" text-anchor="middle">CORRECTION</text>
+  <text x="167" y="237" class="mono ink" font-size="9" text-anchor="middle">Team now knows Go</text>
+
+  <rect x="66" y="274" width="130" height="34" rx="8" class="event"/>
+  <text x="131" y="290" class="mono muted" font-size="9" letter-spacing="1.2" text-anchor="middle">EPISODE</text>
+  <text x="131" y="301" class="mono muted" font-size="8" text-anchor="middle">Session 1 summary</text>
+
+  <rect x="672" y="204" width="158" height="44" rx="8" class="event"/>
+  <text x="751" y="221" class="mono signal" font-size="9" letter-spacing="1.2" text-anchor="middle">SKILL</text>
+  <text x="751" y="237" class="mono ink" font-size="9" text-anchor="middle">Use analogies to explain</text>
+
+  <rect x="542" y="264" width="300" height="124" rx="10" fill="#fff8ea" stroke="#ea580c" stroke-width="1.4"/>
+  <text x="692" y="287" class="mono signal" font-size="11" text-anchor="middle">brain.revise("Team now knows Go")</text>
+
+  <text x="562" y="313" class="mono signal" font-size="10">X CONTRADICTS "Team has no Go"</text>
+  <text x="562" y="334" class="mono signal" font-size="10">! WEAKENS "Team is Rust-only" 0.9 -&gt; 0.3</text>
+  <text x="562" y="355" class="mono signal" font-size="10">! INVALIDATES "Chose Rust for project"</text>
+  <text x="562" y="374" class="mono muted" font-size="9">3 nodes affected | 0 mutations | read-only</text>
+
+  <line x1="44" y1="414" x2="856" y2="414" stroke="#1f1f1f"/>
+  <text x="44" y="434" class="mono muted" font-size="10" letter-spacing="1.1">NODE TYPES: FACT  DECISION  INFERENCE  CORRECTION  EPISODE  SKILL</text>
+  <text x="44" y="452" class="mono muted" font-size="10" letter-spacing="1.1">EDGE TYPES: CAUSED_BY  SUPPORTS  SUPERSEDES  CONTRADICTS  RELATED_TO  PART_OF</text>
+  <circle cx="856" cy="448" r="4" class="signal"/>
+</svg>

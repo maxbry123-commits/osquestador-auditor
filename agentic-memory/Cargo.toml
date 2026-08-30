@@ -1,0 +1,37 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agentic-memory",
+    "crates/agentic-memory-mcp",
+    "crates/agentic-memory-cli",
+    "crates/agentic-memory-ffi",
+    "tests/bridge",
+]
+exclude = [
+    "npm/wasm",
+]
+
+[workspace.package]
+version = "0.4.2"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/agentralabs/agentic-memory"
+authors = ["Agentra Labs <contact@agentralabs.tech>"]
+
+[workspace.dependencies]
+# Shared dependencies - single version across workspace
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tempfile = "3"
+
+# SDK (shared traits for all sisters)
+agentic-sdk = { version = "0.2.0", path = "../agentic-sdk" }
+
+# Internal crates
+agentic-memory = { path = "crates/agentic-memory" }
+agentic-memory-mcp = { path = "crates/agentic-memory-mcp" }
+agentic-memory-cli = { path = "crates/agentic-memory-cli" }
+agentic-memory-ffi = { path = "crates/agentic-memory-ffi" }

@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 220" width="860" height="220">
+  <defs>
+    <style>
+      @keyframes sway1 {
+        0%,100% { transform: rotate(-8deg) translate(0,0); }
+        50%      { transform: rotate(8deg)  translate(2px,-4px); }
+      }
+      @keyframes sway2 {
+        0%,100% { transform: rotate(6deg)  translate(0,0); }
+        50%      { transform: rotate(-10deg) translate(-3px,-5px); }
+      }
+      @keyframes sway3 {
+        0%,100% { transform: rotate(-4deg) translate(0,0); }
+        50%      { transform: rotate(12deg) translate(1px,-3px); }
+      }
+      @keyframes sway4 {
+        0%,100% { transform: rotate(10deg) translate(0,0); }
+        50%      { transform: rotate(-6deg) translate(-2px,-6px); }
+      }
+      @keyframes sway5 {
+        0%,100% { transform: rotate(-12deg) translate(0,0); }
+        50%      { transform: rotate(5deg)  translate(3px,-4px); }
+      }
+      @keyframes float1 {
+        0%,100% { transform: translateY(0px); }
+        50%      { transform: translateY(-6px); }
+      }
+      @keyframes float2 {
+        0%,100% { transform: translateY(0px); }
+        50%      { transform: translateY(-9px); }
+      }
+      @keyframes glow {
+        0%,100% { opacity: 0.18; }
+        50%      { opacity: 0.32; }
+      }
+      .leaf1 { transform-origin: 50% 90%; animation: sway1 4.2s ease-in-out infinite; }
+      .leaf2 { transform-origin: 50% 90%; animation: sway2 3.7s ease-in-out infinite; }
+      .leaf3 { transform-origin: 50% 90%; animation: sway3 5.1s ease-in-out infinite; }
+      .leaf4 { transform-origin: 50% 90%; animation: sway4 4.6s ease-in-out infinite; }
+      .leaf5 { transform-origin: 50% 90%; animation: sway5 3.9s ease-in-out infinite; }
+      .leaf6 { transform-origin: 50% 90%; animation: sway2 4.8s ease-in-out infinite; }
+      .leaf7 { transform-origin: 50% 90%; animation: sway1 5.3s ease-in-out infinite; }
+      .leaf8 { transform-origin: 50% 90%; animation: sway3 4.1s ease-in-out infinite; }
+      .stem1 { transform-origin: 50% 100%; animation: float1 4.2s ease-in-out infinite; }
+      .stem2 { transform-origin: 50% 100%; animation: float2 3.7s ease-in-out infinite; }
+      .stem3 { transform-origin: 50% 100%; animation: float1 5.1s ease-in-out infinite; }
+      .stem4 { transform-origin: 50% 100%; animation: float2 4.6s ease-in-out infinite; }
+      .glow   { animation: glow 6s ease-in-out infinite; }
+    </style>
+
+    <!-- Leaf shape -->
+    <path id="leaf-sm" d="M0,0 C-6,-12 -14,-18 -8,-30 C-2,-18 8,-14 0,0Z"/>
+    <path id="leaf-md" d="M0,0 C-8,-16 -18,-24 -10,-40 C-2,-24 10,-18 0,0Z"/>
+    <path id="leaf-lg" d="M0,0 C-10,-20 -22,-30 -12,-50 C-2,-30 12,-22 0,0Z"/>
+
+    <linearGradient id="leaf-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="leaf-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#86efac"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="leaf-grad-3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#bbf7d0"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#0a0f0a"/>
+      <stop offset="100%" stop-color="#0d1a0d"/>
+    </linearGradient>
+    <radialGradient id="glow-grad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#22c55e" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="860" height="220" rx="16" fill="url(#bg-grad)"/>
+
+  <!-- Ambient glow -->
+  <ellipse class="glow" cx="430" cy="110" rx="280" ry="80" fill="url(#glow-grad)"/>
+
+  <!-- ── LEFT CLUSTER ── -->
+  <!-- Stem + leaves -->
+  <g class="stem1" transform="translate(62,195)">
+    <line x1="0" y1="0" x2="0" y2="-70" stroke="#166534" stroke-width="1.5"/>
+    <g class="leaf3" transform="translate(0,-55)">
+      <use href="#leaf-md" fill="url(#leaf-grad-1)" opacity="0.9" transform="rotate(-30)"/>
+    </g>
+    <g class="leaf1" transform="translate(0,-38)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.85" transform="rotate(40) scale(-1,1)"/>
+    </g>
+    <g class="leaf2" transform="translate(0,-70)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-3)" opacity="0.7" transform="rotate(-15)"/>
+    </g>
+  </g>
+
+  <g class="stem2" transform="translate(102,195)">
+    <line x1="0" y1="0" x2="-8" y2="-90" stroke="#166534" stroke-width="1.5"/>
+    <g class="leaf5" transform="translate(-8,-75)">
+      <use href="#leaf-lg" fill="url(#leaf-grad-1)" opacity="0.95" transform="rotate(-20)"/>
+    </g>
+    <g class="leaf4" transform="translate(-4,-50)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.8" transform="rotate(35) scale(-1,1)"/>
+    </g>
+  </g>
+
+  <g class="stem3" transform="translate(38,195)">
+    <line x1="0" y1="0" x2="5" y2="-55" stroke="#166534" stroke-width="1.2"/>
+    <g class="leaf6" transform="translate(5,-45)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-3)" opacity="0.75" transform="rotate(25) scale(-1,1)"/>
+    </g>
+    <g class="leaf1" transform="translate(2,-30)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.6" transform="rotate(-40)"/>
+    </g>
+  </g>
+
+  <!-- ── RIGHT CLUSTER ── -->
+  <g class="stem2" transform="translate(798,195)">
+    <line x1="0" y1="0" x2="0" y2="-70" stroke="#166534" stroke-width="1.5"/>
+    <g class="leaf2" transform="translate(0,-55)">
+      <use href="#leaf-md" fill="url(#leaf-grad-1)" opacity="0.9" transform="rotate(30) scale(-1,1)"/>
+    </g>
+    <g class="leaf4" transform="translate(0,-38)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.85" transform="rotate(-40)"/>
+    </g>
+    <g class="leaf3" transform="translate(0,-70)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-3)" opacity="0.7" transform="rotate(15) scale(-1,1)"/>
+    </g>
+  </g>
+
+  <g class="stem1" transform="translate(758,195)">
+    <line x1="0" y1="0" x2="8" y2="-90" stroke="#166534" stroke-width="1.5"/>
+    <g class="leaf6" transform="translate(8,-75)">
+      <use href="#leaf-lg" fill="url(#leaf-grad-1)" opacity="0.95" transform="rotate(20) scale(-1,1)"/>
+    </g>
+    <g class="leaf5" transform="translate(4,-50)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.8" transform="rotate(-35)"/>
+    </g>
+  </g>
+
+  <g class="stem3" transform="translate(822,195)">
+    <line x1="0" y1="0" x2="-5" y2="-55" stroke="#166534" stroke-width="1.2"/>
+    <g class="leaf7" transform="translate(-5,-45)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-3)" opacity="0.75" transform="rotate(-25)"/>
+    </g>
+    <g class="leaf2" transform="translate(-2,-30)">
+      <use href="#leaf-sm" fill="url(#leaf-grad-2)" opacity="0.6" transform="rotate(40) scale(-1,1)"/>
+    </g>
+  </g>
+
+  <!-- ── WORDMARK ── -->
+  <text
+    x="430" y="105"
+    font-family="'SF Mono','Fira Code','Consolas',monospace"
+    font-size="72"
+    font-weight="700"
+    letter-spacing="12"
+    text-anchor="middle"
+    fill="#f0fdf4">ENGRAM</text>
+
+  <!-- Thin rule under wordmark -->
+  <line x1="260" y1="120" x2="600" y2="120" stroke="#22c55e" stroke-width="0.75" opacity="0.45"/>
+
+  <!-- Tagline -->
+  <text
+    x="430" y="150"
+    font-family="'SF Mono','Fira Code','Consolas',monospace"
+    font-size="13"
+    letter-spacing="3"
+    text-anchor="middle"
+    fill="#4ade80"
+    opacity="0.85">PERSISTENT · SHARED · VERSIONED</text>
+</svg>

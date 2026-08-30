@@ -1,0 +1,115 @@
+# Development and Deployment
+
+## Local Development
+
+Prerequisites:
+
+- Go 1.24.6 or newer in the 1.24 series
+- `make`
+- `jq` only when running the opt-in CLI E2E/integration suite
+
+Common commands:
+
+```bash
+make deps
+make build
+make test              # deterministic CI suite
+make test-integration  # optional E2E/process/Docker suite
+make install
+```
+
+Use a project-local data directory when testing manually:
+
+```bash
+MNEMON_DATA_DIR=.mnemon-dev ./bin/mnemon store create default
+MNEMON_DATA_DIR=.mnemon-dev ./bin/mnemon remember --no-diff "Local development memory" --cat fact --imp 3
+MNEMON_DATA_DIR=.mnemon-dev ./bin/mnemon recall "development memory"
+```
+
+## Container Development
+
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Start a shell inside the Go development image:
+
+```bash
+make compose-dev
+```
+
+Inside the container:
+
+```bash
+make build
+make test
+```
+
+## Container Deployment
+
+Build the runtime image:
+
+```bash
+make docker-build
+```
+
+Run one command with persistent data mounted at `/mnemon`:
+
+```bash
+docker run --rm \
+  -v mnemon-data:/mnemon \
+  --env-file .env \
+  mnemon-dev/mnemon:dev status
+```
+
+Or use Docker Compose:
+
+```bash
+cp .env.example .env
+make compose-up
+docker compose run --rm mnemon recall "query"
+make compose-down
+```
+
+## Optional Embeddings
+
+Mnemon works without embeddings. The Compose embeddings profile provides the
+default Ollama-backed vector search setup:
+
+```bash
+docker compose --profile embeddings up -d ollama
+docker compose exec ollama ollama pull nomic-embed-text
+docker compose run --rm mnemon embed "hello"
+```
+
+The relevant environment variables are:
+
+- `MNEMON_EMBED_ENDPOINT`
+- `MNEMON_EMBED_MODEL`
+- `MNEMON_EMBED_PROTOCOL`
+- `MNEMON_EMBED_API_KEY`
+- `MNEMON_EMBED_DIMENSIONS`
+
+For host-based Ollama, set `MNEMON_EMBED_ENDPOINT=http://host.docker.internal:11434` on Docker Desktop, or use the host gateway address for Linux deployments.
+
+An external OpenAI-compatible server can be selected with an endpoint ending
+in `/v1`, for example `MNEMON_EMBED_ENDPOINT=http://host.docker.internal:18000/v1`.
+Set `MNEMON_EMBED_MODEL` to a model exposed by that server and
+`MNEMON_EMBED_API_KEY` when authentication is required. Use HTTPS whenever the
+server is not on a trusted local network.
+
+## Release Deployment
+
+Tagged releases are handled by GoReleaser through `.github/workflows/release.yml`.
+
+Required repository secret:
+
+- `HOMEBREW_TAP_TOKEN`, only needed for publishing the Homebrew tap
+
+Create a local snapshot build without publishing:
+
+```bash
+make release-snapshot
+```

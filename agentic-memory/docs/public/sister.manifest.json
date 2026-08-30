@@ -1,0 +1,23 @@
+{
+  "key": "memory",
+  "name": "AgenticMemory",
+  "include_landing": true,
+  "page_ids": [
+    "overview",
+    "experience-with-vs-without",
+    "quickstart",
+    "installation",
+    "command-surface",
+    "runtime-install-sync",
+    "integration-guide",
+    "concepts",
+    "api-reference",
+    "file-format",
+    "rust-api",
+    "benchmarks",
+    "faq",
+    "playbooks-agent-integration",
+    "v3-architecture"
+  ],
+  "slug_by_id": {}
+}

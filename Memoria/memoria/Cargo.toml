@@ -1,0 +1,57 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/memoria-core",
+    "crates/memoria-storage",
+    "crates/memoria-embedding",
+    "crates/memoria-service",
+    "crates/memoria-git",
+    "crates/memoria-api",
+    "crates/memoria-mcp",
+    "crates/memoria-cli",
+    "crates/memoria-test-utils",
+]
+
+[workspace.package]
+version = "0.5.1"
+rust-version = "1.85"
+
+[workspace.dependencies]
+tokio = { version = "1.40", features = ["full"] }
+axum = { version = "0.7", features = ["macros"] }
+futures = "0.3"
+sqlx = { version = "0.8", features = ["runtime-tokio", "tls-rustls", "mysql", "chrono", "json", "macros"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+opentelemetry = { version = "0.28", default-features = false, features = ["trace"] }
+opentelemetry_sdk = { version = "0.28", default-features = false, features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.28", default-features = false, features = ["grpc-tonic", "trace"] }
+tracing-opentelemetry = "0.29"
+clap = { version = "4.5", features = ["derive", "env"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+uuid = { version = "1.0", features = ["v4", "v7"] }
+async-trait = "0.1"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["trace", "cors", "catch-panic"] }
+
+# Internal crates
+memoria-core = { path = "crates/memoria-core" }
+memoria-storage = { path = "crates/memoria-storage" }
+memoria-embedding = { path = "crates/memoria-embedding" }
+memoria-service = { path = "crates/memoria-service" }
+memoria-git = { path = "crates/memoria-git" }
+memoria-api = { path = "crates/memoria-api" }
+memoria-mcp = { path = "crates/memoria-mcp" }
+memoria-test-utils = { path = "crates/memoria-test-utils" }
+
+[patch.crates-io]
+# MatrixOne returns type code 0xf1 for JSON columns in `data branch diff` output,
+# which is non-standard (MySQL uses 0xf5 for JSON). This patch maps 0xf1 -> Blob
+# so sqlx can decode the result set without panicking.
+# Filed as MatrixOne bug: data branch diff uses inconsistent column type codes.
+sqlx-mysql = { path = "vendor/sqlx-mysql" }

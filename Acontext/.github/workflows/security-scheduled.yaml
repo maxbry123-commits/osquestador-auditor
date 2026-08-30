@@ -1,0 +1,10 @@
+name: Security Scheduled Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # Every Monday at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  security:
+    uses: ./.github/workflows/security-reusable.yaml

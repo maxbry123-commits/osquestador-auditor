@@ -1,0 +1,23 @@
+name: Documentation
+description: Report a docs problem or suggest new content
+title: "[Docs]: "
+labels: [kind/docs]
+
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue about this?
+      options:
+        - label: I have checked the existing issues.
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the issue
+      render: Markdown
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional information
+    validations:
+      required: false

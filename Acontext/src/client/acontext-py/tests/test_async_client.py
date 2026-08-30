@@ -1,0 +1,1468 @@
+import json
+from dataclasses import dataclass
+from typing import Any, Dict
+from unittest.mock import AsyncMock, patch
+
+import httpx
+import pytest
+import pytest_asyncio
+
+from acontext.async_client import AcontextAsyncClient
+from acontext.client import FileUpload
+from acontext.messages import build_acontext_message
+from acontext.errors import APIError, TransportError
+
+
+def make_response(status: int, payload: Dict[str, Any]) -> httpx.Response:
+    request = httpx.Request("GET", "https://api.acontext.test/resource")
+    return httpx.Response(status, json=payload, request=request)
+
+
+@pytest_asyncio.fixture
+async def async_client() -> AcontextAsyncClient:
+    client = AcontextAsyncClient(api_key="token")
+    try:
+        yield client
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_async_handle_response_returns_data() -> None:
+    resp = make_response(200, {"code": 200, "data": {"ok": True}})
+    data = AcontextAsyncClient._handle_response(resp, unwrap=True)
+    assert data == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_async_handle_response_app_code_error() -> None:
+    resp = make_response(200, {"code": 500, "msg": "failure"})
+    with pytest.raises(APIError) as ctx:
+        AcontextAsyncClient._handle_response(resp, unwrap=True)
+    assert ctx.value.code == 500
+    assert ctx.value.status_code == 200
+
+
+@patch("acontext.async_client.httpx.AsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_request_transport_error(mock_request) -> None:
+    exc = httpx.ConnectError(
+        "boom", request=httpx.Request("GET", "https://api.acontext.test/failure")
+    )
+    mock_request.side_effect = exc
+    async with AcontextAsyncClient(api_key="token") as client:
+        with pytest.raises(TransportError):
+            await client.ping()
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_ping_returns_pong(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {"code": 200, "msg": "pong"}
+
+    result = await async_client.ping()
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/ping"
+    assert kwargs["unwrap"] is False
+    assert result == "pong"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_create_with_use_uuid(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that use_uuid is sent to API when provided."""
+    mock_request.return_value = {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "project_id": "project-id",
+        "configs": {},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.sessions.create(use_uuid="123e4567-e89b-12d3-a456-426614174000")
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session"
+    assert kwargs["json_data"]["use_uuid"] == "123e4567-e89b-12d3-a456-426614174000"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_create_without_use_uuid(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that use_uuid is not sent when not provided."""
+    mock_request.return_value = {
+        "id": "auto-generated-uuid",
+        "project_id": "project-id",
+        "configs": {},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.sessions.create()
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session"
+    # use_uuid should not be in payload when not provided
+    assert "use_uuid" not in (kwargs.get("json_data") or {})
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_create_with_use_uuid_and_user(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that use_uuid can be combined with other parameters."""
+    mock_request.return_value = {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "project_id": "project-id",
+        "user_id": "user-uuid",
+        "configs": {"agent": "bot1"},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.sessions.create(
+        user="alice@acontext.io",
+        use_uuid="123e4567-e89b-12d3-a456-426614174000",
+        configs={"agent": "bot1"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    assert kwargs["json_data"]["user"] == "alice@acontext.io"
+    assert kwargs["json_data"]["use_uuid"] == "123e4567-e89b-12d3-a456-426614174000"
+    assert kwargs["json_data"]["configs"] == {"agent": "bot1"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_with_files_uses_multipart_payload(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    blob = build_acontext_message(role="user", parts=["hello"])
+
+    class _DummyStream:
+        def read(self) -> bytes:
+            return b"bytes"
+
+    dummy_stream = _DummyStream()
+    upload = FileUpload(
+        filename="image.png", content=dummy_stream, content_type="image/png"
+    )
+
+    await async_client.sessions.store_message(
+        "session-id",
+        blob=blob,
+        format="acontext",
+        file_field="attachment",
+        file=upload,
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session/session-id/messages"
+    assert kwargs["data"] is not None
+    assert "files" in kwargs
+
+    payload_json = json.loads(kwargs["data"]["payload"])
+    assert payload_json["format"] == "acontext"
+    message_blob = payload_json["blob"]
+    assert message_blob["role"] == "user"
+    assert message_blob["parts"][0]["text"] == "hello"
+    assert message_blob["parts"][0]["type"] == "text"
+    assert message_blob["parts"][0]["meta"] is None
+    assert message_blob["parts"][0]["file_field"] is None
+
+    files_payload = kwargs["files"]
+    assert isinstance(files_payload, dict)
+    attachment = files_payload["attachment"]
+    assert attachment[0] == "image.png"
+    assert attachment[1] is dummy_stream
+    assert attachment[2] == "image/png"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_allows_nullable_blob_for_other_formats(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.sessions.store_message("session-id", format="openai", blob=None)  # type: ignore[arg-type]
+
+    mock_request.assert_called_once()
+    _, kwargs = mock_request.call_args
+    assert kwargs["json_data"]["blob"] is None
+
+
+@pytest.mark.asyncio
+async def test_async_store_message_rejects_unknown_format(
+    async_client: AcontextAsyncClient,
+) -> None:
+    with pytest.raises(ValueError, match="format must be one of"):
+        await async_client.sessions.store_message(
+            "session-id",
+            blob={"role": "user", "content": "hi"},  # type: ignore[arg-type]
+            format="legacy",  # type: ignore[arg-type]
+        )
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_explicit_format_still_supported(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.sessions.store_message(
+        "session-id",
+        blob={"role": "user", "content": "hi"},  # type: ignore[arg-type]
+        format="openai",
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session/session-id/messages"
+    assert "json_data" in kwargs
+    assert kwargs["json_data"]["format"] == "openai"
+    assert kwargs["json_data"]["blob"]["content"] == "hi"
+
+
+@dataclass
+class _FakeOpenAIMessage:
+    __module__ = "openai.types.chat"
+
+    role: str
+
+    def model_dump(self) -> dict[str, Any]:
+        return {"role": self.role, "content": "hello"}
+
+
+@dataclass
+class _FakeAnthropicMessage:
+    __module__ = "anthropic.types.messages"
+
+    role: str
+
+    def model_dump(self) -> dict[str, Any]:
+        return {"role": self.role, "content": [{"type": "text", "text": "hi"}]}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_handles_openai_model_dump(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    message = _FakeOpenAIMessage(role="user")
+    await async_client.sessions.store_message(
+        "session-id",
+        blob=message,  # type: ignore[arg-type]
+        format="openai",
+    )
+
+    mock_request.assert_called_once()
+    _, kwargs = mock_request.call_args
+    assert kwargs["json_data"]["format"] == "openai"
+    assert kwargs["json_data"]["blob"] is message
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_handles_anthropic_model_dump(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    message = _FakeAnthropicMessage(role="user")
+    await async_client.sessions.store_message(
+        "session-id",
+        blob=message,  # type: ignore[arg-type]
+        format="anthropic",
+    )
+
+    mock_request.assert_called_once()
+    _, kwargs = mock_request.call_args
+    assert kwargs["json_data"]["format"] == "anthropic"
+    assert kwargs["json_data"]["blob"] is message
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_accepts_acontext_message(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "assistant",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    blob = build_acontext_message(role="assistant", parts=["hi"])
+    await async_client.sessions.store_message(
+        "session-id", blob=blob, format="acontext"
+    )
+
+    mock_request.assert_called_once()
+    _, kwargs = mock_request.call_args
+    assert kwargs["json_data"]["format"] == "acontext"
+
+
+@pytest.mark.asyncio
+async def test_async_store_message_requires_file_field_when_file_provided(
+    async_client: AcontextAsyncClient,
+) -> None:
+    blob = build_acontext_message(role="user", parts=["hello"])
+
+    class _DummyStream:
+        def read(self) -> bytes:
+            return b"bytes"
+
+    upload = FileUpload(
+        filename="image.png", content=_DummyStream(), content_type="image/png"
+    )
+
+    with pytest.raises(
+        ValueError, match="file_field is required when file is provided"
+    ):
+        await async_client.sessions.store_message(
+            "session-id",
+            blob=blob,
+            format="acontext",
+            file=upload,
+        )
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_rejects_file_for_non_acontext_format(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    class _DummyStream:
+        def read(self) -> bytes:
+            return b"bytes"
+
+    upload = FileUpload(
+        filename="image.png", content=_DummyStream(), content_type="image/png"
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="file and file_field parameters are only supported when format is 'acontext'",
+    ):
+        await async_client.sessions.store_message(
+            "session-id",
+            blob={"role": "user", "content": "hi"},  # type: ignore[arg-type]
+            format="openai",
+            file=upload,
+            file_field="attachment",
+        )
+
+    mock_request.assert_not_called()
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_rejects_file_field_for_non_acontext_format(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="file and file_field parameters are only supported when format is 'acontext'",
+    ):
+        await async_client.sessions.store_message(
+            "session-id",
+            blob={"role": "user", "content": "hi"},  # type: ignore[arg-type]
+            format="openai",
+            file_field="attachment",
+        )
+
+    mock_request.assert_not_called()
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_get_messages_forwards_format(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "items": [],
+        "ids": [],
+        "has_more": False,
+        "this_time_tokens": 0,
+    }
+
+    result = await async_client.sessions.get_messages(
+        "session-id", format="acontext", time_desc=True
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/session/session-id/messages"
+    assert kwargs["params"] == {"format": "acontext", "time_desc": "true"}
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "items")
+    assert hasattr(result, "has_more")
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_get_messages_rejects_non_positive_gt_token(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    edit_strategies = [
+        {"type": "remove_tool_result", "params": {"gt_token": 0}},
+    ]
+
+    with pytest.raises(ValueError, match="gt_token must be >= 1"):
+        await async_client.sessions.get_messages(
+            "session-id", format="openai", edit_strategies=edit_strategies
+        )
+
+    mock_request.assert_not_called()
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_get_tasks_without_filters(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {"items": [], "ids": [], "has_more": False}
+
+    result = await async_client.sessions.get_tasks("session-id")
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/session/session-id/task"
+    assert kwargs["params"] is None
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "items")
+    assert hasattr(result, "has_more")
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_get_tasks_with_filters(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {"items": [], "ids": [], "has_more": False}
+
+    result = await async_client.sessions.get_tasks(
+        "session-id", limit=10, cursor="cursor"
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/session/session-id/task"
+    assert kwargs["params"] == {"limit": 10, "cursor": "cursor"}
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "items")
+    assert hasattr(result, "has_more")
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sessions_get_token_counts(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "total_tokens": 1234,
+    }
+
+    result = await async_client.sessions.get_token_counts("session-id")
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/session/session-id/token_counts"
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "total_tokens")
+    assert result.total_tokens == 1234
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_disks_create_hits_disk_endpoint(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "disk",
+        "project_id": "project-id",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    result = await async_client.disks.create()
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/disk"
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "id")
+    assert result.id == "disk"
+
+
+@pytest.mark.asyncio
+async def test_async_artifacts_aliases_disk_artifacts(
+    async_client: AcontextAsyncClient,
+) -> None:
+    assert async_client.artifacts is async_client.disks.artifacts
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_disk_artifacts_upsert_uses_multipart_payload(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "artifact",
+        "disk_id": "disk-id",
+        "path": "/folder/file.txt",
+        "filename": "file.txt",
+        "meta": {},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.disks.artifacts.upsert(
+        "disk-id",
+        file=FileUpload(
+            filename="file.txt", content=b"data", content_type="text/plain"
+        ),
+        file_path="/folder",
+        meta={"source": "unit-test"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/disk/disk-id/artifact"
+    assert "files" in kwargs
+    assert "data" in kwargs
+    assert kwargs["data"]["file_path"] == "/folder"
+    meta = json.loads(kwargs["data"]["meta"])
+    assert meta["source"] == "unit-test"
+    filename, stream, content_type = kwargs["files"]["file"]
+    assert filename == "file.txt"
+    assert content_type == "text/plain"
+    assert stream.read() == b"data"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_disk_artifacts_get_translates_query_params(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "artifact": {
+            "id": "artifact",
+            "disk_id": "disk-id",
+            "path": "/folder/file.txt",
+            "filename": "file.txt",
+            "meta": {},
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        }
+    }
+
+    await async_client.disks.artifacts.get(
+        "disk-id",
+        file_path="/folder",
+        filename="file.txt",
+        with_public_url=False,
+        with_content=True,
+        expire=900,
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/disk/disk-id/artifact"
+    assert kwargs["params"] == {
+        "file_path": "/folder/file.txt",
+        "with_public_url": "false",
+        "with_content": "true",
+        "expire": 900,
+    }
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_skills_create_uses_multipart_payload(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "skill-1",
+        "name": "test-skill",
+        "description": "Test skill",
+        "disk_id": "disk-1",
+        "file_index": [{"path": "SKILL.md", "mime": "text/markdown"}],
+        "meta": {"version": "1.0"},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    await async_client.skills.create(
+        file=FileUpload(
+            filename="skill.zip", content=b"zip content", content_type="application/zip"
+        ),
+        meta={"version": "1.0"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/agent_skills"
+    assert "files" in kwargs
+    assert "data" in kwargs
+    meta = json.loads(kwargs["data"]["meta"])
+    assert meta["version"] == "1.0"
+    filename, stream, content_type = kwargs["files"]["file"]
+    assert filename == "skill.zip"
+    assert content_type == "application/zip"
+    assert stream.read() == b"zip content"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_skills_get_hits_id_endpoint(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "id": "skill-1",
+        "name": "test-skill",
+        "description": "Test skill",
+        "disk_id": "disk-1",
+        "file_index": [{"path": "SKILL.md", "mime": "text/markdown"}],
+        "meta": {},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    result = await async_client.skills.get("skill-1")
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/agent_skills/skill-1"
+    assert result.id == "skill-1"
+    assert result.name == "test-skill"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_skills_delete_hits_skills_endpoint(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = None
+
+    await async_client.skills.delete("skill-1")
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "DELETE"
+    assert path == "/agent_skills/skill-1"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_skills_list_returns_catalog_dict(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "items": [
+            {
+                "id": "skill-1",
+                "name": "test-skill-1",
+                "description": "Test skill 1",
+                "file_index": [{"path": "SKILL.md", "mime": "text/markdown"}],
+                "meta": {},
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            },
+            {
+                "id": "skill-2",
+                "name": "test-skill-2",
+                "description": "Test skill 2",
+                "file_index": [
+                    {"path": "SKILL.md", "mime": "text/markdown"},
+                    {"path": "scripts/main.py", "mime": "text/x-python"},
+                ],
+                "meta": {},
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            },
+        ],
+        "next_cursor": None,
+        "has_more": False,
+    }
+
+    result = await async_client.skills.list_catalog(limit=100)
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/agent_skills"
+    assert kwargs["params"] == {"limit": 100}
+    assert len(result.items) == 2
+    assert result.items[0].name == "test-skill-1"
+    assert result.items[0].description == "Test skill 1"
+    assert result.items[1].name == "test-skill-2"
+    assert result.items[1].description == "Test skill 2"
+    # Verify pagination information (mock data indicates no more pages)
+    assert result.next_cursor is None
+    assert result.has_more is False
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_skills_get_file_hits_id_endpoint(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "path": "scripts/main.py",
+        "mime": "text/x-python",
+        "content": {"type": "code", "raw": "print('Hello, World!')"},
+    }
+
+    result = await async_client.skills.get_file(
+        skill_id="skill-1",
+        file_path="scripts/main.py",
+        expire=1800,
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/agent_skills/skill-1/file"
+    assert kwargs["params"]["file_path"] == "scripts/main.py"
+    assert kwargs["params"]["expire"] == 1800
+    assert result.path == "scripts/main.py"
+    assert result.mime == "text/x-python"
+    assert result.content is not None
+    assert result.content.raw == "print('Hello, World!')"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_users_list_without_filters(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "items": [
+            {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "project_id": "123e4567-e89b-12d3-a456-426614174001",
+                "identifier": "alice@acontext.io",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            },
+            {
+                "id": "223e4567-e89b-12d3-a456-426614174000",
+                "project_id": "123e4567-e89b-12d3-a456-426614174001",
+                "identifier": "bob@acontext.io",
+                "created_at": "2024-01-02T00:00:00Z",
+                "updated_at": "2024-01-02T00:00:00Z",
+            },
+        ],
+        "has_more": False,
+    }
+
+    result = await async_client.users.list()
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/user/ls"
+    assert kwargs["params"] is None
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "items")
+    assert hasattr(result, "has_more")
+    assert len(result.items) == 2
+    assert result.items[0].identifier == "alice@acontext.io"
+    assert result.items[1].identifier == "bob@acontext.io"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_users_list_with_filters(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "items": [
+            {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "project_id": "123e4567-e89b-12d3-a456-426614174001",
+                "identifier": "alice@acontext.io",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            },
+        ],
+        "next_cursor": "cursor-123",
+        "has_more": True,
+    }
+
+    result = await async_client.users.list(
+        limit=10, cursor="cursor-456", time_desc=True
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/user/ls"
+    assert kwargs["params"] == {
+        "limit": 10,
+        "cursor": "cursor-456",
+        "time_desc": "true",
+    }
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "items")
+    assert hasattr(result, "has_more")
+    assert hasattr(result, "next_cursor")
+    assert len(result.items) == 1
+    assert result.items[0].identifier == "alice@acontext.io"
+    assert result.next_cursor == "cursor-123"
+    assert result.has_more is True
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_users_get_resources(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "counts": {
+            "sessions_count": 10,
+            "disks_count": 3,
+            "skills_count": 2,
+        }
+    }
+
+    result = await async_client.users.get_resources("alice@acontext.io")
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/user/alice%40acontext.io/resources"
+    # Verify it returns a Pydantic model
+    assert hasattr(result, "counts")
+    assert result.counts.sessions_count == 10
+    assert result.counts.disks_count == 3
+    assert result.counts.skills_count == 2
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_users_delete(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = None
+
+    await async_client.users.delete("alice@acontext.io")
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "DELETE"
+    assert path == "/user/alice%40acontext.io"
+
+
+# ===== Sandbox API Tests =====
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sandboxes_create(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "sandbox_id": "sandbox-123",
+        "sandbox_status": "running",
+        "sandbox_created_at": "2024-01-01T00:00:00Z",
+        "sandbox_expires_at": "2024-01-01T01:00:00Z",
+    }
+
+    result = await async_client.sandboxes.create()
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/sandbox"
+    # Verify it returns a Pydantic model with correct fields
+    assert hasattr(result, "sandbox_id")
+    assert hasattr(result, "sandbox_status")
+    assert hasattr(result, "sandbox_created_at")
+    assert hasattr(result, "sandbox_expires_at")
+    assert result.sandbox_id == "sandbox-123"
+    assert result.sandbox_status == "running"
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sandboxes_exec_command(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "stdout": "Hello, World!",
+        "stderr": "",
+        "exit_code": 0,
+    }
+
+    result = await async_client.sandboxes.exec_command(
+        sandbox_id="sandbox-123",
+        command="echo 'Hello, World!'",
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/sandbox/sandbox-123/exec"
+    assert kwargs["json_data"] == {"command": "echo 'Hello, World!'"}
+    # Verify it returns a Pydantic model with correct fields
+    assert hasattr(result, "stdout")
+    assert hasattr(result, "stderr")
+    assert hasattr(result, "exit_code")
+    assert result.stdout == "Hello, World!"
+    assert result.stderr == ""
+    assert result.exit_code == 0
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sandboxes_exec_command_with_error(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "stdout": "",
+        "stderr": "command not found: invalid_cmd",
+        "exit_code": 127,
+    }
+
+    result = await async_client.sandboxes.exec_command(
+        sandbox_id="sandbox-123",
+        command="invalid_cmd",
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/sandbox/sandbox-123/exec"
+    assert kwargs["json_data"] == {"command": "invalid_cmd"}
+    assert result.stdout == ""
+    assert result.stderr == "command not found: invalid_cmd"
+    assert result.exit_code == 127
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sandboxes_kill(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "status": 0,
+        "errmsg": "",
+    }
+
+    result = await async_client.sandboxes.kill("sandbox-123")
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "DELETE"
+    assert path == "/sandbox/sandbox-123"
+    # Verify it returns a FlagResponse
+    assert hasattr(result, "status")
+    assert hasattr(result, "errmsg")
+    assert result.status == 0
+    assert result.errmsg == ""
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_sandboxes_kill_with_error(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    mock_request.return_value = {
+        "status": 1,
+        "errmsg": "sandbox not found",
+    }
+
+    result = await async_client.sandboxes.kill("nonexistent-sandbox")
+
+    mock_request.assert_called_once()
+    args, _ = mock_request.call_args
+    method, path = args
+    assert method == "DELETE"
+    assert path == "/sandbox/nonexistent-sandbox"
+    assert result.status == 1
+    assert result.errmsg == "sandbox not found"
+
+
+# ===== Message Meta Tests =====
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_with_meta_parameter(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that meta parameter is sent in request body."""
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {"source": "web", "request_id": "abc123"},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    msg = await async_client.sessions.store_message(
+        "session-id",
+        blob={"role": "user", "content": "Hello"},
+        format="openai",
+        meta={"source": "web", "request_id": "abc123"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session/session-id/messages"
+    assert "json_data" in kwargs
+    assert kwargs["json_data"]["meta"] == {"source": "web", "request_id": "abc123"}
+    assert msg.meta == {"source": "web", "request_id": "abc123"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_store_message_without_meta_parameter(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that meta is not sent when not provided."""
+    mock_request.return_value = {
+        "id": "msg-id",
+        "session_id": "session-id",
+        "role": "user",
+        "meta": {},
+        "parts": [],
+        "session_task_process_status": "pending",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    msg = await async_client.sessions.store_message(
+        "session-id",
+        blob={"role": "user", "content": "Hello"},
+        format="openai",
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    assert "meta" not in kwargs["json_data"]
+    assert msg.meta == {}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_get_messages_returns_metas(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that get_messages returns metas array."""
+    mock_request.return_value = {
+        "items": [
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there"},
+        ],
+        "ids": ["msg-1", "msg-2"],
+        "metas": [
+            {"source": "web"},
+            {"model": "gpt-4"},
+        ],
+        "has_more": False,
+        "this_time_tokens": 50,
+    }
+
+    result = await async_client.sessions.get_messages("session-id", format="openai")
+
+    mock_request.assert_called_once()
+    assert hasattr(result, "metas")
+    assert len(result.metas) == 2
+    assert result.metas[0] == {"source": "web"}
+    assert result.metas[1] == {"model": "gpt-4"}
+    # Verify order matches items/ids
+    assert len(result.metas) == len(result.items) == len(result.ids)
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_get_messages_empty_metas(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test that get_messages handles empty metas (backward compatibility)."""
+    mock_request.return_value = {
+        "items": [{"role": "user", "content": "Hello"}],
+        "ids": ["msg-1"],
+        "metas": [{}],  # Empty meta for message without user meta
+        "has_more": False,
+        "this_time_tokens": 10,
+    }
+
+    result = await async_client.sessions.get_messages("session-id", format="openai")
+
+    assert len(result.metas) == 1
+    assert result.metas[0] == {}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_get_messages_missing_metas_field(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test backward compatibility when metas field is missing."""
+    mock_request.return_value = {
+        "items": [{"role": "user", "content": "Hello"}],
+        "ids": ["msg-1"],
+        # No metas field - backward compatibility with old API
+        "has_more": False,
+        "this_time_tokens": 10,
+    }
+
+    result = await async_client.sessions.get_messages("session-id", format="openai")
+
+    # Should default to empty list
+    assert hasattr(result, "metas")
+    assert result.metas == []
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_message_meta_adds_new_keys(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_message_meta adds new keys."""
+    mock_request.return_value = {
+        "meta": {"existing": "value", "new_key": "new_value"},
+    }
+
+    result = await async_client.sessions.patch_message_meta(
+        "session-id",
+        "message-id",
+        meta={"new_key": "new_value"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "PATCH"
+    assert path == "/session/session-id/messages/message-id/meta"
+    assert kwargs["json_data"] == {"meta": {"new_key": "new_value"}}
+    assert result == {"existing": "value", "new_key": "new_value"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_message_meta_updates_existing_keys(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_message_meta updates existing keys."""
+    mock_request.return_value = {
+        "meta": {"key": "updated_value", "other": "preserved"},
+    }
+
+    result = await async_client.sessions.patch_message_meta(
+        "session-id",
+        "message-id",
+        meta={"key": "updated_value"},
+    )
+
+    mock_request.assert_called_once()
+    assert result == {"key": "updated_value", "other": "preserved"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_message_meta_deletes_keys_with_none(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_message_meta deletes keys when value is None."""
+    mock_request.return_value = {
+        "meta": {"remaining": "value"},  # "deleted_key" was removed
+    }
+
+    result = await async_client.sessions.patch_message_meta(
+        "session-id",
+        "message-id",
+        meta={"deleted_key": None},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    assert kwargs["json_data"] == {"meta": {"deleted_key": None}}
+    assert "deleted_key" not in result
+    assert result == {"remaining": "value"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_configs_adds_new_keys(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_configs adds new keys."""
+    mock_request.return_value = {
+        "configs": {"existing": "value", "new_key": "new_value"},
+    }
+
+    result = await async_client.sessions.patch_configs(
+        "session-id",
+        configs={"new_key": "new_value"},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "PATCH"
+    assert path == "/session/session-id/configs"
+    assert kwargs["json_data"] == {"configs": {"new_key": "new_value"}}
+    assert result == {"existing": "value", "new_key": "new_value"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_configs_updates_existing_keys(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_configs updates existing keys."""
+    mock_request.return_value = {
+        "configs": {"key": "updated_value", "other": "preserved"},
+    }
+
+    result = await async_client.sessions.patch_configs(
+        "session-id",
+        configs={"key": "updated_value"},
+    )
+
+    mock_request.assert_called_once()
+    assert result == {"key": "updated_value", "other": "preserved"}
+
+
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+@pytest.mark.asyncio
+async def test_async_patch_configs_deletes_keys_with_none(
+    mock_request, async_client: AcontextAsyncClient
+) -> None:
+    """Test patch_configs deletes keys when value is None."""
+    mock_request.return_value = {
+        "configs": {"remaining": "value"},  # "deleted_key" was removed
+    }
+
+    result = await async_client.sessions.patch_configs(
+        "session-id",
+        configs={"deleted_key": None},
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    assert kwargs["json_data"] == {"configs": {"deleted_key": None}}
+    assert "deleted_key" not in result
+    assert result == {"remaining": "value"}
+
+
+# ===== Async Session Event Tests =====
+
+
+MOCK_SESSION_EVENT = {
+    "id": "event-uuid-1",
+    "session_id": "session-uuid",
+    "project_id": "project-uuid",
+    "type": "disk_event",
+    "data": {"disk_id": "disk-uuid", "path": "/data/report.csv", "note": "Uploaded"},
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z",
+}
+
+
+@pytest.mark.asyncio
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+async def test_async_add_event_disk_event(mock_request, async_client) -> None:
+    """Test async add_event with DiskEvent."""
+    from acontext.event import DiskEvent
+
+    mock_request.return_value = MOCK_SESSION_EVENT
+
+    event = await async_client.sessions.add_event(
+        "session-uuid",
+        DiskEvent(disk_id="disk-uuid", path="/data/report.csv", note="Uploaded"),
+    )
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "POST"
+    assert path == "/session/session-uuid/events"
+    assert kwargs["json_data"]["type"] == "disk_event"
+    assert event.id == "event-uuid-1"
+
+
+@pytest.mark.asyncio
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+async def test_async_add_event_text_event(mock_request, async_client) -> None:
+    """Test async add_event with TextEvent."""
+    from acontext.event import TextEvent
+
+    mock_request.return_value = {
+        "id": "event-uuid-2",
+        "session_id": "session-uuid",
+        "project_id": "project-uuid",
+        "type": "text_event",
+        "data": {"text": "User switched to dark mode"},
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z",
+    }
+
+    event = await async_client.sessions.add_event(
+        "session-uuid",
+        TextEvent(text="User switched to dark mode"),
+    )
+
+    mock_request.assert_called_once()
+    assert event.type == "text_event"
+
+
+@pytest.mark.asyncio
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+async def test_async_get_events_with_pagination(mock_request, async_client) -> None:
+    """Test async get_events with pagination."""
+    mock_request.return_value = {
+        "items": [MOCK_SESSION_EVENT],
+        "next_cursor": "cursor-abc",
+        "has_more": True,
+    }
+
+    result = await async_client.sessions.get_events("session-uuid", limit=1)
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    method, path = args
+    assert method == "GET"
+    assert path == "/session/session-uuid/events"
+    assert len(result.items) == 1
+    assert result.has_more is True
+
+
+@pytest.mark.asyncio
+@patch("acontext.async_client.AcontextAsyncClient.request", new_callable=AsyncMock)
+async def test_async_get_messages_with_events(mock_request, async_client) -> None:
+    """Test async get_messages with with_events=True."""
+    mock_request.return_value = {
+        "items": [{"role": "user", "content": "Hello"}],
+        "ids": ["msg-1"],
+        "metas": [{}],
+        "events": [MOCK_SESSION_EVENT],
+        "has_more": False,
+        "this_time_tokens": 10,
+    }
+
+    result = await async_client.sessions.get_messages("session-uuid", with_events=True)
+
+    mock_request.assert_called_once()
+    args, kwargs = mock_request.call_args
+    assert kwargs["params"]["with_events"] == "true"
+    assert result.events is not None
+    assert len(result.events) == 1

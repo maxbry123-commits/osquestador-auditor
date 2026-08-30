@@ -1,0 +1,22 @@
+pull_request_rules:
+  - name: Automatic merge on approval
+    conditions:
+      - "#approved-reviews-by>=1"
+      - label!=do-not-merge
+      - base=main
+    actions:
+      queue:
+        name: main
+queue_rules:
+  - name: main
+    merge_method: squash
+    commit_message_template: |-
+      {{ title }} (#{{ number }})
+
+      {{ body }}
+
+      Approved by: @{{ approved_reviews_by | join(', @') }}
+    checks_timeout: 1 h
+    autoqueue: true
+merge_queue:
+  max_parallel_checks: 1

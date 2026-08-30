@@ -1,0 +1,43 @@
+name: Python SDK Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Read version from pyproject.toml
+        run: |
+          VERSION=$(grep '^version = ' sdk/python/pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Version: $VERSION"
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build wheel and sdist
+        working-directory: sdk/python
+        run: python -m build
+
+      - name: Validate package metadata (PyPI compatibility check)
+        run: twine check sdk/python/dist/*
+
+      - name: Run unit tests
+        working-directory: sdk/python
+        run: |
+          pip install -e ".[dev]"
+          python -m pytest tests/unit/ -v
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist/
+          password: ${{ secrets.PYPI_API_TOKEN }}

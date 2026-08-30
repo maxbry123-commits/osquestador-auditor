@@ -1,0 +1,51 @@
+# Data
+data/
+!**/tests/data/
+
+# Benchmark outputs
+benchmark-result*.json
+benchmark-*.html
+
+# Environment
+.env
+scripts/.env
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Kiro local settings
+.kiro/settings/mcp.json
+
+# Claude
+.claude
+.mcp.json
+CLAUDE.md
+
+# Rust
+memoria/target/
+memoria/.env
+memoria/Dockerfile.prebuilt
+
+# Python (legacy)
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+scripts/migrate_embedding_dim.sh
+
+# Plugin dev keys
+dev-signing-key.b64
+.npmrc
+nohup.out
+sdk/python/.venv/
+sdk/python/uv.lock
+.DS_Store
+memoria/.DS_Store

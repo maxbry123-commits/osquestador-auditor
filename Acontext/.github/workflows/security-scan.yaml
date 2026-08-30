@@ -1,0 +1,50 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'src/server/api/go/go.mod'
+      - 'src/server/api/go/go.sum'
+      - 'src/client/acontext-cli/go.mod'
+      - 'src/client/acontext-cli/go.sum'
+      - 'src/server/core/pyproject.toml'
+      - 'src/server/core/uv.lock'
+      - 'src/client/acontext-py/pyproject.toml'
+      - 'src/client/acontext-py/uv.lock'
+      - 'src/client/acontext-ts/package.json'
+      - 'src/client/acontext-ts/package-lock.json'
+      - 'src/server/ui/package.json'
+      - 'src/server/ui/pnpm-lock.yaml'
+      - 'landingpage/package.json'
+      - 'landingpage/pnpm-lock.yaml'
+      - '.github/workflows/security-scan.yaml'
+      - '.github/workflows/security-reusable.yaml'
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'src/server/api/go/go.mod'
+      - 'src/server/api/go/go.sum'
+      - 'src/client/acontext-cli/go.mod'
+      - 'src/client/acontext-cli/go.sum'
+      - 'src/server/core/pyproject.toml'
+      - 'src/server/core/uv.lock'
+      - 'src/client/acontext-py/pyproject.toml'
+      - 'src/client/acontext-py/uv.lock'
+      - 'src/client/acontext-ts/package.json'
+      - 'src/client/acontext-ts/package-lock.json'
+      - 'src/server/ui/package.json'
+      - 'src/server/ui/pnpm-lock.yaml'
+      - 'landingpage/package.json'
+      - 'landingpage/pnpm-lock.yaml'
+      - '.github/workflows/security-scan.yaml'
+      - '.github/workflows/security-reusable.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    uses: ./.github/workflows/security-reusable.yaml

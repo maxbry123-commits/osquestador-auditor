@@ -1,0 +1,28 @@
+{
+  "name": "sessions",
+  "description": "Skills for summarizing and recalling AI coding sessions across Claude Code, Codex, Pi, and OpenCode.",
+  "version": "1.29.1",
+  "author": {
+    "name": "Nick Nisi",
+    "email": "nick@nisi.org"
+  },
+  "homepage": "https://github.com/nicknisi/sessions",
+  "repository": "https://github.com/nicknisi/sessions",
+  "license": "MIT",
+  "keywords": [
+    "sessions",
+    "context",
+    "weekly-summary",
+    "standup",
+    "recall",
+    "metrics",
+    "activity",
+    "digest"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Sessions",
+    "shortDescription": "Summarize and recall AI coding sessions",
+    "category": "Productivity"
+  }
+}

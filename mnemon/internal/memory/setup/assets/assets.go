@@ -1,0 +1,191 @@
+package assets
+
+import "embed"
+
+//go:embed claude/user_prompt.sh
+var ClaudeUserPromptHook []byte
+
+//go:embed claude/stop.sh
+var ClaudeStopHook []byte
+
+//go:embed claude/prime.sh
+var ClaudePrimeHook []byte
+
+//go:embed claude/compact.sh
+var ClaudeCompactHook []byte
+
+//go:embed claude/SKILL.md
+var ClaudeSkill []byte
+
+//go:embed claude/guide.md
+var ClaudeGuide []byte
+
+//go:embed codex/SKILL.md
+var CodexSkill []byte
+
+//go:embed codex/prime.sh
+var CodexPrimeHook []byte
+
+//go:embed codex/user_prompt.sh
+var CodexUserPromptHook []byte
+
+//go:embed codex/stop.sh
+var CodexStopHook []byte
+
+//go:embed cursor/SKILL.md
+var CursorSkill []byte
+
+//go:embed cursor/prime.sh
+var CursorPrimeHook []byte
+
+//go:embed cursor/stop.sh
+var CursorStopHook []byte
+
+//go:embed cursor/compact.sh
+var CursorCompactHook []byte
+
+//go:embed zcode/SKILL.md
+var ZCodeSkill []byte
+
+//go:embed zcode/prime.sh
+var ZCodePrimeHook []byte
+
+//go:embed zcode/user_prompt.sh
+var ZCodeUserPromptHook []byte
+
+//go:embed zcode/stop.sh
+var ZCodeStopHook []byte
+
+//go:embed zcode/prime.ps1
+var ZCodePrimeHookPowerShell []byte
+
+//go:embed zcode/user_prompt.ps1
+var ZCodeUserPromptHookPowerShell []byte
+
+//go:embed zcode/stop.ps1
+var ZCodeStopHookPowerShell []byte
+
+//go:embed minimax/SKILL.md
+var MiniMaxCodeSkill []byte
+
+//go:embed trae/SKILL.md
+var TraeSkill []byte
+
+//go:embed trae/prime.sh
+var TraePrimeHook []byte
+
+//go:embed trae/user_prompt.sh
+var TraeUserPromptHook []byte
+
+//go:embed trae/stop.sh
+var TraeStopHook []byte
+
+//go:embed qoder/SKILL.md
+var QoderSkill []byte
+
+//go:embed qoderwork/SKILL.md
+var QoderWorkSkill []byte
+
+//go:embed qoder/prime.sh
+var QoderPrimeHook []byte
+
+//go:embed qoder/user_prompt.sh
+var QoderUserPromptHook []byte
+
+//go:embed qoder/stop.sh
+var QoderStopHook []byte
+
+//go:embed codebuddy/SKILL.md
+var CodeBuddySkill []byte
+
+//go:embed codebuddy/prime.sh
+var CodeBuddyPrimeHook []byte
+
+//go:embed codebuddy/user_prompt.sh
+var CodeBuddyUserPromptHook []byte
+
+//go:embed codebuddy/stop.sh
+var CodeBuddyStopHook []byte
+
+//go:embed workbuddy/SKILL.md
+var WorkBuddySkill []byte
+
+//go:embed workbuddy/prime.sh
+var WorkBuddyPrimeHook []byte
+
+//go:embed workbuddy/user_prompt.sh
+var WorkBuddyUserPromptHook []byte
+
+//go:embed workbuddy/stop.sh
+var WorkBuddyStopHook []byte
+
+//go:embed kimi/SKILL.md
+var KimiSkill []byte
+
+//go:embed kimi/prime.sh
+var KimiPrimeHook []byte
+
+//go:embed kimi/user_prompt.sh
+var KimiUserPromptHook []byte
+
+//go:embed kimi/stop.sh
+var KimiStopHook []byte
+
+//go:embed opencode/SKILL.md
+var OpenCodeSkill []byte
+
+//go:embed opencode/mnemon.js
+var OpenCodePlugin []byte
+
+//go:embed openclaw/SKILL.md
+var OpenClawSkill []byte
+
+//go:embed openclaw/hooks/mnemon-prime/HOOK.md
+var OpenClawHookMD []byte
+
+//go:embed openclaw/hooks/mnemon-prime/handler.js
+var OpenClawHookHandler []byte
+
+//go:embed openclaw/plugin/package.json
+var OpenClawPluginPackage []byte
+
+//go:embed openclaw/plugin/openclaw.plugin.json
+var OpenClawPluginManifest []byte
+
+//go:embed openclaw/plugin/index.js
+var OpenClawPluginIndex []byte
+
+//go:embed nanoclaw/SKILL.md
+var NanoClawSkill []byte
+
+//go:embed nanoclaw/container-skill.md
+var NanoClawContainerSkill []byte
+
+//go:embed nanobot/SKILL.md
+var NanobotSkill []byte
+
+//go:embed pi/SKILL.md
+var PiSkill []byte
+
+//go:embed pi/mnemon.ts
+var PiExtension []byte
+
+//go:embed hermes/SKILL.md
+var HermesSkill []byte
+
+//go:embed hermes/prime.sh
+var HermesPrimeHook []byte
+
+//go:embed hermes/remind.sh
+var HermesRemindHook []byte
+
+//go:embed hermes/nudge.sh
+var HermesNudgeHook []byte
+
+//go:embed hermes/compact.sh
+var HermesCompactHook []byte
+
+// All returns the embedded filesystem for inspection.
+//
+//go:embed claude codex cursor zcode minimax trae qoder qoderwork codebuddy workbuddy kimi opencode openclaw nanoclaw nanobot pi hermes
+var All embed.FS

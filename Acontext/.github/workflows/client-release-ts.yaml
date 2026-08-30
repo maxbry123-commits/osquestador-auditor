@@ -1,0 +1,122 @@
+name: TypeScript Client Release
+
+on:
+  push:
+    tags:
+      - 'sdk-ts/v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: src/client/acontext-ts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: src/client/acontext-ts/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          # Install peer dependencies for Node.js environment
+          npm install --no-save node-fetch@^3.3.2 form-data@^4.0.0 || true
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Start containers
+        working-directory: src/server
+        run: |
+          cp .env.example .env
+          cp core/config.yaml.example core/config.yaml
+
+          if ! docker compose up -d --wait --quiet-pull acontext-server-pg acontext-server-redis acontext-server-rabbitmq acontext-server-seaweedfs acontext-server-seaweedfs-setup acontext-server-core acontext-server-api 2>&1; then
+            echo "❌ Docker compose failed to start, showing logs:"
+            docker compose logs
+            exit 1
+          fi
+          echo "✅ All containers started successfully"
+
+      - name: Run tests
+        run: npm test
+        env:
+          CI: true
+          ACONTEXT_API_KEY: sk-ac-your-root-api-bearer-token
+          ACONTEXT_BASE_URL: http://localhost:8029/api/v1
+
+      - name: Extract version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version exists
+        id: check_version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if npm view "@acontext/acontext@$VERSION" version > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version $VERSION already exists on npm"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Version $VERSION does not exist on npm"
+          fi
+
+      - name: Publish to npm
+        if: steps.check_version.outputs.exists == 'false'
+        # Auth via OIDC trusted publishers (id-token: write) — do NOT set NODE_AUTH_TOKEN
+        run: npx npm@latest publish --access public --provenance
+
+      - name: Stop containers
+        working-directory: src/server
+        if: ${{ always() }}
+        run: |
+          docker compose down
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: publish
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/sdk-ts/v}
+          echo "version=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Changelog
+        run: |
+          bash .github/scripts/generate-changelog.sh \
+            --tag-prefix "sdk-ts/v" \
+            --source-dir "src/client/acontext-ts" \
+            --display-name "TypeScript SDK" \
+            --output "${{ github.workspace }}-CHANGELOG.txt" \
+            --footer "Published to npm as @acontext/acontext@${{ steps.version.outputs.version }}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt

@@ -1,0 +1,1016 @@
+//! Remote mode: proxy all MCP tool calls to a Memoria REST API server.
+//! Mirrors Python's HTTPBackend.
+
+use crate::purge_args::parse_memory_purge_args;
+use anyhow::Result;
+use reqwest::Client;
+use serde_json::{json, Value};
+
+pub struct RemoteClient {
+    client: Client,
+    base_url: String,
+    #[allow(dead_code)]
+    user_id: String,
+}
+
+impl RemoteClient {
+    pub fn new(api_url: &str, token: Option<&str>, user_id: String, tool: Option<&str>) -> Self {
+        let mut headers = reqwest::header::HeaderMap::new();
+        if let Some(t) = token {
+            if let Ok(v) = reqwest::header::HeaderValue::from_str(&format!("Bearer {t}")) {
+                headers.insert(reqwest::header::AUTHORIZATION, v);
+            }
+        }
+        // Set X-User-Id header
+        if let Ok(v) = reqwest::header::HeaderValue::from_str(&user_id) {
+            headers.insert("X-User-Id", v);
+        }
+        // Set X-Memoria-Tool header (kiro / cursor / claude / codex)
+        if let Some(t) = tool {
+            if let Ok(v) = reqwest::header::HeaderValue::from_str(t) {
+                headers.insert("X-Memoria-Tool", v);
+            }
+        }
+        let client = Client::builder()
+            .default_headers(headers)
+            .no_proxy()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .expect("http client");
+        Self {
+            client,
+            base_url: api_url.trim_end_matches('/').to_string(),
+            user_id,
+        }
+    }
+
+    fn url(&self, path: &str) -> String {
+        format!("{}{}", self.base_url, path)
+    }
+
+    fn mcp_text(text: &str) -> Value {
+        json!({"content": [{"type": "text", "text": text}]})
+    }
+
+    fn mcp_json(v: &Value) -> Value {
+        Self::mcp_text(&serde_json::to_string_pretty(v).unwrap_or_default())
+    }
+
+    fn expect_tool_args<'a>(
+        args: &'a Value,
+        tool: &str,
+        allowed: &[&str],
+    ) -> Result<&'a serde_json::Map<String, Value>> {
+        let map = args
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!("Invalid {tool} arguments: expected object"))?;
+        for key in map.keys() {
+            if !allowed.iter().any(|allowed_key| allowed_key == key) {
+                anyhow::bail!("Invalid {tool} argument '{key}': unknown field");
+            }
+        }
+        Ok(map)
+    }
+
+    fn required_string_arg(args: &Value, tool: &str, field: &str) -> Result<String> {
+        args.get(field)
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+            .ok_or_else(|| anyhow::anyhow!("Invalid {tool} '{field}': expected non-empty string"))
+    }
+
+    fn optional_i64_arg(args: &Value, tool: &str, field: &str, default: i64) -> Result<i64> {
+        match args.get(field) {
+            None => Ok(default),
+            Some(value) => value
+                .as_i64()
+                .ok_or_else(|| anyhow::anyhow!("Invalid {tool} '{field}': expected integer")),
+        }
+    }
+
+    fn json_array_arg(args: &Value, field: &str) -> Result<Value> {
+        match args.get(field) {
+            None => Ok(Value::Array(Vec::new())),
+            Some(Value::Array(values)) => Ok(Value::Array(values.clone())),
+            Some(other) => anyhow::bail!(
+                "Invalid memory_apply '{field}': expected array, got {}",
+                other
+            ),
+        }
+    }
+
+    #[allow(dead_code)]
+    fn mcp_err(e: impl std::fmt::Display) -> Value {
+        Self::mcp_text(&format!("Error: {e}"))
+    }
+
+    async fn parse_response(r: reqwest::Response) -> Result<Value> {
+        let status = r.status();
+        if status.is_success() {
+            return Ok(r.json().await?);
+        }
+        let body = r.text().await.unwrap_or_default();
+        let msg = if body.is_empty() {
+            status.to_string()
+        } else {
+            body
+        };
+        anyhow::bail!("API error {status}: {msg}")
+    }
+
+    pub async fn call(&self, name: &str, args: Value) -> Result<Value> {
+        // remote 模式直接拼 REST payload，会绕过 embedded handler 的必填校验；这里前置调用
+        // 与 embedded 共享的校验。失败返回**软** tool result 文本（error=null），与 embedded
+        // 契约一致（不再转成 JSON-RPC -32000）。
+        if let Err(e) = crate::tools::validate_tool_args(name, &args) {
+            return Ok(Self::mcp_text(e));
+        }
+        match name {
+            "memory_store" => {
+                let mut payload = json!({
+                    "content": args["content"],
+                    "memory_type": args["memory_type"].as_str().unwrap_or("semantic"),
+                    "session_id": args["session_id"],
+                    "trust_tier": args["trust_tier"],
+                    "branch": args["branch"],
+                });
+                if let Some(sid) = args
+                    .get("subject_id")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                {
+                    payload["subject_id"] = json!(sid);
+                }
+                if args.get("extra_metadata").map(Value::is_object).unwrap_or(false) {
+                    payload["extra_metadata"] = args["extra_metadata"].clone();
+                }
+                let r = self
+                    .client
+                    .post(self.url("/v1/memories"))
+                    .json(&payload)
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Stored memory {}: {}",
+                    body["memory_id"].as_str().unwrap_or(""),
+                    body["content"].as_str().unwrap_or("")
+                )))
+            }
+
+            "memory_retrieve" | "memory_search" => {
+                let path = if name == "memory_search" {
+                    "/v1/memories/search"
+                } else {
+                    "/v1/memories/retrieve"
+                };
+                let mut payload = json!({
+                    "query": args["query"],
+                    "top_k": if name == "memory_search" {
+                        args["top_k"].as_i64().unwrap_or(10)
+                    } else {
+                        args["top_k"].as_i64().unwrap_or(5)
+                    },
+                    "session_id": args["session_id"],
+                    "branch": args["branch"],
+                });
+                if let Some(session_scope) = args
+                    .get("session_scope")
+                    .and_then(serde_json::Value::as_str)
+                {
+                    payload["session_scope"] = json!(session_scope);
+                }
+                if let Some(subject_id) = args
+                    .get("subject_id")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                {
+                    payload["subject_id"] = json!(subject_id);
+                }
+                if let Some(memory_types) = args.get("memory_types").and_then(|v| v.as_array()) {
+                    if !memory_types.is_empty() {
+                        payload["memory_types"] = json!(memory_types);
+                    }
+                }
+                let r = self
+                    .client
+                    .post(self.url(path))
+                    .json(&payload)
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                let mems = body.as_array().cloned().unwrap_or_default();
+                if mems.is_empty() {
+                    return Ok(Self::mcp_text("No relevant memories found."));
+                }
+                let text = mems
+                    .iter()
+                    .map(|m| {
+                        let meta = m
+                            .get("extra_metadata")
+                            .filter(|v| v.is_object())
+                            .map(|v| format!(" | metadata: {v}"))
+                            .unwrap_or_default();
+                        format!(
+                            "[{}] ({}) {}{}",
+                            m["memory_id"].as_str().unwrap_or(""),
+                            m["memory_type"].as_str().unwrap_or(""),
+                            m["content"].as_str().unwrap_or(""),
+                            meta
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                Ok(Self::mcp_text(&text))
+            }
+
+            "memory_correct" => {
+                let new_content = args["new_content"].as_str().unwrap_or("");
+                let memory_id = args["memory_id"].as_str().unwrap_or("");
+                let query = args["query"].as_str().unwrap_or("");
+                let r = if !memory_id.is_empty() {
+                    self.client
+                        .put(self.url(&format!("/v1/memories/{memory_id}/correct")))
+                        .json(&json!({
+                            "new_content": new_content,
+                            "reason": args["reason"],
+                            "branch": args["branch"]
+                        }))
+                        .send()
+                        .await?
+                } else {
+                    let mut correct_payload = json!({
+                        "query": query,
+                        "new_content": new_content,
+                        "session_id": args["session_id"],
+                        "session_scope": args["session_scope"],
+                        "reason": args["reason"],
+                        "branch": args["branch"]
+                    });
+                    if let Some(sid) = args
+                        .get("subject_id")
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                    {
+                        correct_payload["subject_id"] = json!(sid);
+                    }
+                    if let Some(memory_types) =
+                        args.get("memory_types").and_then(|v| v.as_array())
+                    {
+                        if !memory_types.is_empty() {
+                            correct_payload["memory_types"] = json!(memory_types);
+                        }
+                    }
+                    self.client
+                        .post(self.url("/v1/memories/correct"))
+                        .json(&correct_payload)
+                        .send()
+                        .await?
+                };
+                let body = Self::parse_response(r).await?;
+                if let Some(_err) = body.get("error") {
+                    return Ok(Self::mcp_text(&format!(
+                        "No matching memory found for query '{query}'"
+                    )));
+                }
+                Ok(Self::mcp_text(&format!(
+                    "Corrected memory {}: {}",
+                    body["memory_id"].as_str().unwrap_or(""),
+                    body["content"].as_str().unwrap_or("")
+                )))
+            }
+
+            "memory_purge" => {
+                let purge_args = parse_memory_purge_args(&args)?;
+                if let Some(memory_id) = purge_args.memory_id {
+                    let ids: Vec<&str> = memory_id
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .collect();
+                    let count = ids.len();
+                    let r = self
+                        .client
+                        .post(self.url("/v1/memories/purge"))
+                        .json(&json!({"memory_ids": ids, "branch": purge_args.branch}))
+                        .send()
+                        .await?;
+                    let body = Self::parse_response(r).await?;
+                    Ok(Self::mcp_text(&format!(
+                        "Purged {} memory(s)",
+                        body["purged"].as_i64().unwrap_or(count as i64)
+                    )))
+                } else if let Some(topic) = purge_args.topic {
+                    let r = self
+                        .client
+                        .post(self.url("/v1/memories/purge"))
+                        .json(&json!({"topic": topic, "branch": purge_args.branch}))
+                        .send()
+                        .await?;
+                    let body = Self::parse_response(r).await?;
+                    Ok(Self::mcp_text(&format!(
+                        "Purged {} memory(s) matching '{topic}'",
+                        body["purged"].as_i64().unwrap_or(0)
+                    )))
+                } else if let Some(session_id) = purge_args.session_id {
+                    let r = self
+                        .client
+                        .post(self.url("/v1/memories/purge"))
+                        .json(&json!({
+                            "session_id": session_id,
+                            "memory_types": purge_args.memory_types.map(|memory_types| {
+                                memory_types
+                                    .into_iter()
+                                    .map(|memory_type| memory_type.to_string())
+                                    .collect::<Vec<_>>()
+                            }),
+                            "branch": purge_args.branch,
+                        }))
+                        .send()
+                        .await?;
+                    let body = Self::parse_response(r).await?;
+                    Ok(Self::mcp_text(&format!(
+                        "Purged {} memory(s) for session '{}'",
+                        body["purged"].as_i64().unwrap_or(0),
+                        session_id
+                    )))
+                } else {
+                    Ok(Self::mcp_text("Provide memory_id, topic, or session_id"))
+                }
+            }
+
+            "memory_profile" => {
+                let subject_id = args
+                    .get("subject_id")
+                    .and_then(|v| v.as_str())
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty());
+                let branch = args
+                    .get("branch")
+                    .and_then(|v| v.as_str())
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty());
+                let mut req = self.client.get(self.url("/v1/profiles/me"));
+                if let Some(sid) = subject_id {
+                    req = req.query(&[("subject_id", sid)]);
+                }
+                if let Some(b) = branch {
+                    req = req.query(&[("branch", b)]);
+                }
+                let r = req.send().await?;
+                let body = Self::parse_response(r).await?;
+                let profile = body["profile"].as_str().unwrap_or("");
+                if profile.is_empty() {
+                    Ok(Self::mcp_text("No profile memories found."))
+                } else {
+                    Ok(Self::mcp_text(profile))
+                }
+            }
+
+            "memory_list" => {
+                let limit = args["limit"].as_i64().unwrap_or(20);
+                let memory_type = args.get("memory_type").and_then(Value::as_str);
+                let session_id = args.get("session_id").and_then(Value::as_str);
+                let subject_id = args
+                    .get("subject_id")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty());
+                let mut req = self
+                    .client
+                    .get(self.url("/v1/memories"))
+                    .query(&[("limit", limit)]);
+                if let Some(memory_type) = memory_type {
+                    req = req.query(&[("memory_type", memory_type)]);
+                }
+                if let Some(session_id) = session_id {
+                    req = req.query(&[("session_id", session_id)]);
+                }
+                if let Some(subject_id) = subject_id {
+                    req = req.query(&[("subject_id", subject_id)]);
+                }
+                if let Some(branch) = args.get("branch").and_then(Value::as_str) {
+                    req = req.query(&[("branch", branch)]);
+                }
+                let body = Self::parse_response(req.send().await?).await?;
+                let items = body["items"].as_array().cloned().unwrap_or_default();
+                if items.is_empty() {
+                    return Ok(Self::mcp_text("No memories found."));
+                }
+                let text = items
+                    .iter()
+                    .map(|m| {
+                        let meta = m
+                            .get("extra_metadata")
+                            .filter(|v| v.is_object())
+                            .map(|v| format!(" | metadata: {v}"))
+                            .unwrap_or_default();
+                        format!(
+                            "[{}] ({}) {}{}",
+                            m["memory_id"].as_str().unwrap_or(""),
+                            m["memory_type"].as_str().unwrap_or(""),
+                            m["content"].as_str().unwrap_or(""),
+                            meta
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                Ok(Self::mcp_text(&text))
+            }
+
+            "memory_capabilities" => Ok(Self::mcp_text(&format!(
+                "{}\n[remote mode — connected to Memoria API server]",
+                crate::tools::MEMORY_CAPABILITIES_TEXT
+            ))),
+
+            "memory_get_retrieval_params" => {
+                let r = self
+                    .client
+                    .get(self.url("/v1/retrieval-params"))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&serde_json::to_string_pretty(&body)?))
+            }
+
+            "memory_tune_params" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/retrieval-params/tune"))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                if body["tuned"].as_bool().unwrap_or(false) {
+                    let old = &body["old_params"];
+                    let new = &body["new_params"];
+                    Ok(Self::mcp_text(&format!(
+                        "Parameters tuned:\n  feedback_weight: {:.3} → {:.3}\n  temporal_decay_hours: {:.1} → {:.1}\n  confidence_weight: {:.3} → {:.3}",
+                        old["feedback_weight"].as_f64().unwrap_or(0.0),
+                        new["feedback_weight"].as_f64().unwrap_or(0.0),
+                        old["temporal_decay_hours"].as_f64().unwrap_or(0.0),
+                        new["temporal_decay_hours"].as_f64().unwrap_or(0.0),
+                        old["confidence_weight"].as_f64().unwrap_or(0.0),
+                        new["confidence_weight"].as_f64().unwrap_or(0.0)
+                    )))
+                } else {
+                    Ok(Self::mcp_text(
+                        body["message"]
+                            .as_str()
+                            .unwrap_or("Not enough feedback to tune parameters"),
+                    ))
+                }
+            }
+
+            "memory_governance" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/governance"))
+                    .json(&json!({"force": args["force"].as_bool().unwrap_or(false)}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                if body["skipped"].as_bool().unwrap_or(false) {
+                    return Ok(Self::mcp_text(&format!(
+                        "Governance skipped (cooldown: {}s remaining).",
+                        body["cooldown_remaining_s"].as_i64().unwrap_or(0)
+                    )));
+                }
+                Ok(Self::mcp_text(&format!(
+                    "Governance complete: quarantined={}, cleaned_stale={}",
+                    body["quarantined"].as_i64().unwrap_or(0),
+                    body["cleaned_stale"].as_i64().unwrap_or(0)
+                )))
+            }
+
+            "memory_rebuild_index" => {
+                let _r = self
+                    .client
+                    .post(self.url("/v1/governance"))
+                    .json(&json!({"force": true}))
+                    .send()
+                    .await?;
+                Ok(Self::mcp_text(
+                    "Index rebuild requested via governance endpoint.",
+                ))
+            }
+
+            "memory_consolidate" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/consolidate"))
+                    .json(&json!({"force": args["force"].as_bool().unwrap_or(false)}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                if body["skipped"].as_bool().unwrap_or(false) {
+                    return Ok(Self::mcp_text(&format!(
+                        "Consolidation skipped (cooldown: {}s remaining).",
+                        body["cooldown_remaining_s"].as_i64().unwrap_or(0)
+                    )));
+                }
+                Ok(Self::mcp_text(&format!("Consolidation complete: conflicts_detected={}, orphaned_scenes={}, promoted={}, demoted={}",
+                    body["conflicts_detected"].as_i64().unwrap_or(0),
+                    body["orphaned_scenes"].as_i64().unwrap_or(0),
+                    body["promoted"].as_i64().unwrap_or(0),
+                    body["demoted"].as_i64().unwrap_or(0))))
+            }
+
+            "memory_reflect" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/reflect"))
+                    .json(&json!({
+                        "force": args["force"].as_bool().unwrap_or(false),
+                        "mode": args["mode"].as_str().unwrap_or("auto"),
+                    }))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                if body["skipped"].as_bool().unwrap_or(false) {
+                    return Ok(Self::mcp_text(&format!(
+                        "Reflection skipped (cooldown: {}s remaining).",
+                        body["cooldown_remaining_s"].as_i64().unwrap_or(0)
+                    )));
+                }
+                if let Some(candidates) = body["candidates"].as_array() {
+                    if !candidates.is_empty() {
+                        let parts: Vec<String> = candidates
+                            .iter()
+                            .enumerate()
+                            .map(|(i, c)| {
+                                let signal = c["signal"].as_str().unwrap_or("cluster");
+                                let importance = c["importance"].as_f64().unwrap_or(0.5);
+                                let mems: Vec<String> = c["memories"]
+                                    .as_array()
+                                    .unwrap_or(&vec![])
+                                    .iter()
+                                    .map(|m| format!("  - {}", m["content"].as_str().unwrap_or("")))
+                                    .collect();
+                                format!(
+                                    "Cluster {} ({signal}, importance={importance:.3}):\n{}",
+                                    i + 1,
+                                    mems.join("\n")
+                                )
+                            })
+                            .collect();
+                        return Ok(Self::mcp_text(&format!(
+                            "Here are memory clusters for reflection. Synthesize 1-2 insights per cluster, \
+                             then store each via memory_store.\n\n{}", parts.join("\n\n"))));
+                    }
+                }
+                Ok(Self::mcp_text(&format!(
+                    "Reflection complete: scenes_created={}, candidates_found={}",
+                    body["scenes_created"].as_i64().unwrap_or(0),
+                    body["candidates_found"].as_i64().unwrap_or(0)
+                )))
+            }
+
+            "memory_extract_entities" => {
+                let mode = args["mode"].as_str().unwrap_or("auto");
+                let r = self
+                    .client
+                    .post(self.url("/v1/extract-entities"))
+                    .json(&json!({"mode": mode}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&serde_json::to_string(&body)?))
+            }
+
+            "memory_link_entities" => {
+                let entities_str = args["entities"].as_str().unwrap_or("[]");
+                let entities: Value = serde_json::from_str(entities_str).unwrap_or(json!([]));
+                let r = self
+                    .client
+                    .post(self.url("/v1/extract-entities/link"))
+                    .json(&json!({"entities": entities}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&serde_json::to_string(&body)?))
+            }
+
+            // Git tools — fully supported (unlike Python which returns "Not available via HTTP")
+            "memory_snapshot" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/snapshots"))
+                    .json(&json!({"name": args["name"], "description": args["description"]}))
+                    .send()
+                    .await?;
+                let _body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Snapshot '{}' created.",
+                    args["name"].as_str().unwrap_or("")
+                )))
+            }
+
+            "memory_snapshots" => {
+                let limit = args["limit"].as_i64().unwrap_or(20);
+                let offset = args["offset"].as_i64().unwrap_or(0);
+                let r = self
+                    .client
+                    .get(self.url(&format!("/v1/snapshots?limit={limit}&offset={offset}")))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_snapshot_delete" => {
+                // names can be a single string or array
+                let mut payload = args.clone();
+                if let Some(names_str) = args["names"].as_str() {
+                    // Convert comma-separated string to array
+                    let names: Vec<&str> = names_str.split(',').map(str::trim).collect();
+                    payload["names"] = json!(names);
+                }
+                let r = self
+                    .client
+                    .post(self.url("/v1/snapshots/delete"))
+                    .json(&payload)
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Deleted {} snapshot(s).",
+                    body["deleted"].as_i64().unwrap_or(0)
+                )))
+            }
+
+            "memory_rollback" => {
+                let name = args["name"].as_str().unwrap_or("");
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/snapshots/{name}/rollback")))
+                    .json(&json!({}))
+                    .send()
+                    .await?;
+                let _body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Rolled back to snapshot '{name}'."
+                )))
+            }
+
+            "memory_branch" => {
+                let r = self
+                    .client
+                    .post(self.url("/v1/branches"))
+                    .json(&json!({
+                        "name": args["name"],
+                        "from_snapshot": args["from_snapshot"],
+                        "from_timestamp": args["from_timestamp"],
+                    }))
+                    .send()
+                    .await?;
+                let _body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Branch '{}' created.",
+                    args["name"].as_str().unwrap_or("")
+                )))
+            }
+
+            "memory_branches" => {
+                let r = self.client.get(self.url("/v1/branches")).send().await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_checkout" => {
+                let name = args["name"].as_str().unwrap_or("");
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/branches/{name}/checkout")))
+                    .json(&json!({}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Switched to branch '{name}'. {} memories.",
+                    body["memory_count"].as_i64().unwrap_or(0)
+                )))
+            }
+
+            "memory_merge" => {
+                let source = args["source"].as_str().unwrap_or("");
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/branches/{source}/merge")))
+                    .json(&json!({"strategy": args["strategy"].as_str().unwrap_or("accept")}))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_pick" => {
+                let source = args["source"].as_str().unwrap_or("");
+                let target = args["target"].as_str().unwrap_or("main");
+                let strategy = args["strategy"].as_str().unwrap_or("fail");
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/branches/{source}/pick")))
+                    .json(&json!({
+                        "target": target,
+                        "strategy": strategy,
+                        "selector": args["selector"],
+                        "dry_run": args.get("dry_run").cloned().unwrap_or(Value::Null),
+                    }))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                if body["dry_run"].as_bool().unwrap_or(false) {
+                    Ok(Self::mcp_json(&body))
+                } else {
+                    Ok(Self::mcp_text(body["result"].as_str().unwrap_or("")))
+                }
+            }
+
+            "memory_diff" => {
+                Self::expect_tool_args(&args, "memory_diff", &["source", "limit"])?;
+                let source = Self::required_string_arg(&args, "memory_diff", "source")?;
+                let limit = Self::optional_i64_arg(&args, "memory_diff", "limit", 50)?;
+                let r = self
+                    .client
+                    .get(self.url(&format!("/v1/branches/{source}/diff?limit={limit}")))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_apply" => {
+                Self::expect_tool_args(
+                    &args,
+                    "memory_apply",
+                    &[
+                        "source",
+                        "adds",
+                        "updates",
+                        "removes",
+                        "accept_branch_conflicts",
+                    ],
+                )?;
+                let source = Self::required_string_arg(&args, "memory_apply", "source")?;
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/branches/{source}/apply")))
+                    .json(&json!({
+                        "adds": Self::json_array_arg(&args, "adds")?,
+                        "updates": Self::json_array_arg(&args, "updates")?,
+                        "removes": Self::json_array_arg(&args, "removes")?,
+                        "accept_branch_conflicts": Self::json_array_arg(&args, "accept_branch_conflicts")?,
+                    }))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_branch_delete" => {
+                let name = args["name"].as_str().unwrap_or("");
+                self.client
+                    .delete(self.url(&format!("/v1/branches/{name}")))
+                    .send()
+                    .await?;
+                Ok(Self::mcp_text(&format!("Branch '{name}' deleted.")))
+            }
+
+            "memory_observe" => {
+                let mut payload = json!({
+                    "messages": args["messages"],
+                    "session_id": args["session_id"],
+                    "branch": args["branch"],
+                });
+                if let Some(sid) = args.get("subject_id").and_then(|v| v.as_str()).map(str::trim).filter(|s| !s.is_empty()) {
+                    payload["subject_id"] = json!(sid);
+                }
+                let r = self
+                    .client
+                    .post(self.url("/v1/observe"))
+                    .json(&payload)
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_json(&body))
+            }
+
+            "memory_feedback" => {
+                let memory_id = args["memory_id"].as_str().unwrap_or("");
+                let signal = args["signal"].as_str().unwrap_or("");
+                let r = self
+                    .client
+                    .post(self.url(&format!("/v1/memories/{memory_id}/feedback")))
+                    .json(&json!({
+                        "signal": signal,
+                        "context": args["context"],
+                    }))
+                    .send()
+                    .await?;
+                let body = Self::parse_response(r).await?;
+                Ok(Self::mcp_text(&format!(
+                    "Recorded feedback: memory={}, signal={}, feedback_id={}",
+                    memory_id,
+                    signal,
+                    body["feedback_id"].as_str().unwrap_or("")
+                )))
+            }
+
+            _ => Ok(Self::mcp_text(&format!("Unknown tool: {name}"))),
+        }
+    }
+
+    pub async fn call_owned(self, name: String, args: Value) -> Result<Value> {
+        self.call(&name, args).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RemoteClient;
+    use axum::{
+        extract::{Path, State},
+        routing::post,
+        Json, Router,
+    };
+    use serde_json::{json, Value};
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Clone)]
+    struct ApplyCapture {
+        branch: Arc<Mutex<Option<String>>>,
+        body: Arc<Mutex<Option<Value>>>,
+    }
+
+    #[tokio::test]
+    async fn memory_apply_remote_call_uses_branch_apply_endpoint() {
+        let capture = ApplyCapture {
+            branch: Arc::new(Mutex::new(None)),
+            body: Arc::new(Mutex::new(None)),
+        };
+
+        let app = Router::new()
+            .route(
+                "/v1/branches/:source/apply",
+                post(
+                    |State(capture): State<ApplyCapture>,
+                     Path(source): Path<String>,
+                     Json(payload): Json<Value>| async move {
+                        *capture.branch.lock().unwrap() = Some(source);
+                        *capture.body.lock().unwrap() = Some(payload);
+                        Json(json!({
+                            "applied_adds": ["new-id"],
+                            "applied_updates": [],
+                            "applied_removes": [],
+                            "applied_conflicts": []
+                        }))
+                    },
+                ),
+            )
+            .with_state(capture.clone());
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind test listener");
+        let addr = listener.local_addr().expect("local addr");
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+        let server = tokio::spawn(async move {
+            axum::serve(listener, app)
+                .with_graceful_shutdown(async {
+                    let _ = shutdown_rx.await;
+                })
+                .await
+                .expect("serve test router");
+        });
+
+        let remote = RemoteClient::new(
+            &format!("http://{addr}"),
+            Some("sk-test"),
+            "default".to_string(),
+            Some("kiro"),
+        );
+        let result = remote
+            .call(
+                "memory_apply",
+                json!({
+                    "source": "feature-1",
+                    "adds": ["new-id"],
+                    "updates": [{"old_id": "old-id", "new_id": "new-id"}],
+                    "removes": ["gone-id"],
+                    "accept_branch_conflicts": ["conflict-id"],
+                }),
+            )
+            .await
+            .expect("memory_apply should succeed");
+
+        let text = result["content"][0]["text"].as_str().expect("text result");
+        assert!(text.contains("applied_adds"));
+        assert_eq!(capture.branch.lock().unwrap().as_deref(), Some("feature-1"));
+        assert_eq!(
+            capture.body.lock().unwrap().clone(),
+            Some(json!({
+                "adds": ["new-id"],
+                "updates": [{"old_id": "old-id", "new_id": "new-id"}],
+                "removes": ["gone-id"],
+                "accept_branch_conflicts": ["conflict-id"],
+            }))
+        );
+
+        let _ = shutdown_tx.send(());
+        let _ = server.await;
+    }
+
+    #[tokio::test]
+    async fn memory_apply_remote_defaults_missing_arrays_to_empty() {
+        let capture = ApplyCapture {
+            branch: Arc::new(Mutex::new(None)),
+            body: Arc::new(Mutex::new(None)),
+        };
+
+        let app = Router::new()
+            .route(
+                "/v1/branches/:source/apply",
+                post(
+                    |State(capture): State<ApplyCapture>,
+                     Path(source): Path<String>,
+                     Json(payload): Json<Value>| async move {
+                        *capture.branch.lock().unwrap() = Some(source);
+                        *capture.body.lock().unwrap() = Some(payload);
+                        Json(json!({
+                            "applied_adds": [],
+                            "applied_updates": [],
+                            "applied_removes": [],
+                            "applied_conflicts": []
+                        }))
+                    },
+                ),
+            )
+            .with_state(capture.clone());
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind test listener");
+        let addr = listener.local_addr().expect("local addr");
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+        let server = tokio::spawn(async move {
+            axum::serve(listener, app)
+                .with_graceful_shutdown(async {
+                    let _ = shutdown_rx.await;
+                })
+                .await
+                .expect("serve test router");
+        });
+
+        let remote = RemoteClient::new(
+            &format!("http://{addr}"),
+            Some("sk-test"),
+            "default".to_string(),
+            Some("kiro"),
+        );
+        remote
+            .call("memory_apply", json!({"source": "feature-2"}))
+            .await
+            .expect("memory_apply should succeed with missing arrays");
+
+        assert_eq!(
+            capture.body.lock().unwrap().clone(),
+            Some(json!({
+                "adds": [],
+                "updates": [],
+                "removes": [],
+                "accept_branch_conflicts": [],
+            }))
+        );
+
+        let _ = shutdown_tx.send(());
+        let _ = server.await;
+    }
+
+    #[tokio::test]
+    async fn memory_diff_remote_rejects_unknown_fields() {
+        let remote = RemoteClient::new(
+            "http://127.0.0.1:9",
+            Some("sk-test"),
+            "default".to_string(),
+            Some("kiro"),
+        );
+        let err = remote
+            .call(
+                "memory_diff",
+                json!({
+                    "source": "feature-3",
+                    "adds": ["unexpected"]
+                }),
+            )
+            .await
+            .expect_err("memory_diff should reject unknown fields before sending");
+
+        assert!(err
+            .to_string()
+            .contains("Invalid memory_diff argument 'adds': unknown field"));
+    }
+}

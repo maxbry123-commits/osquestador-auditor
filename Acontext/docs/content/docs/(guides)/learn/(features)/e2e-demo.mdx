@@ -1,0 +1,956 @@
+---
+title: "End-to-End Auto-Learn Demo"
+description: "A complete walkthrough showing how an agent learns from one incident and applies that knowledge to the next"
+---
+
+This guide walks through the full Acontext auto-learn cycle using a **DevOps incident resolution** scenario. By the end, you'll see an agent that:
+
+1. Diagnoses a 502 gateway error using multiple tool calls
+2. Has its session automatically distilled into a reusable SOP (skill)
+3. Applies that SOP to a **new** incident — resolving it faster with fewer tool calls
+
+```
+ACT 1: Agent investigates 502 errors (no prior knowledge)
+  └► 7+ tool calls: check status, read logs, read config, update, restart, verify
+  └► Task extracted → Skill distilled → SOP written
+
+ACT 2: Similar 502 incident (with learned skill)
+  └► Agent reads skill first → goes straight to the fix
+  └► 3-4 tool calls: targeted diagnosis + fix
+```
+
+## Prerequisites
+
+- `ACONTEXT_API_KEY` — get one at [acontext.io](https://acontext.io)
+- `OPENAI_API_KEY` — for the OpenAI agent loop
+- Python SDK: `pip install acontext openai`
+- TypeScript SDK: `npm install @acontext/acontext openai`
+
+## The Mock Environment
+
+The demo uses five mock DevOps tools that operate against an in-memory state — no real infrastructure needed:
+
+| Tool | Purpose |
+|------|---------|
+| `check_service_status` | Health, error rate, latency |
+| `check_logs` | Recent log entries |
+| `read_config` | Service configuration |
+| `update_config` | Mutate a config value |
+| `restart_service` | Restart and clear errors |
+
+<Accordion title="Mock tool schemas (OpenAI function calling format)">
+```json
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "check_service_status",
+      "description": "Check the health status, error rate, and latency of a service.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_name": { "type": "string", "description": "Name of the service to check." }
+        },
+        "required": ["service_name"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "check_logs",
+      "description": "Retrieve recent log entries for a service.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_name": { "type": "string", "description": "Name of the service." },
+          "lines": { "type": "integer", "description": "Number of recent log lines (max 20)." }
+        },
+        "required": ["service_name"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "read_config",
+      "description": "Read the current configuration of a service.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_name": { "type": "string", "description": "Name of the service." }
+        },
+        "required": ["service_name"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "update_config",
+      "description": "Update a configuration value for a service.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_name": { "type": "string", "description": "Name of the service." },
+          "key": { "type": "string", "description": "Configuration key to update." },
+          "value": { "type": "string", "description": "New value." }
+        },
+        "required": ["service_name", "key", "value"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "restart_service",
+      "description": "Restart a service to apply configuration changes.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_name": { "type": "string", "description": "Name of the service to restart." }
+        },
+        "required": ["service_name"]
+      }
+    }
+  }
+]
+```
+</Accordion>
+
+## Act 1 — The Learning Run
+
+The agent has **no prior knowledge**. It must explore, diagnose, and fix a 502 gateway error from scratch.
+
+**Scenario**: The API gateway connects to six services (auth, backend-api, notifications, redis, database). The `upstream_timeout` is set to 5 seconds, but the backend-api's p99 latency is 4.2 seconds. Gateway logs show 502 errors and slow upstream warnings — but don't reveal the configured timeout value. The notification service is also degraded with SMTP failures (a convincing red herring).
+
+### Step 1: Set up learning space and session
+
+<CodeGroup>
+```python title="Python"
+space = ac.learning_spaces.create()
+session = ac.sessions.create()
+ac.learning_spaces.learn(space.id, session_id=session.id)
+```
+
+```typescript title="TypeScript"
+const space = await ac.learningSpaces.create();
+const session = await ac.sessions.create();
+await ac.learningSpaces.learn({ spaceId: space.id, sessionId: session.id });
+```
+</CodeGroup>
+
+### Step 2: Run the agent and record messages
+
+Run your OpenAI agent loop as usual. The key is storing every message (user, assistant, tool calls, tool results) to Acontext via `store_message`:
+
+<CodeGroup>
+```python title="Python"
+ac.sessions.store_message(session.id, blob={"role": "user", "content": "..."})
+# ... agent calls tools, produces responses ...
+ac.sessions.store_message(session.id, blob={"role": "assistant", "tool_calls": [...]})
+ac.sessions.store_message(session.id, blob={"role": "tool", "tool_call_id": "...", "content": "..."})
+```
+
+```typescript title="TypeScript"
+await ac.sessions.storeMessage(session.id, { role: "user", content: "..." });
+// ... agent calls tools, produces responses ...
+await ac.sessions.storeMessage(session.id, { role: "assistant", tool_calls: [...] });
+await ac.sessions.storeMessage(session.id, { role: "tool", tool_call_id: "...", content: "..." });
+```
+</CodeGroup>
+
+**What the agent typically does** (9-12 tool calls — investigating + fixing):
+
+```
+ 1. check_service_status("api-gateway")         → unhealthy, 34% error rate
+ 2. check_logs("api-gateway")                   → 502s, slow upstream, notification-service failures
+ 3. check_service_status("notification-service") → degraded, 5% errors (investigates red herring)
+ 4. check_logs("notification-service")           → SMTP connection refused (unrelated to 502s)
+ 5. check_service_status("backend-api")          → healthy, but p99 = 4200ms
+ 6. check_logs("backend-api")                    → requests taking 4000-4900ms, slow DB queries
+ 7. read_config("api-gateway")                   → upstream_timeout_ms: 5000 — aha!
+ 8. update_config("api-gateway", "upstream_timeout_ms", "10000")
+ 9. restart_service("api-gateway")
+10. check_service_status("api-gateway")          → healthy, 0% error rate ✓
+```
+
+### Step 3: Flush and inspect extracted tasks
+
+<CodeGroup>
+```python title="Python"
+ac.sessions.flush(session.id)
+
+# Poll until all messages are processed
+status = ac.sessions.messages_observing_status(session.id)
+# status.pending / status.in_process → wait until both are 0
+
+result = ac.sessions.get_tasks(session.id)
+# result.items → list of Task objects
+# result.items[0].status → "success"
+# result.items[0].data.task_description → "Investigate and fix 502 errors..."
+```
+
+```typescript title="TypeScript"
+await ac.sessions.flush(session.id);
+
+const status = await ac.sessions.messagesObservingStatus(session.id);
+// status.pending / status.in_process → wait until both are 0
+
+const result = await ac.sessions.getTasks(session.id);
+// result.items → list of Task objects
+// result.items[0].status → "success"
+```
+</CodeGroup>
+
+**Example extracted task:**
+
+```
+[success] Diagnose and fix 502 errors on the API gateway
+  > Gateway logs show 502s from backend-api, also notification-service health failures
+  > Investigated notification-service: SMTP issue, unrelated to 502 errors
+  > backend-api healthy but p99 latency 4200ms; gateway config upstream_timeout_ms=5000
+  > Root cause: backend-api latency exceeds gateway timeout threshold
+  > Increased upstream_timeout_ms to 10000, restarted gateway → 0% error rate
+```
+
+### Step 4: Wait for skill learning and inspect results
+
+<CodeGroup>
+```python title="Python"
+result = ac.learning_spaces.wait_for_learning(space.id, session_id=session.id)
+# result.status → "completed"
+
+skills = ac.learning_spaces.list_skills(space.id)
+for s in skills:
+    for f in s.file_index:
+        content = ac.skills.get_file(skill_id=s.id, file_path=f.path)
+```
+
+```typescript title="TypeScript"
+const result = await ac.learningSpaces.waitForLearning({
+    spaceId: space.id, sessionId: session.id,
+});
+
+const skills = await ac.learningSpaces.listSkills(space.id);
+for (const s of skills) {
+    for (const f of s.fileIndex) {
+        const content = await ac.skills.getFile({ skillId: s.id, filePath: f.path });
+    }
+}
+```
+</CodeGroup>
+
+**Example generated skill** (auto-created by the learning pipeline):
+
+```markdown title="SKILL.md"
+---
+name: "devops-incident-patterns"
+description: "Reusable patterns for diagnosing and resolving infrastructure incidents"
+---
+# DevOps Incident Patterns
+
+Collected SOPs and warnings from past incident resolutions.
+
+## File Structure
+
+One file per incident category (e.g., gateway-errors.md, database-issues.md).
+
+## Guidelines
+
+- One category per file
+- Include date, symptoms, and numbered resolution steps
+- Update existing entries when better approaches are discovered
+```
+
+```markdown title="gateway-errors.md"
+## API Gateway 502 — Upstream Timeout Mismatch (date: 2026-03-26)
+- Principle: 502 errors from a reverse proxy often indicate the upstream
+  timeout is lower than the backend's actual response time.
+- When to Apply: API gateway returning 502s with upstream timeout errors in logs.
+- Steps:
+  1. Check gateway logs for "upstream timeout" errors — note which backend service
+  2. Compare gateway's upstream_timeout_ms config against the backend's p99 latency
+  3. If p99 > timeout, increase timeout to at least 3-5x the p99 latency
+  4. Restart the gateway to apply the new config
+  5. Verify error rate drops to 0%
+```
+
+<Note>
+The exact skill output varies between runs since the learning pipeline uses LLM-based distillation. The structure and content will be similar, but wording may differ.
+</Note>
+
+## Act 2 — The Recall Run
+
+Now a **new** incident occurs after a deployment. The freshly added `payment-service` has a p99 latency of 45 seconds, exceeding the gateway's 30-second timeout. The user doesn't know which service is causing it — they just see 502s again.
+
+The agent has access to the skill learned in Act 1 via [Skill Content Tools](/tool/skill_tools).
+
+### Step 5: Run the agent with learned skills
+
+<CodeGroup>
+```python title="Python"
+from acontext.agent.skill import SKILL_TOOLS
+
+session2 = ac.sessions.create()
+ac.learning_spaces.learn(space.id, session_id=session2.id)
+
+skill_ids = [s.id for s in skills]
+skill_ctx = SKILL_TOOLS.format_context(ac, skill_ids)
+
+# Add skill tools alongside your existing agent tools
+tools = your_tools + SKILL_TOOLS.to_openai_tool_schema()
+system = "..." + skill_ctx.get_context_prompt()
+```
+
+```typescript title="TypeScript"
+import { SKILL_TOOLS } from '@acontext/acontext';
+
+const session2 = await ac.sessions.create();
+await ac.learningSpaces.learn({ spaceId: space.id, sessionId: session2.id });
+
+const skillIds = skills.map(s => s.id);
+const skillCtx = await SKILL_TOOLS.formatContext(ac, skillIds);
+
+const tools = [...yourTools, ...SKILL_TOOLS.toOpenAIToolSchema()];
+const system = "..." + skillCtx.getContextPrompt();
+```
+</CodeGroup>
+
+**What the agent typically does** (4-6 DevOps tool calls — skips exploration):
+
+```
+1. get_skill(...)                → reads the SOP from Act 1
+2. get_skill_file(...)           → learns the upstream-timeout diagnostic pattern
+3. check_logs("api-gateway")     → "upstream timeout: payment-service...within 30000 ms" — pattern match!
+4. read_config("api-gateway")    → upstream_timeout_ms: 30000
+5. update_config("api-gateway", "upstream_timeout_ms", "60000")
+6. restart_service("api-gateway")
+7. check_service_status("api-gateway") → healthy, 0% error rate ✓
+```
+
+The agent skips the exploratory phase entirely. In Act 1 it had to investigate notification-service (red herring), check backend-api logs, and discover the timeout mismatch. With the SOP, it recognizes the `upstream timeout` pattern in the logs and goes straight to gateway config → fix.
+
+### Result
+
+```
+Act 1 (no prior knowledge):  9-12 DevOps tool calls (investigates multiple services)
+Act 2 (with learned skills): 4-6 DevOps tool calls (targeted fix)
+Improvement: ~40-55% fewer tool calls
+```
+
+## Full Runnable Scripts
+
+<AccordionGroup>
+<Accordion title="Python — complete runnable script">
+```python
+"""
+End-to-end auto-learn demo: DevOps incident resolution.
+
+Requires: ACONTEXT_API_KEY, OPENAI_API_KEY
+  pip install acontext openai
+"""
+
+import json
+import os
+import time
+from copy import deepcopy
+
+from openai import OpenAI
+
+from acontext import AcontextClient
+from acontext.agent.skill import SKILL_TOOLS
+
+# ── Mock environment ──────────────────────────────────────────────────
+
+ACT1_ENV = {
+    "services": {
+        "api-gateway": {"status": "unhealthy", "error_rate_pct": 34, "p99_latency_ms": 55, "type": "reverse-proxy"},
+        "auth-service": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 85, "type": "application"},
+        "backend-api": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 4200, "type": "application"},
+        "notification-service": {"status": "degraded", "error_rate_pct": 5, "p99_latency_ms": 320, "type": "application"},
+        "redis-cache": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 3, "type": "cache"},
+        "user-db": {"status": "healthy", "error_rate_pct": 0, "connections_active": 45, "type": "database"},
+    },
+    "configs": {
+        "api-gateway": {
+            "upstream_timeout_ms": 5000, "max_retries": 3,
+            "routes": {"/api/*": "http://backend-api:8080", "/auth/*": "http://auth-service:8080", "/notifications/*": "http://notification-service:8080"},
+        },
+    },
+    "logs": {
+        "api-gateway": [
+            "[2026-03-26 09:12:03] ERROR  502 Bad Gateway returned to client  path=/api/orders  upstream=backend-api",
+            "[2026-03-26 09:12:01] ERROR  502 Bad Gateway returned to client  path=/api/users  upstream=backend-api",
+            "[2026-03-26 09:11:59] WARN   upstream response slow  service=backend-api  duration=4850ms",
+            "[2026-03-26 09:11:58] WARN   retrying upstream request  attempt=3  service=backend-api",
+            "[2026-03-26 09:11:55] ERROR  upstream health check failed  service=notification-service  consecutive_failures=5",
+            "[2026-03-26 09:11:52] ERROR  502 Bad Gateway returned to client  path=/api/users  upstream=backend-api",
+            "[2026-03-26 09:11:50] WARN   retrying upstream request  attempt=2  service=backend-api",
+            "[2026-03-26 09:11:48] INFO   health check passed  service=auth-service  latency=80ms",
+            "[2026-03-26 09:11:45] INFO   health check passed  service=redis-cache  latency=2ms",
+        ],
+        "auth-service": ["[2026-03-26 09:12:00] INFO   request completed  path=/auth/verify  duration=78ms"],
+        "backend-api": [
+            "[2026-03-26 09:12:00] INFO   request completed  path=/api/users  duration=4150ms",
+            "[2026-03-26 09:11:55] INFO   request completed  path=/api/orders  duration=4890ms",
+            "[2026-03-26 09:11:50] WARN   DB query slow  table=orders  duration=3200ms",
+        ],
+        "notification-service": [
+            "[2026-03-26 09:11:55] ERROR  SMTP relay connection refused  host=smtp.internal  retrying in 30s",
+            "[2026-03-26 09:11:50] WARN   message queue backlog  depth=1240  oldest=45s",
+            "[2026-03-26 09:11:45] ERROR  failed to deliver notification  channel=email  error=connection_refused",
+        ],
+        "redis-cache": ["[2026-03-26 09:12:00] INFO   keyspace hits=12450  misses=23"],
+    },
+}
+
+ACT2_ENV = {
+    "services": {
+        "api-gateway": {"status": "unhealthy", "error_rate_pct": 22, "p99_latency_ms": 60, "type": "reverse-proxy"},
+        "auth-service": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 90, "type": "application"},
+        "backend-api": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 120, "type": "application"},
+        "payment-service": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 45000, "type": "application"},
+        "notification-service": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 200, "type": "application"},
+        "redis-cache": {"status": "healthy", "error_rate_pct": 0, "p99_latency_ms": 3, "type": "cache"},
+        "user-db": {"status": "healthy", "error_rate_pct": 0, "connections_active": 52, "type": "database"},
+    },
+    "configs": {
+        "api-gateway": {
+            "upstream_timeout_ms": 30000, "max_retries": 3,
+            "routes": {"/api/*": "http://backend-api:8080", "/auth/*": "http://auth-service:8080", "/notifications/*": "http://notification-service:8080", "/payments/*": "http://payment-service:8080"},
+        },
+    },
+    "logs": {
+        "api-gateway": [
+            "[2026-03-26 14:30:12] ERROR  upstream timeout: payment-service did not respond within 30000 ms",
+            "[2026-03-26 14:30:12] ERROR  502 Bad Gateway returned to client  path=/payments/checkout",
+            "[2026-03-26 14:30:10] ERROR  upstream timeout: payment-service did not respond within 30000 ms",
+            "[2026-03-26 14:30:10] ERROR  502 Bad Gateway returned to client  path=/payments/refund",
+            "[2026-03-26 14:30:05] WARN   retrying upstream request  attempt=3  service=payment-service",
+            "[2026-03-26 14:30:00] INFO   health check passed  service=backend-api  latency=110ms",
+            "[2026-03-26 14:29:58] INFO   health check passed  service=auth-service  latency=85ms",
+        ],
+        "payment-service": [
+            "[2026-03-26 14:30:11] INFO   request completed  path=/payments/checkout  duration=44200ms",
+            "[2026-03-26 14:30:05] INFO   request completed  path=/payments/refund  duration=42800ms",
+            "[2026-03-26 14:29:50] WARN   external payment gateway slow  provider=stripe  duration=41000ms",
+        ],
+    },
+}
+
+MOCK_TOOL_SCHEMAS = [
+    {"type": "function", "function": {"name": "check_service_status", "description": "Check the health status, error rate, and latency of a service.", "parameters": {"type": "object", "properties": {"service_name": {"type": "string", "description": "Name of the service to check."}}, "required": ["service_name"]}}},
+    {"type": "function", "function": {"name": "check_logs", "description": "Retrieve recent log entries for a service.", "parameters": {"type": "object", "properties": {"service_name": {"type": "string", "description": "Name of the service."}, "lines": {"type": "integer", "description": "Number of log lines (max 20)."}}, "required": ["service_name"]}}},
+    {"type": "function", "function": {"name": "read_config", "description": "Read the current configuration of a service.", "parameters": {"type": "object", "properties": {"service_name": {"type": "string", "description": "Name of the service."}}, "required": ["service_name"]}}},
+    {"type": "function", "function": {"name": "update_config", "description": "Update a configuration value for a service.", "parameters": {"type": "object", "properties": {"service_name": {"type": "string", "description": "Name of the service."}, "key": {"type": "string", "description": "Config key."}, "value": {"type": "string", "description": "New value."}}, "required": ["service_name", "key", "value"]}}},
+    {"type": "function", "function": {"name": "restart_service", "description": "Restart a service.", "parameters": {"type": "object", "properties": {"service_name": {"type": "string", "description": "Name of the service."}}, "required": ["service_name"]}}},
+]
+MOCK_TOOL_NAMES = {t["function"]["name"] for t in MOCK_TOOL_SCHEMAS}
+
+SYSTEM_PROMPT = (
+    "You are a DevOps incident response agent with full authority to make changes. "
+    "Diagnose the root cause, apply the fix immediately, and verify it works. "
+    "Act autonomously — never ask for permission or confirmation. "
+    "Complete the full resolution cycle: diagnose → fix → verify."
+)
+
+
+def exec_mock_tool(env, name, args):
+    if name == "check_service_status":
+        svc = args.get("service_name", "")
+        info = env["services"].get(svc)
+        if not info:
+            return f"Service '{svc}' not found. Available: {', '.join(env['services'])}"
+        return "\n".join([f"Service: {svc}"] + [f"  {k}: {v}" for k, v in info.items()])
+    if name == "check_logs":
+        svc = args.get("service_name", "")
+        n = min(int(args.get("lines", 10)), 20)
+        entries = env["logs"].get(svc, [])
+        return "\n".join(entries[:n]) if entries else f"No logs for '{svc}'."
+    if name == "read_config":
+        svc = args.get("service_name", "")
+        cfg = env["configs"].get(svc)
+        return json.dumps(cfg, indent=2) if cfg else f"No config for '{svc}'."
+    if name == "update_config":
+        svc, key, value = args.get("service_name", ""), args.get("key", ""), args.get("value", "")
+        cfg = env["configs"].get(svc)
+        if not cfg:
+            return f"No config for '{svc}'."
+        try:
+            value = int(value)
+        except (ValueError, TypeError):
+            pass
+        cfg[key] = value
+        return f"Updated {svc}: {key} = {value}"
+    if name == "restart_service":
+        svc = args.get("service_name", "")
+        info = env["services"].get(svc)
+        if not info:
+            return f"Service '{svc}' not found."
+        info["status"] = "healthy"
+        info["error_rate_pct"] = 0
+        return f"Service '{svc}' restarted. Status: healthy"
+    return f"Unknown tool: {name}"
+
+
+def run_agent(oai, ac, session_id, env, user_message, extra_system="", extra_tools=None, skill_ctx=None):
+    system = SYSTEM_PROMPT + ("\n\n" + extra_system if extra_system else "")
+    tools = list(MOCK_TOOL_SCHEMAS) + (extra_tools or [])
+    messages = [{"role": "system", "content": system}, {"role": "user", "content": user_message}]
+    ac.sessions.store_message(session_id, blob={"role": "user", "content": user_message})
+    devops_calls = 0
+
+    for _ in range(15):
+        resp = oai.chat.completions.create(model="gpt-4.1", messages=messages, tools=tools)
+        msg = resp.choices[0].message
+        if msg.tool_calls:
+            blob = {"role": "assistant", "tool_calls": [
+                {"id": tc.id, "type": "function", "function": {"name": tc.function.name, "arguments": tc.function.arguments}}
+                for tc in msg.tool_calls
+            ]}
+            if msg.content:
+                blob["content"] = msg.content
+        else:
+            blob = {"role": "assistant", "content": msg.content or ""}
+        messages.append(blob)
+        ac.sessions.store_message(session_id, blob=blob)
+
+        if not msg.tool_calls:
+            print(f"  Agent: {msg.content}")
+            break
+
+        for tc in msg.tool_calls:
+            fn, args = tc.function.name, json.loads(tc.function.arguments)
+            if fn in MOCK_TOOL_NAMES:
+                result = exec_mock_tool(env, fn, args)
+                devops_calls += 1
+                label = ", ".join(f"{k}={v}" for k, v in args.items())
+                print(f"    → {fn}({label})")
+            elif skill_ctx and SKILL_TOOLS.tool_exists(fn):
+                result = SKILL_TOOLS.execute_tool(skill_ctx, fn, args)
+                print(f"    ★ {fn}({args.get('skill_name', args.get('file_path', fn))})")
+            else:
+                result = f"Unknown tool: {fn}"
+            tool_msg = {"role": "tool", "tool_call_id": tc.id, "content": result}
+            messages.append(tool_msg)
+            ac.sessions.store_message(session_id, blob=tool_msg)
+
+    return devops_calls
+
+
+def wait_for_tasks(ac, session_id, timeout=90):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        s = ac.sessions.messages_observing_status(session_id)
+        if s.pending == 0 and s.in_process == 0:
+            break
+        time.sleep(2)
+    return ac.sessions.get_tasks(session_id).items
+
+
+def main():
+    ac = AcontextClient(api_key=os.environ["ACONTEXT_API_KEY"], base_url=os.getenv("ACONTEXT_BASE_URL"))
+    oai = OpenAI()
+    out_dir = os.path.join(os.path.dirname(__file__), "learned_skills")
+
+    # ── ACT 1 ────────────────────────────────────────────────────────
+    print("\n" + "=" * 60)
+    print("  ACT 1 — Learning Run: Diagnose 502 errors")
+    print("=" * 60)
+
+    space = ac.learning_spaces.create()
+    s1 = ac.sessions.create()
+    ac.learning_spaces.learn(space.id, session_id=s1.id)
+
+    act1 = run_agent(oai, ac, s1.id, deepcopy(ACT1_ENV),
+        "Our API gateway is returning 502 errors on /api/* routes — "
+        "about 34% of requests are failing. "
+        "Diagnose the root cause and fix it.")
+
+    print("\n  Waiting for task extraction...")
+    ac.sessions.flush(s1.id)
+    tasks = wait_for_tasks(ac, s1.id)
+    print(f"  Extracted {len(tasks)} task(s):")
+    for t in tasks:
+        print(f"    [{t.status}] {t.data.task_description}")
+
+    print("\n  Waiting for skill learning pipeline...")
+    ac.learning_spaces.wait_for_learning(space.id, session_id=s1.id, timeout=180)
+
+    skills = ac.learning_spaces.list_skills(space.id)
+    os.makedirs(out_dir, exist_ok=True)
+    print(f"\n  Generated {len(skills)} skill(s) — downloading to learned_skills/")
+    for s in skills:
+        skill_dir = os.path.join(out_dir, s.name)
+        os.makedirs(skill_dir, exist_ok=True)
+        for f in s.file_index:
+            c = ac.skills.get_file(skill_id=s.id, file_path=f.path)
+            if c.content:
+                with open(os.path.join(skill_dir, f.path), "w") as fh:
+                    fh.write(c.content.raw)
+        print(f"    • {s.name}: {s.description}")
+
+    # ── ACT 2 ────────────────────────────────────────────────────────
+    print("\n" + "=" * 60)
+    print("  ACT 2 — Recall Run: New 502 (with learned skills)")
+    print("=" * 60)
+
+    s2 = ac.sessions.create()
+    ac.learning_spaces.learn(space.id, session_id=s2.id)
+    skill_ctx = SKILL_TOOLS.format_context(ac, [s.id for s in skills])
+
+    act2 = run_agent(oai, ac, s2.id, deepcopy(ACT2_ENV),
+        "The API gateway started returning 502 errors again after today's deployment. "
+        "About 22% of requests are failing. Please diagnose and fix.",
+        extra_system="You have skills from previous incidents. Check skills first.\n\n" + skill_ctx.get_context_prompt(),
+        extra_tools=SKILL_TOOLS.to_openai_tool_schema(),
+        skill_ctx=skill_ctx)
+
+    # ── Results ──────────────────────────────────────────────────────
+    print("\n" + "=" * 60)
+    print(f"  Act 1 (no prior knowledge):  {act1} tool calls")
+    print(f"  Act 2 (with learned skills): {act2} tool calls")
+    if act2 < act1:
+        print(f"  → {round((1 - act2/act1) * 100)}% fewer tool calls with learned skills")
+    print(f"\n  Skills saved to: {out_dir}/")
+    print("=" * 60)
+
+    ac.sessions.delete(s1.id)
+    ac.sessions.delete(s2.id)
+    ac.learning_spaces.delete(space.id)
+    for s in skills:
+        ac.skills.delete(s.id)
+    print("  Cleaned up remote resources.")
+
+if __name__ == "__main__":
+    main()
+```
+</Accordion>
+
+<Accordion title="TypeScript — complete runnable script">
+```typescript
+/**
+ * End-to-end auto-learn demo: DevOps incident resolution.
+ * Requires: ACONTEXT_API_KEY, OPENAI_API_KEY
+ *   npm install @acontext/acontext openai
+ */
+
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { AcontextClient } from '@acontext/acontext';
+import { SKILL_TOOLS, SkillContext } from '@acontext/acontext';
+import OpenAI from 'openai';
+
+// ── Mock environment ────────────────────────────────────────────
+
+interface MockEnv {
+  services: Record<string, Record<string, unknown>>;
+  configs: Record<string, Record<string, unknown>>;
+  logs: Record<string, string[]>;
+}
+
+function createAct1Env(): MockEnv {
+  return {
+    services: {
+      'api-gateway': { status: 'unhealthy', error_rate_pct: 34, p99_latency_ms: 55, type: 'reverse-proxy' },
+      'auth-service': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 85, type: 'application' },
+      'backend-api': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 4200, type: 'application' },
+      'notification-service': { status: 'degraded', error_rate_pct: 5, p99_latency_ms: 320, type: 'application' },
+      'redis-cache': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 3, type: 'cache' },
+      'user-db': { status: 'healthy', error_rate_pct: 0, connections_active: 45, type: 'database' },
+    },
+    configs: {
+      'api-gateway': {
+        upstream_timeout_ms: 5000, max_retries: 3,
+        routes: { '/api/*': 'http://backend-api:8080', '/auth/*': 'http://auth-service:8080', '/notifications/*': 'http://notification-service:8080' },
+      },
+    },
+    logs: {
+      'api-gateway': [
+        '[2026-03-26 09:12:03] ERROR  502 Bad Gateway returned to client  path=/api/orders  upstream=backend-api',
+        '[2026-03-26 09:12:01] ERROR  502 Bad Gateway returned to client  path=/api/users  upstream=backend-api',
+        '[2026-03-26 09:11:59] WARN   upstream response slow  service=backend-api  duration=4850ms',
+        '[2026-03-26 09:11:58] WARN   retrying upstream request  attempt=3  service=backend-api',
+        '[2026-03-26 09:11:55] ERROR  upstream health check failed  service=notification-service  consecutive_failures=5',
+        '[2026-03-26 09:11:52] ERROR  502 Bad Gateway returned to client  path=/api/users  upstream=backend-api',
+        '[2026-03-26 09:11:50] WARN   retrying upstream request  attempt=2  service=backend-api',
+        '[2026-03-26 09:11:48] INFO   health check passed  service=auth-service  latency=80ms',
+        '[2026-03-26 09:11:45] INFO   health check passed  service=redis-cache  latency=2ms',
+      ],
+      'auth-service': ['[2026-03-26 09:12:00] INFO   request completed  path=/auth/verify  duration=78ms'],
+      'backend-api': [
+        '[2026-03-26 09:12:00] INFO   request completed  path=/api/users  duration=4150ms',
+        '[2026-03-26 09:11:55] INFO   request completed  path=/api/orders  duration=4890ms',
+        '[2026-03-26 09:11:50] WARN   DB query slow  table=orders  duration=3200ms',
+      ],
+      'notification-service': [
+        '[2026-03-26 09:11:55] ERROR  SMTP relay connection refused  host=smtp.internal  retrying in 30s',
+        '[2026-03-26 09:11:50] WARN   message queue backlog  depth=1240  oldest=45s',
+        '[2026-03-26 09:11:45] ERROR  failed to deliver notification  channel=email  error=connection_refused',
+      ],
+      'redis-cache': ['[2026-03-26 09:12:00] INFO   keyspace hits=12450  misses=23'],
+    },
+  };
+}
+
+function createAct2Env(): MockEnv {
+  return {
+    services: {
+      'api-gateway': { status: 'unhealthy', error_rate_pct: 22, p99_latency_ms: 60, type: 'reverse-proxy' },
+      'auth-service': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 90, type: 'application' },
+      'backend-api': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 120, type: 'application' },
+      'payment-service': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 45000, type: 'application' },
+      'notification-service': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 200, type: 'application' },
+      'redis-cache': { status: 'healthy', error_rate_pct: 0, p99_latency_ms: 3, type: 'cache' },
+      'user-db': { status: 'healthy', error_rate_pct: 0, connections_active: 52, type: 'database' },
+    },
+    configs: {
+      'api-gateway': {
+        upstream_timeout_ms: 30000, max_retries: 3,
+        routes: { '/api/*': 'http://backend-api:8080', '/auth/*': 'http://auth-service:8080', '/notifications/*': 'http://notification-service:8080', '/payments/*': 'http://payment-service:8080' },
+      },
+    },
+    logs: {
+      'api-gateway': [
+        '[2026-03-26 14:30:12] ERROR  upstream timeout: payment-service did not respond within 30000 ms',
+        '[2026-03-26 14:30:12] ERROR  502 Bad Gateway returned to client  path=/payments/checkout',
+        '[2026-03-26 14:30:10] ERROR  upstream timeout: payment-service did not respond within 30000 ms',
+        '[2026-03-26 14:30:10] ERROR  502 Bad Gateway returned to client  path=/payments/refund',
+        '[2026-03-26 14:30:05] WARN   retrying upstream request  attempt=3  service=payment-service',
+        '[2026-03-26 14:30:00] INFO   health check passed  service=backend-api  latency=110ms',
+        '[2026-03-26 14:29:58] INFO   health check passed  service=auth-service  latency=85ms',
+      ],
+      'payment-service': [
+        '[2026-03-26 14:30:11] INFO   request completed  path=/payments/checkout  duration=44200ms',
+        '[2026-03-26 14:30:05] INFO   request completed  path=/payments/refund  duration=42800ms',
+        '[2026-03-26 14:29:50] WARN   external payment gateway slow  provider=stripe  duration=41000ms',
+      ],
+    },
+  };
+}
+
+function execMockTool(env: MockEnv, name: string, args: Record<string, unknown>): string {
+  if (name === 'check_service_status') {
+    const svc = args.service_name as string;
+    const info = env.services[svc];
+    if (!info) return `Service '${svc}' not found. Available: ${Object.keys(env.services).join(', ')}`;
+    return ['Service: ' + svc, ...Object.entries(info).map(([k, v]) => `  ${k}: ${v}`)].join('\n');
+  }
+  if (name === 'check_logs') {
+    const svc = args.service_name as string;
+    const n = Math.min(Number(args.lines ?? 10), 20);
+    const entries = env.logs[svc];
+    return entries?.length ? entries.slice(0, n).join('\n') : `No logs for '${svc}'.`;
+  }
+  if (name === 'read_config') {
+    const svc = args.service_name as string;
+    const cfg = env.configs[svc];
+    return cfg ? JSON.stringify(cfg, null, 2) : `No config for '${svc}'.`;
+  }
+  if (name === 'update_config') {
+    const svc = args.service_name as string;
+    const key = args.key as string;
+    let value: unknown = args.value;
+    const cfg = env.configs[svc];
+    if (!cfg) return `No config for '${svc}'.`;
+    const num = Number(value);
+    if (!isNaN(num) && value !== '') value = num;
+    cfg[key] = value;
+    return `Updated ${svc}: ${key} = ${value}`;
+  }
+  if (name === 'restart_service') {
+    const svc = args.service_name as string;
+    const info = env.services[svc];
+    if (!info) return `Service '${svc}' not found.`;
+    info.status = 'healthy';
+    info.error_rate_pct = 0;
+    return `Service '${svc}' restarted. Status: healthy`;
+  }
+  return `Unknown tool: ${name}`;
+}
+
+const MOCK_TOOL_SCHEMAS: OpenAI.ChatCompletionTool[] = [
+  { type: 'function', function: { name: 'check_service_status', description: 'Check health status, error rate, and latency.', parameters: { type: 'object', properties: { service_name: { type: 'string', description: 'Service name.' } }, required: ['service_name'] } } },
+  { type: 'function', function: { name: 'check_logs', description: 'Retrieve recent log entries.', parameters: { type: 'object', properties: { service_name: { type: 'string', description: 'Service name.' }, lines: { type: 'integer', description: 'Number of lines (max 20).' } }, required: ['service_name'] } } },
+  { type: 'function', function: { name: 'read_config', description: 'Read service configuration.', parameters: { type: 'object', properties: { service_name: { type: 'string', description: 'Service name.' } }, required: ['service_name'] } } },
+  { type: 'function', function: { name: 'update_config', description: 'Update a config value.', parameters: { type: 'object', properties: { service_name: { type: 'string', description: 'Service name.' }, key: { type: 'string', description: 'Config key.' }, value: { type: 'string', description: 'New value.' } }, required: ['service_name', 'key', 'value'] } } },
+  { type: 'function', function: { name: 'restart_service', description: 'Restart a service.', parameters: { type: 'object', properties: { service_name: { type: 'string', description: 'Service name.' } }, required: ['service_name'] } } },
+];
+const MOCK_TOOL_NAMES = new Set(MOCK_TOOL_SCHEMAS.map(t => t.function.name));
+
+const SYSTEM_PROMPT = 'You are a DevOps incident response agent with full authority. ' +
+  'Diagnose the root cause, apply the fix immediately, and verify it works. ' +
+  'Act autonomously — never ask for permission. Complete: diagnose → fix → verify.';
+
+async function runAgent(
+  openai: OpenAI, ac: AcontextClient, sessionId: string, env: MockEnv,
+  userMessage: string, extraSystem = '', extraTools: OpenAI.ChatCompletionTool[] = [],
+  skillCtx?: SkillContext,
+): Promise<number> {
+  const system = SYSTEM_PROMPT + (extraSystem ? '\n\n' + extraSystem : '');
+  const tools = [...MOCK_TOOL_SCHEMAS, ...extraTools];
+  const messages: OpenAI.ChatCompletionMessageParam[] = [
+    { role: 'system', content: system },
+    { role: 'user', content: userMessage },
+  ];
+  await ac.sessions.storeMessage(sessionId, { role: 'user', content: userMessage });
+  let devopsCalls = 0;
+
+  for (let i = 0; i < 15; i++) {
+    const resp = await openai.chat.completions.create({ model: 'gpt-4.1', messages, tools });
+    const msg = resp.choices[0].message;
+    let blob: Record<string, unknown>;
+    if (msg.tool_calls?.length) {
+      blob = { role: 'assistant', tool_calls: msg.tool_calls.map(tc => ({ id: tc.id, type: 'function', function: { name: tc.function.name, arguments: tc.function.arguments } })) };
+      if (msg.content) blob.content = msg.content;
+    } else {
+      blob = { role: 'assistant', content: msg.content ?? '' };
+    }
+    messages.push(msg as OpenAI.ChatCompletionMessageParam);
+    await ac.sessions.storeMessage(sessionId, blob);
+
+    if (!msg.tool_calls?.length) { console.log(`  Agent: ${msg.content}`); break; }
+
+    for (const tc of msg.tool_calls) {
+      const fn = tc.function.name;
+      const args = JSON.parse(tc.function.arguments);
+      let result: string;
+      if (MOCK_TOOL_NAMES.has(fn)) {
+        result = execMockTool(env, fn, args);
+        devopsCalls++;
+        const label = Object.entries(args).map(([k, v]) => `${k}=${v}`).join(', ');
+        console.log(`    → ${fn}(${label})`);
+      } else if (skillCtx && SKILL_TOOLS.toolExists(fn)) {
+        result = await SKILL_TOOLS.executeTool(skillCtx, fn, args);
+        console.log(`    ★ ${fn}(${args.skill_name ?? args.file_path ?? fn})`);
+      } else {
+        result = `Unknown tool: ${fn}`;
+      }
+      messages.push({ role: 'tool', tool_call_id: tc.id, content: result });
+      await ac.sessions.storeMessage(sessionId, { role: 'tool', tool_call_id: tc.id, content: result });
+    }
+  }
+  return devopsCalls;
+}
+
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+async function waitForTasks(ac: AcontextClient, sessionId: string, timeout = 90000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const s = await ac.sessions.messagesObservingStatus(sessionId);
+    if (s.pending === 0 && s.in_process === 0) break;
+    await sleep(2000);
+  }
+  const r = await ac.sessions.getTasks(sessionId);
+  return r.items;
+}
+
+async function main() {
+  const ac = new AcontextClient({ apiKey: process.env.ACONTEXT_API_KEY!, baseUrl: process.env.ACONTEXT_BASE_URL });
+  const openai = new OpenAI();
+
+  // ACT 1
+  console.log('\n' + '='.repeat(60));
+  console.log('  ACT 1 — Learning Run: Diagnose 502 errors');
+  console.log('='.repeat(60));
+
+  const space = await ac.learningSpaces.create();
+  const s1 = await ac.sessions.create();
+  await ac.learningSpaces.learn({ spaceId: space.id, sessionId: s1.id });
+
+  const act1 = await runAgent(openai, ac, s1.id, createAct1Env(),
+    'Our API gateway is returning 502 errors on /api/* routes — ' +
+    'about 34% of requests are failing. ' +
+    'Diagnose the root cause and fix it.');
+
+  console.log('\n  Waiting for task extraction...');
+  await ac.sessions.flush(s1.id);
+  const tasks = await waitForTasks(ac, s1.id);
+  console.log(`  Extracted ${tasks.length} task(s):`);
+  for (const t of tasks) console.log(`    [${t.status}] ${t.data.task_description}`);
+
+  console.log('\n  Waiting for skill learning pipeline...');
+  await ac.learningSpaces.waitForLearning({ spaceId: space.id, sessionId: s1.id, timeout: 180 });
+
+  const skills = await ac.learningSpaces.listSkills(space.id);
+  const outDir = path.join(path.dirname(new URL(import.meta.url).pathname), 'learned_skills');
+  await fs.mkdir(outDir, { recursive: true });
+  console.log(`\n  Generated ${skills.length} skill(s) — downloading to learned_skills/`);
+  for (const s of skills) {
+    const skillDir = path.join(outDir, s.name);
+    await fs.mkdir(skillDir, { recursive: true });
+    for (const f of s.fileIndex) {
+      const c = await ac.skills.getFile({ skillId: s.id, filePath: f.path });
+      if (c.content) await fs.writeFile(path.join(skillDir, f.path), c.content.raw);
+    }
+    console.log(`    • ${s.name}: ${s.description}`);
+  }
+
+  // ACT 2
+  console.log('\n' + '='.repeat(60));
+  console.log('  ACT 2 — Recall Run: New 502 (with learned skills)');
+  console.log('='.repeat(60));
+
+  const s2 = await ac.sessions.create();
+  await ac.learningSpaces.learn({ spaceId: space.id, sessionId: s2.id });
+  const skillCtx = await SKILL_TOOLS.formatContext(ac, skills.map(s => s.id));
+
+  const act2 = await runAgent(openai, ac, s2.id, createAct2Env(),
+    'The API gateway started returning 502 errors again after today\'s deployment. ' +
+    'About 22% of requests are failing. Please diagnose and fix.',
+    'You have skills from previous incidents. Check skills first.\n\n' + skillCtx.getContextPrompt(),
+    SKILL_TOOLS.toOpenAIToolSchema() as OpenAI.ChatCompletionTool[], skillCtx);
+
+  // Results
+  console.log('\n' + '='.repeat(60));
+  console.log(`  Act 1 (no prior knowledge):  ${act1} tool calls`);
+  console.log(`  Act 2 (with learned skills): ${act2} tool calls`);
+  if (act2 < act1) console.log(`  → ${Math.round((1 - act2 / act1) * 100)}% fewer tool calls with learned skills`);
+  console.log(`\n  Skills saved to: learned_skills/`);
+  console.log('='.repeat(60));
+
+  await ac.sessions.delete(s1.id);
+  await ac.sessions.delete(s2.id);
+  await ac.learningSpaces.delete(space.id);
+  for (const s of skills) await ac.skills.delete(s.id);
+  console.log('  Cleaned up remote resources.');
+}
+
+main().catch(e => { console.error(e); process.exit(1); });
+```
+</Accordion>
+</AccordionGroup>
+
+## How It Works Under the Hood
+
+The auto-learn pipeline that runs between Act 1 and Act 2:
+
+```
+Session messages
+  └► Task Agent extracts structured tasks (goal, progress, status)
+      └► Distillation LLM analyzes the completed task:
+          - Was it trivial? → skip
+          - Multi-step procedure? → report_success_analysis (SOP)
+          - Factual content? → report_factual_content
+          - Failed task? → report_failure_analysis (anti-pattern)
+              └► Skill Learner Agent reads distilled context + existing skills
+                  → Creates/updates skill files (SKILL.md + data files)
+```
+
+The DevOps scenario works well because it triggers `report_success_analysis` — the multi-step debugging process with clear decisions produces a rich SOP that the skill learner formats into actionable steps.
+
+## Next Steps
+
+<CardGroup cols={3}>
+<Card title="Custom Skills" icon="sparkles" href="/learn/custom-memory">
+  Define your own memory schemas
+</Card>
+<Card title="Learning Spaces" icon="brain" href="/learn/learning-spaces">
+  Default skills, custom skills, and managing spaces
+</Card>
+<Card title="Skill Content Tools" icon="wand-magic-sparkles" href="/tool/skill_tools">
+  Full reference for skill reading tools
+</Card>
+</CardGroup>

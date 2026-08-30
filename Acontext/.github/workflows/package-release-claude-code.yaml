@@ -1,0 +1,161 @@
+name: Claude Code Plugin Release
+
+on:
+  push:
+    tags:
+      - 'package-claude-code/v*'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Verify & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/packages/claude-code
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: '22'
+
+      - name: Extract version from package.json
+        id: pkg_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Package version: $VERSION"
+
+      - name: Extract version from tag
+        id: tag_version
+        env:
+          GIT_REF: ${{ github.ref }}
+        run: |
+          if [[ "$GIT_REF" == refs/tags/* ]]; then
+            TAG_NAME=${GIT_REF#refs/tags/package-claude-code/v}
+            echo "version=$TAG_NAME" >> "$GITHUB_OUTPUT"
+            echo "Tag version: $TAG_NAME"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify tag matches package.json
+        if: steps.tag_version.outputs.version != ''
+        env:
+          PKG_VERSION: ${{ steps.pkg_version.outputs.version }}
+          TAG_VERSION: ${{ steps.tag_version.outputs.version }}
+        run: |
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "Error: package.json version ($PKG_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version match: $PKG_VERSION"
+
+      - name: Verify plugin.json version
+        env:
+          PKG_VERSION: ${{ steps.pkg_version.outputs.version }}
+        run: |
+          PLUGIN_VERSION=$(node -p "require('./plugin/.claude-plugin/plugin.json').version")
+          if [ "$PKG_VERSION" != "$PLUGIN_VERSION" ]; then
+            echo "Error: plugin.json version ($PLUGIN_VERSION) does not match package.json ($PKG_VERSION)"
+            echo "Hint: run 'npm run release -- $PKG_VERSION' to sync all versions"
+            exit 1
+          fi
+          echo "plugin.json version: $PLUGIN_VERSION ✓"
+
+      - name: Verify marketplace.json version
+        env:
+          PKG_VERSION: ${{ steps.pkg_version.outputs.version }}
+        run: |
+          MKT_VERSION=$(node -p "require('../../../.claude-plugin/marketplace.json').plugins.find(p => p.name === 'acontext').version")
+          if [ "$PKG_VERSION" != "$MKT_VERSION" ]; then
+            echo "Error: marketplace.json version ($MKT_VERSION) does not match package.json ($PKG_VERSION)"
+            echo "Hint: run 'npm run release -- $PKG_VERSION' to sync all versions"
+            exit 1
+          fi
+          echo "marketplace.json version: $MKT_VERSION ✓"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify build output exists
+        run: |
+          node -e "
+            const fs = require('fs');
+            const files = ['plugin/scripts/mcp-server.cjs', 'plugin/scripts/hook-handler.cjs'];
+            for (const f of files) {
+              if (!fs.existsSync(f)) { console.error('Missing: ' + f); process.exit(1); }
+              const stat = fs.statSync(f);
+              if (stat.size < 1000) { console.error('Suspiciously small: ' + f + ' (' + stat.size + ' bytes)'); process.exit(1); }
+              console.log('OK: ' + f + ' (' + (stat.size / 1024).toFixed(0) + ' KB)');
+            }
+          "
+
+      - name: Verify bundles match committed artifacts
+        run: |
+          if git diff --name-only -- plugin/scripts/ | grep -q .; then
+            echo "Error: Committed bundles differ from a clean rebuild:"
+            git diff --stat -- plugin/scripts/
+            echo ""
+            echo "Hint: run 'npm run release -- X.Y.Z' to rebuild and commit the updated bundles."
+            exit 1
+          fi
+          echo "Bundles match committed artifacts ✓"
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: verify
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        env:
+          GIT_REF: ${{ github.ref }}
+        run: |
+          TAG_NAME=${GIT_REF#refs/tags/package-claude-code/v}
+          echo "version=$TAG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Changelog
+        env:
+          CHANGELOG_OUTPUT: ${{ github.workspace }}-CHANGELOG.txt
+        run: |
+          FOOTER=$(printf '%s\n' \
+            "## Installation" \
+            "" \
+            '```bash' \
+            "claude mcp add-from-marketplace acontext --publisher memodb-io" \
+            '```' \
+            "" \
+            "## Release Checklist" \
+            "- [x] Version synced across package.json, plugin.json, marketplace.json" \
+            "- [x] Tests passed" \
+            "- [x] Plugin bundles built and verified")
+          bash .github/scripts/generate-changelog.sh \
+            --tag-prefix "package-claude-code/v" \
+            --source-dir "src/packages/claude-code" \
+            --display-name "Claude Code Plugin" \
+            --output "$CHANGELOG_OUTPUT" \
+            --footer "$FOOTER"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt

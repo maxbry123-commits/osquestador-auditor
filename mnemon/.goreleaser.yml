@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: mnemon
+    main: .
+    binary: mnemon
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X github.com/mnemon-dev/mnemon/cmd.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    ids:
+      - mnemon
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^Merge"
+      - "(?i)eval"
+      - "(?i)codex app-server"
+      - "(?i)skill loop"
+      - "(?i)memory loop"
+      - "(?i)modular"
+      - "(?i)self-evolution"
+      - "(?i)agent memory"
+
+homebrew_casks:
+  - name: mnemon
+    ids:
+      - default
+    binaries:
+      - mnemon
+    repository:
+      owner: mnemon-dev
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: "https://github.com/mnemon-dev/mnemon"
+    description: "Persistent memory and durable agency for LLM agents"
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/mnemon"]
+          end
+
+release:
+  github:
+    owner: mnemon-dev
+    name: mnemon
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
+  header: |
+    v{{.Version}} ships Mnemon Memory and the local Agency authority in one `mnemon` binary.
