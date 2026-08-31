@@ -18,3 +18,4 @@
 {"number": 18, "slug": "rqlite", "source": "https://github.com/rqlite/rqlite.git", "source_commit": "9d0ac5dcafa3cccc05f809326fe68874e8333833", "parts": 1, "status": "COMPLETE"}
 {"number": 19, "slug": "terminusdb", "source": "https://github.com/terminusdb/terminusdb.git", "source_commit": "57f2093baeafd65e16004e84b7b58e0c5cf72858", "parts": 1, "status": "COMPLETE"}
 {"number": 20, "slug": "FalkorDB", "source": "https://github.com/FalkorDB/FalkorDB.git", "source_commit": "347ee10fd2eacecf4b7a8224ccb40e0fdf0f1989", "parts": 1, "status": "COMPLETE"}
+{"number": 21, "slug": "kuzu", "source": "https://github.com/kuzudb/kuzu.git", "source_commit": "89f0263cc7a1fd9c396d2c4953747a013556a7f9", "parts": 12, "status": "COMPLETE"}
