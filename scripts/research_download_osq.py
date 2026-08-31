@@ -5,7 +5,7 @@ os.environ['GIT_LFS_SKIP_PUSH']='1'
 os.environ['GIT_TERMINAL_PROMPT']='0'
 DEST=Path(sys.argv[1]).resolve(); WORK=Path(sys.argv[2]).resolve(); SRC=WORK/'src'; PACK=WORK/'pack'
 MANIFEST=DEST/'RESEARCH_DOWNLOAD_MANIFEST.jsonl'; SPLIT_TARGET=12000000; MAX_ZIP=17*1000*1000; BATCH_LIMIT=90*1024*1024; CHUNK=8*1024*1024
-REPOS=[('64','TriliumNext','https://github.com/TriliumNext/TriliumNext.git'),('88','xxl-job','https://github.com/xuxueli/xxl-job.git'),('89','elastic-job-lite','https://github.com/elasticjob/elastic-job-lite.git'),('90','PowerJob','https://github.com/PowerJob/PowerJob.git'),('91','cadence','https://github.com/uber/cadence.git'),('92','ray','https://github.com/ray-project/ray.git'),('93','hatchet','https://github.com/hatchet-dev/hatchet.git'),('94','conductor','https://github.com/conductor-oss/conductor.git'),('95','typescript-sdk','https://github.com/modelcontextprotocol/typescript-sdk.git'),('96','litellm','https://github.com/BerriAI/litellm.git')]
+REPOS=[('64','TriliumNext','https://github.com/TriliumNext/Trilium.git'),('88','xxl-job','https://github.com/xuxueli/xxl-job.git'),('89','elastic-job-lite','https://github.com/apache/shardingsphere-elasticjob.git'),('90','PowerJob','https://github.com/PowerJob/PowerJob.git'),('91','cadence','https://github.com/uber/cadence.git'),('92','ray','https://github.com/ray-project/ray.git'),('93','hatchet','https://github.com/hatchet-dev/hatchet.git'),('94','conductor','https://github.com/conductor-oss/conductor.git'),('95','typescript-sdk','https://github.com/modelcontextprotocol/typescript-sdk.git'),('96','litellm','https://github.com/BerriAI/litellm.git')]
 def run(c,cwd=None): subprocess.run(c,cwd=cwd,check=True)
 def note(**kw):
     MANIFEST.parent.mkdir(parents=True,exist_ok=True)
