@@ -84,3 +84,11 @@
 {"number": 85, "slug": "dagster", "source": "https://github.com/dagster-io/dagster.git", "source_commit": "fc0d15b2e601b5a14b16c5a6bd9ff5051e9c3ab0", "parts": 13, "status": "COMPLETE"}
 {"number": 86, "slug": "argo-workflows", "source": "https://github.com/argoproj/argo-workflows.git", "source_commit": "bde5adf915fbc2600a49e6e864a699544fb91368", "parts": 2, "status": "COMPLETE"}
 {"number": 87, "slug": "dolphinscheduler", "source": "https://github.com/apache/dolphinscheduler.git", "source_commit": "eca5d5e3df52f812c7820b5da6de5feb5cc140e4", "parts": 7, "status": "COMPLETE"}
+{"number": 1, "parts": 1, "slug": "docmost", "source": "https://github.com/docmost/docmost.git", "source_commit": "5b854645615026d642c5e1735a3eafc59a3211f2", "status": "COMPLETE"}
+{"number": 2, "reason": "clone", "slug": "wisemapping", "source": "https://github.com/wise-team/wisemapping.git", "status": "SKIPPED"}
+{"number": 3, "parts": 4, "slug": "playwright", "source": "https://github.com/microsoft/playwright.git", "source_commit": "de214f440b7e34937fe4886f046b78b757136087", "status": "COMPLETE"}
+{"number": 4, "parts": 1, "slug": "ytmusicapi", "source": "https://github.com/sigma67/ytmusicapi.git", "source_commit": "d69e7a10311020044a33e880e1fedf813ebb6864", "status": "COMPLETE"}
+{"number": 5, "parts": 1, "slug": "bm25s", "source": "https://github.com/xhluca/bm25s.git", "source_commit": "a213158181d4b3781ba06bc88840f89871f1c775", "status": "COMPLETE"}
+{"number": 6, "parts": 1, "slug": "sqlite-vec", "source": "https://github.com/asg017/sqlite-vec.git", "source_commit": "04d28bd21773981e2d266bbf6aa4efbd011eb4f6", "status": "COMPLETE"}
+{"number": 7, "parts": 1, "slug": "qdrant", "source": "https://github.com/qdrant/qdrant.git", "source_commit": "74f3e85b9473c62560006c043e13737ce6b48412", "status": "COMPLETE"}
+{"number": 8, "parts": 1, "slug": "lancedb", "source": "https://github.com/lancedb/lancedb.git", "source_commit": "5cbd979455d792cf6c6d8ed27e13daaeabc20e2f", "status": "COMPLETE"}
