@@ -13,3 +13,4 @@
 {"number": 13, "slug": "graphiti", "source": "https://github.com/getzep/graphiti.git", "source_commit": "8b61fce9f003cc3a05e246f6201f8b782dfe6546", "parts": 1, "status": "COMPLETE"}
 {"number": 14, "slug": "neo4j", "source": "https://github.com/neo4j/neo4j.git", "source_commit": "f213380f812b820a1b312e2ea52cb3d8f1931ccc", "parts": 4, "status": "COMPLETE"}
 {"number": 15, "slug": "sqlite", "source": "https://github.com/sqlite/sqlite.git", "source_commit": "d92acf1afe6dbd4c8aec9aa9513a518f690c2acf", "parts": 2, "status": "COMPLETE"}
+{"number": 16, "slug": "duckdb", "source": "https://github.com/duckdb/duckdb.git", "source_commit": "8616efa9da9921b9111fe46373af7936a5d96d16", "parts": 10, "status": "COMPLETE"}

@@ -1,8 +1,0 @@
-# name: test/issues/general/test_6822.test
-# description: Issue 6822: Unexpected error in TryMultiplyOperator with lcm(.,.)
-# group: [general]
-
-query I
-SELECT lcm(4, 6 :: int128)
-----
-12
