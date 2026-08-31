@@ -119,3 +119,4 @@
 {"number": 33, "parts": 1, "slug": "starlette", "source": "https://github.com/encode/starlette.git", "source_commit": "39fd0ffac25593fce39466320c9a666957ce8b8c", "status": "COMPLETE"}
 {"number": 34, "parts": 1, "slug": "tailwindcss", "source": "https://github.com/tailwindlabs/tailwindcss.git", "source_commit": "f723e834ad032aa0f42405f95f684be3cfcac8ef", "status": "COMPLETE"}
 {"number": 35, "parts": 5, "slug": "vllm", "source": "https://github.com/vllm-project/vllm.git", "source_commit": "89df6fcb808febd88de0d08fb7437e9bddcaf81e", "status": "COMPLETE"}
+{"number": 36, "parts": 1, "slug": "zustand", "source": "https://github.com/pmndrs/zustand.git", "source_commit": "b57db4f86ef179285da216eeb291266da82c361c", "status": "COMPLETE"}
