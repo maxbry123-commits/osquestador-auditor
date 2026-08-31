@@ -446,6 +446,16 @@ Mnemon architecture.
 | `MNEMON_DATA_DIR` | `~/.mnemon` | Base data directory |
 | `MNEMON_STORE` | *(active file or `default`)* | Named memory store for data isolation |
 
+**Retention**:
+
+| Environment Variable | Default | Description |
+|---|---|---|
+| `MNEMON_MAX_INSIGHTS` | `1000` | Active-insight ceiling; `0` disables automatic pruning |
+| `MNEMON_AUTO_PRUNE_MIN_AGE` | `24h` | Grace period before an insight can be auto-pruned; accepts `24h`, `7d`, or `0` |
+
+Each automatic deletion is soft, appears in the oplog as a `prune` operation, and is
+reported by ID in the triggering command's `auto_pruned_ids` field.
+
 **Embedding** (only relevant if using embeddings):
 
 | Environment Variable | Default | Description |
@@ -493,6 +503,16 @@ See [Development and Deployment](docs/DEPLOYMENT.md) for Docker, Compose, Ollama
 - [Memory Import Guide](docs/IMPORT.md) — schema and LLM prompt for importing historical chats
 - [Architecture Diagrams](docs/diagrams/) — system architecture, pipelines, lifecycle management
 
+## Star History
+
+<a href="https://star-history.dera.page/#mnemon-dev/mnemon">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=mnemon-dev/mnemon&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=mnemon-dev/mnemon" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=mnemon-dev/mnemon" />
+ </picture>
+</a>
+
 ## References
 
 Mnemon combines the paradigm of one paper with the methodology of another, grounded in the structural insight that graph memory is isomorphic to LLM attention. See [Theoretical Foundations](docs/DESIGN.md#25-theoretical-foundations) for details.
@@ -506,3 +526,7 @@ Mnemon combines the paradigm of one paper with the methodology of another, groun
 Copyright 2026 Grivn and Mnemon contributors.
 
 [Apache-2.0](LICENSE)
+
+The bracketed copyright example near the end of `LICENSE` is part of Apache
+2.0's standard application appendix; this section carries the project's actual
+copyright notice.
