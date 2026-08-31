@@ -75,3 +75,4 @@
 {"number": 76, "slug": "searxng", "source": "https://github.com/searxng/searxng.git", "source_commit": "d226b78bc4c9ab93a84849b8ad128a68c41be17c", "parts": 1, "status": "COMPLETE"}
 {"number": 77, "slug": "Perplexica", "source": "https://github.com/ItzCrazyKns/Perplexica.git", "source_commit": "7dc5d088f7262fbc5e39037f84940a8a2193c5fb", "parts": 4, "status": "COMPLETE"}
 {"number": 78, "slug": "khoj", "source": "https://github.com/khoj-ai/khoj.git", "source_commit": "ae229ca894c0b80ad84664afcfdde523b5e87057", "parts": 7, "status": "COMPLETE"}
+{"number": 79, "slug": "inngest", "source": "https://github.com/inngest/inngest.git", "source_commit": "fbafabf6cee630e69820c24ac75aa854139ea54e", "parts": 8, "status": "COMPLETE"}
