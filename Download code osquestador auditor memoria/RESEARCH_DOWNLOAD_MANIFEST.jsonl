@@ -61,3 +61,5 @@
 {"number": 61, "slug": "joplin", "source": "https://github.com/laurent22/joplin.git", "source_commit": "65d0a81a37e1b0f7e513f431ddbe621b33678c4e", "parts": 14, "status": "COMPLETE"}
 {"number": 62, "slug": "memos", "source": "https://github.com/usememos/memos.git", "source_commit": "59541ea438b4531ca50f9e25f110989713b987d2", "parts": 1, "status": "COMPLETE"}
 {"number": 63, "slug": "logseq", "source": "https://github.com/logseq/logseq.git", "source_commit": "3e85583fa47eb2173c136ef45fcc3c1dd2174443", "parts": 3, "status": "COMPLETE"}
+{"number": 65, "slug": "anytype-ts", "source": "https://github.com/anyproto/anytype-ts.git", "source_commit": "5341896df6ec459d609627a8bd1be063e67dce8c", "parts": 6, "status": "COMPLETE"}
+{"number": 66, "slug": "AppFlowy", "source": "https://github.com/AppFlowy-IO/AppFlowy.git", "source_commit": "5cf3a365dec0d59f64bad1ee4bb1050471a39b93", "parts": 2, "status": "COMPLETE"}
