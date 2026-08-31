@@ -52,3 +52,7 @@
 {"number": 52, "slug": "fastapi", "source": "https://github.com/tiangolo/fastapi.git", "source_commit": "49033471594ea5d99a80abdf1043231b7791ee49", "parts": 2, "status": "COMPLETE"}
 {"number": 53, "slug": "python-diskcache", "source": "https://github.com/grantjenks/python-diskcache.git", "source_commit": "ebfa37cd99d7ef716ec452ad8af4b4276a8e2233", "parts": 1, "status": "COMPLETE"}
 {"number": 54, "slug": "cachelib", "source": "https://github.com/facebook/cachelib.git", "source_commit": "43498a3d7c454f08ac38069f4f6dda7efdf8afe4", "parts": 1, "status": "COMPLETE"}
+{"number": 55, "slug": "GPTCache", "source": "https://github.com/zilliztech/GPTCache.git", "source_commit": "c59fb3a6152a4458b2a070ca183b61c4b614095f", "parts": 2, "status": "COMPLETE"}
+{"number": 56, "slug": "valkey", "source": "https://github.com/valkey-io/valkey.git", "source_commit": "11a74cf243f006d1a22cc832ea2251c24e0a855f", "parts": 1, "status": "COMPLETE"}
+{"number": 57, "slug": "automerge", "source": "https://github.com/automerge/automerge.git", "source_commit": "47908d6c04a0ce3fea0fa1d6b7f5ce6ba3e5792e", "parts": 6, "status": "COMPLETE"}
+{"number": 58, "slug": "obsidian-releases", "source": "https://github.com/obsidianmd/obsidian-releases.git", "source_commit": "fb0ca9e1e8299433421a4aebe3e51aa561934876", "parts": 1, "status": "COMPLETE"}
