@@ -102,3 +102,4 @@
 {"number": 16, "parts": 1, "slug": "agents-deep-research", "source": "https://github.com/qx-labs/agents-deep-research.git", "source_commit": "5e7f4b2321b20bf04c72a405688ab9980887c603", "status": "COMPLETE"}
 {"number": 17, "parts": 1, "slug": "docker-py", "source": "https://github.com/docker/docker-py.git", "source_commit": "afc6d1ee308e78b908b96a94298c37fa8c465588", "status": "COMPLETE"}
 {"number": 18, "parts": 1, "slug": "guardrails", "source": "https://github.com/guardrails-ai/guardrails.git", "source_commit": "06d0ff2c5f9bcb493d976b76f885e37e41ce845d", "status": "COMPLETE"}
+{"number": 19, "parts": 124, "slug": "plex", "source": "https://github.com/IBM/plex.git", "source_commit": "bf260093582f04622aacc1e9f9ca604d7ccd0c42", "status": "COMPLETE"}
