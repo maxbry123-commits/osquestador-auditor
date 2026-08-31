@@ -63,3 +63,4 @@
 {"number": 63, "slug": "logseq", "source": "https://github.com/logseq/logseq.git", "source_commit": "3e85583fa47eb2173c136ef45fcc3c1dd2174443", "parts": 3, "status": "COMPLETE"}
 {"number": 65, "slug": "anytype-ts", "source": "https://github.com/anyproto/anytype-ts.git", "source_commit": "5341896df6ec459d609627a8bd1be063e67dce8c", "parts": 6, "status": "COMPLETE"}
 {"number": 66, "slug": "AppFlowy", "source": "https://github.com/AppFlowy-IO/AppFlowy.git", "source_commit": "5cf3a365dec0d59f64bad1ee4bb1050471a39b93", "parts": 2, "status": "COMPLETE"}
+{"number": 67, "slug": "AFFiNE", "source": "https://github.com/toeverything/AFFiNE.git", "source_commit": "49536827790702ad0ab6d3be3405d891a6b19f83", "parts": 7, "status": "COMPLETE"}
