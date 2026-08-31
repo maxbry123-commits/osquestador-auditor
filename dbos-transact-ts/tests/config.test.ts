@@ -1,0 +1,648 @@
+import * as utils from '../src/utils';
+import {
+  ConfigFile,
+  getDbosConfig,
+  getSystemDatabaseUrl,
+  overwriteConfigForDBOSCloud,
+  readConfigFile,
+  translateDbosConfig,
+} from '../src/config';
+import { AssertionError } from 'assert';
+import { DBOSConfigInternal, DBOSRuntimeConfig } from '../src/dbos-executor';
+import { DBOSJSON } from '../src/serialization';
+
+describe('dbos-config', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = {};
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  describe('readConfigFile', () => {
+    test('reads package name if not specified in config file', async () => {
+      const mockConfigFile = `system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable'`;
+      jest.spyOn(utils, 'readFile').mockResolvedValueOnce(mockConfigFile);
+      const mockPackageJson = `{ "name": "test-app-from-package-json" }`;
+      jest.spyOn(utils, 'readFile').mockResolvedValueOnce(mockPackageJson);
+
+      const cfg: ConfigFile = await readConfigFile();
+      expect(cfg).toEqual({
+        name: 'test-app-from-package-json',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      });
+    });
+
+    test('handles env substitution', async () => {
+      const database_url = `test-value-${Date.now()}`;
+      process.env.MY_DATABASE_URL = database_url;
+
+      const mockConfigFile = `
+        name: 'test-app'
+        system_database_url: \${MY_DATABASE_URL}`;
+      jest.spyOn(utils, 'readFile').mockResolvedValue(mockConfigFile);
+
+      const cfg: ConfigFile = await readConfigFile();
+      expect(cfg).toEqual({
+        name: 'test-app',
+        system_database_url: database_url,
+      });
+    });
+
+    test('handles missing env substitution', async () => {
+      process.env = {};
+
+      const mockConfigFile = `
+        name: 'test-app'
+        system_database_url: \${MY_DATABASE_URL}`;
+      jest.spyOn(utils, 'readFile').mockResolvedValue(mockConfigFile);
+
+      const cfg: ConfigFile = await readConfigFile();
+      expect(cfg).toEqual({
+        name: 'test-app',
+        system_database_url: '',
+      });
+    });
+
+    test('handles single string endpoints', async () => {
+      const mockConfigFile = `
+        name: 'test-app'
+        telemetry:
+            OTLPExporter:
+                tracesEndpoint: http://otel-collector:4317/from-file
+                logsEndpoint: http://otel-collector:4317/logs
+        `;
+      jest.spyOn(utils, 'readFile').mockResolvedValue(mockConfigFile);
+
+      const cfg: ConfigFile = await readConfigFile();
+      expect(cfg).toEqual({
+        name: 'test-app',
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: 'http://otel-collector:4317/from-file',
+            logsEndpoint: 'http://otel-collector:4317/logs',
+          },
+        },
+      });
+    });
+
+    test('handles string array endpoints', async () => {
+      const mockConfigFile = `
+        name: 'test-app'
+        telemetry:
+            OTLPExporter:
+                tracesEndpoint:
+                  - http://otel-collector:4317/from-file
+                  - http://otel-collector:4317/from-file2
+                logsEndpoint:
+                  - http://otel-collector:4317/logs
+                  - http://otel-collector:4317/logs2
+        `;
+      jest.spyOn(utils, 'readFile').mockResolvedValue(mockConfigFile);
+
+      const cfg: ConfigFile = await readConfigFile();
+      expect(cfg).toEqual({
+        name: 'test-app',
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: ['http://otel-collector:4317/from-file', 'http://otel-collector:4317/from-file2'],
+            logsEndpoint: ['http://otel-collector:4317/logs', 'http://otel-collector:4317/logs2'],
+          },
+        },
+      });
+    });
+
+    class FakeNotFoundError extends Error {
+      readonly code = 'ENOENT';
+    }
+
+    test('config and package files not found', async () => {
+      jest.spyOn(utils, 'readFile').mockImplementation(() => {
+        throw new FakeNotFoundError('not found');
+      });
+      const configFile = await readConfigFile();
+      expect(configFile).toEqual({});
+    });
+
+    test('config file not found', async () => {
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new FakeNotFoundError('not found');
+      });
+      jest.spyOn(utils, 'readFile').mockResolvedValueOnce(`{ "name": "test-app-from-package-json" }`);
+      const configFile = await readConfigFile();
+      expect(configFile).toEqual({ name: 'test-app-from-package-json' });
+    });
+
+    test('package file not found', async () => {
+      jest
+        .spyOn(utils, 'readFile')
+        .mockResolvedValueOnce(
+          `system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable'`,
+        );
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new FakeNotFoundError('not found');
+      });
+      const configFile = await readConfigFile();
+      expect(configFile).toEqual({
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      });
+    });
+
+    test('does not read package if config file has name', async () => {
+      jest.spyOn(utils, 'readFile').mockResolvedValueOnce(`name: 'test-app'`);
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new Error('Should not be called');
+      });
+      const configFile = await readConfigFile();
+      expect(configFile).toEqual({ name: 'test-app' });
+    });
+
+    test('does not read package if config file has name', async () => {
+      jest.spyOn(utils, 'readFile').mockResolvedValueOnce(`name: 'test-app'`);
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new Error('Should not be called');
+      });
+      const configFile = await readConfigFile();
+      expect(configFile).toEqual({ name: 'test-app' });
+    });
+
+    test('throws on non-ENOENT config read error', async () => {
+      jest.spyOn(utils, 'readFile').mockImplementation(() => {
+        throw new Error('Some other error');
+      });
+      await expect(readConfigFile()).rejects.toThrow(new Error('Some other error'));
+    });
+
+    test('throws on non-ENOENT package read error', async () => {
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new FakeNotFoundError('not found');
+      });
+      jest.spyOn(utils, 'readFile').mockImplementationOnce(() => {
+        throw new Error('Some other error');
+      });
+      await expect(readConfigFile()).rejects.toThrow(new Error('Some other error'));
+    });
+  });
+
+  describe('getDbosConfig', () => {
+    test('translates otlp endpoints from string to list', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: 'http://otel-collector:4317/from-file',
+            logsEndpoint: 'http://otel-collector:4317/logs',
+          },
+        },
+      };
+      const config = getDbosConfig(configFile);
+      expect(config.telemetry.OTLPExporter?.tracesEndpoint).toEqual(['http://otel-collector:4317/from-file']);
+      expect(config.telemetry.OTLPExporter?.logsEndpoint).toEqual(['http://otel-collector:4317/logs']);
+    });
+
+    test('support array oltp endpoints', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: ['http://otel-collector:4317/from-file', 'http://otel-collector:4317/from-file2'],
+            logsEndpoint: ['http://otel-collector:4317/logs', 'http://otel-collector:4317/logs2'],
+          },
+        },
+      };
+      const config = getDbosConfig(configFile);
+      expect(config.telemetry?.OTLPExporter?.tracesEndpoint).toEqual([
+        'http://otel-collector:4317/from-file',
+        'http://otel-collector:4317/from-file2',
+      ]);
+      expect(config.telemetry?.OTLPExporter?.logsEndpoint).toEqual([
+        'http://otel-collector:4317/logs',
+        'http://otel-collector:4317/logs2',
+      ]);
+    });
+
+    test('logLevel default', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+      };
+      const config = getDbosConfig(configFile);
+      expect(config.telemetry.logs?.logLevel).toEqual('info');
+    });
+
+    test('logLevel specified', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        telemetry: {
+          logs: {
+            logLevel: 'debug',
+          },
+        },
+      };
+      const config = getDbosConfig(configFile);
+      expect(config.telemetry.logs?.logLevel).toEqual('debug');
+    });
+
+    test('logLevel override', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        telemetry: {
+          logs: {
+            logLevel: 'debug',
+          },
+        },
+      };
+      const config = getDbosConfig(configFile, { logLevel: 'error' });
+      expect(config.telemetry.logs?.logLevel).toEqual('error');
+    });
+
+    test('forceConsole override', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+      };
+      const config = getDbosConfig(configFile, { forceConsole: true });
+      expect(config.telemetry.logs?.forceConsole).toBeTruthy();
+    });
+
+    test('returns correct database url', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      };
+      const config = getDbosConfig(configFile);
+      expect(config.systemDatabaseUrl).toBe('postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable');
+    });
+
+    test('handles node language', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        language: 'node',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      };
+      expect(() => getDbosConfig(configFile)).not.toThrow();
+    });
+
+    test('handles missing language', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      };
+      expect(() => getDbosConfig(configFile)).not.toThrow();
+    });
+
+    test('throws on non node language', () => {
+      const configFile: ConfigFile = {
+        name: 'test-app',
+        language: 'not-node',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      };
+      expect(() => getDbosConfig(configFile)).toThrow();
+    });
+  });
+
+  describe('getSystemDatabaseUrl', () => {
+    test('uses database_url from config when provided', () => {
+      const databaseUrl = getSystemDatabaseUrl({
+        name: 'Test App',
+        system_database_url: 'postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable',
+      });
+      expect(databaseUrl).toBe('postgresql://a:b@c:1234/appdb?connect_timeout=22&sslmode=disable');
+    });
+
+    test('uses default values when config is empty', () => {
+      const databaseUrl = getSystemDatabaseUrl({
+        name: 'Test App',
+      });
+      expect(databaseUrl).toBe(
+        'postgresql://postgres:dbos@localhost:5432/test_app_dbos_sys?connect_timeout=10&sslmode=disable',
+      );
+    });
+
+    test('throws when db url not set and app name is missing', () => {
+      expect(() => getSystemDatabaseUrl({})).toThrow(AssertionError);
+    });
+
+    test('uses PG env values when config is empty', () => {
+      process.env.PGHOST = 'envhost';
+      process.env.PGPORT = '7777';
+      process.env.PGUSER = 'envuser';
+      process.env.PGPASSWORD = 'envpass';
+
+      const databaseUrl = getSystemDatabaseUrl({
+        name: 'Test App',
+      });
+      expect(databaseUrl).toBe(
+        'postgresql://envuser:envpass@envhost:7777/test_app_dbos_sys?connect_timeout=10&sslmode=allow',
+      );
+    });
+
+    test('correctly handles app names with spaces', () => {
+      const url = getSystemDatabaseUrl({
+        name: 'app name with spaces',
+      });
+      expect(url).toBe(
+        'postgresql://postgres:dbos@localhost:5432/app_name_with_spaces_dbos_sys?connect_timeout=10&sslmode=disable',
+      );
+    });
+
+    test('correctly handles db url w/o password', () => {
+      const url = getSystemDatabaseUrl({
+        system_database_url: 'postgresql://postgres@localhost:5432/dbostest?sslmode=disable',
+      });
+      expect(url).toBe('postgresql://postgres@localhost:5432/dbostest?sslmode=disable');
+    });
+
+    test('throws with invalid database_url format', () => {
+      expect(() => getSystemDatabaseUrl({ system_database_url: 'not-a-valid-url' })).toThrow();
+    });
+
+    test.each(['postgres://host:5432/db', 'postgres://user:pass@:5432/db', 'postgres://user:pass@host:5432/'])(
+      'throws when database_url is missing required fields %s',
+      (system_database_url) => {
+        expect(() => getSystemDatabaseUrl({ system_database_url })).toThrow();
+      },
+    );
+
+    test.each(['some_DB', '123db', 'very_very_very_long_very_very_very_long_very_very__database_name', 'largeDB'])(
+      'throws on invalid database name %s',
+      (name) => {
+        expect(() => getSystemDatabaseUrl({ system_database_url: `postgres://host:5432/${name}` })).toThrow();
+      },
+    );
+  });
+
+  describe('translateDbosConfig', () => {
+    test('translate with name', () => {
+      const internalConfig = translateDbosConfig({
+        name: 'dbostest',
+      });
+      expect(internalConfig).toEqual({
+        name: 'dbostest',
+        systemDatabaseUrl:
+          'postgresql://postgres:dbos@localhost:5432/dbostest_dbos_sys?connect_timeout=10&sslmode=disable',
+        sysDbPoolSize: undefined,
+        systemDatabasePool: undefined,
+        systemDatabaseSchemaName: 'dbos',
+        schedulerPollingIntervalMs: undefined,
+        serializer: DBOSJSON,
+        useListenNotify: true,
+        runMigrations: true,
+        telemetry: {
+          logs: {
+            logLevel: 'info',
+            addContextMetadata: undefined,
+            forceConsole: false,
+          },
+          OTLPExporter: {
+            tracesEndpoint: undefined,
+            logsEndpoint: undefined,
+          },
+          otelAttributeFormat: 'legacy',
+        },
+      });
+    });
+
+    test('translate passes through systemDatabasePollingConcurrency', () => {
+      let internalConfig = translateDbosConfig({
+        name: 'dbostest',
+        systemDatabasePoolSize: 50,
+        systemDatabasePollingConcurrency: 8,
+      });
+      expect(internalConfig.sysDbPoolSize).toBe(50);
+      expect(internalConfig.systemDatabasePollingConcurrency).toBe(8);
+      // When unset, translation leaves it undefined; the default (half the pool)
+      // is materialized later in the SystemDatabase constructor.
+      internalConfig = translateDbosConfig({
+        name: 'dbostest',
+        systemDatabasePoolSize: 50,
+      });
+      expect(internalConfig.sysDbPoolSize).toBe(50);
+      expect(internalConfig.systemDatabasePollingConcurrency).toBeUndefined();
+    });
+
+    test('translate validates maxConcurrentQueueDispatches', () => {
+      const internalConfig = translateDbosConfig({
+        name: 'dbostest',
+        maxConcurrentQueueDispatches: 4,
+      });
+      expect(internalConfig.maxConcurrentQueueDispatches).toBe(4);
+      // Unset is allowed (dispatcher defaults it to 3).
+      expect(translateDbosConfig({ name: 'dbostest' }).maxConcurrentQueueDispatches).toBeUndefined();
+      // Every non-positive-integer value is rejected.
+      for (const bad of [0, -1, 2.5, NaN, Infinity]) {
+        expect(() => translateDbosConfig({ name: 'dbostest', maxConcurrentQueueDispatches: bad })).toThrow(
+          'maxConcurrentQueueDispatches must be a positive integer',
+        );
+      }
+    });
+
+    test('translate validates notificationCoalesceMs', () => {
+      // A valid value is threaded through.
+      expect(translateDbosConfig({ name: 'dbostest', notificationCoalesceMs: 1 }).notificationCoalesceMs).toBe(1);
+      // Unset is allowed (the system database defaults it).
+      expect(translateDbosConfig({ name: 'dbostest' }).notificationCoalesceMs).toBeUndefined();
+      // Invalid values are rejected, including NaN/inf which slip past a bare < 1 check.
+      for (const bad of [0.5, 0, -1, NaN, Infinity]) {
+        expect(() => translateDbosConfig({ name: 'dbostest', notificationCoalesceMs: bad })).toThrow(
+          'notificationCoalesceMs must be a finite number at least 1 millisecond',
+        );
+      }
+    });
+
+    test('translate passes through a custom logger', () => {
+      const myLogger = { info: () => {}, debug: () => {}, warn: () => {}, error: () => {} };
+      let internalConfig = translateDbosConfig({ name: 'dbostest', logger: myLogger });
+      expect(internalConfig.telemetry.logs?.logger).toBe(myLogger);
+      internalConfig = translateDbosConfig({ name: 'dbostest' });
+      expect(internalConfig.telemetry.logs?.logger).toBeUndefined();
+    });
+
+    test('translate with force console', () => {
+      const internalConfig = translateDbosConfig(
+        {
+          name: 'dbostest',
+        },
+        true,
+      );
+      expect(internalConfig).toEqual({
+        name: 'dbostest',
+        systemDatabaseUrl:
+          'postgresql://postgres:dbos@localhost:5432/dbostest_dbos_sys?connect_timeout=10&sslmode=disable',
+        sysDbPoolSize: undefined,
+        systemDatabasePool: undefined,
+        systemDatabaseSchemaName: 'dbos',
+        schedulerPollingIntervalMs: undefined,
+        serializer: DBOSJSON,
+        useListenNotify: true,
+        runMigrations: true,
+        telemetry: {
+          logs: {
+            logLevel: 'info',
+            addContextMetadata: undefined,
+            forceConsole: true,
+          },
+          OTLPExporter: {
+            tracesEndpoint: undefined,
+            logsEndpoint: undefined,
+          },
+          otelAttributeFormat: 'legacy',
+        },
+      });
+    });
+
+    test('translate with db url', () => {
+      const internalConfig = translateDbosConfig({
+        systemDatabaseUrl:
+          'postgres://jon:doe@mother:2345/dbostest?sslmode=require&sslrootcert=my_cert&connect_timeout=7',
+      });
+      expect(internalConfig).toEqual({
+        name: undefined,
+        systemDatabaseUrl:
+          'postgres://jon:doe@mother:2345/dbostest?sslmode=require&sslrootcert=my_cert&connect_timeout=7',
+        sysDbPoolSize: undefined,
+        systemDatabasePool: undefined,
+        systemDatabaseSchemaName: 'dbos',
+        schedulerPollingIntervalMs: undefined,
+        serializer: DBOSJSON,
+        useListenNotify: true,
+        runMigrations: true,
+        telemetry: {
+          logs: {
+            logLevel: 'info',
+            addContextMetadata: undefined,
+            forceConsole: false,
+          },
+          OTLPExporter: {
+            tracesEndpoint: undefined,
+            logsEndpoint: undefined,
+          },
+          otelAttributeFormat: 'legacy',
+        },
+      });
+    });
+
+    test('translate with db & sysdb urls', () => {
+      const internalConfig = translateDbosConfig({
+        systemDatabaseUrl: 'postgres://foo:bar@father:1234/blahblahblah',
+      });
+      expect(internalConfig).toEqual({
+        name: undefined,
+        systemDatabaseUrl: 'postgres://foo:bar@father:1234/blahblahblah',
+        sysDbPoolSize: undefined,
+        systemDatabasePool: undefined,
+        systemDatabaseSchemaName: 'dbos',
+        schedulerPollingIntervalMs: undefined,
+        serializer: DBOSJSON,
+        useListenNotify: true,
+        runMigrations: true,
+        telemetry: {
+          logs: {
+            logLevel: 'info',
+            addContextMetadata: undefined,
+            forceConsole: false,
+          },
+          OTLPExporter: {
+            tracesEndpoint: undefined,
+            logsEndpoint: undefined,
+          },
+          otelAttributeFormat: 'legacy',
+        },
+      });
+    });
+  });
+
+  describe('overwriteConfigForDBOSCloud', () => {
+    const internalConfig: DBOSConfigInternal = {
+      name: 'my-app',
+      systemDatabaseUrl: 'postgres://foo:bar@father:1234/blahblahblah',
+      systemDatabaseSchemaName: 'dbos',
+      serializer: DBOSJSON,
+      useListenNotify: true,
+      runMigrations: true,
+      telemetry: {
+        logs: {
+          logLevel: 'info',
+          forceConsole: false,
+        },
+        OTLPExporter: {
+          tracesEndpoint: ['http://otel-collector:4317/traces'],
+          logsEndpoint: ['http://otel-collector:4317/logs'],
+        },
+      },
+    };
+    const runtimeConfig: DBOSRuntimeConfig = {
+      admin_port: 0,
+      runAdminServer: false,
+      start: [],
+      setup: [],
+    };
+
+    test('throws when cloud db url is missing', () => {
+      expect(() => overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, {})).toThrow();
+    });
+
+    test('uses cloud app name', () => {
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'fake://db/url';
+      const [newConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, { name: 'cloud-app-name' });
+      expect(newConfig.name).toBe('cloud-app-name');
+    });
+
+    test('uses cloud db url', () => {
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'postgres://a:b@c:2345/cloud_db';
+      const [newConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, { name: 'cloud-app-name' });
+      expect(newConfig.systemDatabaseUrl).toBe('postgres://a:b@c:2345/cloud_db');
+    });
+
+    test('uses cloud sys db url when set', () => {
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'postgres://a:b@c:2345/cloud_sys_db';
+      const [newConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, { name: 'cloud-app-name' });
+      expect(newConfig.systemDatabaseUrl).toBe('postgres://a:b@c:2345/cloud_sys_db');
+    });
+
+    test('force admin server', () => {
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'fake://db/url';
+      const [, newRuntimeConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, {});
+      expect(newRuntimeConfig.admin_port).toBe(3001);
+      expect(newRuntimeConfig.runAdminServer).toBe(true);
+    });
+
+    test('combine otel endpoints', () => {
+      console.log(internalConfig.telemetry.OTLPExporter);
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'fake://db/url';
+      const [newConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, {
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: ['http://otel-collector:4317/traces-from-cloud'],
+            logsEndpoint: ['http://otel-collector:4317/logs-from-cloud'],
+          },
+        },
+      });
+      expect(newConfig.telemetry.OTLPExporter?.logsEndpoint).toEqual([
+        'http://otel-collector:4317/logs',
+        'http://otel-collector:4317/logs-from-cloud',
+      ]);
+      expect(newConfig.telemetry.OTLPExporter?.tracesEndpoint).toEqual([
+        'http://otel-collector:4317/traces',
+        'http://otel-collector:4317/traces-from-cloud',
+      ]);
+      console.log(internalConfig.telemetry.OTLPExporter);
+    });
+
+    test('combine otel endpoints no duplicates', () => {
+      console.log(internalConfig.telemetry.OTLPExporter);
+      process.env.DBOS_SYSTEM_DATABASE_URL = 'fake://db/url';
+      const [newConfig] = overwriteConfigForDBOSCloud(internalConfig, runtimeConfig, {
+        telemetry: {
+          OTLPExporter: {
+            tracesEndpoint: ['http://otel-collector:4317/traces'],
+            logsEndpoint: ['http://otel-collector:4317/logs'],
+          },
+        },
+      });
+      expect(newConfig.telemetry.OTLPExporter?.logsEndpoint).toEqual(['http://otel-collector:4317/logs']);
+      expect(newConfig.telemetry.OTLPExporter?.tracesEndpoint).toEqual(['http://otel-collector:4317/traces']);
+      console.log(internalConfig.telemetry.OTLPExporter);
+    });
+  });
+});

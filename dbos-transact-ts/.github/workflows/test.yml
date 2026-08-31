@@ -1,0 +1,132 @@
+name: Test DBOS
+
+on:
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/heads/release/') }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22', '24']
+
+    services:
+      # Postgres service container
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          # Specify the password for Postgres superuser.
+          POSTGRES_PASSWORD: dbos
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # CockroachDB service container
+      cockroachdb:
+        image: cockroachdb/cockroach:latest
+        ports:
+          - 26257:26257
+        env:
+          COCKROACH_ARGS: start-single-node --insecure
+        options: >-
+          --health-cmd "curl -f http://localhost:8080/health?ready=1 || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Compile and Test
+        working-directory: ./
+        run: |
+          npm ci
+          npm run build
+          npm run lint
+          npm run test:unit
+        env:
+          PGPASSWORD: dbos
+          DB_PASSWORD: dbos
+          DB_USER: postgres
+          DBOS_COCKROACHDB_URL: postgresql://root@localhost:26257/postgres
+          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SILENCE_LOGS: true
+
+  # The workspace packages test independently of the SDK's own suite, so they run as their own job
+  package-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22', '24']
+
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: dbos
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # Needed by the Kafka receiver packages. No CockroachDB: no package test uses it.
+      kafka:
+        image: apache/kafka
+        ports:
+          - 9092:9092
+        options: >-
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Test packages
+        working-directory: ./
+        run: |
+          npm ci
+          npm run build
+          npm run test:packages
+        env:
+          PGPASSWORD: dbos
+          DB_PASSWORD: dbos
+          DB_USER: postgres
+          KAFKA_BROKER: localhost:9092
+          NPM_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          SILENCE_LOGS: true
+
+  package-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Use Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '20'
+      - name: Verify package publishing correctness
+        run: |
+          npm ci
+          npm run check:package

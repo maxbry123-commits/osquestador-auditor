@@ -1,0 +1,35 @@
+{
+  "name": "@dbos-inc/create",
+  "version": "0.0.0-placeholder",
+  "description": "Tool for performing project initialization from template",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbos-inc/dbos-transact-ts",
+    "directory": "packages/create"
+  },
+  "homepage": "https://docs.dbos.dev/",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "test": "echo \"No tests\""
+  },
+  "bin": {
+    "create": "./dist/cli.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "@types/prompt-sync": "^4.2.3",
+    "@types/update-notifier": "^6.0.8",
+    "@types/validator": "^13.11.9",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.2",
+    "chalk": "4.1.2",
+    "commander": "^12.0.0",
+    "fast-glob": "^3.3.3",
+    "update-notifier": "^7.0.0",
+    "validator": "^13.12.0"
+  }
+}

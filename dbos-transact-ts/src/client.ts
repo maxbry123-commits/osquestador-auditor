@@ -1,0 +1,1014 @@
+import {
+  SystemDatabase,
+  type DuplicationPolicy,
+  type WorkflowStatusInternal,
+  type WorkflowScheduleInternal,
+  type WorkflowScheduleUpdate,
+  type VersionInfo,
+  type ApplicationRowCounts,
+  type DebounceParams,
+  type DebounceResult,
+  DBOS_FUNCNAME_READSTREAM,
+  DEFAULT_POOL_SIZE,
+} from './system_database';
+
+import { DLogger, GlobalLogger } from './telemetry/logs';
+import { randomUUID } from 'node:crypto';
+import {
+  type GetWorkflowsInput,
+  StatusString,
+  type StepInfo,
+  type ListWorkflowStepsOptions,
+  type WorkflowHandle,
+  WorkflowSerializationFormat,
+  type WorkflowStatus,
+  validateWorkflowAttributes,
+} from './workflow';
+import {
+  type GetEventOptions,
+  type PollingOptions,
+  type WaitFirstOptions,
+  type WaitAllOptions,
+  type SetWorkflowDelayOptions,
+  type CancelWorkflowsOptions,
+  type ReadStreamOptions,
+  resolvePollingIntervalMs,
+  resolveTimeoutSeconds,
+  resolveDelayEpochMS,
+  resolveStreamOffset,
+  resolveStreamPollingIntervalMs,
+  resolveStreamTimeoutMS,
+  ReadStreamOffsetOptions,
+} from './dbos';
+import { readStreamCore, readStreamOffsetCore } from './streams';
+import {
+  DBOSJSON,
+  DBOSSerializer,
+  deserializePositionalArgs,
+  deserializeValue,
+  serializeArgs,
+  serializeValue,
+} from './serialization';
+import {
+  forkWorkflow,
+  getWorkflow,
+  listQueuedWorkflows,
+  listWorkflows,
+  listWorkflowSteps,
+  toWorkflowStatus,
+} from './workflow_management';
+import { DBOSExecutor } from './dbos-executor';
+import {
+  DBOSAwaitedWorkflowCancelledError,
+  DBOSAwaitedWorkflowExceededMaxRecoveryAttempts,
+  DBOSError,
+  DBOSInvalidWorkflowTransitionError,
+  DBOSQueueDuplicatedError,
+} from './error';
+import { ClientBase, Pool } from 'pg';
+import {
+  type WorkflowSchedule,
+  toWorkflowSchedule,
+  createScheduleId,
+  ScheduleOptions,
+  triggerSchedule,
+  backfillSchedule,
+} from './scheduler/scheduler';
+import { validateCrontab, validateTimezone } from './scheduler/crontab';
+import { logQueue, RegisterQueueOptions, WorkflowQueue } from './wfqueue';
+
+/**
+ * EnqueueOptions defines the options that can be passed to the `enqueue` method of the DBOSClient.
+ * This includes parameters like queue name, workflow name, workflow class name, and other optional settings.
+ */
+export interface ClientEnqueueOptions {
+  /**
+   * The name of the queue to which the workflow will be enqueued.
+   */
+  queueName: string;
+  /**
+   * The name of the method that will be invoked when the workflow runs.
+   */
+  workflowName: string;
+  /**
+   * The name of the class containing the method that will be invoked when the workflow runs.
+   * If not provided, an empty string will be used as the class name.
+   */
+  workflowClassName?: string;
+  /**
+   * The name of the ConfiguredInstance containing the method that will be invoked when the workflow runs.
+   * If not provided, an empty string will be used as the configured instance name.
+   */
+  workflowConfigName?: string;
+  /**
+   * An optional identifier for the workflow to ensure idempotency.
+   * If not provided, a new UUID will be generated.
+   */
+  workflowID?: string;
+  /**
+   * The application version associated with this workflow.
+   * If not provided, the version of the DBOS app that first dequeues the workflow will be used.
+   */
+  appVersion?: string;
+  /**
+   * Timeout for the workflow execution in milliseconds.
+   * Note, timeout starts when the workflow is dequeued.
+   * If not provided, the workflow timeout will not be set and the workflow will run to completion.
+   */
+  workflowTimeoutMS?: number;
+  /**
+   * An ID used to identify enqueues workflows that will be used for de-duplication.
+   * If not provided, no de-duplication will be performed.
+   */
+  deduplicationID?: string;
+
+  /**
+   * Serialization to use for enqueued request
+   *   Default is to use the serialization for JS/TS, as this is the most flexible
+   *   If `portable_json` is specified, a more limited JSON serialization is used,
+   *    allowing cross-language enqueues of workflows with simple semantics
+   */
+  serializationType?: WorkflowSerializationFormat;
+
+  /**
+   * An optional priority for the workflow.
+   * Workflows with higher priority will be dequeued first.
+   */
+  priority?: number;
+  /**
+   * Partition key for partitioned queues.
+   * Required when enqueueing on a partitioned queue.
+   */
+  queuePartitionKey?: string;
+  /**
+   * Number of seconds to delay the workflow before it starts executing.
+   * The workflow will be in DELAYED status until the delay expires, then transition to ENQUEUED.
+   */
+  delaySeconds?: number;
+  /**
+   * How to handle a collision with another workflow that has the same `deduplicationID`
+   * on the same queue.
+   *   `'reject'` (default): throw `DBOSQueueDuplicatedError`.
+   *   `'return-existing'`: return a handle to the existing workflow instead of throwing.
+   *     Requires `deduplicationID`. Arguments passed by the colliding caller are discarded
+   *     and the handle resolves with the original workflow's result.
+   */
+  duplicationPolicy?: DuplicationPolicy;
+  /**
+   * Custom key-value attributes to attach to the workflow at creation.
+   * Attributes are searchable via the `attributes` filter of `listWorkflows`.
+   */
+  attributes?: Record<string, unknown>;
+  /**
+   * The application that owns and runs this workflow. Defaults to the enqueuer's own
+   * application. Leaving both unset enqueues an unclaimed workflow, which any
+   * application sharing the system database may run.
+   */
+  applicationName?: string;
+}
+
+/**
+ * Options for client send
+ */
+interface ClientSendOptions {
+  /**
+   * Serialization to use for sent message
+   *   Default is to use the serialization for TS/JS, as this is the most flexible
+   *   If `portable_json` is specified, a more limited JSON serialization is used,
+   *     allowing cross-language message sends
+   */
+  serializationType?: WorkflowSerializationFormat;
+}
+
+export class ClientHandle<R> implements WorkflowHandle<R> {
+  constructor(
+    readonly systemDatabase: SystemDatabase,
+    readonly workflowUUID: string,
+  ) {}
+
+  getWorkflowUUID(): string {
+    return this.workflowUUID;
+  }
+
+  get workflowID(): string {
+    return this.workflowUUID;
+  }
+
+  async getStatus(): Promise<WorkflowStatus | null> {
+    const status = await this.systemDatabase.getWorkflowStatus(this.workflowUUID);
+    return status ? toWorkflowStatus(status, this.systemDatabase.getSerializer()) : null;
+  }
+
+  async getResult(options?: PollingOptions): Promise<R> {
+    const pollingIntervalMs = resolvePollingIntervalMs(options);
+    const res = await this.systemDatabase.awaitWorkflowResult(
+      this.workflowID,
+      undefined,
+      undefined,
+      undefined,
+      pollingIntervalMs,
+    );
+    if (res?.cancelled) {
+      throw new DBOSAwaitedWorkflowCancelledError(this.workflowID);
+    }
+    if (res?.maxRecoveryAttemptsExceeded) {
+      throw new DBOSAwaitedWorkflowExceededMaxRecoveryAttempts(this.workflowID);
+    }
+    return await DBOSExecutor.reviveResultOrError<R>(res!, this.systemDatabase.getSerializer());
+  }
+
+  async getWorkflowInputs<T extends unknown[]>(): Promise<T> {
+    const status = (await this.systemDatabase.getWorkflowStatus(this.workflowUUID)) as WorkflowStatusInternal;
+    return (await deserializePositionalArgs(
+      status.input,
+      status.serialization,
+      this.systemDatabase.getSerializer(),
+    )) as T;
+  }
+}
+
+/**
+ * DBOSClient is the main entry point for interacting with the DBOS system.
+ */
+export class DBOSClient {
+  private readonly logger: GlobalLogger;
+  private readonly systemDatabase: SystemDatabase;
+
+  private constructor(
+    systemDatabaseUrl: string,
+    systemDatabasePool: Pool | undefined,
+    readonly serializer: DBOSSerializer,
+    systemDatabaseSchemaName?: string,
+    systemDatabasePoolSize?: number,
+    systemDatabasePollingConcurrency?: number,
+    logger?: DLogger,
+    applicationName?: string,
+    observabilityQueryTimeoutMs?: number,
+  ) {
+    this.logger = new GlobalLogger(undefined, logger ? { logger } : undefined);
+    this.systemDatabase = new SystemDatabase(
+      systemDatabaseUrl,
+      this.logger,
+      serializer,
+      systemDatabasePoolSize ?? DEFAULT_POOL_SIZE,
+      systemDatabasePool,
+      systemDatabaseSchemaName,
+      // The client does not run a background notifications listener
+      false,
+      systemDatabasePollingConcurrency,
+      undefined,
+      applicationName,
+      observabilityQueryTimeoutMs,
+    );
+  }
+
+  /**
+   * Creates a new instance of the DBOSClient.
+   * @param systemDatabaseUrl - The connection string for the system database. This should include the hostname, port, username, password, and database name.
+   * @param systemDatabasePool - An optional pre-configured connection pool to use for the system database. DBOS uses this pool instead of its own; its configuration is your responsibility. We recommend attaching error handlers to it so connection failures are handled.
+   * @param serializer - An optional serializer for workflow inputs and outputs. Defaults to JSON serialization.
+   * @param systemDatabaseSchemaName - An optional schema name for the system database. Defaults to `dbos`.
+   * @param systemDatabasePoolSize - An optional maximum size for the system database connection pool. Defaults to {@link DEFAULT_POOL_SIZE}.
+   * @param systemDatabasePollingConcurrency - An optional maximum number of concurrent polling operations. Defaults to half the pool size (minimum 1).
+   * @param logger - An optional custom logger to which the client directs all its logging, replacing the built-in console logger.
+   * @param applicationName - The application this client acts on behalf of. Always set this when several applications share this system database, so workflows, schedules, and queues created by this client are owned by that application.
+   * @param observabilityQueryTimeoutMs - An optional statement timeout, in milliseconds, for read-only observability queries against the system database. Defaults to 30000. Set to 0 or less to disable the cap.
+   * @returns A Promise that resolves with the DBOSClient instance.
+   */
+  static async create({
+    systemDatabaseUrl,
+    systemDatabasePool,
+    serializer,
+    systemDatabaseSchemaName,
+    systemDatabasePoolSize,
+    systemDatabasePollingConcurrency,
+    logger,
+    applicationName,
+    observabilityQueryTimeoutMs,
+  }: {
+    systemDatabaseUrl: string;
+    systemDatabasePool?: Pool;
+    serializer?: DBOSSerializer;
+    systemDatabaseSchemaName?: string;
+    systemDatabasePoolSize?: number;
+    systemDatabasePollingConcurrency?: number;
+    logger?: DLogger;
+    applicationName?: string;
+    observabilityQueryTimeoutMs?: number;
+  }): Promise<DBOSClient> {
+    const client = new DBOSClient(
+      systemDatabaseUrl,
+      systemDatabasePool,
+      serializer ?? DBOSJSON,
+      systemDatabaseSchemaName,
+      systemDatabasePoolSize,
+      systemDatabasePollingConcurrency,
+      logger,
+      applicationName,
+      observabilityQueryTimeoutMs,
+    );
+    return Promise.resolve(client);
+  }
+
+  /** The application this client acts on behalf of; undefined if it writes unclaimed rows. */
+  get applicationName(): string | undefined {
+    return this.systemDatabase.appName;
+  }
+
+  /**
+   * Releases the resources this client holds. Call it when the client is no longer needed.
+   * The system database pool is closed only if this client created it.
+   * @returns A Promise that resolves when the client has been torn down.
+   */
+  async destroy() {
+    await this.systemDatabase.destroy();
+  }
+
+  /**
+   * Enqueues a workflow for execution.
+   * @param options - Options for the enqueue operation, including queue name, workflow name, and other parameters.
+   * @param args - Arguments to pass to the workflow upon execution.
+   * @returns A Promise that resolves when enqueue is complete, providing a handle to the enqueued workflow.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async enqueue<T extends (...args: any[]) => Promise<any>>(
+    options: ClientEnqueueOptions,
+    ...args: Parameters<T>
+  ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>> {
+    const internalStatus = await this.#buildEnqueueStatus(options, args);
+
+    let finalID: string;
+    if (options.duplicationPolicy === 'return-existing') {
+      finalID = await this.#initSingletonWorkflow(internalStatus, options);
+    } else {
+      await this.systemDatabase.initWorkflowStatus(internalStatus, null);
+      finalID = internalStatus.workflowUUID;
+    }
+
+    return new ClientHandle<Awaited<ReturnType<T>>>(this.systemDatabase, finalID);
+  }
+
+  async #buildEnqueueStatus(
+    options: ClientEnqueueOptions,
+    args: unknown[],
+    namedArgs?: { [key: string]: unknown },
+    defaultSerializationType?: WorkflowSerializationFormat,
+  ): Promise<WorkflowStatusInternal> {
+    validateWorkflowAttributes(options.attributes);
+    const { workflowName, workflowClassName, workflowConfigName, queueName, appVersion } = options;
+    const workflowUUID = options.workflowID ?? randomUUID();
+
+    const serparam = await serializeArgs(
+      args,
+      namedArgs,
+      this.serializer,
+      options?.serializationType ?? defaultSerializationType,
+    );
+    const delayUntilEpochMS =
+      options.delaySeconds !== undefined && options.delaySeconds > 0
+        ? Date.now() + options.delaySeconds * 1000
+        : undefined;
+    return {
+      workflowUUID: workflowUUID,
+      status: delayUntilEpochMS !== undefined ? StatusString.DELAYED : StatusString.ENQUEUED,
+      workflowName: workflowName,
+      workflowClassName: workflowClassName ?? '',
+      workflowConfigName: workflowConfigName ?? '',
+      queueName: queueName,
+      authenticatedUser: '',
+      output: null,
+      error: null,
+      assumedRole: '',
+      authenticatedRoles: [],
+      request: {},
+      executorId: '',
+      applicationVersion: appVersion,
+      applicationID: '',
+      timeoutMS: options.workflowTimeoutMS,
+      deadlineEpochMS: undefined,
+      input: serparam.serializedValue,
+      deduplicationID: options.deduplicationID,
+      priority: options.priority ?? 0,
+      queuePartitionKey: options.queuePartitionKey,
+      serialization: serparam.serialization,
+      delayUntilEpochMS,
+      attributes: options.attributes,
+      // Fall back to the client's own application, if it was given one.
+      applicationName: options.applicationName ?? this.systemDatabase.appName,
+    };
+  }
+
+  /**
+   * Enqueue a debounced workflow for `DebouncerClient`.
+   * The debounce fields are stamped onto the built status here because they are
+   * not part of the public enqueue API.
+   * @internal
+   */
+  async enqueueDebounced(
+    options: ClientEnqueueOptions,
+    debounceDeadlineEpochMS: number | undefined,
+    args: unknown[],
+  ): Promise<string> {
+    const internalStatus = await this.#buildEnqueueStatus(options, args);
+    internalStatus.debounceDeadlineEpochMS = debounceDeadlineEpochMS;
+    internalStatus.isDebounced = true;
+    if (
+      internalStatus.delayUntilEpochMS !== undefined &&
+      debounceDeadlineEpochMS !== undefined &&
+      debounceDeadlineEpochMS < internalStatus.delayUntilEpochMS
+    ) {
+      internalStatus.delayUntilEpochMS = debounceDeadlineEpochMS;
+    }
+    await this.systemDatabase.initWorkflowStatus(internalStatus, null);
+    return internalStatus.workflowUUID;
+  }
+
+  /**
+   * Extend an existing debounced DELAYED workflow, for `DebouncerClient`.
+   * @internal
+   */
+  async debounceDelayedWorkflow(params: DebounceParams): Promise<DebounceResult> {
+    return await this.systemDatabase.debounceDelayedWorkflow(params);
+  }
+
+  /**
+   * Insert the workflow status row under the `'return-existing'` duplication policy: a retry
+   * loop that catches `DBOSQueueDuplicatedError`, looks up the active workflow holding the
+   * dedup slot, and returns its UUID. Falls back to retry if the slot was cleared between
+   * INSERT and lookup (the prior workflow completed or was cancelled mid-flight).
+   */
+  async #initSingletonWorkflow(internalStatus: WorkflowStatusInternal, options: ClientEnqueueOptions): Promise<string> {
+    if (!options.deduplicationID) {
+      throw new DBOSInvalidWorkflowTransitionError("`duplicationPolicy: 'return-existing'` requires `deduplicationID`");
+    }
+    while (true) {
+      try {
+        await this.systemDatabase.initWorkflowStatus(internalStatus, null);
+        return internalStatus.workflowUUID;
+      } catch (e) {
+        if (!(e instanceof DBOSQueueDuplicatedError)) throw e;
+        const existingID = await this.systemDatabase.getDeduplicatedWorkflow(
+          options.queueName,
+          options.deduplicationID,
+        );
+        if (existingID) return existingID;
+      }
+    }
+  }
+
+  /**
+   * Enqueues a workflow for execution, where the workflow function definition is not
+   *   available and may be implemented in another language.
+   * @param options - Options for the enqueue operation, including queue name, workflow name, and other parameters.
+   * @param positionalArgs - Array of positional arguments to pass to the workflow upon execution.
+   * @param namedArgs - Optional object containing named arguments for the target workflow (useful mainly for calling Python functions with kwargs)
+   * @returns A Promise that resolves when enqueue is complete, providing a handle to the enqueued workflow.
+   */
+  async enqueuePortable<T = unknown>(
+    options: ClientEnqueueOptions,
+    positionalArgs: unknown[],
+    namedArgs?: { [key: string]: unknown },
+  ): Promise<WorkflowHandle<T>> {
+    const internalStatus = await this.#buildEnqueueStatus(options, positionalArgs, namedArgs, 'portable');
+
+    let finalID: string;
+    if (options.duplicationPolicy === 'return-existing') {
+      finalID = await this.#initSingletonWorkflow(internalStatus, options);
+    } else {
+      await this.systemDatabase.initWorkflowStatus(internalStatus, null);
+      finalID = internalStatus.workflowUUID;
+    }
+
+    return new ClientHandle<T>(this.systemDatabase, finalID);
+  }
+
+  /**
+   * Enqueues a workflow within a transaction the caller owns, so the enqueue commits or rolls back with the
+   * caller's own writes.
+   *
+   * `client` must be a `pg` client with an open transaction on the DBOS system database. The caller must commit
+   * the transaction: the workflow does not exist, and the returned handle does not resolve, until the
+   * transaction commits.
+   *
+   * @param client - A `pg` client with an open transaction on the system database.
+   * @param options - Options for the enqueue operation, including queue name, workflow name, and other parameters.
+   * @param args - Arguments to pass to the workflow upon execution.
+   * @returns A Promise that resolves with a handle to the workflow, valid once the transaction commits.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async enqueueInTransaction<T extends (...args: any[]) => Promise<any>>(
+    client: ClientBase,
+    options: ClientEnqueueOptions,
+    ...args: Parameters<T>
+  ): Promise<WorkflowHandle<Awaited<ReturnType<T>>>> {
+    const internalStatus = await this.#buildEnqueueStatus(options, args);
+    const finalID = await this.#enqueueInTransaction(client, internalStatus, options);
+    return new ClientHandle<Awaited<ReturnType<T>>>(this.systemDatabase, finalID);
+  }
+
+  /**
+   * Enqueues a workflow whose definition is not available and may be implemented in another language, within a
+   * transaction the caller owns. See {@link enqueueInTransaction} for the transaction requirements.
+   *
+   * @param client - A `pg` client with an open transaction on the system database.
+   * @param options - Options for the enqueue operation, including queue name, workflow name, and other parameters.
+   * @param positionalArgs - Array of positional arguments to pass to the workflow upon execution.
+   * @param namedArgs - Optional object containing named arguments for the target workflow (useful mainly for calling Python functions with kwargs)
+   * @returns A Promise that resolves with a handle to the workflow, valid once the transaction commits.
+   */
+  async enqueuePortableInTransaction<T = unknown>(
+    client: ClientBase,
+    options: ClientEnqueueOptions,
+    positionalArgs: unknown[],
+    namedArgs?: { [key: string]: unknown },
+  ): Promise<WorkflowHandle<T>> {
+    const internalStatus = await this.#buildEnqueueStatus(options, positionalArgs, namedArgs, 'portable');
+    const finalID = await this.#enqueueInTransaction(client, internalStatus, options);
+    return new ClientHandle<T>(this.systemDatabase, finalID);
+  }
+
+  async #enqueueInTransaction(
+    client: ClientBase,
+    internalStatus: WorkflowStatusInternal,
+    options: ClientEnqueueOptions,
+  ): Promise<string> {
+    if (options.duplicationPolicy === 'return-existing') {
+      // A unique violation aborts the caller's transaction, so recovering the existing ID would need a new one.
+      throw new DBOSError("`duplicationPolicy: 'return-existing'` is not supported in a caller-owned transaction");
+    }
+    await this.systemDatabase.initWorkflowStatus(internalStatus, null, client);
+    return internalStatus.workflowUUID;
+  }
+
+  /**
+   * Register a workflow queue and persist its configuration in the system
+   * database. The returned queue's `set` methods write through this
+   * client's database.
+   *
+   * Defaults `onConflict` to `'always_update'` because clients are not
+   * associated with an application version.
+   *
+   * `applicationName` names the application that owns this queue and polls it,
+   * defaulting to the client's own. Registering a queue already owned by a
+   * different application throws.
+   */
+  async registerQueue(
+    name: string,
+    options: RegisterQueueOptions & { applicationName?: string } = {},
+  ): Promise<WorkflowQueue> {
+    const { onConflict = 'always_update', applicationName, ...params } = options;
+    if (onConflict === 'update_if_latest_version') {
+      throw new Error(
+        "DBOSClient.registerQueue does not support onConflict='update_if_latest_version' " +
+          'because clients are not associated with an application version. ' +
+          "Use 'always_update' or 'never_update'.",
+      );
+    }
+    WorkflowQueue.validateQueueParams(params);
+
+    const updateExisting = onConflict === 'always_update';
+    const record = { ...WorkflowQueue.recordFromParams(name, params), applicationName };
+    const inserted = await this.systemDatabase.upsertQueue(record, updateExisting);
+
+    const persisted = await this.systemDatabase.getQueue(name);
+    if (persisted === null) {
+      throw new Error(`Queue '${name}' missing from database after upsert`);
+    }
+    const queue = WorkflowQueue._fromRecord(persisted, this.systemDatabase);
+    if (inserted) {
+      this.logger.info(`Registered new queue:`);
+      logQueue(this.logger, queue);
+    }
+    return queue;
+  }
+
+  /** Retrieve a database-backed queue by name, or `null` if no row exists. */
+  async retrieveQueue(name: string): Promise<WorkflowQueue | null> {
+    const record = await this.systemDatabase.getQueue(name);
+    return record === null ? null : WorkflowQueue._fromRecord(record, this.systemDatabase);
+  }
+
+  /** Delete a database-backed queue. Pending workflows on it are unrecoverable. */
+  async deleteQueue(name: string): Promise<void> {
+    await this.systemDatabase.deleteQueue(name);
+  }
+
+  /**
+   * List all database-backed queues registered in the system database. `applicationName`
+   * lists only queues owned by these applications. By default, only lists this
+   * application's queues.
+   */
+  async listQueues(applicationName?: string | string[]): Promise<WorkflowQueue[]> {
+    const records = await this.systemDatabase.listQueues(applicationName);
+    return records.map((record) => WorkflowQueue._fromRecord(record, this.systemDatabase));
+  }
+
+  /**
+   * Sends a message to a workflow, identified by destinationID.
+   * @param destinationID - The ID of the destination workflow.
+   * @param message - The message to send. This can be any serializable object.
+   * @param topic - An optional topic to send the message to. If not provided, the default topic will be used.
+   * @param idempotencyKey - An optional idempotency key to ensure that the message is only sent once per destination.
+   * @returns A Promise that resolves when the message has been sent.
+   */
+  async send<T>(
+    destinationID: string,
+    message: T,
+    topic?: string,
+    idempotencyKey?: string,
+    options?: ClientSendOptions,
+  ): Promise<void> {
+    const sermsg = await serializeValue(message, this.serializer, options?.serializationType);
+    await this.systemDatabase.sendDirect(
+      destinationID,
+      sermsg.serializedValue,
+      topic,
+      sermsg.serialization,
+      idempotencyKey,
+    );
+  }
+
+  /**
+   * Sends a message to a workflow within a transaction the caller owns, so the message commits or rolls back
+   * with the caller's own writes.
+   *
+   * `client` must be a `pg` client with an open transaction on the DBOS system database. The caller must commit
+   * the transaction: the destination workflow cannot receive the message until the transaction commits.
+   *
+   * @param client - A `pg` client with an open transaction on the system database.
+   * @param destinationID - The ID of the destination workflow.
+   * @param message - The message to send. This can be any serializable object.
+   * @param topic - An optional topic to send the message to. If not provided, the default topic will be used.
+   * @param idempotencyKey - An optional idempotency key to ensure that the message is only sent once per destination.
+   * @returns A Promise that resolves when the message has been written to the caller's transaction.
+   */
+  async sendInTransaction<T>(
+    client: ClientBase,
+    destinationID: string,
+    message: T,
+    topic?: string,
+    idempotencyKey?: string,
+    options?: ClientSendOptions,
+  ): Promise<void> {
+    const sermsg = await serializeValue(message, this.serializer, options?.serializationType);
+    await this.systemDatabase.sendDirect(
+      destinationID,
+      sermsg.serializedValue,
+      topic,
+      sermsg.serialization,
+      idempotencyKey,
+      client,
+    );
+  }
+
+  /**
+   * Retrieves an event published by workflowID for a given key.
+   * @param workflowID - The ID of the workflow that published the event.
+   * @param key - The key associated with the event you want to retrieve.
+   * @param options - {@link GetEventOptions} controlling timeout or deadline; if neither is set, times out after 60 seconds
+   * @returns A Promise that resolves with the event payload.
+   */
+  async getEvent<T>(workflowID: string, key: string, options?: number | GetEventOptions): Promise<T | null> {
+    const timeoutSeconds = resolveTimeoutSeconds(options);
+    const pollingIntervalMs = resolvePollingIntervalMs(options);
+    const evt = await this.systemDatabase.getEvent(workflowID, key, timeoutSeconds ?? 60, undefined, pollingIntervalMs);
+    return (await deserializeValue(evt.serializedValue, evt.serialization, this.serializer)) as T;
+  }
+
+  /**
+   * Retrieves a single workflow by its id.
+   * @param workflowID - The ID of the workflow to retrieve.
+   * @returns a WorkflowHandle that represents the retrieved workflow.
+   */
+  retrieveWorkflow<T = unknown>(workflowID: string): WorkflowHandle<Awaited<T>> {
+    return new ClientHandle(this.systemDatabase, workflowID);
+  }
+
+  cancelWorkflow(workflowID: string, options?: CancelWorkflowsOptions): Promise<void> {
+    return this.systemDatabase.cancelWorkflows([workflowID], options?.cancelChildren);
+  }
+
+  cancelWorkflows(workflowIDs: string[], options?: CancelWorkflowsOptions): Promise<void> {
+    return this.systemDatabase.cancelWorkflows(workflowIDs, options?.cancelChildren);
+  }
+
+  resumeWorkflow(workflowID: string, options?: { queueName?: string }): Promise<void> {
+    return this.systemDatabase.resumeWorkflows([workflowID], options?.queueName);
+  }
+
+  resumeWorkflows(workflowIDs: string[], options?: { queueName?: string }): Promise<void> {
+    return this.systemDatabase.resumeWorkflows(workflowIDs, options?.queueName);
+  }
+
+  setWorkflowPriority(workflowID: string, priority: number): Promise<void> {
+    return this.systemDatabase.setWorkflowPriority(workflowID, priority);
+  }
+
+  setWorkflowDelay(workflowID: string, options: number | SetWorkflowDelayOptions): Promise<void> {
+    const delayUntilEpochMS = resolveDelayEpochMS(options);
+    return this.systemDatabase.setWorkflowDelay(workflowID, delayUntilEpochMS);
+  }
+
+  deleteWorkflow(workflowID: string, deleteChildren: boolean = false): Promise<void> {
+    return this.systemDatabase.deleteWorkflows([workflowID], deleteChildren);
+  }
+
+  deleteWorkflows(workflowIDs: string[], deleteChildren: boolean = false): Promise<void> {
+    return this.systemDatabase.deleteWorkflows(workflowIDs, deleteChildren);
+  }
+
+  forkWorkflow(
+    workflowID: string,
+    startStep: number,
+    options?: {
+      newWorkflowID?: string;
+      applicationVersion?: string;
+      timeoutMS?: number;
+      queueName?: string;
+      queuePartitionKey?: string;
+      replacementChildren?: Record<string, string>;
+    },
+  ): Promise<string> {
+    return forkWorkflow(this.systemDatabase, workflowID, startStep, options);
+  }
+
+  getWorkflow(workflowID: string): Promise<WorkflowStatus | undefined> {
+    return getWorkflow(this.systemDatabase, workflowID);
+  }
+
+  listWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]> {
+    return listWorkflows(this.systemDatabase, input);
+  }
+
+  listQueuedWorkflows(input: GetWorkflowsInput): Promise<WorkflowStatus[]> {
+    return listQueuedWorkflows(this.systemDatabase, input);
+  }
+
+  listWorkflowSteps(workflowID: string, options?: ListWorkflowStepsOptions): Promise<StepInfo[] | undefined> {
+    return listWorkflowSteps(this.systemDatabase, workflowID, true, options);
+  }
+
+  async waitFirst(handles: WorkflowHandle<unknown>[], options?: WaitFirstOptions): Promise<WorkflowHandle<unknown>> {
+    const pollingIntervalMs = resolvePollingIntervalMs(options);
+    if (handles.length === 0) {
+      throw new Error('handles must not be empty');
+    }
+    const handleMap = new Map<string, WorkflowHandle<unknown>>();
+    for (const handle of handles) {
+      if (handleMap.has(handle.workflowID)) {
+        throw new Error(`Duplicate workflow ID in waitFirst: ${handle.workflowID}`);
+      }
+      handleMap.set(handle.workflowID, handle);
+    }
+    const completedId = await this.systemDatabase.awaitFirstWorkflowId(
+      [...handleMap.keys()],
+      undefined,
+      pollingIntervalMs,
+    );
+    return handleMap.get(completedId)!;
+  }
+
+  async waitAll<R>(handles: WorkflowHandle<R>[], options?: WaitAllOptions): Promise<WorkflowHandle<R>[]> {
+    if (handles.length === 0) {
+      return [];
+    }
+    const pollingIntervalMs = resolvePollingIntervalMs(options);
+    const workflowIds = [...new Set(handles.map((handle) => handle.workflowID))];
+    await this.systemDatabase.awaitWorkflowIds(workflowIds, undefined, pollingIntervalMs);
+    return handles;
+  }
+
+  /**
+   * Read values from a stream as an async generator.
+   * This function reads values from a stream identified by the workflowID and key,
+   * yielding each value in order until the stream is closed or the workflow terminates.
+   * @param workflowID - The ID of the workflow that wrote to the stream
+   * @param key - The stream key to read from
+   * @param options - Optional settings, including the offset to start reading from
+   * @returns An async generator that yields each value in the stream until the stream is closed
+   */
+  async *readStream<T>(
+    workflowID: string,
+    key: string,
+    options: ReadStreamOptions = {},
+  ): AsyncGenerator<T, void, unknown> {
+    // A client never runs inside a workflow, so its reads are not checkpointed.
+    yield* readStreamCore<T>(this.systemDatabase, this.serializer, workflowID, key, {
+      offset: resolveStreamOffset(options),
+      pollingIntervalMs: resolveStreamPollingIntervalMs(options) ?? this.systemDatabase.dbPollingIntervalStreamMs,
+      timeoutMS: resolveStreamTimeoutMS(options),
+      functionName: DBOS_FUNCNAME_READSTREAM,
+      checkpoint: false,
+    });
+  }
+
+  /**
+   * Read the single value at one offset of a stream, waiting for it to be written.
+   * @param workflowID - The ID of the workflow that wrote to the stream
+   * @param key - The stream key to read from
+   * @param offset - The offset to read
+   * @param options - Optional settings, including how long to wait for the value
+   * @returns The value at the offset
+   * @throws DBOSStreamTimeoutError - If the timeout passes, or the stream ends before reaching the offset.
+   *   A replayed error is revived as a plain `Error`, so match it with `isStreamTimeoutError`, not `instanceof`.
+   */
+  async readStreamOffset<T>(
+    workflowID: string,
+    key: string,
+    offset: number,
+    options: ReadStreamOffsetOptions = {},
+  ): Promise<T> {
+    return await readStreamOffsetCore<T>(this.systemDatabase, this.serializer, workflowID, key, {
+      offset: resolveStreamOffset({ ...options, offset }),
+      pollingIntervalMs: resolveStreamPollingIntervalMs(options) ?? this.systemDatabase.dbPollingIntervalStreamMs,
+      timeoutMS: resolveStreamTimeoutMS(options),
+      functionName: DBOS_FUNCNAME_READSTREAM,
+      checkpoint: false,
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dynamic Workflow Schedules
+  // ---------------------------------------------------------------------------
+
+  async createSchedule(options: {
+    scheduleName: string;
+    workflowName: string;
+    workflowClassName?: string;
+    schedule: string;
+    context?: unknown;
+    options?: ScheduleOptions;
+    /**
+     * The application that owns this schedule and runs its workflows. Defaults to the
+     * client's own. Leaving both unset creates an unclaimed schedule, which every
+     * application sharing the system database will run.
+     */
+    applicationName?: string;
+  }): Promise<void> {
+    validateCrontab(options.schedule);
+    if (options.options?.cronTimezone) {
+      validateTimezone(options.options.cronTimezone);
+    }
+    const schedInternal: WorkflowScheduleInternal = {
+      scheduleId: createScheduleId(),
+      scheduleName: options.scheduleName,
+      workflowName: options.workflowName,
+      workflowClassName: options.workflowClassName ?? '',
+      schedule: options.schedule,
+      status: 'ACTIVE',
+      context: await this.serializer.stringify(options.context),
+      lastFiredAt: null,
+      automaticBackfill: options.options?.automaticBackfill ?? false,
+      cronTimezone: options.options?.cronTimezone ?? null,
+      queueName: options.options?.queueName ?? null,
+      applicationName: options.applicationName ?? this.systemDatabase.appName,
+    };
+    await this.systemDatabase.createSchedule(schedInternal);
+  }
+
+  /**
+   * Return registered workflow schedules, optionally filtered. `applicationName`
+   * lists only schedules owned by these applications. By default, only lists this
+   * application's schedules.
+   */
+  async listSchedules(filters?: {
+    status?: string | string[];
+    workflowName?: string | string[];
+    scheduleNamePrefix?: string | string[];
+    applicationName?: string | string[];
+  }): Promise<WorkflowSchedule[]> {
+    const results = await this.systemDatabase.listSchedules(filters);
+    return await Promise.all(results.map((r) => toWorkflowSchedule(r, this.serializer)));
+  }
+
+  async getSchedule(name: string): Promise<WorkflowSchedule | null> {
+    const result = await this.systemDatabase.getSchedule(name);
+    return result ? await toWorkflowSchedule(result, this.serializer) : null;
+  }
+
+  async deleteSchedule(name: string): Promise<void> {
+    await this.systemDatabase.deleteSchedule(name);
+  }
+
+  async pauseSchedule(name: string): Promise<void> {
+    await this.systemDatabase.setScheduleStatus(name, 'PAUSED');
+  }
+
+  async resumeSchedule(name: string): Promise<void> {
+    await this.systemDatabase.setScheduleStatus(name, 'ACTIVE');
+  }
+
+  async updateSchedule(
+    name: string,
+    updates: {
+      schedule?: string;
+      context?: unknown;
+      automaticBackfill?: boolean;
+      cronTimezone?: string | null;
+      queueName?: string | null;
+    },
+  ): Promise<void> {
+    if (updates.schedule !== undefined) {
+      validateCrontab(updates.schedule);
+    }
+    if (updates.cronTimezone) {
+      validateTimezone(updates.cronTimezone);
+    }
+    // Only the keys the caller provided are updated. An `undefined` value leaves a field unchanged; `null` clears a nullable field. Including `context` (even as `undefined`) sets it, since `undefined` is a valid empty context.
+    const internalUpdates: WorkflowScheduleUpdate = {};
+    if (updates.schedule !== undefined) internalUpdates.schedule = updates.schedule;
+    if ('context' in updates) internalUpdates.context = await this.serializer.stringify(updates.context);
+    if (updates.automaticBackfill !== undefined) internalUpdates.automaticBackfill = updates.automaticBackfill;
+    if (updates.cronTimezone !== undefined) internalUpdates.cronTimezone = updates.cronTimezone;
+    if (updates.queueName !== undefined) internalUpdates.queueName = updates.queueName;
+    await this.systemDatabase.updateSchedule(name, internalUpdates);
+  }
+
+  async applySchedules(
+    schedules: Array<{
+      scheduleName: string;
+      workflowName: string;
+      workflowClassName?: string;
+      schedule: string;
+      context?: unknown;
+      automaticBackfill?: boolean;
+      cronTimezone?: string;
+      queueName?: string;
+      applicationName?: string;
+    }>,
+  ): Promise<void> {
+    const internals: WorkflowScheduleInternal[] = [];
+    for (const sched of schedules) {
+      validateCrontab(sched.schedule);
+      if (sched.cronTimezone) {
+        validateTimezone(sched.cronTimezone);
+      }
+      internals.push({
+        scheduleId: createScheduleId(),
+        scheduleName: sched.scheduleName,
+        workflowName: sched.workflowName,
+        workflowClassName: sched.workflowClassName ?? '',
+        schedule: sched.schedule,
+        status: 'ACTIVE',
+        context: await this.serializer.stringify(sched.context),
+        lastFiredAt: null,
+        automaticBackfill: sched.automaticBackfill ?? false,
+        cronTimezone: sched.cronTimezone ?? null,
+        queueName: sched.queueName ?? null,
+        applicationName: sched.applicationName ?? this.systemDatabase.appName,
+      });
+    }
+    await this.systemDatabase.applySchedules(internals);
+  }
+
+  async triggerSchedule(name: string): Promise<WorkflowHandle<unknown>> {
+    const workflowID = await triggerSchedule(this.systemDatabase, this.serializer, name);
+    return new ClientHandle(this.systemDatabase, workflowID);
+  }
+
+  async backfillSchedule(name: string, start: Date, end: Date): Promise<WorkflowHandle<unknown>[]> {
+    const workflowIDs = await backfillSchedule(this.systemDatabase, this.serializer, name, start, end);
+    return workflowIDs.map((id) => new ClientHandle(this.systemDatabase, id));
+  }
+
+  // ==================== Application Versions ====================
+
+  async listApplicationVersions(): Promise<VersionInfo[]> {
+    return this.systemDatabase.listApplicationVersions();
+  }
+
+  async getLatestApplicationVersion(): Promise<VersionInfo> {
+    return this.systemDatabase.getLatestApplicationVersion();
+  }
+
+  /**
+   * Set a version as the latest by updating its timestamp to now. `applicationName`
+   * is the application to act as, defaulting to this client's. Version names are
+   * global, so promoting one registered by a different application throws.
+   */
+  async setLatestApplicationVersion(versionName: string, options?: { applicationName?: string }): Promise<void> {
+    await this.systemDatabase.updateApplicationVersionTimestamp(versionName, Date.now(), options?.applicationName);
+  }
+
+  // ==================== Application Rename ====================
+
+  /**
+   * Give an application ownership of rows another name holds, rows nobody holds, or
+   * both. Do not run while the application being renamed is running.
+   *
+   * @param oldName - The application's previous name. `undefined` moves nothing but the
+   *   unclaimed rows, so it requires `adoptUnclaimedRows`.
+   * @param newName - The application that ends up owning the rows.
+   * @param options.batchSize - Terminal workflows and steps are re-owned this many at a
+   *   time. `null` moves them in a single transaction.
+   * @param options.adoptUnclaimedRows - Also take rows no application owns. Defaults to false.
+   * @returns The number of rows moved, by table.
+   */
+  async renameApplication(
+    oldName: string | undefined,
+    newName: string,
+    options: { batchSize?: number | null; adoptUnclaimedRows?: boolean } = {},
+  ): Promise<ApplicationRowCounts> {
+    return await this.systemDatabase.renameApplication(oldName, newName, options);
+  }
+}

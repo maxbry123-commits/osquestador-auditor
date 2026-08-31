@@ -1,0 +1,398 @@
+import { PoolConfig } from 'pg';
+import { DBOS, FunctionName } from '@dbos-inc/dbos-sdk';
+import {
+  type DataSourceTransactionHandler,
+  createTransactionCompletionSchemaPG,
+  createTransactionCompletionTablePG,
+  isPGRetriableTransactionError,
+  DBOSError,
+  DBOSStepAlreadyRecordedError,
+  replayRecordedStep,
+  registerTransaction,
+  runTransaction,
+  DBOSDataSource,
+  registerDataSource,
+  PGTransactionConfig,
+  CheckSchemaInstallationReturn,
+  checkSchemaInstallationPG,
+} from '@dbos-inc/dbos-sdk/datasource';
+import { DataSource, EntityManager } from 'typeorm';
+import { AsyncLocalStorage } from 'async_hooks';
+import { SuperJSON } from 'superjson';
+
+export interface TypeORMTransactionConfig extends PGTransactionConfig {
+  name?: string;
+}
+
+interface DBOSTypeOrmLocalCtx {
+  entityManager: EntityManager;
+  owner: TypeOrmTransactionHandler;
+}
+
+const asyncLocalCtx = new AsyncLocalStorage<DBOSTypeOrmLocalCtx>();
+
+interface transaction_completion {
+  workflow_id: string;
+  function_num: number;
+  output: string | null;
+  error: string | null;
+}
+
+class TypeOrmTransactionHandler implements DataSourceTransactionHandler {
+  readonly dsType = 'TypeOrm';
+  #createdDataSource: DataSource | undefined;
+  readonly schemaName: string;
+
+  constructor(
+    readonly name: string,
+    private readonly config?: PoolConfig,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    private readonly entities?: Function[],
+    private readonly providedDataSource?: DataSource,
+    schemaName: string = 'dbos',
+  ) {
+    this.schemaName = schemaName;
+  }
+
+  static async createDataSource(
+    config: PoolConfig,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    entities: Function[],
+  ): Promise<DataSource> {
+    const ds = new DataSource({
+      type: 'postgres',
+      entities: entities,
+      url: config.connectionString,
+      host: config.host,
+      port: config.port,
+      username: config.user,
+      // password: config.password,
+      database: config.database,
+      // ssl: config.ssl,
+      connectTimeoutMS: config.connectionTimeoutMillis,
+      poolSize: config.max,
+    });
+    await ds.initialize();
+    return ds;
+  }
+
+  get dataSource(): DataSource {
+    const ds = this.providedDataSource ?? this.#createdDataSource;
+    if (!ds) {
+      throw new Error(`DataSource ${this.name} is not initialized.`);
+    }
+    return ds;
+  }
+
+  async initialize(): Promise<void> {
+    if (!this.providedDataSource) {
+      const ds = this.#createdDataSource;
+      this.#createdDataSource = await TypeOrmTransactionHandler.createDataSource(this.config!, this.entities!);
+      await ds?.destroy();
+    }
+
+    let installed = false;
+    try {
+      const res = await this.dataSource.query<CheckSchemaInstallationReturn[]>(
+        checkSchemaInstallationPG(this.schemaName),
+      );
+      installed = !!res[0]?.schema_exists && !!res[0]?.table_exists;
+    } catch (e) {
+      throw new Error(
+        `In initialization of 'TypeOrmDataSource' ${this.name}: Database could not be reached: ${(e as Error).message}`,
+      );
+    }
+
+    // Install
+    if (!installed) {
+      try {
+        await this.dataSource.query(createTransactionCompletionSchemaPG(this.schemaName));
+        await this.dataSource.query(createTransactionCompletionTablePG(this.schemaName));
+      } catch (err) {
+        throw new Error(
+          `In initialization of 'TypeOrmDataSource' ${this.name}: The '${this.schemaName}.transaction_completion' table does not exist, and could not be created.  This should be added to your database migrations.
+          See: https://docs.dbos.dev/typescript/tutorials/transaction-tutorial#installing-the-dbos-schema`,
+        );
+      }
+    }
+  }
+
+  async destroy(): Promise<void> {
+    const ds = this.#createdDataSource;
+    this.#createdDataSource = undefined;
+    await ds?.destroy();
+  }
+
+  async #checkExecution(
+    workflowID: string,
+    stepID: number,
+  ): Promise<{ output: string | null } | { error: string } | undefined> {
+    type TxOutputRow = Pick<transaction_completion, 'output' | 'error'>;
+    const rows = await this.dataSource.query<TxOutputRow[]>(
+      `SELECT output, error FROM "${this.schemaName}".transaction_completion
+       WHERE workflow_id=$1 AND function_num=$2;`,
+      [workflowID, stepID],
+    );
+
+    if (rows.length !== 1) {
+      return undefined;
+    }
+
+    const { output, error } = rows[0];
+    return error !== null ? { error } : { output };
+  }
+
+  static async #recordOutput(
+    entityManager: EntityManager,
+    workflowID: string,
+    stepID: number,
+    output: string,
+    schemaName: string,
+  ): Promise<void> {
+    const rows = await entityManager.query<{ workflow_id: string }[]>(
+      `INSERT INTO "${schemaName}".transaction_completion (workflow_id, function_num, output)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (workflow_id, function_num) DO NOTHING
+       RETURNING workflow_id`,
+      [workflowID, stepID, output],
+    );
+    if (rows.length === 0) {
+      throw new DBOSStepAlreadyRecordedError(workflowID, stepID);
+    }
+  }
+
+  async #recordError(workflowID: string, stepID: number, error: string): Promise<void> {
+    const rows = await this.dataSource.query<{ workflow_id: string }[]>(
+      `INSERT INTO "${this.schemaName}".transaction_completion (workflow_id, function_num, error)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (workflow_id, function_num) DO NOTHING
+       RETURNING workflow_id`,
+      [workflowID, stepID, error],
+    );
+    if (rows.length === 0) {
+      throw new DBOSStepAlreadyRecordedError(workflowID, stepID);
+    }
+  }
+
+  // A duplicate execution won the race, so its recorded outcome is the durable one.
+  async #replayConflictingStep<Return>(workflowID: string, stepID: number): Promise<Return> {
+    const recorded = await this.#checkExecution(workflowID, stepID);
+    if (recorded === undefined) {
+      throw new DBOSError(
+        `Step ${stepID} of workflow ${workflowID} conflicted with a concurrent execution, but no recorded outcome was found`,
+      );
+    }
+    return replayRecordedStep<Return>(recorded);
+  }
+
+  /* Required by base class */
+  async invokeTransactionFunction<This, Args extends unknown[], Return>(
+    config: PGTransactionConfig | undefined,
+    target: This,
+    func: (this: This, ...args: Args) => Promise<Return>,
+    ...args: Args
+  ): Promise<Return> {
+    const workflowID = DBOS.workflowID;
+    const stepID = DBOS.stepID;
+    if (workflowID !== undefined && stepID === undefined) {
+      throw new Error('DBOS.stepID is undefined inside a workflow.');
+    }
+
+    const isolationLevel = config?.isolationLevel ?? 'READ COMMITTED';
+    const readOnly = config?.readOnly ? true : false;
+    const saveResults = !readOnly && workflowID !== undefined;
+
+    // Retry loop if appropriate
+    let retryWaitMS = 1;
+    const backoffFactor = 1.5;
+    const maxRetryWaitMS = 2000; // Maximum wait 2 seconds.
+
+    while (true) {
+      // Check to see if this tx has already been executed
+      const previousResult = saveResults ? await this.#checkExecution(workflowID, stepID!) : undefined;
+      if (previousResult) {
+        return replayRecordedStep<Return>(previousResult);
+      }
+
+      try {
+        const result = await this.dataSource.transaction(isolationLevel, async (entityManager: EntityManager) => {
+          if (readOnly) {
+            await entityManager.query('SET TRANSACTION READ ONLY');
+          }
+
+          const result = await asyncLocalCtx.run({ entityManager, owner: this }, async () => {
+            return await func.call(target, ...args);
+          });
+
+          // save the output of read/write transactions
+          if (saveResults) {
+            await TypeOrmTransactionHandler.#recordOutput(
+              entityManager,
+              workflowID,
+              stepID!,
+              SuperJSON.stringify(result),
+              this.schemaName,
+            );
+          }
+
+          return result;
+        });
+
+        return result;
+      } catch (error) {
+        if (saveResults && error instanceof DBOSStepAlreadyRecordedError) {
+          return await this.#replayConflictingStep<Return>(workflowID, stepID!);
+        }
+        if (isPGRetriableTransactionError(error)) {
+          DBOS.span?.addEvent('TXN SERIALIZATION FAILURE', { retryWaitMillis: retryWaitMS }, performance.now());
+          // Retry serialization failures.
+          await new Promise((resolve) => setTimeout(resolve, retryWaitMS));
+          retryWaitMS = Math.min(retryWaitMS * backoffFactor, maxRetryWaitMS);
+          continue;
+        } else {
+          if (saveResults) {
+            const message = SuperJSON.stringify(error);
+            try {
+              await this.#recordError(workflowID, stepID!, message);
+            } catch (recordError) {
+              if (recordError instanceof DBOSStepAlreadyRecordedError) {
+                return await this.#replayConflictingStep<Return>(workflowID, stepID!);
+              }
+              throw recordError;
+            }
+          }
+
+          throw error;
+        }
+      }
+    }
+  }
+}
+
+export class TypeOrmDataSource implements DBOSDataSource<TypeORMTransactionConfig> {
+  // User calls this... DBOS not directly involved...
+  static #getEntityManager(p?: TypeOrmTransactionHandler): EntityManager {
+    if (!DBOS.isInTransaction()) {
+      throw new Error('Invalid use of TypeOrmDataSource.entityManager outside of a DBOS transaction');
+    }
+    const ctx = asyncLocalCtx.getStore();
+    if (!ctx) {
+      throw new Error('Invalid use of TypeOrmDataSource.entityManager outside of a DBOS transaction');
+    }
+    if (p && p !== ctx.owner) {
+      throw new Error('Invalid retrieval of `TypeOrmDataSource.entityManager` from the wrong instance');
+    }
+
+    return ctx.entityManager;
+  }
+
+  static get entityManager() {
+    return TypeOrmDataSource.#getEntityManager(undefined);
+  }
+
+  get entityManager() {
+    return TypeOrmDataSource.#getEntityManager(this.#provider);
+  }
+
+  static async initializeDBOSSchema(config: PoolConfig, schemaName: string = 'dbos'): Promise<void> {
+    const ds = await TypeOrmTransactionHandler.createDataSource(config, []);
+    try {
+      await ds.query(createTransactionCompletionSchemaPG(schemaName));
+      await ds.query(createTransactionCompletionTablePG(schemaName));
+    } finally {
+      await ds.destroy();
+    }
+  }
+
+  #provider: TypeOrmTransactionHandler;
+
+  /**
+   * @deprecated - For readability, use `createFromConfig` or `createFromDataSource`
+   */
+  constructor(
+    readonly name: string,
+    config?: PoolConfig,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    entities?: Function[],
+    dataSource?: DataSource,
+    schemaName: string = 'dbos',
+  ) {
+    if (config && entities) {
+      this.#provider = new TypeOrmTransactionHandler(name, config, entities, undefined, schemaName);
+      registerDataSource(this.#provider);
+    } else if (dataSource) {
+      this.#provider = new TypeOrmTransactionHandler(name, undefined, undefined, dataSource, schemaName);
+      registerDataSource(this.#provider);
+    } else {
+      throw new TypeError(
+        'TypeOrmDataSource must be provided with the underlying `DataSource` or with a configuration and entity list',
+      );
+    }
+  }
+
+  static createFromConfig(
+    name: string,
+    config: PoolConfig,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    entities: Function[],
+    schemaName: string = 'dbos',
+  ) {
+    return new TypeOrmDataSource(name, config, entities, undefined, schemaName);
+  }
+
+  static createFromDataSource(name: string, ds: DataSource, schemaName: string = 'dbos') {
+    return new TypeOrmDataSource(name, undefined, undefined, ds, schemaName);
+  }
+
+  /**
+   * Run `func` as a transaction against this DataSource
+   * @param func Function to run within a transactional context
+   * @param funcName Name to record for the transaction
+   * @param config Transaction configuration (isolation, etc)
+   * @returns Return value from `func`
+   */
+  async runTransaction<T>(func: () => Promise<T>, config?: TypeORMTransactionConfig) {
+    return await runTransaction(func, config?.name ?? func.name, { dsName: this.name, config });
+  }
+
+  /**
+   * Register function as DBOS transaction, to be called within the context
+   *  of a transaction on this data source.
+   *
+   * @param func Function to wrap
+   * @param target Name of function
+   * @param config Transaction settings
+   * @returns Wrapped function, to be called instead of `func`
+   */
+  registerTransaction<This, Args extends unknown[], Return>(
+    func: (this: This, ...args: Args) => Promise<Return>,
+    config?: TypeORMTransactionConfig & FunctionName,
+  ): (this: This, ...args: Args) => Promise<Return> {
+    return registerTransaction(this.name, func, config);
+  }
+
+  /**
+   * Decorator establishing function as a transaction
+   */
+  transaction(config?: TypeORMTransactionConfig) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const ds = this;
+    return function decorator<This, Args extends unknown[], Return>(
+      target: object,
+      propertyKey: PropertyKey,
+      descriptor: TypedPropertyDescriptor<(this: This, ...args: Args) => Promise<Return>>,
+    ) {
+      if (!descriptor.value) {
+        throw new Error('Use of decorator when original method is undefined');
+      }
+
+      descriptor.value = ds.registerTransaction(descriptor.value, {
+        ...config,
+        name: config?.name ?? String(propertyKey),
+        ctorOrProto: target,
+      });
+
+      return descriptor;
+    };
+  }
+}

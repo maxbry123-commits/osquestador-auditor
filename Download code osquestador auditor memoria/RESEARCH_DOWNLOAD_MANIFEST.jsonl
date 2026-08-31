@@ -76,3 +76,6 @@
 {"number": 77, "slug": "Perplexica", "source": "https://github.com/ItzCrazyKns/Perplexica.git", "source_commit": "7dc5d088f7262fbc5e39037f84940a8a2193c5fb", "parts": 4, "status": "COMPLETE"}
 {"number": 78, "slug": "khoj", "source": "https://github.com/khoj-ai/khoj.git", "source_commit": "ae229ca894c0b80ad84664afcfdde523b5e87057", "parts": 7, "status": "COMPLETE"}
 {"number": 79, "slug": "inngest", "source": "https://github.com/inngest/inngest.git", "source_commit": "fbafabf6cee630e69820c24ac75aa854139ea54e", "parts": 8, "status": "COMPLETE"}
+{"number": 80, "slug": "trigger.dev", "source": "https://github.com/triggerdotdev/trigger.dev.git", "source_commit": "1d55693c0fc76279e7e8275fe41f959b65d5ea99", "parts": 3, "status": "COMPLETE"}
+{"number": 81, "slug": "restate", "source": "https://github.com/restatedev/restate.git", "source_commit": "e8b0592c31b25f4fd00446bb44c68d0b8e3a8ed7", "parts": 1, "status": "COMPLETE"}
+{"number": 82, "slug": "dbos-transact-ts", "source": "https://github.com/dbos-inc/dbos-transact-ts.git", "source_commit": "0ef1f9bab9cd7f793beae548122c1bdb9c6ccc28", "parts": 1, "status": "COMPLETE"}

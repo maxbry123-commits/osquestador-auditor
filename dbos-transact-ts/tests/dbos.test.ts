@@ -1,0 +1,1389 @@
+import { WorkflowHandle, DBOS, DBOSSerializer } from '../src/';
+import { generateDBOSTestConfig, setUpDBOSTestSysDb, Event } from './helpers';
+import { randomUUID } from 'node:crypto';
+import { StatusString } from '../src/workflow';
+import { DBOSConfig } from '../src/dbos-executor';
+import { Client, Pool, PoolClient } from 'pg';
+import { DBOSWorkflowCancelledError, DBOSAwaitedWorkflowCancelledError, DBOSInitializationError } from '../src/error';
+import assert from 'node:assert';
+import { DBOSClient } from '../dist/src';
+import { deriveDatabaseUrl, dropPGDatabase, ensurePGDatabase, getDatabaseNameFromUrl } from '../src/database_utils';
+import { sleepConfig } from '../src/utils';
+
+const silentDropLogger = { warn: () => {} };
+
+describe('dbos-tests', () => {
+  let username: string;
+  let config: DBOSConfig;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    expect(config.systemDatabaseUrl).toBeDefined();
+    const url = new URL(config.systemDatabaseUrl!);
+    username = url.username;
+    await setUpDBOSTestSysDb(config);
+    DBOS.setConfig(config);
+  });
+
+  beforeEach(async () => {
+    await DBOS.launch();
+    DBOSTestClass.cnt = 0;
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  test('simple-function', async () => {
+    const workflowHandle: WorkflowHandle<string> = await DBOS.startWorkflow(DBOSTestClass).testWorkflow(username);
+    const workflowResult: string = await workflowHandle.getResult();
+    expect(workflowResult).toEqual(username);
+  });
+
+  test('simple-workflow-attempts-counter', async () => {
+    const systemDBClient = new Client({
+      connectionString: config.systemDatabaseUrl,
+    });
+    try {
+      await systemDBClient.connect();
+      const handle = await DBOS.startWorkflow(DBOSTestClass).noopWorkflow();
+      for (let i = 0; i < 10; i++) {
+        await DBOS.startWorkflow(DBOSTestClass, { workflowID: handle.workflowID }).noopWorkflow();
+        const result = await systemDBClient.query<{ status: string; attempts: number }>(
+          `SELECT status, recovery_attempts as attempts FROM dbos.workflow_status WHERE workflow_uuid=$1`,
+          [handle.workflowID],
+        );
+        expect(result.rows[0].attempts).toBe(String(1));
+      }
+    } finally {
+      await systemDBClient.end();
+    }
+  });
+
+  test('return-void', async () => {
+    const workflowUUID = randomUUID();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await DBOSTestClass.testVoidFunction();
+    });
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(DBOSTestClass.testVoidFunction()).resolves.toBeFalsy();
+    });
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(DBOSTestClass.testVoidFunction()).resolves.toBeFalsy();
+    });
+  });
+
+  test('tight-loop', async () => {
+    for (let i = 0; i < 100; i++) {
+      await expect(DBOSTestClass.testNameWorkflow(username)).resolves.toBe(username);
+    }
+  });
+
+  test('abort-function', async () => {
+    await expect(DBOSTestClass.testFailWorkflow('fail')).rejects.toThrow('fail');
+  });
+
+  test('simple-step', async () => {
+    const workflowUUID: string = randomUUID();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(DBOSTestClass.testStep()).resolves.toBe(0);
+    });
+    await expect(DBOSTestClass.testStep()).resolves.toBe(1);
+  });
+
+  test('simple-workflow-notifications', async () => {
+    // Send to non-existent workflow should fail
+    await expect(DBOSTestClass.sendWorkflow('1234567')).rejects.toThrow(
+      'Sent to non-existent destination workflow UUID',
+    );
+
+    const workflowUUID = randomUUID();
+    const handle = await DBOS.startWorkflow(DBOSTestClass, { workflowID: workflowUUID }).receiveWorkflow();
+    await expect(DBOSTestClass.sendWorkflow(handle.workflowID)).resolves.toBeFalsy(); // return void.
+    expect(await handle.getResult()).toBe(true);
+  });
+
+  class SendIdempotencyTestClass {
+    static recvTwoMessagesEvent = new Event();
+    static recvWfEvent = new Event();
+    static recvStepEvent = new Event();
+
+    @DBOS.workflow()
+    static async recvTwoMsgs() {
+      const msg1 = await DBOS.recv<string>(undefined, { timeoutSeconds: 10 });
+      SendIdempotencyTestClass.recvTwoMessagesEvent.set();
+      const msg2 = await DBOS.recv<string>(undefined, { timeoutSeconds: 2 });
+      return `${msg1}-${msg2}`;
+    }
+
+    @DBOS.workflow()
+    static async recvTwoOnTopic() {
+      const msg1 = await DBOS.recv<string>('t', { timeoutSeconds: 10 });
+      const msg2 = await DBOS.recv<string>('t', { timeoutSeconds: 10 });
+      return `${msg1}-${msg2}`;
+    }
+
+    @DBOS.workflow()
+    static async recvTwoMsgsWfIdem() {
+      const msg1 = await DBOS.recv<string>(undefined, { timeoutSeconds: 10 });
+      SendIdempotencyTestClass.recvWfEvent.set();
+      const msg2 = await DBOS.recv<string>(undefined, { timeoutSeconds: 2 });
+      return `${msg1}-${msg2}`;
+    }
+
+    @DBOS.workflow()
+    static async sendWithKeyWF(dest: string, msg: string, key: string) {
+      await DBOS.send(dest, msg, undefined, key);
+    }
+
+    @DBOS.workflow()
+    static async recvOneMsg() {
+      return String(await DBOS.recv<string>('s', 10));
+    }
+
+    @DBOS.step()
+    static async sendFromStep(dest: string, msg: string, topic: string) {
+      await DBOS.send(dest, msg, topic);
+    }
+
+    @DBOS.workflow()
+    static async sendFromStepWF(dest: string, msg: string, topic: string) {
+      await SendIdempotencyTestClass.sendFromStep(dest, msg, topic);
+    }
+
+    @DBOS.workflow()
+    static async recvTwoMsgsAgain() {
+      const msg1 = await DBOS.recv<string>(undefined, { timeoutSeconds: 10 });
+      SendIdempotencyTestClass.recvStepEvent.set();
+      const msg2 = await DBOS.recv<string>(undefined, { timeoutSeconds: 2 });
+      return `${msg1}-${msg2}`;
+    }
+
+    @DBOS.step()
+    static async sendFromStepWithKey(dest: string, msg: string, key: string) {
+      await DBOS.send(dest, msg, undefined, key);
+    }
+
+    @DBOS.workflow()
+    static async sendFromStepIdemWF(dest: string, msg: string, key: string) {
+      await SendIdempotencyTestClass.sendFromStepWithKey(dest, msg, key);
+    }
+
+    @DBOS.workflow()
+    static async recvOneShort() {
+      return String(await DBOS.recv<string>(undefined, { timeoutSeconds: 3 }));
+    }
+  }
+
+  test('send-idempotency-key', async () => {
+    // Test 1: Sending with the same idempotency key twice delivers only one message.
+    SendIdempotencyTestClass.recvTwoMessagesEvent.clear();
+    const destUUID = randomUUID();
+    const handle = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destUUID }).recvTwoMsgs();
+
+    const idemKey = randomUUID();
+    await DBOS.send(destUUID, 'hello', undefined, idemKey);
+    await SendIdempotencyTestClass.recvTwoMessagesEvent.wait();
+    // Duplicate send with the same key should be silently ignored.
+    await DBOS.send(destUUID, 'hello_duplicate', undefined, idemKey);
+    // The second recv times out (returns null), proving only one message was delivered.
+    expect(await handle.getResult()).toBe('hello-null');
+
+    // Test 2: Different idempotency keys deliver separate messages.
+    const destUUID2 = randomUUID();
+    const handle2 = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destUUID2 }).recvTwoOnTopic();
+
+    await DBOS.send(destUUID2, 'a', 't', randomUUID());
+    await DBOS.send(destUUID2, 'b', 't', randomUUID());
+    expect(await handle2.getResult()).toBe('a-b');
+
+    // Test 3: Send from a workflow with same idempotency key twice delivers only one message.
+    SendIdempotencyTestClass.recvWfEvent.clear();
+    const destUUIDwf = randomUUID();
+    const handleWf = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destUUIDwf }).recvTwoMsgsWfIdem();
+
+    const wfIdemKey = randomUUID();
+    await SendIdempotencyTestClass.sendWithKeyWF(destUUIDwf, 'hello_wf', wfIdemKey);
+    await SendIdempotencyTestClass.recvWfEvent.wait();
+
+    // Duplicate send with the same key should be silently ignored.
+    await SendIdempotencyTestClass.sendWithKeyWF(destUUIDwf, 'hello_wf_dup', wfIdemKey);
+    // The second recv times out (returns null), proving only one message was delivered.
+    expect(await handleWf.getResult()).toBe('hello_wf-null');
+
+    // Test 4: Send from a step (without idempotency key).
+    const destUUID3 = randomUUID();
+    const handle3 = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destUUID3 }).recvOneMsg();
+
+    await SendIdempotencyTestClass.sendFromStepWF(destUUID3, 'from_step', 's');
+    expect(await handle3.getResult()).toBe('from_step');
+
+    // Test 5: Send from a step with same idempotency key twice delivers only one message.
+    SendIdempotencyTestClass.recvStepEvent.clear();
+    const destUUID4 = randomUUID();
+    const handle4 = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destUUID4 }).recvTwoMsgsAgain();
+
+    const stepIdemKey = randomUUID();
+    await SendIdempotencyTestClass.sendFromStepIdemWF(destUUID4, 'hello_step', stepIdemKey);
+    await SendIdempotencyTestClass.recvStepEvent.wait();
+
+    // Duplicate send with the same key should be silently ignored.
+    await SendIdempotencyTestClass.sendFromStepIdemWF(destUUID4, 'hello_step_dup', stepIdemKey);
+    // The second recv times out (returns null), proving only one message was delivered.
+    expect(await handle4.getResult()).toBe('hello_step-null');
+  });
+
+  test('send-idempotency-key-scoped-per-destination', async () => {
+    // An idempotency key is scoped per destination: the same key sent to two
+    // different workflows must deliver to both (matching Python and Go, where
+    // message_uuid is `${key}::${destinationID}`).
+    const destA = randomUUID();
+    const destB = randomUUID();
+    const handleA = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destA }).recvOneShort();
+    const handleB = await DBOS.startWorkflow(SendIdempotencyTestClass, { workflowID: destB }).recvOneShort();
+
+    const key = randomUUID();
+    await DBOS.send(destA, 'to_A', undefined, key);
+    await DBOS.send(destB, 'to_B', undefined, key);
+
+    expect(await handleA.getResult()).toBe('to_A');
+    expect(await handleB.getResult()).toBe('to_B');
+  });
+
+  test('simple-workflow-events', async () => {
+    const handle: WorkflowHandle<number> = await DBOS.startWorkflow(DBOSTestClass).setEventWorkflow();
+    const workflowUUID = handle.workflowID;
+    await handle.getResult();
+    await expect(DBOS.getEvent(workflowUUID, 'key1')).resolves.toBe('value1');
+    await expect(DBOS.getEvent(workflowUUID, 'key2')).resolves.toBe('value2');
+    await expect(DBOS.getEvent(workflowUUID, 'fail', 0)).resolves.toBe(null);
+  });
+
+  test('simple-workflow-events-multiple', async () => {
+    const handle: WorkflowHandle<number> = await DBOS.startWorkflow(DBOSTestClass).setEventMultipleWorkflow();
+    const workflowUUID = handle.workflowID;
+    await handle.getResult();
+    await expect(DBOS.getEvent(workflowUUID, 'key1')).resolves.toBe('value1b');
+    await expect(DBOS.getEvent(workflowUUID, 'key2')).resolves.toBe('value2');
+    await expect(DBOS.getEvent(workflowUUID, 'fail', 0)).resolves.toBe(null);
+  });
+
+  class RetrieveWorkflowStatus {
+    // Test workflow status changes correctly.
+    static resolve1: () => void;
+    static promise1 = new Promise<void>((resolve) => {
+      RetrieveWorkflowStatus.resolve1 = resolve;
+    });
+
+    static resolve2: () => void;
+    static promise2 = new Promise<void>((resolve) => {
+      RetrieveWorkflowStatus.resolve2 = resolve;
+    });
+
+    static resolve3: () => void;
+    static promise3 = new Promise<void>((resolve) => {
+      RetrieveWorkflowStatus.resolve3 = resolve;
+    });
+
+    @DBOS.workflow()
+    static async testStatusWorkflow(id: number, name: string) {
+      await RetrieveWorkflowStatus.promise1;
+      RetrieveWorkflowStatus.resolve3(); // Signal the execution has done.
+      await RetrieveWorkflowStatus.promise2;
+      return name;
+    }
+  }
+
+  test('retrieve-workflowstatus', async () => {
+    const workflowUUID = randomUUID();
+
+    const workflowHandle = await DBOS.startWorkflow(RetrieveWorkflowStatus, {
+      workflowID: workflowUUID,
+    }).testStatusWorkflow(123, 'hello');
+
+    expect(workflowHandle.workflowID).toBe(workflowUUID);
+    await expect(workflowHandle.getStatus()).resolves.toMatchObject({
+      workflowID: workflowUUID,
+      status: StatusString.PENDING,
+      workflowName: RetrieveWorkflowStatus.testStatusWorkflow.name,
+    });
+    await expect(workflowHandle.getWorkflowInputs()).resolves.toMatchObject([123, 'hello']);
+
+    // getResult with a timeout ... it'll time out.
+    await expect(DBOS.getResult<string>(workflowUUID, 0.1)).resolves.toBeNull();
+
+    RetrieveWorkflowStatus.resolve1();
+    await RetrieveWorkflowStatus.promise3;
+
+    // Retrieve handle, should get the pending status.
+    await expect(DBOS.retrieveWorkflow<string>(workflowUUID).getStatus()).resolves.toMatchObject({
+      status: StatusString.PENDING,
+      workflowName: RetrieveWorkflowStatus.testStatusWorkflow.name,
+    });
+
+    // Proceed to the end.
+    RetrieveWorkflowStatus.resolve2();
+    await expect(workflowHandle.getResult()).resolves.toBe('hello');
+
+    // The status should transition to SUCCESS.
+    const retrievedHandle = DBOS.retrieveWorkflow<string>(workflowUUID);
+    expect(retrievedHandle).not.toBeNull();
+    expect(retrievedHandle.workflowID).toBe(workflowUUID);
+    await expect(retrievedHandle.getResult()).resolves.toBe('hello');
+    await expect(workflowHandle.getStatus()).resolves.toMatchObject({
+      status: StatusString.SUCCESS,
+    });
+    await expect(retrievedHandle.getStatus()).resolves.toMatchObject({
+      status: StatusString.SUCCESS,
+    });
+  });
+
+  describe('workflow-timeout', () => {
+    test('workflow-withWorkflowTimeout', async () => {
+      const workflowID: string = randomUUID();
+      await DBOS.withNextWorkflowID(workflowID, async () => {
+        await DBOS.withWorkflowTimeout(100, async () => {
+          await expect(DBOSTimeoutTestClass.blockedWorkflow()).rejects.toThrow(
+            new DBOSWorkflowCancelledError(workflowID),
+          );
+        });
+      });
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+    });
+
+    test('nested-withWorkflowTimeout-restores-outer', async () => {
+      // Timeouts large enough that the quick workflows complete without cancelling;
+      // we only inspect the recorded timeoutMS. Regression test for nested `with*`
+      // restore: the inner block must not leak its value to the outer scope.
+      const innerID = randomUUID();
+      const afterID = randomUUID();
+      await DBOS.withWorkflowTimeout(30000, async () => {
+        await DBOS.withWorkflowTimeout(5000, async () => {
+          await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID: innerID })
+            .sleepingWorkflow(10)
+            .then((h) => h.getResult());
+        });
+        // The outer 30000ms timeout must be restored here, not the inner 5000ms.
+        await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID: afterID })
+          .sleepingWorkflow(10)
+          .then((h) => h.getResult());
+      });
+      expect((await DBOS.getWorkflowStatus(innerID))?.timeoutMS).toBe(5000);
+      expect((await DBOS.getWorkflowStatus(afterID))?.timeoutMS).toBe(30000);
+    });
+
+    test('workflow-timeout-startWorkflow-params', async () => {
+      const workflowID = randomUUID();
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID, timeoutMS: 100 }).blockedWorkflow();
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+    });
+
+    test('parent-workflow-withWorkflowTimeout', async () => {
+      const workflowID: string = randomUUID();
+      const childID = `${workflowID}-0`;
+      await DBOS.withNextWorkflowID(workflowID, async () => {
+        await DBOS.withWorkflowTimeout(100, async () => {
+          await expect(DBOSTimeoutTestClass.blockingParentStartWF()).rejects.toThrow(
+            new DBOSWorkflowCancelledError(workflowID),
+          );
+        });
+      });
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+      // The child is cancelled by its own inherited deadline, independently of the parent.
+      // Wait for it to settle before reading its status to avoid a race with that cancellation.
+      await expect(DBOS.retrieveWorkflow(childID).getResult()).rejects.toThrow(
+        new DBOSAwaitedWorkflowCancelledError(childID),
+      );
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBe(childStatus?.deadlineEpochMS);
+    });
+
+    test('parent-workflow-timeout-startWorkflow-params', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 100,
+      }).blockingParentStartWF();
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+      // The child is cancelled by its own inherited deadline, independently of the parent.
+      // Wait for it to settle before reading its status to avoid a race with that cancellation.
+      await expect(DBOS.retrieveWorkflow(childID).getResult()).rejects.toThrow(
+        new DBOSAwaitedWorkflowCancelledError(childID),
+      );
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBe(childStatus?.deadlineEpochMS);
+    });
+
+    test('direct-parent-workflow-withWorkflowTimeout', async () => {
+      const workflowID: string = randomUUID();
+      const childID = `${workflowID}-0`;
+      await DBOS.withNextWorkflowID(workflowID, async () => {
+        await DBOS.withWorkflowTimeout(100, async () => {
+          await expect(DBOSTimeoutTestClass.blockingParentDirect()).rejects.toThrow(
+            new DBOSWorkflowCancelledError(workflowID),
+          );
+        });
+      });
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+      // The child is cancelled by its own inherited deadline, independently of the parent.
+      // Wait for it to settle before reading its status to avoid a race with that cancellation.
+      await expect(DBOS.retrieveWorkflow(childID).getResult()).rejects.toThrow(
+        new DBOSAwaitedWorkflowCancelledError(childID),
+      );
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBe(childStatus?.deadlineEpochMS);
+    });
+
+    test('direct-parent-workflow-timeout-startWorkflow-params', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 100,
+      }).blockingParentDirect();
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+      // The child is cancelled by its own inherited deadline, independently of the parent.
+      // Wait for it to settle before reading its status to avoid a race with that cancellation.
+      await expect(DBOS.retrieveWorkflow(childID).getResult()).rejects.toThrow(
+        new DBOSAwaitedWorkflowCancelledError(childID),
+      );
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBe(childStatus?.deadlineEpochMS);
+    });
+
+    test('child-wf-timeout-simple', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID }).timeoutParentStartWF(100);
+      await expect(handle.getResult()).rejects.toThrow(new DBOSAwaitedWorkflowCancelledError(childID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.ERROR);
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBe(undefined);
+    });
+
+    test('child-wf-timeout-before-parent', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 1000,
+      }).timeoutParentStartWF(100);
+      await expect(handle.getResult()).rejects.toThrow(new DBOSAwaitedWorkflowCancelledError(childID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.ERROR);
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(status?.deadlineEpochMS).toBeGreaterThan(childStatus?.deadlineEpochMS as number);
+    });
+
+    test('child-wf-timeout-after-parent', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 100,
+      }).timeoutParentStartWF(1000);
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+      // A parent cancelled before it awaits its child stops waiting for it, so let the child's own deadline settle it.
+      await expect(DBOS.retrieveWorkflow(childID).getResult()).rejects.toThrow(
+        new DBOSAwaitedWorkflowCancelledError(childID),
+      );
+      const childStatus = await DBOS.getWorkflowStatus(childID);
+      expect(childStatus?.status).toBe(StatusString.CANCELLED);
+      expect(childStatus?.deadlineEpochMS).toBeGreaterThan(status?.deadlineEpochMS as number);
+    });
+
+    test('sleeping-workflow-timed-out', async () => {
+      const workflowID = randomUUID();
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID, timeoutMS: 100 }).sleepingWorkflow(
+        1000,
+      );
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.CANCELLED);
+    });
+
+    test('sleeping-workflow-not-timed-out', async () => {
+      const workflowID = randomUUID();
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, { workflowID, timeoutMS: 2000 }).sleepingWorkflow(
+        1000,
+      );
+      await expect(handle.getResult()).resolves.toBe(42);
+      const status = await DBOS.getWorkflowStatus(workflowID);
+      expect(status?.status).toBe(StatusString.SUCCESS);
+    });
+
+    test('child-wf-detach-deadline', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 100,
+      }).timeoutParentStartDetachedChild(100);
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      await expect(handle.getStatus()).resolves.toMatchObject({
+        status: StatusString.CANCELLED,
+      });
+      const childHandle = DBOS.retrieveWorkflow(childID);
+      await expect(childHandle.getResult()).resolves.toBe(42);
+      await expect(childHandle.getStatus()).resolves.toMatchObject({
+        status: StatusString.SUCCESS,
+      });
+    });
+
+    test('child-wf-detach-deadline-with-syntax', async () => {
+      const workflowID = randomUUID();
+      const childID = `${workflowID}-0`;
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass, {
+        workflowID,
+        timeoutMS: 100,
+      }).timeoutParentStartDetachedChildWithSyntax(100);
+      await expect(handle.getResult()).rejects.toThrow(new DBOSWorkflowCancelledError(workflowID));
+      await expect(handle.getStatus()).resolves.toMatchObject({
+        status: StatusString.CANCELLED,
+      });
+      const childHandle = DBOS.retrieveWorkflow(childID);
+      await expect(childHandle.getResult()).resolves.toBe(42);
+      await expect(childHandle.getStatus()).resolves.toMatchObject({
+        status: StatusString.SUCCESS,
+      });
+    });
+
+    test('test_wait_first', async () => {
+      const handleFast = await DBOS.startWorkflow(WaitFirstTestClass).fastWorkflow();
+      const handleSlow = await DBOS.startWorkflow(WaitFirstTestClass).slowWorkflow();
+
+      const resultHandle = await DBOS.waitFirst([handleFast, handleSlow]);
+      expect(resultHandle.workflowID).toBe(handleFast.workflowID);
+      expect(await resultHandle.getResult()).toBe('fast');
+      // Wait for slow workflow to finish so it doesn't hang
+      await handleSlow.getResult();
+
+      // Test waitFirst via the client
+      const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+      try {
+        const handleFast2 = await DBOS.startWorkflow(WaitFirstTestClass).fastWorkflow();
+        const handleSlow2 = await DBOS.startWorkflow(WaitFirstTestClass).slowWorkflow();
+
+        const clientHandleFast = client.retrieveWorkflow(handleFast2.workflowID);
+        const clientHandleSlow = client.retrieveWorkflow(handleSlow2.workflowID);
+
+        const clientResult = await client.waitFirst([clientHandleFast, clientHandleSlow]);
+        expect(clientResult.workflowID).toBe(handleFast2.workflowID);
+        expect(await clientResult.getResult()).toBe('fast');
+        await handleSlow2.getResult();
+
+        // Client waitFirst with empty handles should throw
+        await expect(client.waitFirst([])).rejects.toThrow('handles must not be empty');
+      } finally {
+        await client.destroy();
+      }
+    });
+
+    test('test_wait_all', async () => {
+      const handleFast = await DBOS.startWorkflow(WaitFirstTestClass).fastWorkflow();
+      const handleSlow = await DBOS.startWorkflow(WaitFirstTestClass).slowWorkflow();
+      const handles = [handleSlow, handleFast, handleFast];
+
+      const resultHandles = await DBOS.waitAll(handles);
+      expect(resultHandles).toHaveLength(handles.length);
+      expect(resultHandles[0]).toBe(handleSlow);
+      expect(resultHandles[1]).toBe(handleFast);
+      expect(resultHandles[2]).toBe(handleFast);
+      await expect(handleFast.getStatus()).resolves.toMatchObject({ status: StatusString.SUCCESS });
+      await expect(handleSlow.getStatus()).resolves.toMatchObject({ status: StatusString.SUCCESS });
+
+      const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+      try {
+        const handleFast2 = await DBOS.startWorkflow(WaitFirstTestClass).fastWorkflow();
+        const handleSlow2 = await DBOS.startWorkflow(WaitFirstTestClass).slowWorkflow();
+        const clientHandleFast = client.retrieveWorkflow(handleFast2.workflowID);
+        const clientHandleSlow = client.retrieveWorkflow(handleSlow2.workflowID);
+        const clientHandles = [clientHandleSlow, clientHandleFast, clientHandleFast];
+
+        const clientResultHandles = await client.waitAll(clientHandles);
+        expect(clientResultHandles).toHaveLength(clientHandles.length);
+        expect(clientResultHandles[0]).toBe(clientHandleSlow);
+        expect(clientResultHandles[1]).toBe(clientHandleFast);
+        expect(clientResultHandles[2]).toBe(clientHandleFast);
+        await expect(clientHandleFast.getStatus()).resolves.toMatchObject({ status: StatusString.SUCCESS });
+        await expect(clientHandleSlow.getStatus()).resolves.toMatchObject({ status: StatusString.SUCCESS });
+      } finally {
+        await client.destroy();
+      }
+    });
+
+    test('test_wait_first_empty', async () => {
+      await expect(DBOS.waitFirst([])).rejects.toThrow('handles must not be empty');
+    });
+
+    test('test_wait_all_empty', async () => {
+      await expect(DBOS.waitAll([])).resolves.toEqual([]);
+
+      const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+      try {
+        await expect(client.waitAll([])).resolves.toEqual([]);
+      } finally {
+        await client.destroy();
+      }
+    });
+
+    test('test_wait_all_inside_workflow', async () => {
+      const handleFast = await DBOS.startWorkflow(WaitFirstTestClass).fastWorkflow();
+      const handleSlow = await DBOS.startWorkflow(WaitFirstTestClass).slowWorkflow();
+      const workflowID = randomUUID();
+      const waitHandle = await DBOS.startWorkflow(WaitFirstTestClass, { workflowID }).waitAllWorkflow([
+        handleSlow.workflowID,
+        handleFast.workflowID,
+      ]);
+
+      await expect(waitHandle.getResult()).resolves.toEqual([handleSlow.workflowID, handleFast.workflowID]);
+      const steps = await DBOS.listWorkflowSteps(workflowID);
+      expect(steps?.map((step) => step.name)).toContain('DBOS.waitAll');
+    });
+
+    // This test should run last in the block as it changes some global state
+    test('custom-serializer-test', async () => {
+      await DBOS.shutdown();
+      const config = generateDBOSTestConfig();
+      // Reset the test database
+      await setUpDBOSTestSysDb(config);
+
+      const key = 'key';
+      const value = 'value';
+      const message = 'message';
+      const workflow = DBOS.registerWorkflow(
+        async (input: string) => {
+          await DBOS.setEvent(key, input);
+          return DBOS.recv();
+        },
+        { name: 'custom-serializer-test' },
+      );
+      const errorWorkflow = DBOS.registerWorkflow(
+        async () => {
+          await Promise.resolve();
+          throw new Error(message);
+        },
+        { name: 'custom-serializer-test-error' },
+      );
+      // Configure DBOS with a custom serializer to base64-encoded JSON
+      const jsonSerializer: DBOSSerializer = {
+        name: () => 'custom_base64',
+        parse: (text: string | null | undefined): unknown => {
+          // Parsers must always return null when receiving null or undefined
+          if (text === null || text === undefined) return null;
+          return JSON.parse(Buffer.from(text, 'base64').toString());
+        },
+        stringify: (obj: unknown): string => {
+          // JSON.stringify doesn't handle undefined, so convert it to null instead
+          if (obj === undefined) {
+            obj = null;
+          }
+          return Buffer.from(JSON.stringify(obj)).toString('base64');
+        },
+      };
+      config.serializer = jsonSerializer;
+      DBOS.setConfig(config);
+      await DBOS.launch();
+      const queue = await DBOS.registerQueue('example-queue', { onConflict: 'always_update' });
+
+      // Test workflow operations with a custom serializer
+      const handle = await DBOS.startWorkflow(workflow, { queueName: queue.name })(value);
+      await DBOS.send(handle.workflowID, message);
+      assert.equal(await handle.getResult(), message);
+      assert.equal(await DBOS.getEvent(handle.workflowID, key), value);
+      const steps = await DBOS.listWorkflowSteps(handle.workflowID);
+      assert.ok(steps);
+      assert.equal(steps.length, 3);
+      assert.ok(steps[0].name.includes('DBOS.setEvent'));
+      assert.ok(steps[1].name.includes('DBOS.recv'));
+      assert.equal(steps[1].output, message);
+      const errorHandle = await DBOS.startWorkflow(errorWorkflow, { queueName: queue.name })();
+      await expect(errorHandle.getResult()).rejects.toThrow(message);
+
+      // Test the client with a custom serializer
+      const client = await DBOSClient.create({
+        systemDatabaseUrl: config.systemDatabaseUrl!,
+        serializer: jsonSerializer,
+      });
+      const clientEnqueue = await client.enqueue(
+        { workflowName: 'custom-serializer-test', queueName: queue.name },
+        message,
+      );
+      await client.send(clientEnqueue.workflowID, message);
+      assert.equal(await clientEnqueue.getResult(), message);
+      const clientHandle = client.retrieveWorkflow(handle.workflowID);
+      assert.equal(await clientHandle.getResult(), message);
+      assert.equal(await client.getEvent(handle.workflowID, key), value);
+      await client.destroy();
+
+      // Verify a client without the custom serializer does not fail,
+      // but falls back to returning raw strings
+      const badClient = await DBOSClient.create({
+        systemDatabaseUrl: config.systemDatabaseUrl!,
+      });
+      const workflows = await badClient.listWorkflows({});
+      assert.equal(workflows.length, 3);
+      assert.equal(workflows[0].output, jsonSerializer.stringify(message));
+      const badClientSteps = await badClient.listWorkflowSteps(workflows[0].workflowID);
+      assert.ok(badClientSteps);
+      assert.ok(badClientSteps[1].name.includes('DBOS.recv'));
+      assert.equal(badClientSteps[1].output, jsonSerializer.stringify(message));
+      assert.equal(badClientSteps.length, 3);
+      await badClient.destroy();
+    });
+  });
+});
+
+class WaitFirstTestClass {
+  @DBOS.workflow()
+  static async fastWorkflow() {
+    await Promise.resolve();
+    return 'fast';
+  }
+
+  @DBOS.workflow()
+  static async slowWorkflow() {
+    // Sleep well past the 1s result-poll interval so waitFirst reliably observes fastWorkflow complete first.
+    await DBOS.sleep(2000);
+    return 'slow';
+  }
+
+  @DBOS.workflow()
+  static async waitAllWorkflow(workflowIDs: string[]) {
+    const handles = workflowIDs.map((workflowID) => DBOS.retrieveWorkflow<string>(workflowID));
+    const resultHandles = await DBOS.waitAll(handles);
+    return resultHandles.map((handle) => handle.workflowID);
+  }
+}
+
+class DBOSTimeoutTestClass {
+  @DBOS.workflow()
+  static async sleepingWorkflow(duration: number) {
+    await DBOS.sleep(duration);
+    return 42;
+  }
+
+  @DBOS.workflow()
+  static async blockedWorkflow() {
+    while (true) {
+      await DBOS.sleep(100);
+    }
+  }
+
+  @DBOS.workflow()
+  static async blockingParentStartWF() {
+    await DBOS.startWorkflow(DBOSTimeoutTestClass)
+      .blockedWorkflow()
+      .then((h) => h.getResult());
+  }
+
+  @DBOS.workflow()
+  static async blockingParentDirect() {
+    await DBOSTimeoutTestClass.blockedWorkflow();
+  }
+
+  @DBOS.workflow()
+  static async timeoutParentStartWF(timeout: number) {
+    await DBOS.startWorkflow(DBOSTimeoutTestClass, { timeoutMS: timeout })
+      .blockedWorkflow()
+      .then((h) => h.getResult());
+  }
+
+  @DBOS.workflow()
+  static async timeoutParentStartDetachedChild(duration: number) {
+    await DBOS.startWorkflow(DBOSTimeoutTestClass, { timeoutMS: null })
+      .sleepingWorkflow(duration * 2)
+      .then((h) => h.getResult());
+  }
+
+  @DBOS.workflow()
+  static async timeoutParentStartDetachedChildWithSyntax(duration: number) {
+    await DBOS.withWorkflowTimeout(null, async () => {
+      await DBOSTimeoutTestClass.sleepingWorkflow(duration * 2);
+    });
+  }
+}
+
+class DBOSTestClass {
+  static cnt: number = 0;
+
+  @DBOS.step()
+  static async testFunction(name: string) {
+    return Promise.resolve(name);
+  }
+
+  @DBOS.workflow()
+  static async testWorkflow(name: string) {
+    const funcResult = await DBOSTestClass.testFunction(name);
+    return funcResult;
+  }
+
+  @DBOS.step()
+  static async testVoidFunction() {
+    return Promise.resolve();
+  }
+
+  @DBOS.step()
+  static async testNameFunction(name: string) {
+    return Promise.resolve(name);
+  }
+
+  @DBOS.workflow()
+  static async testNameWorkflow(name: string) {
+    return DBOSTestClass.testNameFunction(name); // Missing await is intentional
+  }
+
+  @DBOS.step()
+  static async testFailFunction(name: string) {
+    if (name === 'fail') {
+      throw new Error('fail');
+    }
+    return Promise.resolve(name);
+  }
+
+  @DBOS.workflow()
+  static async testFailWorkflow(name: string) {
+    await DBOSTestClass.testFailFunction(name);
+  }
+
+  @DBOS.step()
+  static async testStep() {
+    return Promise.resolve(DBOSTestClass.cnt++);
+  }
+
+  @DBOS.workflow()
+  static async receiveWorkflow() {
+    const message1 = await DBOS.recv<string>();
+    const message2 = await DBOS.recv<string>();
+    const fail = await DBOS.recv('fail', 0);
+    return message1 === 'message1' && message2 === 'message2' && fail === null;
+  }
+
+  @DBOS.workflow()
+  static async sendWorkflow(destinationId: string) {
+    await DBOS.send(destinationId, 'message1');
+    await DBOS.send(destinationId, 'message2');
+  }
+
+  @DBOS.workflow()
+  static async setEventWorkflow() {
+    await DBOS.setEvent('key1', 'value1');
+    await DBOS.setEvent('key2', 'value2');
+    return 0;
+  }
+
+  @DBOS.workflow()
+  static async setEventMultipleWorkflow() {
+    await DBOS.setEvent('key1', 'value1');
+    await DBOS.setEvent('key2', 'value2');
+    await DBOS.setEvent('key1', 'value1b');
+    return 0;
+  }
+
+  @DBOS.workflow()
+  static async noopWorkflow() {
+    return Promise.resolve();
+  }
+}
+
+class TimeoutTestClass {
+  @DBOS.workflow()
+  static async getEventTimeoutWorkflow() {
+    const workflowID = DBOS.workflowID!;
+    return DBOS.getEvent(workflowID, 'key', 0);
+  }
+
+  @DBOS.workflow()
+  static async recvTimeoutWorkflow() {
+    return DBOS.recv(undefined, 0);
+  }
+}
+
+describe('timeout-tests', () => {
+  let config: DBOSConfig;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    await setUpDBOSTestSysDb(config);
+    DBOS.setConfig(config);
+  });
+
+  beforeEach(async () => {
+    await DBOS.launch();
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  test('get-event-timeout', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutTestClass).getEventTimeoutWorkflow();
+    expect(await handle.getResult()).toBeNull();
+
+    const forkedHandle = await DBOS.forkWorkflow(handle.workflowID, 5);
+    expect(await forkedHandle.getResult()).toBeNull();
+  });
+
+  test('recv-timeout', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutTestClass).recvTimeoutWorkflow();
+    expect(await handle.getResult()).toBeNull();
+
+    const forkedHandle = await DBOS.forkWorkflow(handle.workflowID, 5);
+    expect(await forkedHandle.getResult()).toBeNull();
+  });
+});
+
+class TimeoutOptionsTestClass {
+  @DBOS.workflow()
+  static async recvWithNumber() {
+    return DBOS.recv(undefined, 0);
+  }
+
+  @DBOS.workflow()
+  static async recvWithTimeoutOptions() {
+    return DBOS.recv(undefined, { timeoutSeconds: 0 });
+  }
+
+  @DBOS.workflow()
+  static async recvWithDeadlineOptions() {
+    return DBOS.recv(undefined, { deadlineEpochMS: Date.now() });
+  }
+
+  @DBOS.workflow()
+  static async getEventWithNumber(targetID: string) {
+    return DBOS.getEvent(targetID, 'key', 0);
+  }
+
+  @DBOS.workflow()
+  static async getEventWithTimeoutOptions(targetID: string) {
+    return DBOS.getEvent(targetID, 'key', { timeoutSeconds: 0 });
+  }
+
+  @DBOS.workflow()
+  static async getEventWithDeadlineOptions(targetID: string) {
+    return DBOS.getEvent(targetID, 'key', { deadlineEpochMS: Date.now() });
+  }
+}
+
+describe('timeout-options-tests', () => {
+  let config: DBOSConfig;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    await setUpDBOSTestSysDb(config);
+    DBOS.setConfig(config);
+  });
+
+  beforeEach(async () => {
+    await DBOS.launch();
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  test('recv-timeout-number', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).recvWithNumber();
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('recv-timeout-options', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).recvWithTimeoutOptions();
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('recv-deadline-options', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).recvWithDeadlineOptions();
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('getEvent-timeout-number', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).getEventWithNumber(randomUUID());
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('getEvent-timeout-options', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).getEventWithTimeoutOptions(randomUUID());
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('getEvent-deadline-options', async () => {
+    const handle = await DBOS.startWorkflow(TimeoutOptionsTestClass).getEventWithDeadlineOptions(randomUUID());
+    expect(await handle.getResult()).toBeNull();
+  });
+
+  test('client-getEvent-timeout-number', async () => {
+    const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+    try {
+      expect(await client.getEvent(randomUUID(), 'key', 0)).toBeNull();
+    } finally {
+      await client.destroy();
+    }
+  });
+
+  test('client-getEvent-timeout-options', async () => {
+    const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+    try {
+      expect(await client.getEvent(randomUUID(), 'key', { timeoutSeconds: 0 })).toBeNull();
+    } finally {
+      await client.destroy();
+    }
+  });
+
+  test('client-getEvent-deadline-options', async () => {
+    const client = await DBOSClient.create({ systemDatabaseUrl: config.systemDatabaseUrl! });
+    try {
+      expect(await client.getEvent(randomUUID(), 'key', { deadlineEpochMS: Date.now() })).toBeNull();
+    } finally {
+      await client.destroy();
+    }
+  });
+});
+
+describe('custom-pool-test', () => {
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  test('custom-pool-test', async () => {
+    const baseConfig = generateDBOSTestConfig();
+    // Destroy the system database
+    await dropPGDatabase(baseConfig.systemDatabaseUrl!, silentDropLogger);
+    const systemDatabaseURL = baseConfig.systemDatabaseUrl;
+    assert(systemDatabaseURL);
+    let pool = new Pool({ connectionString: systemDatabaseURL });
+    let config: DBOSConfig = {
+      systemDatabaseUrl: 'postgres://fake:nonsense@badhost:1111/no_database',
+      systemDatabasePool: pool,
+      useListenNotify: false,
+    };
+    DBOS.setConfig(config);
+    const workflow = DBOS.registerWorkflow(
+      () => {
+        return DBOS.recv();
+      },
+      { name: 'custom-pool-test' },
+    );
+    // Launching with a custom pool but nonexistent database should fail
+    await expect(DBOS.launch()).rejects.toThrow(DBOSInitializationError);
+    await DBOS.shutdown();
+    // A pool DBOS was given is the caller's to close, even after a failed launch
+    assert(!pool.ending && !pool.ended);
+    await pool.end();
+    // Create the system database, launch should succeed with a custom pool but fake URL
+    await ensurePGDatabase(baseConfig.systemDatabaseUrl!, { info: () => {}, warn: () => {} });
+    pool = new Pool({ connectionString: systemDatabaseURL });
+    config = {
+      systemDatabaseUrl: 'postgres://fake:nonsense@badhost:1111/no_database',
+      systemDatabasePool: pool,
+      useListenNotify: false,
+    };
+    DBOS.setConfig(config);
+    await DBOS.launch();
+
+    try {
+      const message = 'message';
+      const handle = await DBOS.startWorkflow(workflow)();
+      await DBOS.send(handle.workflowID, message);
+      assert.equal(await handle.getResult(), message);
+
+      const client = await DBOSClient.create({
+        systemDatabaseUrl: config.systemDatabaseUrl!,
+        systemDatabasePool: config.systemDatabasePool,
+      });
+      const clientHandle = client.retrieveWorkflow(handle.workflowID);
+      assert.equal(await clientHandle.getResult(), message);
+
+      // Destroying the client must leave the shared pool open for the runtime still using it
+      await client.destroy();
+      const secondHandle = await DBOS.startWorkflow(workflow)();
+      await DBOS.send(secondHandle.workflowID, message);
+      assert.equal(await secondHandle.getResult(), message);
+
+      await DBOS.shutdown();
+      await pool.query('SELECT 1');
+    } finally {
+      // Shutdown leaves this pool open, and DBOS never gave it an error listener, so a failure above must
+      // not hand it to the next describe, whose DROP DATABASE ... WITH (FORCE) would kill its connections.
+      await DBOS.shutdown();
+      pool.on('error', () => {});
+      await pool.end();
+    }
+  });
+});
+
+describe('custom-pool-lifecycle', () => {
+  let config: DBOSConfig;
+  let systemDatabaseUrl: string;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    systemDatabaseUrl = config.systemDatabaseUrl!;
+    await setUpDBOSTestSysDb(config);
+  });
+
+  test('destroy ends polling waits instead of leaving them running on the caller pool', async () => {
+    const pool = new Pool({ connectionString: systemDatabaseUrl });
+    try {
+      const client = await DBOSClient.create({ systemDatabaseUrl, systemDatabasePool: pool });
+      await client.registerQueue('custom-pool-lifecycle-queue');
+      // Nothing is launched to dequeue it, so this wait would otherwise poll forever.
+      const handle = await client.enqueue<() => Promise<string>>({
+        workflowName: 'neverRuns',
+        queueName: 'custom-pool-lifecycle-queue',
+      });
+      const pending = handle.getResult();
+      await client.destroy();
+
+      await expect(pending).rejects.toThrow('The system database has been shut down');
+      // The caller's pool is still theirs to use.
+      await pool.query('SELECT 1');
+    } finally {
+      await pool.end();
+    }
+  });
+
+  test('never instruments the caller pool, so there is nothing to unpick on destroy', async () => {
+    const pool = new Pool({ connectionString: systemDatabaseUrl });
+    const events = ['error', 'connect', 'acquire', 'release', 'remove'] as const;
+    try {
+      const before = events.map((e) => pool.listenerCount(e));
+
+      const clients: DBOSClient[] = [];
+      for (let i = 0; i < 3; i++) {
+        clients.push(await DBOSClient.create({ systemDatabaseUrl, systemDatabasePool: pool }));
+      }
+      expect(events.map((e) => pool.listenerCount(e))).toEqual(before);
+
+      // Opening a real connection is what would fire a 'connect' hook, so the leak needs one to show up.
+      const connection = await pool.connect();
+      try {
+        // Stock pg leaves a checked-out client with no 'error' listener of its own; DBOS must not add one.
+        expect(connection.listenerCount('error')).toBe(0);
+
+        for (const client of clients) {
+          await client.destroy();
+        }
+
+        // What destroy() does control on a pool it does not own: leave it open and usable.
+        expect(events.map((e) => pool.listenerCount(e))).toEqual(before);
+        expect(pool.ended).toBe(false);
+        expect((await pool.query('SELECT 1')).rowCount).toBe(1);
+      } finally {
+        connection.release();
+      }
+    } finally {
+      await pool.end();
+    }
+  });
+
+  test('many clients share one caller pool while others are created and destroyed', async () => {
+    // A pool smaller than the number of concurrent clients, so they genuinely contend for connections.
+    const pool = new Pool({ connectionString: systemDatabaseUrl, max: 5 });
+    const events = ['error', 'connect', 'acquire', 'release', 'remove'] as const;
+    try {
+      const before = events.map((e) => pool.listenerCount(e));
+
+      // This one stays up throughout, and must be unaffected by its peers coming and going.
+      const survivor = await DBOSClient.create({ systemDatabaseUrl, systemDatabasePool: pool });
+
+      // One name, so the contention is on a single row and the work leaves a single row behind.
+      const queueName = 'custom-pool-shared-queue';
+
+      // Each worker creates, queries, and destroys on its own schedule, so creates and destroys interleave.
+      const churn = Array.from({ length: 8 }, async (_, i) => {
+        const client = await DBOSClient.create({ systemDatabaseUrl, systemDatabasePool: pool });
+        try {
+          // A write, so the connection is held through borrowClient; pool.query() never borrows.
+          await client.registerQueue(queueName);
+          await client.listQueues();
+          if (i % 2 === 0) {
+            await client.listQueues();
+          }
+        } finally {
+          await client.destroy();
+        }
+      });
+      const survivorWork = Array.from({ length: 8 }, () => survivor.registerQueue(queueName));
+      await Promise.all([...churn, ...survivorWork]);
+
+      // Guards the premise: the work above really did contend for several connections at once.
+      expect(pool.totalCount).toBeGreaterThan(1);
+
+      // Peers being destroyed mid-flight left the survivor able to keep using the shared pool.
+      await expect(survivor.registerQueue(queueName)).resolves.toBeDefined();
+      await survivor.destroy();
+
+      expect(events.map((e) => pool.listenerCount(e))).toEqual(before);
+      // The leak a shared pool actually punishes: every connection handed out must have come back.
+      expect(pool.waitingCount).toBe(0);
+      expect(pool.idleCount).toBe(pool.totalCount);
+
+      // All idle per the assertion above, so taking exactly that many never waits on the pool.
+      const idleAtRest = pool.idleCount;
+      const drained: PoolClient[] = [];
+      try {
+        for (let i = 0; i < idleAtRest; i++) {
+          drained.push(await pool.connect());
+        }
+        // pg strips its own idle listener on acquire, so anything left is one borrowClient kept.
+        expect(drained.map((c) => c.listenerCount('error'))).toEqual(drained.map(() => 0));
+      } finally {
+        drained.forEach((c) => c.release());
+      }
+
+      expect((await pool.query('SELECT 1')).rowCount).toBe(1);
+    } finally {
+      await pool.end();
+    }
+  });
+});
+
+describe('run-migrations-flag', () => {
+  let config: DBOSConfig;
+  // A throwaway system database, so a failed verification never touches the shared test one.
+  let unmigratedUrl: string;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    await setUpDBOSTestSysDb(config);
+    unmigratedUrl = deriveDatabaseUrl(config.systemDatabaseUrl!, 'dbostest_unmigrated_sys');
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+    await dropPGDatabase(unmigratedUrl, silentDropLogger);
+  });
+
+  test('launches against an already-migrated system database', async () => {
+    const workflow = DBOS.registerWorkflow(() => Promise.resolve('migrated'), { name: 'run-migrations-false-test' });
+    DBOS.setConfig({ ...config, runMigrations: false });
+    await DBOS.launch();
+
+    assert.equal(await workflow(), 'migrated');
+  });
+
+  test('throws when the system database is not migrated', async () => {
+    // The database exists but holds no DBOS schema, so it is at version 0.
+    await ensurePGDatabase(unmigratedUrl, { info: () => {}, warn: () => {} });
+    DBOS.setConfig({ ...config, systemDatabaseUrl: unmigratedUrl, runMigrations: false });
+
+    const error = await DBOS.launch().then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(error).toBeInstanceOf(DBOSInitializationError);
+    expect((error as Error).message).toMatch(/is at schema version 0, but this version of DBOS requires/);
+
+    // Verification must not have migrated it on the way past.
+    const dbClient = new Client({ connectionString: unmigratedUrl });
+    try {
+      await dbClient.connect();
+      const { rows } = await dbClient.query<{ schema_name: string }>(
+        `SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'dbos'`,
+      );
+      expect(rows).toHaveLength(0);
+    } finally {
+      await dbClient.end();
+    }
+  });
+
+  test('accepts a system database ahead of this build', async () => {
+    // Migrate the throwaway database, then push it past this build, as a newer peer would.
+    DBOS.setConfig({ ...config, systemDatabaseUrl: unmigratedUrl });
+    await DBOS.launch();
+    await DBOS.shutdown();
+
+    const dbClient = new Client({ connectionString: unmigratedUrl });
+    try {
+      await dbClient.connect();
+      const { rows } = await dbClient.query<{ version: string }>(
+        'UPDATE dbos.dbos_migrations SET version = version + 1000 RETURNING version',
+      );
+      const aheadVersion = rows[0].version;
+
+      DBOS.setConfig({ ...config, systemDatabaseUrl: unmigratedUrl, runMigrations: false });
+      await DBOS.launch();
+
+      // Verification accepts the newer schema and leaves the version untouched.
+      const after = await dbClient.query<{ version: string }>('SELECT version FROM dbos.dbos_migrations');
+      expect(after.rows[0].version).toBe(aheadVersion);
+    } finally {
+      await dbClient.end();
+    }
+  });
+
+  test('does not create a missing system database', async () => {
+    DBOS.setConfig({ ...config, systemDatabaseUrl: unmigratedUrl, runMigrations: false });
+    await expect(DBOS.launch()).rejects.toThrow(DBOSInitializationError);
+
+    const dbClient = new Client({ connectionString: deriveDatabaseUrl(unmigratedUrl, 'postgres') });
+    try {
+      await dbClient.connect();
+      const { rowCount } = await dbClient.query('SELECT 1 FROM pg_database WHERE datname = $1', [
+        getDatabaseNameFromUrl(unmigratedUrl),
+      ]);
+      expect(rowCount).toBe(0);
+    } finally {
+      await dbClient.end();
+    }
+  });
+});
+
+describe('long-sleep-tests', () => {
+  test('sleep exceeding 32-bit max does not produce TimeoutOverflowWarning', async () => {
+    let warned = false;
+    const listener = (warning: Error) => {
+      if (warning.name === 'TimeoutOverflowWarning') warned = true;
+    };
+    process.on('warning', listener);
+    const spy = jest.spyOn(globalThis, 'setTimeout');
+    try {
+      void DBOS.sleep(3_000_000_000);
+      await new Promise((r) => setTimeout(r, 50));
+      assert.strictEqual(warned, false, 'Should not produce TimeoutOverflowWarning');
+    } finally {
+      process.off('warning', listener);
+      for (const call of spy.mock.results) {
+        if (call.type === 'return') clearTimeout(call.value);
+      }
+      spy.mockRestore();
+    }
+  });
+
+  test('workflow sleep works with reduced maxTimeoutMS', async () => {
+    const config = generateDBOSTestConfig();
+    await setUpDBOSTestSysDb(config);
+    DBOS.setConfig(config);
+    await DBOS.launch();
+    const saved = sleepConfig.maxTimeoutMS;
+    sleepConfig.maxTimeoutMS = 10;
+    try {
+      const handle = await DBOS.startWorkflow(DBOSTimeoutTestClass).sleepingWorkflow(1000);
+      const result = await handle.getResult();
+      assert.strictEqual(result, 42);
+    } finally {
+      sleepConfig.maxTimeoutMS = saved;
+      await DBOS.shutdown();
+    }
+  });
+});

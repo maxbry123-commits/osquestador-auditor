@@ -1,0 +1,394 @@
+import { DBOS } from '../src';
+import { DBOSConfig } from '../src/dbos-executor';
+import { dropDatabase, generateDBOSTestConfig, reexecuteWorkflowById, setUpDBOSTestSysDb } from './helpers';
+import { randomUUID } from 'node:crypto';
+
+describe('oaoo-tests', () => {
+  let username: string;
+  let config: DBOSConfig;
+
+  beforeAll(async () => {
+    config = generateDBOSTestConfig();
+    expect(config.systemDatabaseUrl).toBeDefined();
+    const url = new URL(config.systemDatabaseUrl!);
+    username = url.username;
+    await setUpDBOSTestSysDb(config);
+    DBOS.setConfig(config);
+  });
+
+  beforeEach(async () => {
+    expect(config.systemDatabaseUrl).toBeDefined();
+    await dropDatabase(config.systemDatabaseUrl!);
+    await DBOS.launch();
+  });
+
+  afterEach(async () => {
+    await DBOS.shutdown();
+  });
+
+  /**
+   * Step OAOO tests.
+   */
+  class StepOAOO {
+    static #counter = 0;
+    static get counter() {
+      return StepOAOO.#counter;
+    }
+    @DBOS.step()
+    static async testStep() {
+      return Promise.resolve(StepOAOO.#counter++);
+    }
+
+    @DBOS.workflow()
+    static async testCommWorkflow() {
+      const funcResult = StepOAOO.testStep();
+      return funcResult ?? -1;
+    }
+  }
+
+  test('step-oaoo', async () => {
+    const workflowUUID: string = randomUUID();
+
+    let result: number = -222;
+    result = await DBOS.withNextWorkflowID(workflowUUID, async () => await StepOAOO.testCommWorkflow());
+    expect(result).toBe(0);
+    expect(StepOAOO.counter).toBe(1);
+
+    // Test OAOO. Should return the original result.
+    result = await DBOS.withNextWorkflowID(workflowUUID, async () => await StepOAOO.testCommWorkflow());
+    expect(result).toBe(0);
+    expect(StepOAOO.counter).toBe(1);
+
+    // Should be a new run.
+    expect(await StepOAOO.testCommWorkflow()).toBe(1);
+    expect(StepOAOO.counter).toBe(2);
+  });
+
+  /**
+   * Workflow OAOO tests.
+   */
+  class WorkflowOAOO {
+    @DBOS.step()
+    static async stepOne(name: string) {
+      return Promise.resolve(name);
+    }
+
+    @DBOS.step()
+    static async stepTwo(name: string) {
+      return Promise.resolve(name);
+    }
+
+    @DBOS.workflow()
+    static async testTxWorkflow(name: string) {
+      await WorkflowOAOO.stepOne(name);
+      await WorkflowOAOO.stepTwo(name);
+      return name;
+    }
+
+    @DBOS.workflow()
+    static async nestedWorkflow(name: string) {
+      return await WorkflowOAOO.testTxWorkflow(name);
+    }
+
+    static numberOfChildInvocationsMax1 = 0;
+
+    @DBOS.step()
+    static async nestedWorkflowStepToRunOnce() {
+      ++WorkflowOAOO.numberOfChildInvocationsMax1;
+      return Promise.resolve();
+    }
+
+    @DBOS.workflow()
+    static async nestedWorkflowChildToRunOnce() {
+      return await WorkflowOAOO.nestedWorkflowStepToRunOnce();
+    }
+
+    @DBOS.workflow()
+    static async nestedWorkflowRunChildOnce() {
+      return DBOS.withNextWorkflowID(
+        'constant-idempotency-run-once',
+        async () => await WorkflowOAOO.nestedWorkflowChildToRunOnce(),
+      );
+    }
+
+    @DBOS.workflow()
+    static async sleepWorkflow(durationSec: number) {
+      await DBOS.sleepSeconds(durationSec);
+      return;
+    }
+
+    @DBOS.workflow()
+    static async recvWorkflow(timeoutSeconds: number) {
+      await DBOS.recv('a-topic', timeoutSeconds);
+      return;
+    }
+
+    @DBOS.workflow()
+    static async getEventWorkflow(timeoutSeconds: number) {
+      await DBOS.getEvent(randomUUID(), 'a-key', timeoutSeconds);
+      return;
+    }
+  }
+
+  test('workflow-sleep-oaoo', async () => {
+    const workflowUUID = randomUUID();
+    const initTime = Date.now();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.sleepWorkflow(2)).resolves.toBeFalsy();
+    });
+    expect(Date.now() - initTime).toBeGreaterThanOrEqual(1950);
+
+    // The sleep step's recorded timing must reflect the full sleep length, not zero.
+    const sleepSteps = (await DBOS.listWorkflowSteps(workflowUUID))!;
+    expect(sleepSteps.length).toBe(1);
+    expect(sleepSteps[0].name).toBe('DBOS.sleep');
+    expect(sleepSteps[0].completedAtEpochMs! - sleepSteps[0].startedAtEpochMs!).toBeGreaterThanOrEqual(2000);
+
+    // Rerunning should skip the sleep
+    const startTime = Date.now();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.sleepWorkflow(2)).resolves.toBeFalsy();
+    });
+    expect(Date.now() - startTime).toBeLessThanOrEqual(200);
+  });
+
+  // Regression: a fractional duration must not reach the BIGINT timing columns.
+  test('workflow-sleep-fractional-duration', async () => {
+    const workflowUUID = randomUUID();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.sleepWorkflow(0.0015)).resolves.toBeFalsy(); // 1.5ms
+    });
+
+    const steps = (await DBOS.listWorkflowSteps(workflowUUID))!;
+    expect(steps.length).toBe(1);
+    expect(steps[0].name).toBe('DBOS.sleep');
+    expect(Number.isInteger(steps[0].startedAtEpochMs!)).toBe(true);
+    expect(Number.isInteger(steps[0].completedAtEpochMs!)).toBe(true);
+    expect(steps[0].completedAtEpochMs! - steps[0].startedAtEpochMs!).toBe(2); // Math.ceil(1.5)
+
+    // Non-finite durations are rejected rather than reaching the database.
+    await expect(DBOS.sleep(NaN)).rejects.toThrow('finite');
+    await expect(DBOS.sleep(Infinity)).rejects.toThrow('finite');
+  });
+
+  test('workflow-recv-oaoo', async () => {
+    const workflowUUID = randomUUID();
+    const initTime = Date.now();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.recvWorkflow(2)).resolves.toBeFalsy();
+    });
+    expect(Date.now() - initTime).toBeGreaterThanOrEqual(1950);
+
+    // The recv step records the full wait; its durable timeout marker stays zero-duration.
+    const recvSteps = (await DBOS.listWorkflowSteps(workflowUUID))!;
+    const recvStep = recvSteps.find((s) => s.name === 'DBOS.recv')!;
+    const recvTimeout = recvSteps.find((s) => s.name === 'DBOS.sleep')!;
+    expect(recvStep.completedAtEpochMs! - recvStep.startedAtEpochMs!).toBeGreaterThanOrEqual(1950);
+    expect(recvTimeout.completedAtEpochMs! - recvTimeout.startedAtEpochMs!).toBeLessThan(50);
+
+    // Rerunning should skip the sleep
+    const startTime = Date.now();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.recvWorkflow(2)).resolves.toBeFalsy();
+    });
+    expect(Date.now() - startTime).toBeLessThanOrEqual(200);
+  });
+
+  test('workflow-getEvent-oaoo', async () => {
+    const workflowUUID = randomUUID();
+    const initTime = Date.now();
+    await DBOS.withNextWorkflowID(
+      workflowUUID,
+      async () => await expect(WorkflowOAOO.getEventWorkflow(2)).resolves.toBeFalsy(),
+    );
+    expect(Date.now() - initTime).toBeGreaterThanOrEqual(1950);
+
+    // The getEvent step records the full wait; its durable timeout marker stays zero-duration.
+    const geSteps = (await DBOS.listWorkflowSteps(workflowUUID))!;
+    const geStep = geSteps.find((s) => s.name === 'DBOS.getEvent')!;
+    const geTimeout = geSteps.find((s) => s.name === 'DBOS.sleep')!;
+    expect(geStep.completedAtEpochMs! - geStep.startedAtEpochMs!).toBeGreaterThanOrEqual(1950);
+    expect(geTimeout.completedAtEpochMs! - geTimeout.startedAtEpochMs!).toBeLessThan(50);
+
+    // Rerunning should skip the sleep
+    const startTime = Date.now();
+    await DBOS.withNextWorkflowID(
+      workflowUUID,
+      async () => await expect(WorkflowOAOO.getEventWorkflow(2)).resolves.toBeFalsy(),
+    );
+    expect(Date.now() - startTime).toBeLessThanOrEqual(200);
+  });
+
+  test('workflow-oaoo', async () => {
+    let workflowResult: string;
+    const uuidArray: string[] = [];
+
+    for (let i = 0; i < 10; i++) {
+      const workflowHandle = await DBOS.startWorkflow(WorkflowOAOO).testTxWorkflow(username);
+      const workflowUUID: string = workflowHandle.workflowID;
+      uuidArray.push(workflowUUID);
+      workflowResult = await workflowHandle.getResult();
+      expect(workflowResult).toEqual(username);
+    }
+
+    // Rerunning with the same workflow UUID should return the same output.
+    for (let i = 0; i < 10; i++) {
+      const workflowUUID: string = uuidArray[i];
+      const workflowResult: string = await DBOS.withNextWorkflowID(
+        workflowUUID,
+        async () => await WorkflowOAOO.testTxWorkflow(username),
+      );
+      expect(workflowResult).toEqual(username);
+    }
+  });
+
+  test('nested-workflow-oaoo', async () => {
+    const workflowUUID = randomUUID();
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.nestedWorkflow(username)).resolves.toBe(username);
+    });
+
+    await DBOS.withNextWorkflowID(workflowUUID, async () => {
+      await expect(WorkflowOAOO.nestedWorkflow(username)).resolves.toBe(username);
+    });
+
+    // Retrieve output of the child workflow.
+    const retrievedHandle = DBOS.retrieveWorkflow(workflowUUID + '-0');
+    await expect(retrievedHandle.getResult()).resolves.toBe(username);
+
+    // Nested with OAOO key calculated
+    await WorkflowOAOO.nestedWorkflowRunChildOnce();
+    await WorkflowOAOO.nestedWorkflowRunChildOnce();
+    expect(WorkflowOAOO.numberOfChildInvocationsMax1).toBe(1);
+  });
+
+  /**
+   * Workflow notification OAOO tests.
+   */
+  class NotificationOAOO {
+    @DBOS.workflow()
+    static async receiveOaooWorkflow(topic: string, timeout: number) {
+      // This returns true if and only if exactly one message is sent to it.
+      const succeeds = await DBOS.recv<number>(topic, timeout);
+      const fails = await DBOS.recv<number>(topic, 0);
+      return succeeds === 123 && fails === null;
+    }
+  }
+
+  test('notification-oaoo', async () => {
+    const recvWorkflowUUID = randomUUID();
+    const idempotencyKey = 'test-suffix';
+
+    // Receive twice with the same UUID.  Each should get the same result of true.
+    const recvHandle1 = await DBOS.startWorkflow(NotificationOAOO, {
+      workflowID: recvWorkflowUUID,
+    }).receiveOaooWorkflow('testTopic', 1);
+    const recvHandle2 = await DBOS.startWorkflow(NotificationOAOO, {
+      workflowID: recvWorkflowUUID,
+    }).receiveOaooWorkflow('testTopic', 1);
+
+    // Send twice with the same idempotency key.  Only one message should be sent.
+    await expect(DBOS.send(recvWorkflowUUID, 123, 'testTopic', idempotencyKey)).resolves.not.toThrow();
+    await expect(DBOS.send(recvWorkflowUUID, 123, 'testTopic', idempotencyKey)).resolves.not.toThrow();
+
+    await expect(recvHandle1.getResult()).resolves.toBe(true);
+    await expect(recvHandle2.getResult()).resolves.toBe(true);
+
+    // A receive with a different UUID should return false.
+    await expect(NotificationOAOO.receiveOaooWorkflow('testTopic', 0)).resolves.toBe(false);
+  });
+
+  /**
+   * GetEvent/Status OAOO tests.
+   */
+  class EventStatusOAOO {
+    static wfCnt: number = 0;
+    static resolve: () => void;
+    static promise = new Promise<void>((r) => {
+      EventStatusOAOO.resolve = r;
+    });
+
+    static resolve3: () => void;
+    static promise3 = new Promise<void>((r) => {
+      EventStatusOAOO.resolve3 = r;
+    });
+
+    @DBOS.workflow()
+    static async setEventWorkflow() {
+      await DBOS.setEvent('key1', 'value1');
+      await DBOS.setEvent('key2', 'value2');
+      await EventStatusOAOO.promise;
+      throw Error('Failed workflow');
+    }
+
+    @DBOS.workflow()
+    static async getEventRetrieveWorkflow(targetUUID: string): Promise<string> {
+      let res = '';
+      const getValue = await DBOS.getEvent<string>(targetUUID, 'key1', 0);
+      EventStatusOAOO.wfCnt++;
+      if (getValue === null) {
+        res = 'valueNull';
+      } else {
+        res = getValue;
+      }
+
+      const handle = DBOS.retrieveWorkflow(targetUUID);
+      const status = await handle.getStatus();
+      EventStatusOAOO.wfCnt++;
+      if (status === null) {
+        res += '-statusNull';
+      } else {
+        res += '-' + status.status;
+      }
+
+      // Set the child workflow UUID to targetUUID.
+      const invokedHandle = await DBOS.startWorkflow(EventStatusOAOO, { workflowID: targetUUID }).setEventWorkflow();
+      const ires = await invokedHandle.getStatus();
+      res += '-' + ires?.status;
+      try {
+        if (EventStatusOAOO.wfCnt > 2) {
+          await invokedHandle.getResult();
+        }
+      } catch (e) {
+        // Ignore error.
+        DBOS.logger.error(e);
+      }
+      EventStatusOAOO.resolve3();
+      return res;
+    }
+  }
+
+  test('workflow-getevent-retrieve', async () => {
+    // Execute a workflow (w/ getUUID) to get an event and retrieve a workflow that doesn't exist, then invoke the setEvent workflow as a child workflow.
+    // If we execute the get workflow without UUID, both getEvent and retrieveWorkflow should return values.
+    // But if we run the get workflow again with getUUID, getEvent/retrieveWorkflow should still return null.
+    const getUUID = randomUUID();
+    const setUUID = randomUUID();
+
+    const handle1 = await DBOS.startWorkflow(EventStatusOAOO, { workflowID: getUUID }).getEventRetrieveWorkflow(
+      setUUID,
+    );
+
+    await EventStatusOAOO.promise3;
+    expect(EventStatusOAOO.wfCnt).toBe(2);
+    await expect(DBOS.getEvent(setUUID, 'key1')).resolves.toBe('value1');
+
+    EventStatusOAOO.resolve();
+
+    // Wait for the child workflow to finish.
+    const handle = DBOS.retrieveWorkflow(setUUID);
+    await expect(handle.getResult()).rejects.toThrow('Failed workflow');
+
+    // Wait for parent to finish
+    await expect(handle1.getResult()).resolves.toBe('valueNull-statusNull-PENDING');
+
+    // Test OAOO for getEvent and getWorkflowStatus by reexecuting.
+    const handle2 = await reexecuteWorkflowById(getUUID);
+    await expect(handle2.getResult()).resolves.toBe('valueNull-statusNull-PENDING');
+
+    // Run without UUID, should get the new result.
+    await expect(EventStatusOAOO.getEventRetrieveWorkflow(setUUID)).resolves.toBe('value1-ERROR-ERROR');
+
+    expect(EventStatusOAOO.wfCnt).toBe(6); // Should re-execute the workflow because we forced it
+  });
+});
