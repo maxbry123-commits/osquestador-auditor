@@ -108,3 +108,7 @@
 {"number": 22, "parts": 1, "slug": "python-sdk", "source": "https://github.com/modelcontextprotocol/python-sdk.git", "source_commit": "d2290ca3434731b68ea3e2270bc06a6e6575931b", "status": "COMPLETE"}
 {"number": 23, "parts": 1, "slug": "servers", "source": "https://github.com/modelcontextprotocol/servers.git", "source_commit": "579c3903f30044eb702a599a74b3ae77588e722e", "status": "COMPLETE"}
 {"number": 24, "parts": 7, "slug": "n8n", "source": "https://github.com/n8n-io/n8n.git", "source_commit": "7700b7630d9d2391867c812bd762b5c93d3fb56d", "status": "COMPLETE"}
+{"number": 25, "parts": 3, "slug": "ollama", "source": "https://github.com/ollama/ollama.git", "source_commit": "e37a00a8fa94fca07cefd544bffc9d8997ebcd44", "status": "COMPLETE"}
+{"number": 26, "parts": 2, "slug": "phoenix", "source": "https://github.com/Arize-ai/phoenix.git", "source_commit": "773c5e5ee41293cb50da86d9f53ec6f0f3ce6e54", "status": "COMPLETE"}
+{"number": 27, "parts": 1, "slug": "pydantic", "source": "https://github.com/pydantic/pydantic.git", "source_commit": "f512b087202f58ec90a9d38c9102858567d72440", "status": "COMPLETE"}
+{"number": 28, "parts": 1, "slug": "pydantic-settings", "source": "https://github.com/pydantic/pydantic-settings.git", "source_commit": "53df0b5196a22d441f0c37460ccfa7cb20394671", "status": "COMPLETE"}
