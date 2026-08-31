@@ -11,9 +11,9 @@ def clone_retry(url,root):
     last=None
     for attempt in range(1,5):
         shutil.rmtree(root,ignore_errors=True)
-        try: run(['git','clone','--depth','1','--no-tags',url,str(root)]); return
+        try: run(['git','clone','--depth','1','--no-tags',url,str(root)]); return True
         except subprocess.CalledProcessError as e: last=e; print(f'CLONE RETRY {attempt}/4 {url}',flush=True); time.sleep(attempt*3)
-    raise last
+    print(f'SKIP CLONE FAIL {url} last={last}',flush=True); return False
 def done(slug):
     if not MANIFEST.exists(): return False
     return any(json.loads(x).get('slug')==slug and json.loads(x).get('status')=='COMPLETE' for x in MANIFEST.read_text().splitlines() if x.strip())
@@ -54,7 +54,9 @@ batch=batch_no=0
 for item in REPOS:
     number,slug,url=item['n'],item['slug'],item['url']; print(f'===== QUEUE {number}: {slug} =====')
     if done(slug): print(slug,'COMPLETE'); continue
-    root=SRC/slug; clone_retry(url,root)
+    root=SRC/slug
+    if clone_retry(url,root) is False:
+        print(f'SKIP REPORT {number} {slug}',flush=True); continue
     sha=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(); shutil.rmtree(root/'.git',ignore_errors=True); chunk_big(root)
     full=PACK/f'{slug}_full.zip'; full.unlink(missing_ok=True); run(['zip','-q','-r','-9','-y',str(full.resolve()),'.'],cwd=root); parts=[]
     if full.stat().st_size<=SPLIT_TARGET:
