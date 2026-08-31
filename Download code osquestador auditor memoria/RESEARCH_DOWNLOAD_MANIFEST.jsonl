@@ -79,3 +79,4 @@
 {"number": 80, "slug": "trigger.dev", "source": "https://github.com/triggerdotdev/trigger.dev.git", "source_commit": "1d55693c0fc76279e7e8275fe41f959b65d5ea99", "parts": 3, "status": "COMPLETE"}
 {"number": 81, "slug": "restate", "source": "https://github.com/restatedev/restate.git", "source_commit": "e8b0592c31b25f4fd00446bb44c68d0b8e3a8ed7", "parts": 1, "status": "COMPLETE"}
 {"number": 82, "slug": "dbos-transact-ts", "source": "https://github.com/dbos-inc/dbos-transact-ts.git", "source_commit": "0ef1f9bab9cd7f793beae548122c1bdb9c6ccc28", "parts": 1, "status": "COMPLETE"}
+{"number": 83, "slug": "airflow", "source": "https://github.com/apache/airflow.git", "source_commit": "b0721979b92e4cddc13afe294b5a034ec90d0e49", "parts": 9, "status": "COMPLETE"}
