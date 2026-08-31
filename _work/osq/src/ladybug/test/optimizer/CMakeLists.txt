@@ -1,1 +1,0 @@
-add_lbug_test(optimizer_test optimizer_test.cpp)

@@ -14,3 +14,7 @@
 {"number": 14, "slug": "neo4j", "source": "https://github.com/neo4j/neo4j.git", "source_commit": "f213380f812b820a1b312e2ea52cb3d8f1931ccc", "parts": 4, "status": "COMPLETE"}
 {"number": 15, "slug": "sqlite", "source": "https://github.com/sqlite/sqlite.git", "source_commit": "d92acf1afe6dbd4c8aec9aa9513a518f690c2acf", "parts": 2, "status": "COMPLETE"}
 {"number": 16, "slug": "duckdb", "source": "https://github.com/duckdb/duckdb.git", "source_commit": "8616efa9da9921b9111fe46373af7936a5d96d16", "parts": 10, "status": "COMPLETE"}
+{"number": 17, "slug": "ladybug", "source": "https://github.com/LadybugDB/ladybug.git", "source_commit": "dd9ca6cc70f8e57add26d132cc0d386a87b326c9", "parts": 2, "status": "COMPLETE"}
+{"number": 18, "slug": "rqlite", "source": "https://github.com/rqlite/rqlite.git", "source_commit": "9d0ac5dcafa3cccc05f809326fe68874e8333833", "parts": 1, "status": "COMPLETE"}
+{"number": 19, "slug": "terminusdb", "source": "https://github.com/terminusdb/terminusdb.git", "source_commit": "57f2093baeafd65e16004e84b7b58e0c5cf72858", "parts": 1, "status": "COMPLETE"}
+{"number": 20, "slug": "FalkorDB", "source": "https://github.com/FalkorDB/FalkorDB.git", "source_commit": "347ee10fd2eacecf4b7a8224ccb40e0fdf0f1989", "parts": 1, "status": "COMPLETE"}
