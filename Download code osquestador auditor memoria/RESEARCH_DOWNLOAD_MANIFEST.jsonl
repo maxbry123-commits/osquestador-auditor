@@ -81,3 +81,4 @@
 {"number": 82, "slug": "dbos-transact-ts", "source": "https://github.com/dbos-inc/dbos-transact-ts.git", "source_commit": "0ef1f9bab9cd7f793beae548122c1bdb9c6ccc28", "parts": 1, "status": "COMPLETE"}
 {"number": 83, "slug": "airflow", "source": "https://github.com/apache/airflow.git", "source_commit": "b0721979b92e4cddc13afe294b5a034ec90d0e49", "parts": 9, "status": "COMPLETE"}
 {"number": 84, "slug": "prefect", "source": "https://github.com/PrefectHQ/prefect.git", "source_commit": "33ccf3d0e1c9236c920ac5ba8089ee83263fce94", "parts": 4, "status": "COMPLETE"}
+{"number": 85, "slug": "dagster", "source": "https://github.com/dagster-io/dagster.git", "source_commit": "fc0d15b2e601b5a14b16c5a6bd9ff5051e9c3ab0", "parts": 13, "status": "COMPLETE"}
