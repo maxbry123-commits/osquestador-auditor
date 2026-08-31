@@ -4,8 +4,8 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: osq-main-oss
-  cancel-in-progress: false
+  group: research-download-chain-final
+  cancel-in-progress: true
 jobs:
   descarga-extraccion:
     runs-on: ubuntu-latest
