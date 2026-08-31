@@ -58,3 +58,4 @@
 {"number": 58, "slug": "obsidian-releases", "source": "https://github.com/obsidianmd/obsidian-releases.git", "source_commit": "fb0ca9e1e8299433421a4aebe3e51aa561934876", "parts": 1, "status": "COMPLETE"}
 {"number": 59, "slug": "kanboard", "source": "https://github.com/kanboard/kanboard.git", "source_commit": "9ce6a5edc5b646ef15780cb445bc6d2c39d9898f", "parts": 1, "status": "COMPLETE"}
 {"number": 60, "slug": "siyuan", "source": "https://github.com/siyuan-note/siyuan.git", "source_commit": "44a6c212a994c7ba8129fc38b001a9ab58957c6f", "parts": 21, "status": "COMPLETE"}
+{"number": 61, "slug": "joplin", "source": "https://github.com/laurent22/joplin.git", "source_commit": "65d0a81a37e1b0f7e513f431ddbe621b33678c4e", "parts": 14, "status": "COMPLETE"}
