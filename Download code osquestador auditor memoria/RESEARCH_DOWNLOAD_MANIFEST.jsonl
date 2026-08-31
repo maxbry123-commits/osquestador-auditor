@@ -112,3 +112,10 @@
 {"number": 26, "parts": 2, "slug": "phoenix", "source": "https://github.com/Arize-ai/phoenix.git", "source_commit": "773c5e5ee41293cb50da86d9f53ec6f0f3ce6e54", "status": "COMPLETE"}
 {"number": 27, "parts": 1, "slug": "pydantic", "source": "https://github.com/pydantic/pydantic.git", "source_commit": "f512b087202f58ec90a9d38c9102858567d72440", "status": "COMPLETE"}
 {"number": 28, "parts": 1, "slug": "pydantic-settings", "source": "https://github.com/pydantic/pydantic-settings.git", "source_commit": "53df0b5196a22d441f0c37460ccfa7cb20394671", "status": "COMPLETE"}
+{"number": 29, "parts": 14, "slug": "pydantic-ai", "source": "https://github.com/pydantic/pydantic-ai.git", "source_commit": "8c5838dd327f8b588525f6b2ee8605ba6426f410", "status": "COMPLETE"}
+{"number": 30, "parts": 1, "slug": "pyyaml", "source": "https://github.com/yaml/pyyaml.git", "source_commit": "34a9bf82357f4952d8f194a5a31f1c39743652d0", "status": "COMPLETE"}
+{"number": 31, "parts": 2, "slug": "react", "source": "https://github.com/facebook/react.git", "source_commit": "065bc84eb50914fa1bc60983eac0b0b717186d74", "status": "COMPLETE"}
+{"number": 32, "parts": 1, "slug": "redis-py", "source": "https://github.com/redis/redis-py.git", "source_commit": "7ff04812c3a8e2b6e79b2b8edc7e112d927a78ea", "status": "COMPLETE"}
+{"number": 33, "parts": 1, "slug": "starlette", "source": "https://github.com/encode/starlette.git", "source_commit": "39fd0ffac25593fce39466320c9a666957ce8b8c", "status": "COMPLETE"}
+{"number": 34, "parts": 1, "slug": "tailwindcss", "source": "https://github.com/tailwindlabs/tailwindcss.git", "source_commit": "f723e834ad032aa0f42405f95f684be3cfcac8ef", "status": "COMPLETE"}
+{"number": 35, "parts": 5, "slug": "vllm", "source": "https://github.com/vllm-project/vllm.git", "source_commit": "89df6fcb808febd88de0d08fb7437e9bddcaf81e", "status": "COMPLETE"}
