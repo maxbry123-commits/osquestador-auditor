@@ -1,9 +1,0 @@
-{
-  "pipes-iterator": {
-    "json-pipes-iterator": {
-      "jsonPath": "/data/work-items.jsonl",
-      "fetcherId": "fsf",
-      "emitterId": "fse"
-    }
-  }
-}

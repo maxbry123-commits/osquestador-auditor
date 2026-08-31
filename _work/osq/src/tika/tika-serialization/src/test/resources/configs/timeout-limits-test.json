@@ -1,8 +1,0 @@
-{
-  "parse-context": {
-    "timeout-limits": {
-      "totalTaskTimeoutMillis": 7200000,
-      "progressTimeoutMillis": 120000
-    }
-  }
-}
