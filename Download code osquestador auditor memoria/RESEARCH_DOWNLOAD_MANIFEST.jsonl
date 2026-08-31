@@ -4,3 +4,4 @@
 {"number": 4, "slug": "whisperX", "source": "https://github.com/m-bain/whisperX.git", "source_commit": "2cfd7b7c5c7bba144954364db747319b50e8232b", "parts": 2, "status": "COMPLETE"}
 {"number": 5, "slug": "Speech", "source": "https://github.com/NVIDIA-NeMo/Speech.git", "source_commit": "66f1211a81e225e600658908a2743abf778e57e1", "parts": 5, "status": "COMPLETE"}
 {"number": 6, "slug": "parakeet.cpp", "source": "https://github.com/mudler/parakeet.cpp.git", "source_commit": "e75de9b6b9b688fd293aa22f7e27aa724ea286f8", "parts": 1, "status": "COMPLETE"}
+{"number": 7, "slug": "ultralytics", "source": "https://github.com/ultralytics/ultralytics.git", "source_commit": "fa34184a5080c81fff453670394e13303ac781b2", "parts": 1, "status": "COMPLETE"}
