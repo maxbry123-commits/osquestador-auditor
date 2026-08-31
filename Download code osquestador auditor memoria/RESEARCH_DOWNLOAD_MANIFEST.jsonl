@@ -80,3 +80,4 @@
 {"number": 81, "slug": "restate", "source": "https://github.com/restatedev/restate.git", "source_commit": "e8b0592c31b25f4fd00446bb44c68d0b8e3a8ed7", "parts": 1, "status": "COMPLETE"}
 {"number": 82, "slug": "dbos-transact-ts", "source": "https://github.com/dbos-inc/dbos-transact-ts.git", "source_commit": "0ef1f9bab9cd7f793beae548122c1bdb9c6ccc28", "parts": 1, "status": "COMPLETE"}
 {"number": 83, "slug": "airflow", "source": "https://github.com/apache/airflow.git", "source_commit": "b0721979b92e4cddc13afe294b5a034ec90d0e49", "parts": 9, "status": "COMPLETE"}
+{"number": 84, "slug": "prefect", "source": "https://github.com/PrefectHQ/prefect.git", "source_commit": "33ccf3d0e1c9236c920ac5ba8089ee83263fce94", "parts": 4, "status": "COMPLETE"}
