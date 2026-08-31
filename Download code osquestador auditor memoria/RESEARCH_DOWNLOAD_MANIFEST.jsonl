@@ -92,3 +92,8 @@
 {"number": 6, "parts": 1, "slug": "sqlite-vec", "source": "https://github.com/asg017/sqlite-vec.git", "source_commit": "04d28bd21773981e2d266bbf6aa4efbd011eb4f6", "status": "COMPLETE"}
 {"number": 7, "parts": 1, "slug": "qdrant", "source": "https://github.com/qdrant/qdrant.git", "source_commit": "74f3e85b9473c62560006c043e13737ce6b48412", "status": "COMPLETE"}
 {"number": 8, "parts": 1, "slug": "lancedb", "source": "https://github.com/lancedb/lancedb.git", "source_commit": "5cbd979455d792cf6c6d8ed27e13daaeabc20e2f", "status": "COMPLETE"}
+{"number": 9, "parts": 3, "slug": "chroma", "source": "https://github.com/chroma-core/chroma.git", "source_commit": "fcf321c4e6543918b2a9c6338f45b63ead16e8b2", "status": "COMPLETE"}
+{"number": 10, "parts": 3, "slug": "SWE-agent", "source": "https://github.com/princeton-nlp/SWE-agent.git", "source_commit": "3ea751c087f32b16e039a2233dd6eefecef325d5", "status": "COMPLETE"}
+{"number": 11, "parts": 1, "slug": "asyncpg", "source": "https://github.com/MagicStack/asyncpg.git", "source_commit": "db8ecc2a38e16fb0c090aef6f5506547c2831c24", "status": "COMPLETE"}
+{"number": 12, "parts": 1, "slug": "aiomysql", "source": "https://github.com/aio-libs/aiomysql.git", "source_commit": "1aa9cfcbad60f14f5a8bdccaa660f10f69123015", "status": "COMPLETE"}
+{"number": 13, "parts": 2, "slug": "Chart.js", "source": "https://github.com/chartjs/Chart.js.git", "source_commit": "cb02e1d207bd4c4c40b20c259017f85f26f1e30a", "status": "COMPLETE"}
