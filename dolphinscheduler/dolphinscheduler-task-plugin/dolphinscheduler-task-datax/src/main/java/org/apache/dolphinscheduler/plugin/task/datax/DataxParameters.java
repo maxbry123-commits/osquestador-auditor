@@ -1,0 +1,236 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.dolphinscheduler.plugin.task.datax;
+
+import org.apache.dolphinscheduler.common.utils.JSONUtils;
+import org.apache.dolphinscheduler.plugin.task.api.enums.ResourceType;
+import org.apache.dolphinscheduler.plugin.task.api.model.ResourceInfo;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.AbstractParameters;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.DataSourceParameters;
+import org.apache.dolphinscheduler.plugin.task.api.parameters.resource.ResourceParametersHelper;
+import org.apache.dolphinscheduler.spi.enums.Flag;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import lombok.Data;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+/**
+ * DataX parameter
+ */
+@Data
+public class DataxParameters extends AbstractParameters {
+
+    /**
+     * if custom json config，eg  0, 1
+     */
+    private int customConfig;
+
+    /**
+     * if customConfig eq 1 ,then json is usable
+     */
+    private String json;
+
+    /**
+     * data source type，eg  MYSQL, POSTGRES ...
+     */
+    private String dsType;
+
+    /**
+     * datasource id
+     */
+    private int dataSource;
+
+    /**
+     * data target type，eg  MYSQL, POSTGRES ...
+     */
+    private String dtType;
+
+    /**
+     * datatarget id
+     */
+    private int dataTarget;
+
+    private String sql;
+
+    private String targetTable;
+
+    private List<String> preStatements;
+
+    private List<String> postStatements;
+
+    /**
+     * speed byte num
+     */
+    private int jobSpeedByte;
+
+    /**
+     * speed record count
+     */
+    private int jobSpeedRecord;
+
+    /**
+     * datax channel
+     */
+    private int jobChannel;
+
+    /**
+     * Xms memory
+     */
+    private int xms;
+
+    /**
+     * Xmx memory
+     */
+    private int xmx;
+
+    /**
+     * writer batch size for DataX
+     */
+    private int batchSize;
+
+    private List<ResourceInfo> resourceList;
+
+    @Override
+    public boolean checkParameters() {
+        if (customConfig == Flag.NO.ordinal()) {
+            return dataSource != 0
+                    && dataTarget != 0
+                    && StringUtils.isNotEmpty(sql)
+                    && StringUtils.isNotEmpty(targetTable);
+        } else {
+            // Custom config is valid with either inline json or an attached resource file that
+            // unambiguously carries the job definition, identified as the single .json resource
+            // (issue #18389). resourceList is multi-select and also holds auxiliary files, so a
+            // non-empty list on its own is not enough.
+            return !isInlineJsonAbsent() || getJobDefinitionResource() != null;
+        }
+    }
+
+    /**
+     * When the inline json is absent the job definition must come from an attached resource file.
+     * resourceList is multi-select and also carries auxiliary files such as Kerberos keytabs and
+     * xml configs, so the job definition is identified as the single resource whose name ends with
+     * {@code .json} rather than the first entry in the list (issue #18389). Returns that resource,
+     * or {@code null} when there is not exactly one json resource, which the caller treats as a
+     * missing or ambiguous job definition.
+     */
+    public ResourceInfo getJobDefinitionResource() {
+        if (CollectionUtils.isEmpty(resourceList)) {
+            return null;
+        }
+        List<ResourceInfo> jsonResources = resourceList.stream()
+                .filter(Objects::nonNull)
+                .filter(resource -> StringUtils.endsWithIgnoreCase(resource.getResourceName(), ".json"))
+                .collect(Collectors.toList());
+        return jsonResources.size() == 1 ? jsonResources.get(0) : null;
+    }
+
+    /**
+     * Returns true when the json field carries no usable inline job definition. The UI
+     * historically stored an empty object placeholder in the json field, so a blank value
+     * and any semantically empty JSON object (for example {@code {}}, {@code { }} or a
+     * formatted multi-line empty object) are all treated as absent (issue #18389).
+     */
+    public boolean isInlineJsonAbsent() {
+        if (StringUtils.isBlank(json)) {
+            return true;
+        }
+        try {
+            ObjectNode node = JSONUtils.parseObject(json);
+            return node == null || node.isEmpty();
+        } catch (Exception e) {
+            // not parseable as a JSON object, so there is inline content: downstream
+            // validation reports the malformed definition
+            return false;
+        }
+    }
+
+    @Override
+    public List<ResourceInfo> getResourceFilesList() {
+        return resourceList;
+    }
+
+    @Override
+    public String toString() {
+        return "DataxParameters{" +
+                "customConfig=" + customConfig +
+                ", json='" + json + '\'' +
+                ", dsType='" + dsType + '\'' +
+                ", dataSource=" + dataSource +
+                ", dtType='" + dtType + '\'' +
+                ", dataTarget=" + dataTarget +
+                ", sql='" + sql + '\'' +
+                ", targetTable='" + targetTable + '\'' +
+                ", preStatements=" + preStatements +
+                ", postStatements=" + postStatements +
+                ", jobSpeedByte=" + jobSpeedByte +
+                ", jobSpeedRecord=" + jobSpeedRecord +
+                ", jobChannel=" + jobChannel +
+                ", xms=" + xms +
+                ", xmx=" + xmx +
+                ", batchSize=" + batchSize +
+                ", resourceList=" + JSONUtils.toJsonString(resourceList) +
+                '}';
+    }
+
+    @Override
+    public ResourceParametersHelper getResources() {
+        ResourceParametersHelper resources = super.getResources();
+
+        if (customConfig == Flag.YES.ordinal()) {
+            return resources;
+        }
+        resources.put(ResourceType.DATASOURCE, dataSource);
+        resources.put(ResourceType.DATASOURCE, dataTarget);
+        return resources;
+    }
+
+    public DataxTaskExecutionContext generateExtendedContext(ResourceParametersHelper parametersHelper) {
+
+        DataxTaskExecutionContext dataxTaskExecutionContext = new DataxTaskExecutionContext();
+
+        if (customConfig == Flag.YES.ordinal()) {
+            return dataxTaskExecutionContext;
+        }
+
+        DataSourceParameters dbSource =
+                (DataSourceParameters) parametersHelper.getResourceParameters(ResourceType.DATASOURCE, dataSource);
+        DataSourceParameters dbTarget =
+                (DataSourceParameters) parametersHelper.getResourceParameters(ResourceType.DATASOURCE, dataTarget);
+
+        if (Objects.nonNull(dbSource)) {
+            dataxTaskExecutionContext.setDataSourceId(dataSource);
+            dataxTaskExecutionContext.setSourcetype(dbSource.getType());
+            dataxTaskExecutionContext.setSourceConnectionParams(dbSource.getConnectionParams());
+        }
+
+        if (Objects.nonNull(dbTarget)) {
+            dataxTaskExecutionContext.setDataTargetId(dataTarget);
+            dataxTaskExecutionContext.setTargetType(dbTarget.getType());
+            dataxTaskExecutionContext.setTargetConnectionParams(dbTarget.getConnectionParams());
+        }
+        return dataxTaskExecutionContext;
+    }
+}
