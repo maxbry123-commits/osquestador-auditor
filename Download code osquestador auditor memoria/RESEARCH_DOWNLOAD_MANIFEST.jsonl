@@ -103,3 +103,7 @@
 {"number": 17, "parts": 1, "slug": "docker-py", "source": "https://github.com/docker/docker-py.git", "source_commit": "afc6d1ee308e78b908b96a94298c37fa8c465588", "status": "COMPLETE"}
 {"number": 18, "parts": 1, "slug": "guardrails", "source": "https://github.com/guardrails-ai/guardrails.git", "source_commit": "06d0ff2c5f9bcb493d976b76f885e37e41ce845d", "status": "COMPLETE"}
 {"number": 19, "parts": 124, "slug": "plex", "source": "https://github.com/IBM/plex.git", "source_commit": "bf260093582f04622aacc1e9f9ca604d7ccd0c42", "status": "COMPLETE"}
+{"number": 20, "parts": 26, "slug": "llama_index", "source": "https://github.com/run-llama/llama_index.git", "source_commit": "9f42cf0bd45a756f86ca325e343b9be9031d7928", "status": "COMPLETE"}
+{"number": 21, "parts": 1, "slug": "lucide", "source": "https://github.com/lucide-icons/lucide.git", "source_commit": "eb3c04d059d92903f992f0d3b7c732deca6da7a5", "status": "COMPLETE"}
+{"number": 22, "parts": 1, "slug": "python-sdk", "source": "https://github.com/modelcontextprotocol/python-sdk.git", "source_commit": "d2290ca3434731b68ea3e2270bc06a6e6575931b", "status": "COMPLETE"}
+{"number": 23, "parts": 1, "slug": "servers", "source": "https://github.com/modelcontextprotocol/servers.git", "source_commit": "579c3903f30044eb702a599a74b3ae77588e722e", "status": "COMPLETE"}
