@@ -1,0 +1,92 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * This file is part of Neo4j.
+ *
+ * Neo4j is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package org.neo4j.fabric.util
+
+import org.neo4j.cypher.internal.ast.CatalogName
+import org.neo4j.cypher.internal.ast.semantics.FeatureError
+import org.neo4j.cypher.internal.ast.semantics.SemanticError
+import org.neo4j.cypher.internal.ast.semantics.SemanticErrorDef
+import org.neo4j.cypher.internal.util.ASTNode
+import org.neo4j.cypher.internal.util.InputPosition
+import org.neo4j.exceptions.CypherTypeException
+import org.neo4j.exceptions.SyntaxException
+import org.neo4j.fabric.eval.Catalog
+import org.neo4j.gqlstatus.ErrorGqlStatusObject
+import org.neo4j.values.AnyValue
+import org.neo4j.values.storable.Value
+
+/**
+ * The main feature of "Neo4j" errors is that they have status codes. Any error without a status code that occurs during cypher statement execution
+ * and makes to Bolt server will be mapped to a generic [[org.neo4j.kernel.api.exceptions.Status.Statement.ExecutionFailed]] that is an equivalent of HTTP 500
+ * and indicates a generic failure on the server side.
+ */
+object Errors {
+
+  trait HasErrors extends Throwable {
+    def update(upd: SemanticErrorDef => SemanticErrorDef): HasErrors
+  }
+
+  def unknownFunction(functionName: String, position: InputPosition): Nothing =
+    throw SyntaxException.unknownFunction(functionName, position.offset, position.line, position.column)
+
+  def invalidType(value: String, expectedType: String, actualType: String, signature: String): Nothing = {
+    val expectedTypeList: java.util.List[String] = java.util.List.of(expectedType)
+    throw CypherTypeException.invalidType(value, expectedTypeList, actualType, signature)
+  }
+
+  def wrongArity(exp: Int, got: Int, procFunc: String, signature: String): Nothing =
+    throw SyntaxException.wrongNumberOfArguments(
+      exp,
+      got,
+      procFunc,
+      signature,
+      s"Wrong arity. Expected $exp argument(s), got $got argument(s)"
+    )
+
+  def syntax(gql: ErrorGqlStatusObject, msg: String, query: String, pos: InputPosition): Nothing =
+    throw new SyntaxException(gql, msg, query, pos.offset)
+
+  /** Attaches position and query info to exceptions, if it is missing */
+  def errorContext[T](query: String, node: ASTNode)(block: => T): T =
+    try block
+    catch {
+      case e: HasErrors => throw e.update {
+          case SemanticError(gql, msg, InputPosition.NONE)   => syntax(gql, msg, query, node.position)
+          case SemanticError(gql, msg, pos)                  => syntax(gql, msg, query, pos)
+          case FeatureError(gql, msg, _, InputPosition.NONE) => syntax(gql, msg, query, node.position)
+          case FeatureError(gql, msg, _, pos)                => syntax(gql, msg, query, pos)
+          case o                                             => o
+        }
+    }
+
+  def show(n: CatalogName): String = n.parts.mkString(".")
+
+  def show(av: AnyValue): String = av match {
+    case v: Value => v.prettyPrint()
+    case x        => x.getTypeName
+  }
+
+  def show(a: Catalog.Arg[_]) = s"${a.name}: ${a.tpe.getSimpleName}"
+
+  def show(seq: Seq[_]): String = seq.map {
+    case v: AnyValue       => show(v)
+    case a: Catalog.Arg[_] => show(a)
+  }.mkString(",")
+}

@@ -7,3 +7,7 @@
 {"number": 7, "slug": "ultralytics", "source": "https://github.com/ultralytics/ultralytics.git", "source_commit": "fa34184a5080c81fff453670394e13303ac781b2", "parts": 1, "status": "COMPLETE"}
 {"number": 8, "slug": "tika", "source": "https://github.com/apache/tika.git", "source_commit": "6d66308ff81e71a1e9cf62c7faaad69e6c22a8c7", "parts": 15, "status": "COMPLETE"}
 {"number": 9, "slug": "unstructured", "source": "https://github.com/Unstructured-IO/unstructured.git", "source_commit": "d68ab0fda9bcac317b7c033d42412d716ba1d790", "parts": 11, "status": "COMPLETE"}
+{"number": 10, "slug": "faiss", "source": "https://github.com/facebookresearch/faiss.git", "source_commit": "3a716ead1a3c4562fe6e96d982d26789c58e19ed", "parts": 1, "status": "COMPLETE"}
+{"number": 11, "slug": "sentence-transformers", "source": "https://github.com/UKPLab/sentence-transformers.git", "source_commit": "652c8e8a70b9bef7161405ac7e6d8f3b2a828aed", "parts": 2, "status": "COMPLETE"}
+{"number": 12, "slug": "haystack", "source": "https://github.com/deepset-ai/haystack.git", "source_commit": "e318778c9bf60a1963e3b5f451359655dd696c30", "parts": 3, "status": "COMPLETE"}
+{"number": 13, "slug": "graphiti", "source": "https://github.com/getzep/graphiti.git", "source_commit": "8b61fce9f003cc3a05e246f6201f8b782dfe6546", "parts": 1, "status": "COMPLETE"}

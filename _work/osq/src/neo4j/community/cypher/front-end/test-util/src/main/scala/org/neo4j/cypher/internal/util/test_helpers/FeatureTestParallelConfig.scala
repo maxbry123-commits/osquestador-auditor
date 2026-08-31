@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) "Neo4j"
+ * Neo4j Sweden AB [https://neo4j.com]
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.neo4j.cypher.internal.util.test_helpers
+
+import org.junit.platform.engine.ConfigurationParameters
+import org.junit.platform.engine.support.hierarchical.ParallelExecutionConfiguration
+import org.junit.platform.engine.support.hierarchical.ParallelExecutionConfigurationStrategy
+
+abstract class AvailableProcessorsParallelStrategy(factor: Double) extends ParallelExecutionConfigurationStrategy {
+
+  final override def createConfiguration(
+    configurationParameters: ConfigurationParameters
+  ): ParallelExecutionConfiguration = {
+    new ParallelExecutionConfiguration {
+      private val parallelism = math.max(1, (Runtime.getRuntime.availableProcessors() * factor).toInt)
+      override def getParallelism: Int = parallelism
+      override def getMinimumRunnable: Int = 0
+      override def getMaxPoolSize: Int = parallelism + 256
+      override def getCorePoolSize: Int = parallelism
+      override def getKeepAliveSeconds: Int = 30
+    }
+  }
+}
+
+/**
+ * Custom parallel execution configuration for feature tests.
+ * Tries to use all cores for test execution.
+ */
+class HighParallelismParallelStrategy extends AvailableProcessorsParallelStrategy(1.0)
+
+/**
+ * Custom parallel execution configuration for feature tests with parallel loads.
+ * Do not use all available processors for test execution.
+ * Reduces memory needs and allow more room for the db to work in parallel.
+ */
+class LowParallelismParallelStrategy extends AvailableProcessorsParallelStrategy(0.75)
+
+class HalfParallelismParallelStrategy extends AvailableProcessorsParallelStrategy(0.5)

@@ -1,0 +1,96 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 13 (0xd)
+    Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=SE, O=Example, OU=Example Certificate Authority, CN=Example Cluster Authority
+        Validity
+            Not Before: Dec 12 12:17:42 2024 GMT
+            Not After : Dec 13 12:17:42 2024 GMT
+        Subject: C=SE, O=Example, OU=Example Cluster, CN=Server 12
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                RSA Public-Key: (2048 bit)
+                Modulus:
+                    00:e5:a2:79:44:63:8b:b9:f9:a4:45:00:45:e5:7f:
+                    54:b8:bb:fc:d4:39:10:25:f2:57:b1:01:28:8e:e4:
+                    b2:53:ff:02:07:e3:b2:4b:24:c5:43:bf:15:ab:e6:
+                    da:80:a3:3d:07:54:ef:bd:f2:09:68:df:f0:5d:e3:
+                    88:a7:87:39:dc:91:e9:ae:23:c7:f3:8f:93:fc:0a:
+                    ac:82:b6:d1:72:c8:96:20:c6:f2:8a:ed:4f:8c:95:
+                    7f:92:e2:39:60:d5:cf:de:c5:3a:89:3f:36:68:d0:
+                    75:fb:27:71:72:b6:43:97:6b:14:4a:c5:cf:eb:b9:
+                    15:4a:1d:46:76:7e:3a:32:74:57:05:fb:19:dc:91:
+                    2b:e2:9e:45:26:6d:ae:a2:4f:2a:17:9e:92:26:90:
+                    48:55:c7:93:5d:17:40:df:f5:36:1e:fe:57:88:c0:
+                    32:4a:c3:0c:6a:2a:ad:f4:ee:69:32:3c:87:f0:17:
+                    44:01:e0:cb:5f:08:ee:17:5c:6c:4b:f5:be:4e:09:
+                    a2:fa:59:c6:f2:5e:dc:1b:d7:3e:82:19:a9:b3:1a:
+                    c6:57:3f:0b:26:b7:f3:35:31:57:a1:83:bf:f6:d7:
+                    ca:2a:17:db:b6:72:7e:94:25:d0:57:ce:f5:68:42:
+                    c8:09:70:4e:ef:ee:0c:2f:46:7d:72:5c:78:1a:4d:
+                    a7:91
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Basic Constraints: 
+                CA:FALSE
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication, TLS Web Client Authentication
+            X509v3 Subject Key Identifier: 
+                66:74:C0:2B:BC:80:4F:79:2A:34:1F:BB:0D:6D:1D:21:04:27:F4:13
+            X509v3 Authority Key Identifier: 
+                keyid:BD:98:C2:19:20:46:2C:E4:FE:EB:5F:7D:43:39:E3:EB:C7:72:75:D8
+
+            Authority Information Access: 
+                CA Issuers - URI:http://example.com/ca/cluster.cer
+
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  URI:http://example.com/ca/cluster.crl
+
+            X509v3 Subject Alternative Name: 
+                DNS:localhost, IP Address:127.0.0.1
+    Signature Algorithm: sha256WithRSAEncryption
+         78:44:84:87:72:79:67:69:35:d8:66:9b:06:65:9d:83:a8:15:
+         d3:b5:17:c3:a2:00:57:48:df:c7:27:9d:bb:f3:b1:73:e2:f0:
+         7f:e9:27:75:50:4f:20:22:e0:23:9d:e7:da:ec:6a:64:a0:9f:
+         a5:85:06:2c:0f:90:77:cb:e3:43:eb:17:17:fa:37:01:ab:b7:
+         66:b5:6d:d0:14:8e:36:f3:5e:5a:c0:f6:2b:5b:f9:90:10:91:
+         8b:83:36:87:e0:3d:8a:83:4d:8f:8c:94:a3:f3:68:e4:e4:01:
+         59:da:b0:d1:88:36:a9:d8:dc:2d:9c:34:55:a6:35:7b:3a:37:
+         46:74:0f:77:fe:52:0b:d7:2c:b7:5d:5f:f8:61:08:ca:94:4b:
+         b6:3a:84:7a:04:79:bd:22:c5:9c:14:24:ed:07:99:5a:a2:72:
+         bf:4e:77:6a:a4:38:7a:61:47:58:90:a0:f4:b4:ee:5f:36:71:
+         55:4e:6e:6b:1f:d6:f5:22:0c:1e:76:58:9b:61:96:e4:df:f3:
+         b2:28:e8:45:6f:9e:14:4f:70:9b:11:5e:12:f5:b5:59:ac:21:
+         dc:dd:40:83:f2:39:c1:35:8c:28:b3:e9:bc:52:5c:9f:0b:26:
+         eb:30:2b:b1:69:d1:94:a4:74:71:96:1d:31:fb:0a:8d:28:55:
+         c1:2f:b9:e2
+-----BEGIN CERTIFICATE-----
+MIIEQjCCAyqgAwIBAgIBDTANBgkqhkiG9w0BAQsFADBrMQswCQYDVQQGEwJTRTEQ
+MA4GA1UECgwHRXhhbXBsZTEmMCQGA1UECwwdRXhhbXBsZSBDZXJ0aWZpY2F0ZSBB
+dXRob3JpdHkxIjAgBgNVBAMMGUV4YW1wbGUgQ2x1c3RlciBBdXRob3JpdHkwHhcN
+MjQxMjEyMTIxNzQyWhcNMjQxMjEzMTIxNzQyWjBNMQswCQYDVQQGEwJTRTEQMA4G
+A1UECgwHRXhhbXBsZTEYMBYGA1UECwwPRXhhbXBsZSBDbHVzdGVyMRIwEAYDVQQD
+DAlTZXJ2ZXIgMTIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDlonlE
+Y4u5+aRFAEXlf1S4u/zUORAl8lexASiO5LJT/wIH47JLJMVDvxWr5tqAoz0HVO+9
+8glo3/Bd44inhznckemuI8fzj5P8CqyCttFyyJYgxvKK7U+MlX+S4jlg1c/exTqJ
+PzZo0HX7J3FytkOXaxRKxc/ruRVKHUZ2fjoydFcF+xnckSvinkUmba6iTyoXnpIm
+kEhVx5NdF0Df9TYe/leIwDJKwwxqKq307mkyPIfwF0QB4MtfCO4XXGxL9b5OCaL6
+WcbyXtwb1z6CGamzGsZXPwsmt/M1MVehg7/218oqF9u2cn6UJdBXzvVoQsgJcE7v
+7gwvRn1yXHgaTaeRAgMBAAGjggENMIIBCTAOBgNVHQ8BAf8EBAMCBaAwCQYDVR0T
+BAIwADAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFGZ0
+wCu8gE95KjQfuw1tHSEEJ/QTMB8GA1UdIwQYMBaAFL2YwhkgRizk/utffUM54+vH
+cnXYMD0GCCsGAQUFBwEBBDEwLzAtBggrBgEFBQcwAoYhaHR0cDovL2V4YW1wbGUu
+Y29tL2NhL2NsdXN0ZXIuY2VyMDIGA1UdHwQrMCkwJ6AloCOGIWh0dHA6Ly9leGFt
+cGxlLmNvbS9jYS9jbHVzdGVyLmNybDAaBgNVHREEEzARgglsb2NhbGhvc3SHBH8A
+AAEwDQYJKoZIhvcNAQELBQADggEBAHhEhIdyeWdpNdhmmwZlnYOoFdO1F8OiAFdI
+38cnnbvzsXPi8H/pJ3VQTyAi4COd59rsamSgn6WFBiwPkHfL40PrFxf6NwGrt2a1
+bdAUjjbzXlrA9itb+ZAQkYuDNofgPYqDTY+MlKPzaOTkAVnasNGINqnY3C2cNFWm
+NXs6N0Z0D3f+UgvXLLddX/hhCMqUS7Y6hHoEeb0ixZwUJO0HmVqicr9Od2qkOHph
+R1iQoPS07l82cVVObmsf1vUiDB52WJthluTf87Io6EVvnhRPcJsRXhL1tVmsIdzd
+QIPyOcE1jCiz6bxSXJ8LJuswK7Fp0ZSkdHGWHTH7Co0oVcEvueI=
+-----END CERTIFICATE-----
