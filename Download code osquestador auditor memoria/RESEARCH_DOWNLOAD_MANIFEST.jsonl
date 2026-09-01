@@ -120,3 +120,7 @@
 {"number": 34, "parts": 1, "slug": "tailwindcss", "source": "https://github.com/tailwindlabs/tailwindcss.git", "source_commit": "f723e834ad032aa0f42405f95f684be3cfcac8ef", "status": "COMPLETE"}
 {"number": 35, "parts": 5, "slug": "vllm", "source": "https://github.com/vllm-project/vllm.git", "source_commit": "89df6fcb808febd88de0d08fb7437e9bddcaf81e", "status": "COMPLETE"}
 {"number": 36, "parts": 1, "slug": "zustand", "source": "https://github.com/pmndrs/zustand.git", "source_commit": "b57db4f86ef179285da216eeb291266da82c361c", "status": "COMPLETE"}
+{"number": 23, "parts": 2, "slug": "Weaviate", "source": "https://github.com/weaviate/weaviate.git", "source_commit": "837e1d8a63a19b685e7c241256613d340993781d", "status": "COMPLETE"}
+{"number": 24, "parts": 4, "slug": "Milvus", "source": "https://github.com/milvus-io/milvus.git", "source_commit": "d4a2f1699145ac566a336f8c12e6b568b6eca97b", "status": "COMPLETE"}
+{"number": 26, "parts": 1, "slug": "pgvector", "source": "https://github.com/pgvector/pgvector.git", "source_commit": "e48241b4dcc045b18902914f668d03d1d399dfbe", "status": "COMPLETE"}
+{"number": 27, "parts": 2, "slug": "GraphRAG", "source": "https://github.com/microsoft/graphrag.git", "source_commit": "f40e9a26ce62ba0b3fef8837d24aafdcc6e6c704", "status": "COMPLETE"}
