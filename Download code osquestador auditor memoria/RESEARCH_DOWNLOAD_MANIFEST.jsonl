@@ -124,3 +124,4 @@
 {"number": 24, "parts": 4, "slug": "Milvus", "source": "https://github.com/milvus-io/milvus.git", "source_commit": "d4a2f1699145ac566a336f8c12e6b568b6eca97b", "status": "COMPLETE"}
 {"number": 26, "parts": 1, "slug": "pgvector", "source": "https://github.com/pgvector/pgvector.git", "source_commit": "e48241b4dcc045b18902914f668d03d1d399dfbe", "status": "COMPLETE"}
 {"number": 27, "parts": 2, "slug": "GraphRAG", "source": "https://github.com/microsoft/graphrag.git", "source_commit": "f40e9a26ce62ba0b3fef8837d24aafdcc6e6c704", "status": "COMPLETE"}
+{"number": 30, "parts": 2, "slug": "LangChain", "source": "https://github.com/langchain-ai/langchain.git", "source_commit": "b4d46a503e7de6fa3bb9c78d67510e2ee7bf238b", "status": "COMPLETE"}
