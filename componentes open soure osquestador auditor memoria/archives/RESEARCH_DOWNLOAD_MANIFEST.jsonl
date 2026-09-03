@@ -1,1 +1,4 @@
 {"number": 1, "parts": 2, "slug": "Mem0", "source": "https://github.com/mem0ai/mem0.git", "source_commit": "9a7924befd7026e41e445ba809370009e5e985a6", "status": "COMPLETE"}
+{"number": 2, "parts": 7, "slug": "Cognee", "source": "https://github.com/topoteretes/cognee.git", "source_commit": "e8dd3d93de4699f0f59bedccace94408ecb6058c", "status": "COMPLETE"}
+{"number": 3, "parts": 2, "slug": "Neo4j-Agent-Memory", "source": "https://github.com/neo4j-labs/agent-memory.git", "source_commit": "5b4e00af88342707d011bb9d4f2b34503f43a8c3", "status": "COMPLETE"}
+{"number": 4, "parts": 1, "slug": "LangGraph", "source": "https://github.com/langchain-ai/langgraph.git", "source_commit": "11738d83db4320bb191804342b5c76ae7eca54a0", "status": "COMPLETE"}
