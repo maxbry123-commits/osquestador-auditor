@@ -1,0 +1,136 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33738138830",
+  "archive_groups": 40,
+  "pending_before": 19,
+  "processed": [
+    {
+      "slug": "ollama",
+      "target": "ollama",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 3,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/ollama_0001.zip": "4cba28c23fb40d3c50ef8b3f4a3579cf7377e07a9be8a008023dbc565cf108f9",
+        "Download code osquestador auditor memoria/ollama_0002.zip": "136be511c06c047927aa69890db2c3db06e6a28afa6e95d595bd003e8e6c3cf3",
+        "Download code osquestador auditor memoria/ollama_0003.zip": "6496340bde2f0cf6f472a41bf8a994cc70a391acfb976cd3535911400d6d3ed9"
+      },
+      "copied": 1348,
+      "mirrors": [],
+      "files": 1348,
+      "bytes": 54569623,
+      "tree_sha256": "23f3c4c3eaa67a6c3527a229185579936f6a73e22bd12284e05a49d8549633fb"
+    },
+    {
+      "slug": "tailwindcss",
+      "target": "tailwindcss",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/tailwindcss_0001.zip": "ea2b8e36e457a642817df4f8f00c98e7bac5a45555433e7c7055a0ff9f156f3b"
+      },
+      "copied": 553,
+      "mirrors": [],
+      "files": 553,
+      "bytes": 5792203,
+      "tree_sha256": "825b5f95aa548a4e913c87f08a1a46f71abe46320179f9702284d6e7c3c2738d"
+    },
+    {
+      "slug": "pydantic",
+      "target": "pydantic",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/pydantic_0001.zip": "55511de7d2ada79106f6ec42727cb6d55670759ea7691a27474fd29f984af06e"
+      },
+      "copied": 824,
+      "mirrors": [],
+      "files": 824,
+      "bytes": 11301207,
+      "tree_sha256": "f44b60f8ab5ad940653df526fb045f39683784727e8686f6354e70e5f9fe8e00"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "lancedb",
+      "target": "lancedb",
+      "mirror": null
+    },
+    {
+      "slug": "pgvector",
+      "target": "pgvector",
+      "mirror": null
+    },
+    {
+      "slug": "Weaviate",
+      "target": "Weaviate",
+      "mirror": null
+    },
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "mirror": null
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "mirror": null
+    },
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}
