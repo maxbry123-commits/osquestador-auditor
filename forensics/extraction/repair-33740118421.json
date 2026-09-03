@@ -1,0 +1,105 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33740118421",
+  "archive_groups": 40,
+  "pending_before": 13,
+  "processed": [
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/pyyaml_0001.zip": "9095c653c036d741f2be56aa3e20fd74787d2db86c85a65ab01bc42b494bed3e"
+      },
+      "copied": 642,
+      "mirrors": [],
+      "files": 642,
+      "bytes": 617514,
+      "tree_sha256": "ae724e3766fa4dfd1ce4606324c409cfd30c0a10cc70b92448b429211518ee3b"
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/pydantic-settings_0001.zip": "2e3af01567b525a44fddf582b3eda3f2777cc4503fae15ba2b6c43e8cbde69e5"
+      },
+      "copied": 57,
+      "mirrors": [],
+      "files": 57,
+      "bytes": 1183048,
+      "tree_sha256": "c42c337b26ebe1c68e50a4ce516afe6d6de2d2800056c85836741e0697c30ed2"
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 2,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/LangChain_0001.zip": "7b321d972673a48b8892243e58f401acc0e24f63fdbec1b7762c1cb0d1bf1b0c",
+        "Download code osquestador auditor memoria/LangChain_0002.zip": "af9c8409ef2fb9272e8f82bff782718b6c72fc9d140ecb089ab32cb98070b911"
+      },
+      "copied": 3044,
+      "mirrors": [],
+      "files": 3043,
+      "bytes": 41233124,
+      "tree_sha256": "805feed404a3b3d4be0a8abc2b751663864c7799067b01edb246433308b0c135"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}
