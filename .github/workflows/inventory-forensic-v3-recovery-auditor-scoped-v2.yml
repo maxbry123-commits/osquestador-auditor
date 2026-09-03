@@ -1,0 +1,40 @@
+name: inventory-forensic-v3-recovery-auditor-scoped-v2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/inventory-forensic-v3-recovery-auditor-scoped-v2.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  forensic_scoped:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: always()
+    steps:
+      - name: Checkout main metadata
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: |
+            .github
+      - name: Build scoped evidence
+        run: python3 .github/scripts/inventory_forensic_v3_auditor_scoped.py
+      - name: Validate evidence
+        run: |
+          test -s audit-v3-scoped/inventory-scoped-v3.json
+          python3 -m json.tool audit-v3-scoped/inventory-scoped-v3.json >/dev/null
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-forensic-v3-recovery-auditor-scoped-v2
+          path: audit-v3-scoped/
+          if-no-files-found: error
+          retention-days: 30
