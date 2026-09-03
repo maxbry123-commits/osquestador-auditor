@@ -1,0 +1,195 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33733970463",
+  "archive_groups": 40,
+  "pending_before": 31,
+  "processed": [
+    {
+      "slug": "docker-py",
+      "target": "docker-py",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/docker-py_0001.zip": "db01f9f107a093229efd95dbef23a1bd5e8839f79f6a719357f75220329d3a8c"
+      },
+      "copied": 197,
+      "mirrors": [],
+      "files": 197,
+      "bytes": 1256730,
+      "tree_sha256": "0c0955c7a54f97e6716f2a046aa613c2d8e434e63a4ffdf152e3e7a1d3fd1e3b"
+    },
+    {
+      "slug": "GraphRAG",
+      "target": "GraphRAG",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 2,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/GraphRAG_0001.zip": "828b6c16b694db4ef63112d19919354accfdad9ef7297c8a6204b2bcf1bfb102",
+        "Download code osquestador auditor memoria/GraphRAG_0002.zip": "f136b00a97cca720381ebfc3520f72af64c2d697b66432c1d88260a55ab7ac5e"
+      },
+      "copied": 908,
+      "mirrors": [],
+      "files": 907,
+      "bytes": 16003864,
+      "tree_sha256": "584c3779de1da002d45d078fde092f05a8afa936f574208eb6e1626923e77991"
+    },
+    {
+      "slug": "guardrails",
+      "target": "guardrails",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/guardrails_0001.zip": "796f6fdfd7eb7d47c2def909be243435a235f9919bfe5881fec57f0397b4cb64"
+      },
+      "copied": 563,
+      "mirrors": [],
+      "files": 563,
+      "bytes": 15758281,
+      "tree_sha256": "170b7a34cbd1d3660d7aedb253c8a11501c19b89161bc485f22dd09cf5615d86"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "playwright",
+      "target": "playwright",
+      "mirror": null
+    },
+    {
+      "slug": "redis-py",
+      "target": "redis-py",
+      "mirror": null
+    },
+    {
+      "slug": "sqlite-vec",
+      "target": "sqlite-vec",
+      "mirror": null
+    },
+    {
+      "slug": "Milvus",
+      "target": "Milvus",
+      "mirror": null
+    },
+    {
+      "slug": "react",
+      "target": "react",
+      "mirror": null
+    },
+    {
+      "slug": "chroma",
+      "target": "chroma",
+      "mirror": null
+    },
+    {
+      "slug": "ollama",
+      "target": "ollama",
+      "mirror": null
+    },
+    {
+      "slug": "tailwindcss",
+      "target": "tailwindcss",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic",
+      "target": "pydantic",
+      "mirror": null
+    },
+    {
+      "slug": "lancedb",
+      "target": "lancedb",
+      "mirror": null
+    },
+    {
+      "slug": "pgvector",
+      "target": "pgvector",
+      "mirror": null
+    },
+    {
+      "slug": "Weaviate",
+      "target": "Weaviate",
+      "mirror": null
+    },
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "mirror": null
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "mirror": null
+    },
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "deep-research",
+      "target": "deep-research",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "phoenix",
+      "target": "phoenix",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    },
+    {
+      "slug": "agents-deep-research",
+      "target": "agents-deep-research",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}
