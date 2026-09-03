@@ -1,0 +1,249 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33732027569",
+  "archive_groups": 40,
+  "pending_before": 37,
+  "processed": [
+    {
+      "slug": "llama_index",
+      "target": "llama_index",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 26,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/llama_index_0001.zip": "0271b12aa3ab242f1f09aaee4112964091a3a41e63238379a44f1cd37d39edb3",
+        "Download code osquestador auditor memoria/llama_index_0002.zip": "01bf04bbf887e3510ec2439e060bf68c899c01937e09caba482d9ed032934ba8",
+        "Download code osquestador auditor memoria/llama_index_0003.zip": "790a83c00a1e12261a578ea882a9a47f50b001dc002d03d572ef5a31bd22a8f2",
+        "Download code osquestador auditor memoria/llama_index_0004.zip": "7c2f407bf245b1d65015ceda1c937f7e4f1393a8e2d9b0bc62abe52d0a91d2a6",
+        "Download code osquestador auditor memoria/llama_index_0005.zip": "2f517209361dfaf5622b33a0e8a8735bb84709f47c034425bfb71ec4bb5477f8",
+        "Download code osquestador auditor memoria/llama_index_0006.zip": "e6c738fbe2e33fead7a39d034879770fc9756b9b74655fefa175ce1d40f4749c",
+        "Download code osquestador auditor memoria/llama_index_0007.zip": "2eb501fc72935f02da1c3ab7e2eb854619ea53acddfa6483fc5a5038f218e1e0",
+        "Download code osquestador auditor memoria/llama_index_0008.zip": "42cf53c53a92e69987786a60ad8b279c9fa3e89c430bd8a31e9f13f92190e0e8",
+        "Download code osquestador auditor memoria/llama_index_0009.zip": "86d591dd79cac6081c15417c80c28d15c50685dcb865d2fdd551e35c4387d55f",
+        "Download code osquestador auditor memoria/llama_index_0010.zip": "d49d8621e3d87ba8c3e581324cf118b98775700a6278d0aed4c81d8802524ee1",
+        "Download code osquestador auditor memoria/llama_index_0011.zip": "08cb8661f94b791ae16e5577f89b202359994dcdd98408c86879c7739b9218b7",
+        "Download code osquestador auditor memoria/llama_index_0012.zip": "e956a9c935ea6f5683013af0b4af2fe4b0fdd62837157999f0032e36f98d4d89",
+        "Download code osquestador auditor memoria/llama_index_0013.zip": "6b867f55d49ded80db9d7ce4cde18603908a038f9fef116e9e85935ff060694e",
+        "Download code osquestador auditor memoria/llama_index_0014.zip": "4bdb92bf7995381527cba1482cba299cb4e55b378f2583059b0f49ce96991987",
+        "Download code osquestador auditor memoria/llama_index_0015.zip": "395517eca3e8c0e54787490af18381cdc68398a28b48cb0874eef63e32d4b900",
+        "Download code osquestador auditor memoria/llama_index_0016.zip": "90ae2870ca9723cf1b2b9b49548092fcd28a09a09eba8238d2a1ead395a67977",
+        "Download code osquestador auditor memoria/llama_index_0017.zip": "25d8b5eb8d83bf77d79c96d8a1e99284a874a6ec261661102d685c9ab0facd1e",
+        "Download code osquestador auditor memoria/llama_index_0018.zip": "4c3a2bb6575aa3c023542c4e24803470598df64139aa2c4aebed356b08977bd7",
+        "Download code osquestador auditor memoria/llama_index_0019.zip": "3109a9b4e54741bcf563b6496f46502e910806e55a7272d293498dd401523b4e",
+        "Download code osquestador auditor memoria/llama_index_0020.zip": "5725373cdaf178ad469d789cb47e2ba76ff1ffa4532fc070aa4421141f22ca62",
+        "Download code osquestador auditor memoria/llama_index_0021.zip": "a60ed61c4b426e6a21f67bbe8ca6d57ca81e51ef2cc01a68f92a1209394cd5df",
+        "Download code osquestador auditor memoria/llama_index_0022.zip": "0cf6db4a171cca01f55f5823ad0685695f98e6fec9f8b9f9d3fea8b3a310d8e3",
+        "Download code osquestador auditor memoria/llama_index_0023.zip": "0f1f5cb36ffa42ea7c66884268b4b7c081f46b77db02a54b6a331a3a460eaaa8",
+        "Download code osquestador auditor memoria/llama_index_0024.zip": "77df003fdc91b86272319164ec35b74b7415fcaa9073f47f234922f9bae86bc5",
+        "Download code osquestador auditor memoria/llama_index_0025.zip": "1039abf471f03264ea539995da717e9145be9a19f050027d4aa0767042615bc3",
+        "Download code osquestador auditor memoria/llama_index_0026.zip": "0cfc1d02d16d5f29dd3582b9ce4930f2a59cb221e832145a76dd1d1f60af213d"
+      },
+      "copied": 9850,
+      "mirrors": [],
+      "files": 9850,
+      "bytes": 765391492,
+      "tree_sha256": "b2781cbb129d629cb7521048b2b8d92a11d0a240b2f317279403214c79d6ee31"
+    },
+    {
+      "slug": "servers",
+      "target": "servers",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/servers_0001.zip": "237b01afbcdcc7b1814549857182f2da5053b469f106f4f6fca73c13235b7058"
+      },
+      "copied": 152,
+      "mirrors": [],
+      "files": 152,
+      "bytes": 1473007,
+      "tree_sha256": "533b35bf49696e66cc19e4e70ed99465aac4dee59b1e25b2e8daa61e5f8c53aa"
+    },
+    {
+      "slug": "python-sdk",
+      "target": "python-sdk",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/python-sdk_0001.zip": "742c4f53b4a721428b91bd6e9a5c0eb4d2d479b436af43404974cab62cc10b63"
+      },
+      "copied": 1665,
+      "mirrors": [],
+      "files": 1665,
+      "bytes": 14774162,
+      "tree_sha256": "d1d21e7866c746c42b6645a554029d0787fe5ff4bb0eff3570fc3a5955858282"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "n8n",
+      "target": "n8n",
+      "mirror": null
+    },
+    {
+      "slug": "cryptography",
+      "target": "cryptography",
+      "mirror": null
+    },
+    {
+      "slug": "SWE-agent",
+      "target": "SWE-agent",
+      "mirror": null
+    },
+    {
+      "slug": "docker-py",
+      "target": "docker-py",
+      "mirror": null
+    },
+    {
+      "slug": "GraphRAG",
+      "target": "GraphRAG",
+      "mirror": null
+    },
+    {
+      "slug": "guardrails",
+      "target": "guardrails",
+      "mirror": null
+    },
+    {
+      "slug": "playwright",
+      "target": "playwright",
+      "mirror": null
+    },
+    {
+      "slug": "redis-py",
+      "target": "redis-py",
+      "mirror": null
+    },
+    {
+      "slug": "sqlite-vec",
+      "target": "sqlite-vec",
+      "mirror": null
+    },
+    {
+      "slug": "Milvus",
+      "target": "Milvus",
+      "mirror": null
+    },
+    {
+      "slug": "react",
+      "target": "react",
+      "mirror": null
+    },
+    {
+      "slug": "chroma",
+      "target": "chroma",
+      "mirror": null
+    },
+    {
+      "slug": "ollama",
+      "target": "ollama",
+      "mirror": null
+    },
+    {
+      "slug": "tailwindcss",
+      "target": "tailwindcss",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic",
+      "target": "pydantic",
+      "mirror": null
+    },
+    {
+      "slug": "lancedb",
+      "target": "lancedb",
+      "mirror": null
+    },
+    {
+      "slug": "pgvector",
+      "target": "pgvector",
+      "mirror": null
+    },
+    {
+      "slug": "Weaviate",
+      "target": "Weaviate",
+      "mirror": null
+    },
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "mirror": null
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "mirror": null
+    },
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "deep-research",
+      "target": "deep-research",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "phoenix",
+      "target": "phoenix",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    },
+    {
+      "slug": "agents-deep-research",
+      "target": "agents-deep-research",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}
