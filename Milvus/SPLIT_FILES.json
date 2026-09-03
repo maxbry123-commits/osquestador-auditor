@@ -1,0 +1,9 @@
+[
+  {
+    "repo": "Milvus",
+    "path": "internal/core/thirdparty/tantivy/tantivy-binding/src/analyzer/data/jieba/dict.txt.big",
+    "chunks_dir": "Milvus/internal/core/thirdparty/tantivy/tantivy-binding/src/analyzer/data/jieba/dict.txt.big.chunks",
+    "bytes": 8583143,
+    "chunk_bytes": 8388608
+  }
+]
