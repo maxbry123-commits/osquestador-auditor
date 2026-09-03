@@ -1,0 +1,120 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33739148448",
+  "archive_groups": 40,
+  "pending_before": 16,
+  "processed": [
+    {
+      "slug": "lancedb",
+      "target": "lancedb",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/lancedb_0001.zip": "72df4944927da2fd23f75cf2b546f357d68858734134e5d85f8d1e8aaa23389e"
+      },
+      "copied": 716,
+      "mirrors": [],
+      "files": 715,
+      "bytes": 20281158,
+      "tree_sha256": "50465e5d1bba7baa0376e6c491369e69ca57c8255850ced9269b74c14ed02585"
+    },
+    {
+      "slug": "pgvector",
+      "target": "pgvector",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/pgvector_0001.zip": "5e84ade86b129ef264bb4996a8a73826335445c3dcf8b40addd4fd665b359358"
+      },
+      "copied": 158,
+      "mirrors": [],
+      "files": 158,
+      "bytes": 729916,
+      "tree_sha256": "d8252af96de2864c1f1523af7e5aa4b893c7eb80b6d030b722240be5bc4d7f79"
+    },
+    {
+      "slug": "Weaviate",
+      "target": "Weaviate",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 2,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/Weaviate_0001.zip": "e845622fa3fc3848ef8ffa2b3387c3c559272d12e0b8b6f75eaf863f646c7b98",
+        "Download code osquestador auditor memoria/Weaviate_0002.zip": "71ffd9f1acfacb5bd7ba62eb0755ef14679567adbf5152cd6b58aab073331ec2"
+      },
+      "copied": 5480,
+      "mirrors": [],
+      "files": 5480,
+      "bytes": 51476645,
+      "tree_sha256": "ec81e9c137b9450254319d17a45a2beee85d4d3a22a9a0b9f75ce8d4b22828cb"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "mirror": null
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "mirror": null
+    },
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}

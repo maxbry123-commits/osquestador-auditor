@@ -1,0 +1,303 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package db
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/pkg/errors"
+	"github.com/weaviate/weaviate/adapters/repos/db/propertyspecific"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/common"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/geo"
+	"github.com/weaviate/weaviate/entities/additional"
+	"github.com/weaviate/weaviate/entities/errorcompounder"
+	"github.com/weaviate/weaviate/entities/models"
+	"github.com/weaviate/weaviate/entities/schema"
+	"github.com/weaviate/weaviate/entities/storobj"
+)
+
+func (s *Shard) initGeoProp(prop *models.Property) error {
+	// Building one index at a time keeps a prop's commit log directory to a
+	// single writer. A second index there prunes the empty raw file the first
+	// one holds open, so the surviving index appends to an unlinked inode and
+	// loses everything it logs, and a startup scan running at the same time
+	// fails on the file that just vanished. The check below cannot prevent
+	// this: it only sees indexes that are already registered, not the ones
+	// other callers are still building.
+	s.geoInitLock.Lock()
+	defer s.geoInitLock.Unlock()
+
+	// replacing a live index would leave its commit logger and queue registered,
+	// putting two writers on the same files
+	if s.hasGeoIndexForProp(prop.Name) {
+		return nil
+	}
+
+	// starts geo props cycles if actual geo property is present
+	// (safe to start multiple times)
+	s.index.cycleCallbacks.geoPropsCommitLoggerCycle.Start()
+	s.index.cycleCallbacks.geoPropsTombstoneCleanupCycle.Start()
+
+	idx, err := geo.NewIndex(geo.Config{
+		ID:                    geoPropID(prop.Name),
+		RootPath:              s.path(),
+		CoordinatesForID:      s.makeCoordinatesForID(prop.Name),
+		Store:                 s.store,
+		CoordinatesFromObject: s.makeCoordinatesFromObject(prop.Name),
+		WaitForCachePrefill:   s.index.Config.HNSWWaitForCachePrefill,
+		DisablePersistence:    false,
+		Logger:                s.index.logger,
+		ClassName:             s.index.Config.ClassName.String(),
+		ShardName:             s.name,
+		HNSWEF:                s.index.Config.HNSWGeoIndexEF,
+		AllocChecker:          s.index.allocChecker,
+	},
+		s.cycleCallbacks.geoPropsCommitLoggerCallbacks,
+		s.cycleCallbacks.geoPropsTombstoneCleanupCallbacks,
+	)
+	if err != nil {
+		return errors.Wrapf(err, "create geo index for prop %q", prop.Name)
+	}
+
+	s.propertyIndicesLock.Lock()
+	s.propertyIndices[prop.Name] = propertyspecific.Index{
+		Type:     schema.DataTypeGeoCoordinates,
+		GeoIndex: idx,
+		Name:     prop.Name,
+	}
+	s.propertyIndicesLock.Unlock()
+
+	idx.PostStartup(s.shutCtx)
+
+	// Create a geo queue wrapping the underlying HNSW for async indexing
+	if underlyingVI, ok := idx.UnderlyingVectorIndex().(VectorIndex); ok {
+		geoQueue, err := NewGeoIndexQueue(s, prop.Name, underlyingVI)
+		if err != nil {
+			// the guard at the top would skip the retry, leaving the prop with an
+			// index but no queue until the shard is reloaded
+			s.propertyIndicesLock.Lock()
+			delete(s.propertyIndices, prop.Name)
+			s.propertyIndicesLock.Unlock()
+
+			ec := errorcompounder.New()
+			ec.AddWrapf(err, "create geo index queue for prop %q", prop.Name)
+			ec.AddWrapf(idx.Shutdown(s.shutCtx), "shutdown geo index for prop %q", prop.Name)
+			return ec.ToError()
+		}
+		s.propertyIndicesLock.Lock()
+		s.geoQueues[prop.Name] = geoQueue
+		s.propertyIndicesLock.Unlock()
+	}
+
+	return nil
+}
+
+func (s *Shard) makeCoordinatesForID(propName string) geo.CoordinatesForID {
+	// read-only once built, so all lookups can share it
+	propExtraction := storobj.NewPropExtraction().Add(propName)
+
+	return func(ctx context.Context, id uint64) (*models.GeoCoordinates, error) {
+		obj, err := s.objectByIndexIDWithProps(ctx, id, propExtraction)
+		if err != nil {
+			// reporting a read or decode failure as a not-found would make the
+			// geo index tombstone a doc that is still there
+			return nil, err
+		}
+
+		coordinates, err := geoCoordinatesOfProp(obj, propName)
+		if err != nil {
+			return nil, err
+		}
+		if coordinates == nil {
+			return nil, storobj.NewErrNotFoundf(id,
+				"object has no property %q", propName)
+		}
+
+		return coordinates, nil
+	}
+}
+
+// makeCoordinatesFromObject reads a coordinate straight out of an object's
+// stored bytes, so the geo cache prefill can scan the objects bucket in storage
+// order instead of seeking once per doc ID. The class name comes from the
+// schema because objects may be written without it on disk.
+func (s *Shard) makeCoordinatesFromObject(propName string) geo.CoordinatesFromObject {
+	// read-only once built, so all lookups can share it
+	propExtraction := storobj.NewPropExtraction().Add(propName)
+	className := s.index.Config.ClassName.String()
+
+	return func(objectBytes []byte) (*models.GeoCoordinates, error) {
+		obj, err := storobj.FromBinaryOptionalDisk(objectBytes, className,
+			additional.Properties{}, propExtraction)
+		if err != nil {
+			return nil, err
+		}
+
+		return geoCoordinatesOfProp(obj, propName)
+	}
+}
+
+// geoCoordinatesOfProp returns propName's coordinates, or nil if the object
+// carries no such property.
+func geoCoordinatesOfProp(obj *storobj.Object, propName string) (*models.GeoCoordinates, error) {
+	props, ok := obj.Properties().(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	prop, ok := props[propName]
+	if !ok {
+		return nil, nil
+	}
+
+	geoProp, ok := prop.(*models.GeoCoordinates)
+	if !ok {
+		return nil, fmt.Errorf("expected property to be of type %T, got: %T",
+			&models.GeoCoordinates{}, prop)
+	}
+
+	return geoProp, nil
+}
+
+func geoPropID(propName string) string {
+	return fmt.Sprintf("geo.%s", propName)
+}
+
+func (s *Shard) updatePropertySpecificIndices(ctx context.Context, object *storobj.Object,
+	status objectInsertStatus,
+) error {
+	if err := s.isReadOnly(); err != nil {
+		return err
+	}
+
+	s.propertyIndicesLock.RLock()
+	defer s.propertyIndicesLock.RUnlock()
+
+	for propName, propIndex := range s.propertyIndices {
+		if err := s.updatePropertySpecificIndex(ctx, propName, propIndex,
+			object, status); err != nil {
+			return errors.Wrapf(err, "property %q", propName)
+		}
+	}
+
+	return nil
+}
+
+func (s *Shard) updatePropertySpecificIndex(ctx context.Context, propName string,
+	index propertyspecific.Index, obj *storobj.Object,
+	status objectInsertStatus,
+) error {
+	if index.Type != schema.DataTypeGeoCoordinates {
+		return fmt.Errorf("unsupported per-property index type %q", index.Type)
+	}
+
+	// currently the only property-specific index we support
+	return s.updateGeoIndex(ctx, propName, index, obj, status)
+}
+
+func (s *Shard) updateGeoIndex(ctx context.Context, propName string,
+	index propertyspecific.Index, obj *storobj.Object, status objectInsertStatus,
+) error {
+	if err := s.isReadOnly(); err != nil {
+		return err
+	}
+
+	// geo props were not changed
+	if status.docIDPreserved || status.skipUpsert {
+		return nil
+	}
+
+	if status.docIDChanged {
+		if err := s.deleteFromGeoIndex(propName, index, status.oldDocID); err != nil {
+			return errors.Wrap(err, "delete old doc id from geo index")
+		}
+	}
+
+	return s.addToGeoIndex(ctx, propName, index, obj, status)
+}
+
+func (s *Shard) addToGeoIndex(ctx context.Context, propName string,
+	index propertyspecific.Index,
+	obj *storobj.Object, status objectInsertStatus,
+) error {
+	if err := s.isReadOnly(); err != nil {
+		return err
+	}
+
+	if obj.Properties() == nil {
+		return nil
+	}
+
+	asMap := obj.Properties().(map[string]interface{})
+	propValue, ok := asMap[propName]
+	if !ok {
+		return nil
+	}
+
+	var asGeo *models.GeoCoordinates
+	switch val := propValue.(type) {
+	case map[string]any:
+		asGeoBytes, err := json.Marshal(val)
+		if err != nil {
+			return fmt.Errorf("adjust geo property type: marshal geo property map: %w", err)
+		}
+		var asGeoAdjusted models.GeoCoordinates
+		err = json.Unmarshal(asGeoBytes, &asGeoAdjusted)
+		if err != nil {
+			return fmt.Errorf("adjust geo property type: unmarshal geo property map: %w", err)
+		}
+		asGeo = &asGeoAdjusted
+	case *models.GeoCoordinates:
+		asGeo = val
+	default:
+		return fmt.Errorf("expected prop to be of type %T, but got: %T",
+			&models.GeoCoordinates{}, propValue)
+	}
+
+	if s.index.AsyncIndexingEnabled {
+		if geoQueue, ok := s.geoQueues[propName]; ok {
+			vec, err := geo.GeoCoordinatesToVector(asGeo)
+			if err != nil {
+				return errors.Wrapf(err, "convert geo coordinates to vector")
+			}
+			return geoQueue.Insert(ctx, &common.Vector[[]float32]{ID: status.docID, Vector: vec})
+		}
+	}
+
+	if err := index.GeoIndex.Add(ctx, status.docID, asGeo); err != nil {
+		return errors.Wrapf(err, "insert into geo index")
+	}
+
+	return nil
+}
+
+func (s *Shard) deleteFromGeoIndex(propName string, index propertyspecific.Index,
+	docID uint64,
+) error {
+	if err := s.isReadOnly(); err != nil {
+		return err
+	}
+
+	if s.index.AsyncIndexingEnabled {
+		if geoQueue, ok := s.geoQueues[propName]; ok {
+			return geoQueue.Delete(docID)
+		}
+	}
+
+	if err := index.GeoIndex.Delete(docID); err != nil {
+		return errors.Wrapf(err, "delete from geo index")
+	}
+
+	return nil
+}

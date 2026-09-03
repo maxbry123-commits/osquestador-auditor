@@ -1,0 +1,1288 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package db
+
+import (
+	"context"
+	"fmt"
+	"slices"
+	"time"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
+	"github.com/weaviate/weaviate/adapters/repos/db/helpers"
+	"github.com/weaviate/weaviate/adapters/repos/db/inverted"
+	resolver "github.com/weaviate/weaviate/adapters/repos/db/sharding"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/dynamic"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/flat"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/hfresh"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/hnsw"
+	command "github.com/weaviate/weaviate/cluster/proto/api"
+	"github.com/weaviate/weaviate/cluster/router"
+	"github.com/weaviate/weaviate/cluster/types"
+	"github.com/weaviate/weaviate/entities/errorcompounder"
+	enterrors "github.com/weaviate/weaviate/entities/errors"
+	"github.com/weaviate/weaviate/entities/models"
+	"github.com/weaviate/weaviate/entities/modulecapabilities"
+	"github.com/weaviate/weaviate/entities/schema"
+	schemaConfig "github.com/weaviate/weaviate/entities/schema/config"
+	"github.com/weaviate/weaviate/entities/storobj"
+	esync "github.com/weaviate/weaviate/entities/sync"
+	"github.com/weaviate/weaviate/entities/vectorindex"
+	"github.com/weaviate/weaviate/usecases/multitenancy"
+	"github.com/weaviate/weaviate/usecases/replica"
+	schemaUC "github.com/weaviate/weaviate/usecases/schema"
+	"github.com/weaviate/weaviate/usecases/sharding"
+)
+
+// provider is an interface has to be implemented by modules
+// to get the backend (s3, azure blob storage, google cloud storage) module
+type provider interface {
+	// OffloadBackend returns the backend module for (s3, azure blob storage, google cloud storage)
+	OffloadBackend(backend string) (modulecapabilities.OffloadCloud, bool)
+}
+
+type processor interface {
+	UpdateTenantsProcess(ctx context.Context,
+		class string, req *command.TenantProcessRequest) (uint64, error)
+}
+
+type Migrator struct {
+	db            *DB
+	cloud         modulecapabilities.OffloadCloud
+	logger        logrus.FieldLogger
+	cluster       processor
+	nodeId        string
+	localNodeName string
+
+	classLocks *esync.KeyLocker
+}
+
+func NewMigrator(db *DB, logger logrus.FieldLogger, localNodeName string) *Migrator {
+	return &Migrator{
+		db:            db,
+		logger:        logger,
+		classLocks:    esync.NewKeyLocker(),
+		localNodeName: localNodeName,
+	}
+}
+
+func (m *Migrator) SetNode(nodeID string) {
+	m.nodeId = nodeID
+}
+
+func (m *Migrator) SetCluster(c processor) {
+	m.cluster = c
+}
+
+func (m *Migrator) SetOffloadProvider(provider provider, moduleName string) {
+	cloud, enabled := provider.OffloadBackend(moduleName)
+	if !enabled {
+		m.logger.Debug(fmt.Sprintf("module %s is not enabled", moduleName))
+	}
+	m.cloud = cloud
+	m.logger.Info(fmt.Sprintf("module %s is enabled", moduleName))
+}
+
+func (m *Migrator) AddClass(ctx context.Context, class *models.Class) error {
+	if err := replica.ValidateConfig(class, m.db.config.Replication); err != nil {
+		return fmt.Errorf("replication config: %w", err)
+	}
+
+	indexID := indexID(schema.ClassName(class.Class))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(class.Class))
+	if idx != nil {
+		return fmt.Errorf("index for class %v already found locally", idx.ID())
+	}
+
+	asyncConfig, err := asyncReplicationConfigFromModelOrDefaults(multitenancy.IsMultiTenant(class.MultiTenancyConfig), class.ReplicationConfig.AsyncConfig, m.logger.WithField("class", class.Class))
+	if err != nil {
+		return fmt.Errorf("async replication config: %w", err)
+	}
+
+	isMultiTenant := multitenancy.IsMultiTenant(class.MultiTenancyConfig)
+	collection := schema.ClassName(class.Class).String()
+	indexRouter := router.NewBuilder(
+		collection,
+		isMultiTenant,
+		m.db.nodeSelector,
+		m.db.schemaGetter,
+		m.db.schemaReader,
+		m.db.replicationFSM,
+	).Build()
+	shardResolver := resolver.NewShardResolver(collection, multitenancy.IsMultiTenant(class.MultiTenancyConfig), m.db.schemaGetter)
+	var totalShardSizeBytes uint64
+	var localActiveShardsCount int
+	if isMultiTenant {
+		// we need to calculate the local shards count if it's MT to be able to decide
+		// to enable lazy load shards
+		localActiveShardsCount, err = m.db.schemaReader.LocalActiveShardsCount(class.Class)
+		if err != nil {
+			return fmt.Errorf("get local shards count for class %q: %w", class.Class, err)
+		}
+		// Only calculate shard sizes if the shard-count condition alone wouldn't
+		// already trigger lazy-loading. This avoids walking all shard directories
+		// on large MT setups where the count exceeds the threshold.
+		if localActiveShardsCount <= m.db.config.LazyLoadShardCountThreshold &&
+			m.db.config.LazyLoadShardSizeThresholdGB > 0 {
+			// we do need to calculate shard size if it's MT to be able to decide
+			// to enable lazy load shards based on total size
+			localShards, err := m.db.schemaReader.LocalShards(class.Class)
+			if err != nil {
+				return fmt.Errorf("get local shard names for class %q: %w", class.Class, err)
+			}
+			sizeThresholdBytes := uint64(m.db.config.LazyLoadShardSizeThresholdGB * 1024 * 1024 * 1024)
+			totalShardSizeBytes = m.db.totalShardSizeBytes(schema.ClassName(class.Class), localShards, sizeThresholdBytes)
+		}
+	}
+
+	var lazyLoadShardEnabled bool
+	idx, err = NewIndex(ctx, m.db,
+		IndexConfig{
+			ClassName:                      schema.ClassName(class.Class),
+			RootPath:                       m.db.config.RootPath,
+			ResourceUsage:                  m.db.config.ResourceUsage,
+			QueryMaximumResults:            m.db.config.QueryMaximumResults,
+			QueryHybridMaximumResults:      m.db.config.QueryHybridMaximumResults,
+			QueryNestedRefLimit:            m.db.config.QueryNestedRefLimit,
+			MemtablesFlushDirtyAfter:       m.db.config.MemtablesFlushDirtyAfter,
+			MemtablesInitialSizeMB:         m.db.config.MemtablesInitialSizeMB,
+			MemtablesMaxSizeMB:             m.db.config.MemtablesMaxSizeMB,
+			MemtablesMinActiveSeconds:      m.db.config.MemtablesMinActiveSeconds,
+			MemtablesMaxActiveSeconds:      m.db.config.MemtablesMaxActiveSeconds,
+			MinMMapSize:                    m.db.config.MinMMapSize,
+			LazySegmentsDisabled:           m.db.config.LazySegmentsDisabled,
+			SegmentInfoIntoFileNameEnabled: m.db.config.SegmentInfoIntoFileNameEnabled,
+			WriteMetadataFilesEnabled:      m.db.config.WriteMetadataFilesEnabled,
+			MaxReuseWalSize:                m.db.config.MaxReuseWalSize,
+			SegmentsCleanupIntervalSeconds: m.db.config.SegmentsCleanupIntervalSeconds,
+			SeparateObjectsCompactions:     m.db.config.SeparateObjectsCompactions,
+			CycleManagerRoutinesFactor:     m.db.config.CycleManagerRoutinesFactor,
+			IndexRangeableInMemory:         m.db.config.IndexRangeableInMemory,
+			ObjectsTTLBatchSize:            m.db.config.ObjectsTTLBatchSize,
+			ObjectsTTLPauseEveryNoBatches:  m.db.config.ObjectsTTLPauseEveryNoBatches,
+			ObjectsTTLPauseDuration:        m.db.config.ObjectsTTLPauseDuration,
+			MaxSegmentSize:                 m.db.config.MaxSegmentSize,
+			TrackVectorDimensions:          m.db.config.TrackVectorDimensions,
+			TrackVectorDimensionsInterval:  m.db.config.TrackVectorDimensionsInterval,
+			UsageEnabled:                   m.db.config.UsageEnabled,
+			AvoidMMap:                      m.db.config.AvoidMMap,
+			EnableLazyLoadShards: func() bool {
+				// If explicitly set (true = always lazy, false = always eager),
+				// skip auto-detection entirely.
+				if m.db.config.EnableLazyLoadShards != nil {
+					return *m.db.config.EnableLazyLoadShards
+				}
+
+				lazyLoadShardEnabled = shouldAutoLazyLoadShards(
+					isMultiTenant,
+					localActiveShardsCount,
+					totalShardSizeBytes,
+					m.db.config.LazyLoadShardCountThreshold,
+					m.db.config.LazyLoadShardSizeThresholdGB,
+				)
+				return lazyLoadShardEnabled
+			}(),
+			LazyLoadShardWarmupMinObjects:       m.db.config.LazyLoadShardWarmupMinObjects,
+			ForceFullReplicasSearch:             m.db.config.ForceFullReplicasSearch,
+			TransferInactivityTimeout:           m.db.config.TransferInactivityTimeout,
+			HaltForTransferTimeout:              m.db.config.HaltForTransferTimeout,
+			LSMEnableSegmentsChecksumValidation: m.db.config.LSMEnableSegmentsChecksumValidation,
+			SkipWriteClassNameOnDisk:            m.db.config.LSMSkipWriteClassNameEnabled,
+			ReplicationFactor:                   class.ReplicationConfig.Factor,
+			AsyncReplicationConfig:              asyncConfig,
+			AsyncReplicationScheduler:           m.db.asyncReplicationScheduler,
+			DeletionStrategy:                    class.ReplicationConfig.DeletionStrategy,
+			ShardLoadLimiter:                    m.db.shardLoadLimiter,
+			StartupShards:                       &m.db.startupShards,
+			BucketLoadLimiter:                   m.db.bucketLoadLimiter,
+			NamespacesExister:                   m.db.namespacesExister,
+			HNSWMaxLogSize:                      m.db.config.HNSWMaxLogSize,
+			HNSWWaitForCachePrefill: func() bool {
+				// don't wait if lazy load shard is enabled
+				if lazyLoadShardEnabled {
+					return false
+				}
+				return m.db.config.HNSWWaitForCachePrefill
+			}(),
+			HNSWFlatSearchConcurrency:    m.db.config.HNSWFlatSearchConcurrency,
+			HNSWAcornFilterRatio:         m.db.config.HNSWAcornFilterRatio,
+			BM25FilterTombMergeGateRatio: m.db.config.BM25FilterTombMergeGateRatio,
+			VisitedListPoolMaxSize:       m.db.config.VisitedListPoolMaxSize,
+			QuerySlowLogEnabled:          m.db.config.QuerySlowLogEnabled,
+			QuerySlowLogThreshold:        m.db.config.QuerySlowLogThreshold,
+			InvertedSorterDisabled:       m.db.config.InvertedSorterDisabled,
+			QueryBatchedContainsEnabled:  m.db.config.QueryBatchedContainsEnabled,
+			LazyPropertyLengthsEnabled:   m.db.config.LazyPropertyLengthsEnabled,
+			MaintenanceModeEnabled:       m.db.config.MaintenanceModeEnabled,
+			HFreshEnabled:                m.db.config.HFreshEnabled,
+			AutoTenantActivation:         schema.AutoTenantActivationEnabled(class),
+		},
+		// no backward-compatibility check required, since newly added classes will
+		// always have the field set
+		inverted.ConfigFromModel(class.InvertedIndexConfig),
+		convertToVectorIndexConfig(class.VectorIndexConfig),
+		convertToVectorIndexConfigs(class.VectorConfig),
+		indexRouter, shardResolver, m.db.schemaGetter, m.db.schemaReader, m.db, m.logger, m.db.nodeResolver, m.db.remoteIndex,
+		m.db.replicaClient, &m.db.config.Replication, m.db.promMetrics, class, m.db.jobQueueCh, m.db.scheduler, m.db.indexCheckpoints,
+		m.db.memMonitor, m.db.reindexer, m.db.bitmapBufPool, m.db.AsyncIndexingEnabled, m.db.tenantsManager)
+	if err != nil {
+		return errors.Wrap(err, "create index")
+	}
+
+	idx.usageLimits = m.db.usageLimits
+	idx.SetReplicationFSMReader(m.db.replicationFSM)
+	m.db.indexLock.Lock()
+	m.db.indices[idx.ID()] = idx
+	m.db.indexLock.Unlock()
+
+	// Shards built inside NewIndex read the read-only flag as they come up, but
+	// a transition landing after that read reaches them through neither path -
+	// the sweep cannot see an index that is not in db.indices yet. Settle them
+	// against the flag now that it can.
+	m.db.reconcileIndexResourcePressure(idx)
+
+	// NewIndex loaded shards reading the live AsyncReplicationDisabled flag, but
+	// the index was not yet in db.indices, so a concurrent runtime flag toggle's
+	// reconcile hook could have skipped it. Re-reconcile now that it is visible
+	// so its shards match the current flag. Non-fatal: a hiccup here must not
+	// fail class creation — the next toggle/schema update will correct it.
+	//
+	// Take dropIndex.RLock only after publishing the index, keeping the
+	// indexLock -> dropIndex order used everywhere else (acquiring dropIndex
+	// first would invert it against DeleteIndex). classLocks already serialises
+	// a same-class DeleteIndex, so the index cannot be dropped before this runs.
+	func() {
+		idx.dropIndex.RLock()
+		defer idx.dropIndex.RUnlock()
+		if err := idx.enterRead(); err != nil {
+			return
+		}
+		defer idx.exitRead()
+		if err := idx.reconcileAsyncReplication(ctx); err != nil {
+			m.logger.WithField("action", "add_class").WithField("class", class.Class).
+				Errorf("reconcile async replication for new index: %v", err)
+		}
+	}()
+
+	m.logger.WithFields(logrus.Fields{
+		"action":                  "lazy_shard_auto_detection",
+		"class":                   class.Class,
+		"enable_lazy_load_shards": lazyLoadShardEnabled,
+		"background_warmup":       idx.Config.backgroundWarmupEnabled(),
+		"warmup_min_objects":      m.db.config.LazyLoadShardWarmupMinObjects,
+		"local_shard_count":       localActiveShardsCount,
+		"total_shard_size_bytes":  totalShardSizeBytes,
+		"count_threshold":         m.db.config.LazyLoadShardCountThreshold,
+		"size_threshold_gb":       m.db.config.LazyLoadShardSizeThresholdGB,
+	}).Info("lazy load shard auto-detection result")
+	return nil
+}
+
+func (m *Migrator) DropClass(ctx context.Context, className string, hasFrozen bool) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	if err := m.db.DeleteIndex(schema.ClassName(className)); err != nil {
+		return err
+	}
+
+	if m.cloud != nil && hasFrozen {
+		return m.cloud.Delete(ctx, className, "", "")
+	}
+
+	return nil
+}
+
+func (m *Migrator) UpdateClass(ctx context.Context, className string, newClassName *string) error {
+	if newClassName != nil {
+		return errors.New("weaviate does not support renaming of classes")
+	}
+
+	return nil
+}
+
+// LoadShardForMovement loads the target shard of a replica movement. The
+// replication caller keeps a suspend or resume landing mid-movement from failing
+// the apply on the node gaining the replica.
+func (m *Migrator) LoadShardForMovement(ctx context.Context, class, shard string) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return fmt.Errorf("could not find collection %s", class)
+	}
+	return idx.LoadLocalShardForMovement(ctx, shard)
+}
+
+// LoadShardForNewReplica loads a shard for the apply that adds a replica to it
+// with no replica movement under way.
+func (m *Migrator) LoadShardForNewReplica(ctx context.Context, class, shard string) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return fmt.Errorf("could not find collection %s", class)
+	}
+	return idx.LoadLocalShardForNewReplica(ctx, shard)
+}
+
+func (m *Migrator) DropShard(ctx context.Context, class, shard string) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return fmt.Errorf("could not find collection %s", class)
+	}
+	return idx.dropShards([]string{shard})
+}
+
+func (m *Migrator) ReconcileAsyncReplicationForShard(ctx context.Context, class, shard string) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return fmt.Errorf("could not find collection %s", class)
+	}
+	return idx.ReconcileAsyncReplicationForShard(ctx, shard)
+}
+
+func (m *Migrator) ShutdownShard(ctx context.Context, class, shard string) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return fmt.Errorf("could not find collection %s", class)
+	}
+
+	idx.shardCreateLocks.Lock(shard)
+	defer idx.shardCreateLocks.Unlock(shard)
+
+	shardLike, ok := idx.shards.LoadAndDelete(shard)
+	if !ok {
+		return fmt.Errorf("could not find shard %s", shard)
+	}
+	if err := shutdownOrRestoreShard(ctx, idx, shard, shardLike); err != nil {
+		if !errors.Is(err, errAlreadyShutdown) {
+			return errors.Wrapf(err, "shutdown shard %q", shard)
+		}
+		idx.logger.WithField("shard", shardLike.Name()).Debug("was already shut or dropped")
+	}
+	return nil
+}
+
+// UpdateIndex ensures that the local index is up2date with the latest sharding
+// state (shards/tenants) and index properties that may have been added in the
+// case that the local node was down during a class update operation.
+//
+// This method is relevant when the local node is a part of a cluster,
+// particularly with the introduction of the v2 RAFT-based schema
+func (m *Migrator) UpdateIndex(ctx context.Context, incomingClass *models.Class,
+	incomingSS *sharding.State,
+) error {
+	idx := m.db.GetIndex(schema.ClassName(incomingClass.Class))
+
+	{ // add index if missing
+		if idx == nil {
+			if err := m.AddClass(ctx, incomingClass); err != nil {
+				return fmt.Errorf(
+					"add missing class %s during update index: %w",
+					incomingClass.Class, err)
+			}
+			return nil
+		}
+	}
+
+	// the property add runs even when the shard reconcile fails: it is the only
+	// thing that gives an already loaded shard the class's new properties, and a
+	// shard that failed to load or unload does not stop the others from needing them
+	ec := errorcompounder.New()
+
+	{ // add/remove missing shards
+		if incomingSS.PartitioningEnabled {
+			ec.Add(m.updateIndexTenants(ctx, idx, incomingSS))
+		} else {
+			ec.Add(m.updateIndexShards(ctx, idx, incomingSS))
+		}
+	}
+
+	{ // add missing properties
+		ec.Add(m.updateIndexAddMissingProperties(ctx, idx, incomingClass))
+	}
+
+	return ec.ToError()
+}
+
+func (m *Migrator) updateIndexTenants(ctx context.Context, idx *Index,
+	incomingSS *sharding.State,
+) error {
+	// the delete runs even when the status update fails: the status update only
+	// touches tenants incomingSS lists and the delete only tenants it omits, and
+	// skipping the delete leaves a tenant dropped from the schema on disk
+	ec := errorcompounder.New()
+	ec.Add(m.updateIndexTenantsStatus(ctx, idx, incomingSS))
+	ec.Add(m.updateIndexDeleteTenants(ctx, idx, incomingSS))
+	return ec.ToError()
+}
+
+func (m *Migrator) updateIndexTenantsStatus(ctx context.Context, idx *Index,
+	incomingSS *sharding.State,
+) error {
+	nodeName := m.db.schemaGetter.NodeName()
+
+	// one tenant's failure must not skip the rest: Physical iterates in map
+	// order, so which tenants were reconciled would otherwise vary per run
+	ec := errorcompounder.New()
+	for shardName, phys := range incomingSS.Physical {
+		if !phys.IsLocalShard(nodeName) {
+			continue
+		}
+
+		if phys.Status == models.TenantActivityStatusHOT {
+			// Only load the tenant if activity status == HOT.
+			ec.AddWrapf(idx.loadLocalShardForReload(ctx, shardName, true /* mustLoad */),
+				"add missing tenant shard %s during update index", shardName)
+		} else {
+			// Shutdown the tenant if activity status != HOT
+			ec.AddWrapf(idx.UnloadLocalShard(ctx, shardName),
+				"shutdown tenant shard %s during update index", shardName)
+		}
+	}
+	return ec.ToErrorLimited(maxReportedErrors)
+}
+
+func (m *Migrator) updateIndexDeleteTenants(ctx context.Context,
+	idx *Index, incomingSS *sharding.State,
+) error {
+	var toRemove []string
+
+	idx.ForEachShard(func(name string, _ ShardLike) error {
+		if _, ok := incomingSS.Physical[name]; !ok {
+			toRemove = append(toRemove, name)
+		}
+		return nil
+	})
+
+	if len(toRemove) == 0 {
+		return nil
+	}
+
+	// the cloud delete runs even when the local drop fails, otherwise the
+	// offloaded data is orphaned: the dropped shards are gone from the index,
+	// so a later update no longer lists them
+	ec := errorcompounder.New()
+	ec.Add(idx.dropShards(toRemove))
+
+	if m.cloud != nil {
+		// TODO-offload: currently we send all tenants and if it did find one in the cloud will delete
+		// better to filter the passed shards and get the frozen only
+		ec.Add(idx.dropCloudShards(ctx, m.cloud, toRemove, m.nodeId))
+	}
+
+	if err := ec.ToError(); err != nil {
+		return fmt.Errorf("drop tenant shards %v during update index: %w", toRemove, err)
+	}
+	return nil
+}
+
+func (m *Migrator) updateIndexShards(ctx context.Context, idx *Index,
+	incomingSS *sharding.State,
+) error {
+	requestedShards := incomingSS.AllLocalPhysicalShards()
+	existingShards := make(map[string]ShardLike)
+
+	if err := idx.ForEachShard(func(name string, shard ShardLike) error {
+		existingShards[name] = shard
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failed to iterate over loaded shards: %w", err)
+	}
+
+	// every shard is attempted and every failure reported: a swallowed unload
+	// reports a partial reconcile as a success, and stopping at the first failed
+	// load leaves every shard behind it unreconciled
+	ec := errorcompounder.New()
+
+	// Initialize missing shards and shutdown unneeded ones
+	for shardName := range existingShards {
+		if !slices.Contains(requestedShards, shardName) {
+			ec.AddWrapf(idx.UnloadLocalShard(ctx, shardName),
+				"shutdown shard %s during update index", shardName)
+		}
+	}
+
+	for _, shardName := range requestedShards {
+		if _, exists := existingShards[shardName]; !exists {
+			ec.AddWrapf(idx.loadLocalShardForReload(ctx, shardName, false /* mustLoad */),
+				"add missing shard %s during update index", shardName)
+		}
+	}
+
+	return ec.ToErrorLimited(maxReportedErrors)
+}
+
+func (m *Migrator) updateIndexAddMissingProperties(ctx context.Context, idx *Index,
+	incomingClass *models.Class,
+) error {
+	for _, prop := range incomingClass.Properties {
+		// Returning an error in idx.ForEachShard stops the range.
+		// So if one shard is missing the property bucket, we know
+		// that the property needs to be added to the index, and
+		// don't need to continue iterating over all shards
+		errMissingProp := errors.New("missing prop")
+		// Ensure we iterate over loaded shard to avoid force loading a lazy loaded shard
+		err := idx.ForEachLoadedShard(func(name string, shard ShardLike) error {
+			if !shardHasProperty(shard, prop) {
+				return errMissingProp
+			}
+			return nil
+		})
+		if errors.Is(err, errMissingProp) {
+			if err := idx.addProperty(ctx, prop); err != nil {
+				return fmt.Errorf("add missing prop %s during update index: %w", prop.Name, err)
+			}
+		}
+	}
+	return nil
+}
+
+// shardHasProperty reports whether prop's value index exists on this shard. Geo
+// props get a property-specific index and no filterable bucket, so probing that
+// bucket would report them missing forever.
+func shardHasProperty(shard ShardLike, prop *models.Property) bool {
+	if dt, _ := schema.AsPrimitive(prop.DataType); dt == schema.DataTypeGeoCoordinates {
+		return shard.hasGeoIndexForProp(prop.Name)
+	}
+	return shard.Store().Bucket(helpers.BucketFromPropNameLSM(prop.Name)) != nil
+}
+
+func (m *Migrator) AddProperty(ctx context.Context, className string, prop ...*models.Property) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot add property to a non-existing index for %s", className)
+	}
+
+	return idx.addProperty(ctx, prop...)
+}
+
+func (m *Migrator) UpdateProperty(ctx context.Context, className string, property *models.Property) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot update property for a non-existing index for %s", className)
+	}
+
+	return idx.updateProperty(ctx, property)
+}
+
+func (m *Migrator) GetShardsQueueSize(ctx context.Context, className, tenant string) (map[string]int64, error) {
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		// index not yet local (RAFT schema not applied on this node) or class does not exist
+		return nil, fmt.Errorf("cannot get shards queue size for a non-existing index for %s: %w", className, schemaUC.ErrNotFound)
+	}
+
+	return idx.getShardsQueueSize(ctx, tenant)
+}
+
+func (m *Migrator) GetShardsStatus(ctx context.Context, className, tenant string) (map[string]map[string]string, map[string]string, error) {
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		// index not yet local (RAFT schema not applied on this node) or class does not exist
+		return nil, nil, fmt.Errorf("cannot get shards status for a non-existing index for %s: %w", className, schemaUC.ErrNotFound)
+	}
+
+	return idx.getShardsStatus(ctx, tenant)
+}
+
+func (m *Migrator) UpdateShardStatus(ctx context.Context, className, shardName, targetStatus string, schemaVersion uint64) error {
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		// index not yet local (RAFT schema not applied on this node) or class does not exist
+		return fmt.Errorf("cannot update shard status to a non-existing index for %s: %w", className, schemaUC.ErrNotFound)
+	}
+
+	return idx.updateShardStatus(ctx, shardName, targetStatus)
+}
+
+// NewTenants creates new partitions
+func (m *Migrator) NewTenants(ctx context.Context, class *models.Class, creates []*schemaUC.CreateTenantPayload) error {
+	idx := m.db.GetIndex(schema.ClassName(class.Class))
+	if idx == nil {
+		return fmt.Errorf("cannot find index for %q", class.Class)
+	}
+
+	ec := errorcompounder.New()
+	for _, pl := range creates {
+		if pl.Status != models.TenantActivityStatusHOT {
+			continue // skip creating inactive shards
+		}
+
+		err := idx.LoadLocalShardForTenantAdd(ctx, pl.Name)
+		ec.Add(err)
+	}
+	return ec.ToError()
+}
+
+// UpdateTenants activates or deactivates tenant partitions and returns a commit func
+// that can be used to either commit or rollback the changes. A namespace being
+// deleted leaves an activated tenant's shard closed instead of failing the apply.
+func (m *Migrator) UpdateTenants(ctx context.Context, class *models.Class, updates []*schemaUC.UpdateTenantPayload, implicitTenantActivation bool) error {
+	return m.updateTenants(ctx, class, updates, func(ctx context.Context, idx *Index, name string) error {
+		return idx.LoadLocalShardForTenantActivation(ctx, name, implicitTenantActivation)
+	})
+}
+
+// UpdateTenantsForProcess applies the statuses a finished offload or onload
+// reported. A namespace being deleted leaves the tenant's shard closed instead of
+// failing the apply.
+func (m *Migrator) UpdateTenantsForProcess(ctx context.Context, class *models.Class, updates []*schemaUC.UpdateTenantPayload) error {
+	return m.updateTenants(ctx, class, updates, func(ctx context.Context, idx *Index, name string) error {
+		return idx.LoadLocalShardForTenantProcess(ctx, name)
+	})
+}
+
+func (m *Migrator) updateTenants(ctx context.Context, class *models.Class, updates []*schemaUC.UpdateTenantPayload,
+	loadShard func(ctx context.Context, idx *Index, name string) error,
+) error {
+	idx := m.db.GetIndex(schema.ClassName(class.Class))
+	if idx == nil {
+		return fmt.Errorf("cannot find index for %q", class.Class)
+	}
+	if err := idx.enterRead(); err != nil {
+		m.logger.WithField("index", idx.ID()).Debug("index is already shut down or dropped")
+		return err
+	}
+	defer idx.exitRead()
+
+	hot := make([]string, 0, len(updates))
+	cold := make([]string, 0, len(updates))
+	// freeze needs each tenant's pre-freeze status, so it keeps the whole payload
+	freezing := make([]*schemaUC.UpdateTenantPayload, 0, len(updates))
+	frozen := make([]string, 0, len(updates))
+	unfreezing := make([]string, 0, len(updates))
+
+	for _, tenant := range updates {
+		switch tenant.Status {
+		case models.TenantActivityStatusHOT:
+			hot = append(hot, tenant.Name)
+		case models.TenantActivityStatusCOLD:
+			cold = append(cold, tenant.Name)
+		case models.TenantActivityStatusFROZEN:
+			frozen = append(frozen, tenant.Name)
+
+		case types.TenantActivityStatusFREEZING: // never arrives from user
+			freezing = append(freezing, tenant)
+		case types.TenantActivityStatusUNFREEZING: // never arrives from user
+			unfreezing = append(unfreezing, tenant.Name)
+		}
+	}
+
+	ec := errorcompounder.NewSafe()
+	if len(hot) > 0 {
+		m.logger.WithField("action", "tenants_to_hot").Debug(hot)
+
+		eg := enterrors.NewErrorGroupWrapper(m.logger)
+		eg.SetLimit(_NUMCPU * 2)
+
+		for _, name := range hot {
+			// The timeout is rather arbitrary. It's meant to be so high that it can
+			// never stop a valid tenant activation use case, but low enough to
+			// prevent a context-leak.
+			eg.Go(func() error {
+				idx.backupLock.RLock(name)
+				defer idx.backupLock.RUnlock(name)
+
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+				defer cancel()
+
+				if err := loadShard(ctx, idx, name); err != nil {
+					ec.Add(err)
+					idx.logger.WithFields(logrus.Fields{
+						"action": "tenant_activation_lazy_load_shard",
+						"shard":  name,
+					}).Errorf("loading shard %q failed: %v", name, err)
+				}
+				return nil
+			})
+		}
+		eg.Wait()
+	}
+
+	if len(cold) > 0 {
+		m.logger.WithField("action", "tenants_to_cold").Debug(cold)
+
+		eg := enterrors.NewErrorGroupWrapper(m.logger)
+		eg.SetLimit(_NUMCPU * 2)
+
+		for _, name := range cold {
+			eg.Go(func() error {
+				idx.backupLock.RLock(name)
+				defer idx.backupLock.RUnlock(name)
+
+				idx.shardCreateLocks.Lock(name)
+				defer idx.shardCreateLocks.Unlock(name)
+
+				shard, ok := idx.shards.LoadAndDelete(name)
+				if !ok {
+					m.logger.WithField("shard", name).Debug("already shut down or dropped")
+					return nil // shard already does not exist or inactive
+				}
+
+				m.logger.WithField("shard", name).Debug("starting shutdown")
+
+				if err := shutdownOrRestoreShard(ctx, idx, name, shard); err != nil {
+					if errors.Is(err, errAlreadyShutdown) {
+						m.logger.WithField("shard", shard.Name()).Debug("already shut down or dropped")
+					} else {
+						ec.Add(err)
+					}
+				}
+
+				return nil
+			})
+		}
+
+		eg.Wait()
+	}
+
+	if len(frozen) > 0 {
+		m.logger.WithField("action", "tenants_to_frozen").Debug(frozen)
+		m.frozen(ctx, idx, frozen, ec)
+	}
+
+	if len(freezing) > 0 {
+		m.logger.WithField("action", "tenants_to_freezing").Debug(tenantNames(freezing))
+		m.freeze(ctx, idx, class.Class, freezing, ec)
+	}
+
+	if len(unfreezing) > 0 {
+		m.logger.WithField("action", "tenants_to_unfreezing").Debug(unfreezing)
+		m.unfreeze(ctx, idx, class.Class, unfreezing, ec)
+	}
+
+	return ec.ToError()
+}
+
+func tenantNames(tenants []*schemaUC.UpdateTenantPayload) []string {
+	names := make([]string, len(tenants))
+	for i, tenant := range tenants {
+		names[i] = tenant.Name
+	}
+	return names
+}
+
+// DeleteTenants deletes tenant from the database and data from the disk, no matter the current status of the tenant
+func (m *Migrator) DeleteTenants(ctx context.Context, class string, tenants []*models.Tenant) error {
+	idx := m.db.GetIndex(schema.ClassName(class))
+	if idx == nil {
+		return nil
+	}
+
+	// Collect tenant names and frozen tenant names
+	allTenantNames := make([]string, 0, len(tenants))
+	frozenTenants := make([]string, 0, len(tenants))
+
+	for _, tenant := range tenants {
+		allTenantNames = append(allTenantNames, tenant.Name)
+		if tenant.ActivityStatus == models.TenantActivityStatusFROZEN ||
+			tenant.ActivityStatus == models.TenantActivityStatusFREEZING {
+			frozenTenants = append(frozenTenants, tenant.Name)
+		}
+	}
+
+	// the cloud delete runs even when the local drop fails, otherwise the
+	// offloaded data is orphaned: nothing retries once the schema entry is gone
+	ec := errorcompounder.New()
+	ec.Add(idx.dropShards(allTenantNames))
+
+	if m.cloud != nil && len(frozenTenants) > 0 {
+		ec.AddWrapf(idx.dropCloudShards(ctx, m.cloud, frozenTenants, m.nodeId),
+			"drop tenant shards %v during update index", frozenTenants)
+	}
+
+	return ec.ToError()
+}
+
+func (m *Migrator) UpdateVectorIndexConfig(ctx context.Context,
+	className string, updated schemaConfig.VectorIndexConfig,
+) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot update vector index config of non-existing index for %s", className)
+	}
+
+	return idx.updateVectorIndexConfig(ctx, updated)
+}
+
+func (m *Migrator) UpdateVectorIndexConfigs(ctx context.Context,
+	className string, updated map[string]schemaConfig.VectorIndexConfig,
+) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot update vector config of non-existing index for %s", className)
+	}
+
+	return idx.updateVectorIndexConfigs(ctx, updated)
+}
+
+func (m *Migrator) GetVectorIndexNames(className string) []string {
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return nil
+	}
+
+	configs := idx.GetVectorIndexConfigs()
+	names := make([]string, 0, len(configs))
+	for name := range configs {
+		names = append(names, name)
+	}
+	return names
+}
+
+func (m *Migrator) DropVectorIndex(ctx context.Context, className string, targetVector string) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot drop vector index of non-existing index for %s", className)
+	}
+
+	return idx.dropVectorIndex(ctx, targetVector)
+}
+
+func (m *Migrator) ValidateVectorIndexConfigUpdate(
+	old, updated schemaConfig.VectorIndexConfig,
+) error {
+	// hnsw is the only supported vector index type at the moment, so no need
+	// to check, we can always use that an hnsw-specific validation should be
+	// used for now.
+	switch old.IndexType() {
+	case vectorindex.VectorIndexTypeHNSW:
+		return hnsw.ValidateUserConfigUpdate(old, updated)
+	case vectorindex.VectorIndexTypeFLAT:
+		return flat.ValidateUserConfigUpdate(old, updated)
+	case vectorindex.VectorIndexTypeDYNAMIC:
+		return dynamic.ValidateUserConfigUpdate(old, updated)
+	case vectorindex.VectorIndexTypeHFresh:
+		if !m.db.config.HFreshEnabled {
+			return errors.New("hfresh index is available only in experimental mode")
+		}
+		return hfresh.ValidateUserConfigUpdate(old, updated)
+	}
+	return fmt.Errorf("invalid index type: %s", old.IndexType())
+}
+
+func (m *Migrator) ValidateVectorIndexConfigsUpdate(old, updated map[string]schemaConfig.VectorIndexConfig,
+) error {
+	for vecName := range old {
+		updatedCfg, exists := updated[vecName]
+		if !exists {
+			// Vector index was dropped — no config to validate.
+			continue
+		}
+		if err := m.ValidateVectorIndexConfigUpdate(old[vecName], updatedCfg); err != nil {
+			return fmt.Errorf("invalid update for vector %q: %w", vecName, err)
+		}
+	}
+	return nil
+}
+
+func (m *Migrator) ValidateInvertedIndexConfigUpdate(old, updated *models.InvertedIndexConfig,
+) error {
+	return inverted.ValidateUserConfigUpdate(old, updated)
+}
+
+func (m *Migrator) UpdateInvertedIndexConfig(ctx context.Context, className string,
+	updated *models.InvertedIndexConfig,
+) error {
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot update inverted index config of non-existing index for %s", className)
+	}
+
+	conf := inverted.ConfigFromModel(updated)
+
+	return idx.updateInvertedIndexConfig(ctx, conf)
+}
+
+func (m *Migrator) UpdateReplicationConfig(ctx context.Context, className string, cfg *models.ReplicationConfig) error {
+	if cfg == nil {
+		return nil
+	}
+
+	indexID := indexID(schema.ClassName(className))
+
+	m.classLocks.Lock(indexID)
+	defer m.classLocks.Unlock(indexID)
+
+	idx := m.db.GetIndex(schema.ClassName(className))
+	if idx == nil {
+		return errors.Errorf("cannot update replication factor of non-existing index for %s", className)
+	}
+
+	if err := idx.updateReplicationConfig(ctx, cfg); err != nil {
+		return fmt.Errorf("update replication config for class %q: %w", className, err)
+	}
+
+	return nil
+}
+
+func (m *Migrator) RecalculateVectorDimensions(ctx context.Context) error {
+	count := 0
+	m.logger.
+		WithField("action", "reindex").
+		Info("Reindexing dimensions, this may take a while")
+
+	m.db.indexLock.Lock()
+	defer m.db.indexLock.Unlock()
+
+	// Iterate over all indexes
+	for _, index := range m.db.indices {
+		err := index.ForEachShard(func(name string, shard ShardLike) error {
+			return shard.resetDimensionsLSM(ctx)
+		})
+		if err != nil {
+			m.logger.WithField("action", "reindex").WithError(err).Warn("could not reset vector dimensions")
+			return err
+		}
+
+		// Iterate over all shards
+		err = index.IterateObjects(ctx, func(index *Index, shard ShardLike, object *storobj.Object) error {
+			count = count + 1
+			return object.IterateThroughVectorDimensions(func(targetVector string, dims int) error {
+				if err = shard.extendDimensionTrackerLSM(dims, object.DocID, targetVector); err != nil {
+					return fmt.Errorf("failed to extend dimension tracker for vector %q: %w", targetVector, err)
+				}
+				return nil
+			})
+		})
+		if err != nil {
+			m.logger.WithField("action", "reindex").WithError(err).Warn("could not extend vector dimensions")
+			return err
+		}
+	}
+	f := func() {
+		for {
+			m.logger.
+				WithField("action", "reindex").
+				Warnf("Reindexed %v objects. Reindexing dimensions complete. Please remove environment variable REINDEX_VECTOR_DIMENSIONS_AT_STARTUP before next startup", count)
+			time.Sleep(5 * time.Minute)
+		}
+	}
+	enterrors.GoWrapper(f, m.logger)
+
+	return nil
+}
+
+func (m *Migrator) RecountProperties(ctx context.Context) error {
+	count := 0
+	m.logger.
+		WithField("action", "recount").
+		Info("Recounting properties, this may take a while")
+
+	m.db.indexLock.Lock()
+	defer m.db.indexLock.Unlock()
+	// Iterate over all indexes
+	for _, index := range m.db.indices {
+
+		// Clear the shards before counting
+		err := index.IterateShards(ctx, func(index *Index, shard ShardLike) error {
+			shard.GetPropertyLengthTracker().Clear()
+			return nil
+		})
+		if err != nil {
+			m.logger.WithField("error", err).Error("could not clear prop lengths")
+		}
+
+		// Iterate over all shards
+		err = index.IterateObjects(ctx, func(index *Index, shard ShardLike, object *storobj.Object) error {
+			count = count + 1
+			props, _, _, err := shard.AnalyzeObject(object)
+			if err != nil {
+				m.logger.WithField("error", err).Error("could not analyze object")
+				return nil
+			}
+
+			if err := shard.SetPropertyLengths(props); err != nil {
+				m.logger.WithField("error", err).Error("could not add prop lengths")
+				return nil
+			}
+
+			shard.GetPropertyLengthTracker().Flush()
+
+			return nil
+		})
+		if err != nil {
+			m.logger.WithField("error", err).Error("could not iterate over objects")
+		}
+
+		// Flush the GetPropertyLengthTracker() to disk
+		err = index.IterateShards(ctx, func(index *Index, shard ShardLike) error {
+			return shard.GetPropertyLengthTracker().Flush()
+		})
+		if err != nil {
+			m.logger.WithField("error", err).Error("could not flush prop lengths")
+		}
+
+	}
+	f := func() {
+		for {
+			m.logger.
+				WithField("action", "recount").
+				Warnf("Recounted %v objects. Recounting properties complete. Please remove environment variable 	RECOUNT_PROPERTIES_AT_STARTUP before next startup", count)
+			time.Sleep(5 * time.Minute)
+		}
+	}
+	enterrors.GoWrapper(f, m.logger)
+
+	return nil
+}
+
+func (m *Migrator) InvertedReindex(ctx context.Context, taskNamesWithArgs map[string]any) error {
+	errs := errorcompounder.New()
+	errs.Add(m.doInvertedReindex(ctx, taskNamesWithArgs))
+	errs.Add(m.doInvertedIndexMissingTextFilterable(ctx, taskNamesWithArgs))
+	return errs.ToError()
+}
+
+func (m *Migrator) doInvertedReindex(ctx context.Context, taskNamesWithArgs map[string]any) error {
+	tasks := map[string]ShardInvertedReindexTask{}
+	for name, args := range taskNamesWithArgs {
+		switch name {
+		case "ShardInvertedReindexTaskSetToRoaringSet":
+			tasks[name] = &ShardInvertedReindexTaskSetToRoaringSet{}
+		case "ShardInvertedReindexTask_SpecifiedIndex":
+			if args == nil {
+				return fmt.Errorf("no args given for %q reindex task", name)
+			}
+			argsMap, ok := args.(map[string][]string)
+			if !ok {
+				return fmt.Errorf("invalid args given for %q reindex task", name)
+			}
+			classNamesWithPropertyNames := map[string]map[string]struct{}{}
+			for class, props := range argsMap {
+				classNamesWithPropertyNames[class] = map[string]struct{}{}
+				for _, prop := range props {
+					classNamesWithPropertyNames[class][prop] = struct{}{}
+				}
+			}
+			tasks[name] = &ShardInvertedReindexTask_SpecifiedIndex{
+				classNamesWithPropertyNames: classNamesWithPropertyNames,
+			}
+		}
+	}
+
+	if len(tasks) == 0 {
+		return nil
+	}
+
+	eg := enterrors.NewErrorGroupWrapper(m.logger)
+	eg.SetLimit(_NUMCPU)
+	for _, index := range m.db.indices {
+		index.ForEachShard(func(name string, shard ShardLike) error {
+			eg.Go(func() error {
+				reindexer := NewShardInvertedReindexer(shard, m.logger)
+				for taskName, task := range tasks {
+					reindexer.AddTask(task)
+					m.logInvertedReindexShard(shard).
+						WithField("task", taskName).
+						Info("About to start inverted reindexing, this may take a while")
+				}
+				if err := reindexer.Do(ctx); err != nil {
+					m.logInvertedReindexShard(shard).
+						WithError(err).
+						Error("failed reindexing")
+					return errors.Wrapf(err, "failed reindexing shard '%s'", shard.ID())
+				}
+				m.logInvertedReindexShard(shard).
+					Info("Finished inverted reindexing")
+				return nil
+			}, name)
+			return nil
+		})
+	}
+	return eg.Wait()
+}
+
+func (m *Migrator) doInvertedIndexMissingTextFilterable(ctx context.Context, taskNamesWithArgs map[string]any) error {
+	if _, ok := taskNamesWithArgs["ShardInvertedReindexTaskMissingTextFilterable"]; !ok {
+		return nil
+	}
+
+	task := newShardInvertedReindexTaskMissingTextFilterable(m)
+	if err := task.init(); err != nil {
+		m.logMissingFilterable().WithError(err).Error("failed init missing text filterable task")
+		return errors.Wrap(err, "failed init missing text filterable task")
+	}
+
+	if len(task.migrationState.MissingFilterableClass2Props) == 0 {
+		m.logMissingFilterable().Info("no classes to create filterable index, skipping")
+		return nil
+	}
+
+	m.logMissingFilterable().Info("staring missing text filterable task")
+
+	eg := enterrors.NewErrorGroupWrapper(m.logger)
+	eg.SetLimit(_NUMCPU * 2)
+	for _, index := range m.db.indices {
+		index := index
+		className := index.Config.ClassName.String()
+
+		if _, ok := task.migrationState.MissingFilterableClass2Props[className]; !ok {
+			continue
+		}
+
+		eg.Go(func() error {
+			errgrpShards := enterrors.NewErrorGroupWrapper(m.logger)
+			index.ForEachShard(func(_ string, shard ShardLike) error {
+				errgrpShards.Go(func() error {
+					m.logMissingFilterableShard(shard).
+						Info("starting filterable indexing on shard, this may take a while")
+
+					reindexer := NewShardInvertedReindexer(shard, m.logger)
+					reindexer.AddTask(task)
+
+					if err := reindexer.Do(ctx); err != nil {
+						m.logMissingFilterableShard(shard).
+							WithError(err).
+							Error("failed filterable indexing on shard")
+						return errors.Wrapf(err, "failed filterable indexing for shard '%s' of index '%s'",
+							shard.ID(), index.ID())
+					}
+					m.logMissingFilterableShard(shard).
+						Info("finished filterable indexing on shard")
+					return nil
+				}, shard.ID())
+				return nil
+			})
+
+			if err := errgrpShards.Wait(); err != nil {
+				m.logMissingFilterableIndex(index).
+					WithError(err).
+					Error("failed filterable indexing on index")
+				return errors.Wrapf(err, "failed filterable indexing of index '%s'", index.ID())
+			}
+
+			if err := task.updateMigrationStateAndSave(className); err != nil {
+				m.logMissingFilterableIndex(index).
+					WithError(err).
+					Error("failed updating migration state file")
+				return errors.Wrapf(err, "failed updating migration state file for class '%s'", className)
+			}
+
+			m.logMissingFilterableIndex(index).
+				Info("finished filterable indexing on index")
+
+			return nil
+		}, index.ID())
+	}
+
+	if err := eg.Wait(); err != nil {
+		m.logMissingFilterable().
+			WithError(err).
+			Error("failed missing text filterable task")
+		return errors.Wrap(err, "failed missing text filterable task")
+	}
+
+	m.logMissingFilterable().Info("finished missing text filterable task")
+	return nil
+}
+
+func (m *Migrator) logInvertedReindex() *logrus.Entry {
+	return m.logger.WithField("action", "inverted_reindex")
+}
+
+func (m *Migrator) logInvertedReindexShard(shard ShardLike) *logrus.Entry {
+	return m.logInvertedReindex().
+		WithField("index", shard.Index().ID()).
+		WithField("shard", shard.ID())
+}
+
+func (m *Migrator) logMissingFilterable() *logrus.Entry {
+	return m.logger.WithField("action", "ii_missing_text_filterable")
+}
+
+func (m *Migrator) logMissingFilterableIndex(index *Index) *logrus.Entry {
+	return m.logMissingFilterable().WithField("index", index.ID())
+}
+
+func (m *Migrator) logMissingFilterableShard(shard ShardLike) *logrus.Entry {
+	return m.logMissingFilterableIndex(shard.Index()).WithField("shard", shard.ID())
+}
+
+// As of v1.19 property's IndexInverted setting is replaced with IndexFilterable
+// and IndexSearchable
+// Filterable buckets use roaring set strategy and searchable ones use map strategy
+// (therefore are applicable just for text/text[])
+// Since both type of buckets can coexist for text/text[] props they need to be
+// distinguished by their name: searchable bucket has "searchable" suffix.
+// Up until v1.19 default text/text[]/string/string[] (string/string[] deprecated since v1.19)
+// strategy for buckets was map, migrating from pre v1.19 to v1.19 needs to properly
+// handle existing text/text[] buckets of map strategy having filterable bucket name.
+//
+// Enabled InvertedIndex translates in v1.19 to both InvertedFilterable and InvertedSearchable
+// enabled, but since only searchable bucket exist (with filterable name), it has to be renamed
+// to searchable bucket.
+// Though IndexFilterable setting is enabled filterable index does not exists,
+// therefore shards are switched into fallback mode, to use searchable buckets instead of
+// filterable ones whenever filtered are expected.
+// Fallback mode effectively sets IndexFilterable to false, although it stays enabled according
+// to schema.
+//
+// If filterable indexes will be created (that is up to user to decide whether missing indexes
+// should be created later on), shards will not be working in fallback mode, and actual filterable index
+// will be used when needed.
+func (m *Migrator) AdjustFilterablePropSettings(ctx context.Context) error {
+	f2sm := newFilterableToSearchableMigrator(m)
+	if err := f2sm.migrate(ctx); err != nil {
+		return err
+	}
+	return f2sm.switchShardsToFallbackMode(ctx)
+}
+
+func (m *Migrator) WaitForStartup(ctx context.Context) error {
+	return m.db.WaitForStartup(ctx)
+}
+
+// Shutdown no-op if db was never loaded
+func (m *Migrator) Shutdown(ctx context.Context) error {
+	if !m.db.StartupComplete() {
+		return nil
+	}
+	m.logger.Info("closing loaded database ...")
+	return m.db.Shutdown(ctx)
+}

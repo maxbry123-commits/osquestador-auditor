@@ -1,0 +1,550 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package traverser
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/go-openapi/strfmt"
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+	"github.com/weaviate/weaviate/entities/dto"
+	"github.com/weaviate/weaviate/entities/filters"
+	"github.com/weaviate/weaviate/entities/models"
+	"github.com/weaviate/weaviate/entities/search"
+	"github.com/weaviate/weaviate/entities/searchparams"
+	"github.com/weaviate/weaviate/entities/storobj"
+	"github.com/weaviate/weaviate/usecases/config"
+)
+
+// spyModulesProvider wraps the default fakeModulesProvider and records
+// what results the module extension (reranker) receives.
+type spyModulesProvider struct {
+	*fakeModulesProvider
+	extendCalls [][]strfmt.UUID
+}
+
+func (s *spyModulesProvider) GetExploreAdditionalExtend(ctx context.Context, in []search.Result,
+	moduleParams map[string]any, searchVector models.Vector,
+	argumentModuleParams map[string]any,
+) ([]search.Result, error) {
+	s.recordCall(in)
+	return in, nil
+}
+
+func (s *spyModulesProvider) ListExploreAdditionalExtend(ctx context.Context, in []search.Result,
+	moduleParams map[string]any,
+	argumentModuleParams map[string]any,
+) ([]search.Result, error) {
+	s.recordCall(in)
+	return in, nil
+}
+
+func (s *spyModulesProvider) recordCall(in []search.Result) {
+	ids := make([]strfmt.UUID, len(in))
+	for i, r := range in {
+		ids[i] = r.ID
+	}
+	s.extendCalls = append(s.extendCalls, ids)
+}
+
+// makeBM25Results generates n results with deterministic BM25 scores and properties.
+// Score decreases, likes increases — so boost on likes reverses the order.
+func makeBM25Results(n int) []search.Result {
+	results := make([]search.Result, n)
+	for i := range results {
+		results[i] = search.Result{
+			ID:    strfmt.UUID(fmt.Sprintf("id-%02d", i)),
+			Score: float32(n-i) * 0.1,
+			Schema: map[string]any{
+				"name":  fmt.Sprintf("Item %02d", i),
+				"likes": float64(i * 100),
+			},
+			Dims: 3,
+		}
+	}
+	return results
+}
+
+// makeVectorResults generates n results with deterministic distances and properties.
+func makeVectorResults(n int) []search.Result {
+	results := make([]search.Result, n)
+	for i := range results {
+		results[i] = search.Result{
+			ID:   strfmt.UUID(fmt.Sprintf("id-%02d", i)),
+			Dist: float32(i) * 0.05,
+			Schema: map[string]any{
+				"name":  fmt.Sprintf("Item %02d", i),
+				"likes": float64(i * 100),
+			},
+			Dims: 3,
+		}
+	}
+	return results
+}
+
+func newTestExplorer(searcher *fakeVectorSearcher, modules ModulesProvider) *Explorer {
+	log, _ := test.NewNullLogger()
+	metrics := &fakeMetrics{}
+	metrics.On("AddUsageDimensions", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	conf := config.Config{
+		QueryDefaults:       config.QueryDefaults{Limit: 100},
+		QueryMaximumResults: 200,
+	}
+	explorer := NewExplorer(searcher, log, modules, metrics, conf)
+	explorer.SetSchemaGetter(newFakeSchemaGetter("TestClass"))
+	return explorer
+}
+
+func likesBoost(weight float32, depth int) *filters.Boost {
+	return &filters.Boost{
+		Weight: weight,
+		Depth:  depth,
+		Conditions: []filters.BoostCondition{{
+			PropertyValue: &filters.PropertyValue{
+				Path:     &filters.Path{Property: "likes"},
+				Modifier: filters.PropertyValueModifierNone,
+			},
+			Weight: 1.0,
+		}},
+	}
+}
+
+func idsFromResponse(res []any) []string {
+	// GetClass returns []any where each is the Schema map.
+	// We can't read IDs from Schema unless we put _additional in.
+	// Instead, read the "name" field which encodes the index.
+	ids := make([]string, len(res))
+	for i, r := range res {
+		m := r.(map[string]any)
+		ids[i] = m["name"].(string)
+	}
+	return ids
+}
+
+func Test_Explorer_BoostPipeline(t *testing.T) {
+	t.Run("BM25 + boost reorders by likes", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+
+		searcher.On("Search", mock.Anything).Return(makeBM25Results(20), nil)
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 5},
+			KeywordRanking: &searchparams.KeywordRanking{
+				Query: "test", Type: "bm25", Properties: []string{"name"},
+			},
+			Boost: likesBoost(1.0, 20),
+		}
+
+		res, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+		require.Len(t, res, 5)
+
+		// With weight=1.0 on likes, highest-likes items should be first.
+		// makeBM25Results gives likes = i*100, so id-19 has likes=1900, id-18=1800, etc.
+		names := idsFromResponse(res)
+		assert.Equal(t, "Item 19", names[0])
+		assert.Equal(t, "Item 18", names[1])
+	})
+
+	t.Run("BM25 + boost page-through consistency", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+
+		searcher.On("Search", mock.Anything).Return(makeBM25Results(20), nil)
+
+		makeParams := func(offset, limit int) dto.GetParams {
+			return dto.GetParams{
+				ClassName:  "TestClass",
+				Pagination: &filters.Pagination{Offset: offset, Limit: limit},
+				KeywordRanking: &searchparams.KeywordRanking{
+					Query: "test", Type: "bm25", Properties: []string{"name"},
+				},
+				Boost: likesBoost(0.8, 20),
+			}
+		}
+
+		allRes, err := explorer.GetClass(context.Background(), makeParams(0, 10))
+		require.NoError(t, err)
+		require.Len(t, allRes, 10)
+
+		p1Res, err := explorer.GetClass(context.Background(), makeParams(0, 5))
+		require.NoError(t, err)
+		require.Len(t, p1Res, 5)
+
+		p2Res, err := explorer.GetClass(context.Background(), makeParams(5, 5))
+		require.NoError(t, err)
+		require.Len(t, p2Res, 5)
+
+		allNames := idsFromResponse(allRes)
+		p1Names := idsFromResponse(p1Res)
+		p2Names := idsFromResponse(p2Res)
+
+		combined := append(p1Names, p2Names...)
+		assert.Equal(t, allNames, combined, "page 1 + page 2 should equal full result")
+	})
+
+	t.Run("nearVector + boost page-through consistency", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).Return(makeVectorResults(20), nil)
+
+		makeParams := func(offset, limit int) dto.GetParams {
+			return dto.GetParams{
+				ClassName:  "TestClass",
+				Pagination: &filters.Pagination{Offset: offset, Limit: limit},
+				NearVector: &searchparams.NearVector{
+					Vectors: []models.Vector{[]float32{0.1, 0.2, 0.3}},
+				},
+				Boost: likesBoost(0.8, 20),
+			}
+		}
+
+		allRes, err := explorer.GetClass(context.Background(), makeParams(0, 10))
+		require.NoError(t, err)
+		require.Len(t, allRes, 10)
+
+		p1Res, err := explorer.GetClass(context.Background(), makeParams(0, 5))
+		require.NoError(t, err)
+		require.Len(t, p1Res, 5)
+
+		p2Res, err := explorer.GetClass(context.Background(), makeParams(5, 5))
+		require.NoError(t, err)
+		require.Len(t, p2Res, 5)
+
+		allNames := idsFromResponse(allRes)
+		p1Names := idsFromResponse(p1Res)
+		p2Names := idsFromResponse(p2Res)
+
+		combined := append(p1Names, p2Names...)
+		assert.Equal(t, allNames, combined, "page 1 + page 2 should equal full result")
+	})
+
+	t.Run("module extension receives boost-paginated results for BM25", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		spy := &spyModulesProvider{fakeModulesProvider: &fakeModulesProvider{}}
+		explorer := newTestExplorer(searcher, spy)
+
+		searcher.On("Search", mock.Anything).Return(makeBM25Results(20), nil)
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 5},
+			KeywordRanking: &searchparams.KeywordRanking{
+				Query: "test", Type: "bm25", Properties: []string{"name"},
+			},
+			Boost: likesBoost(1.0, 20),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		// Module extension should receive exactly 5 results (after boost pagination),
+		// not 20 (the full overfetched pool).
+		require.Len(t, spy.extendCalls, 1)
+		assert.Len(t, spy.extendCalls[0], 5,
+			"reranker should receive boost-paginated results, not the full pool")
+
+		// The IDs should be in boost order (highest likes first).
+		assert.Equal(t, strfmt.UUID("id-19"), spy.extendCalls[0][0])
+	})
+
+	t.Run("module extension receives boost-paginated results for nearVector", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		spy := &spyModulesProvider{fakeModulesProvider: &fakeModulesProvider{}}
+		explorer := newTestExplorer(searcher, spy)
+
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).Return(makeVectorResults(20), nil)
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 5},
+			NearVector: &searchparams.NearVector{
+				Vectors: []models.Vector{[]float32{0.1, 0.2, 0.3}},
+			},
+			Boost: likesBoost(1.0, 20),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		require.Len(t, spy.extendCalls, 1)
+		assert.Len(t, spy.extendCalls[0], 5,
+			"reranker should receive boost-paginated results, not the full pool")
+		assert.Equal(t, strfmt.UUID("id-19"), spy.extendCalls[0][0])
+	})
+
+	t.Run("module extension receives offset results for BM25 + boost", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		spy := &spyModulesProvider{fakeModulesProvider: &fakeModulesProvider{}}
+		explorer := newTestExplorer(searcher, spy)
+
+		searcher.On("Search", mock.Anything).Return(makeBM25Results(20), nil)
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 5, Limit: 3},
+			KeywordRanking: &searchparams.KeywordRanking{
+				Query: "test", Type: "bm25", Properties: []string{"name"},
+			},
+			Boost: likesBoost(1.0, 20),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		require.Len(t, spy.extendCalls, 1)
+		assert.Len(t, spy.extendCalls[0], 3,
+			"reranker should receive 3 results (offset=5, limit=3)")
+
+		// With weight=1.0, boost orders by likes desc: id-19, id-18, ..., id-00.
+		// Offset=5 skips the first 5, so reranker should see id-14, id-13, id-12.
+		assert.Equal(t, strfmt.UUID("id-14"), spy.extendCalls[0][0])
+		assert.Equal(t, strfmt.UUID("id-13"), spy.extendCalls[0][1])
+		assert.Equal(t, strfmt.UUID("id-12"), spy.extendCalls[0][2])
+	})
+}
+
+// Test_Explorer_BoostThenMMR: boost re-ranks the pool, then MMR diversifies and
+// paginates. Boost must not run again after MMR.
+func Test_Explorer_BoostThenMMR(t *testing.T) {
+	t.Run("nearVector + boost: boost feeds MMR relevance", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).Return(makeVectorResults(20), nil)
+
+		var diversifyInput []string
+		searcher.diversifyFn = func(sel *searchparams.Selection, class, target string, results []search.Result) ([]search.Result, error) {
+			diversifyInput = make([]string, len(results))
+			for i, r := range results {
+				diversifyInput[i] = r.Schema.(map[string]any)["name"].(string)
+			}
+			return results, nil
+		}
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 20}, // query Limit = MMR pool
+			NearVector: &searchparams.NearVector{Vectors: []models.Vector{[]float32{0.1, 0.2, 0.3}}},
+			Boost:      likesBoost(1.0, 20),
+			Selection:  mmrSel(3, 1), // pure relevance so passthrough order is preserved
+		}
+
+		res, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+		require.Len(t, res, 3, "MMR.Limit is the page size")
+
+		require.Len(t, diversifyInput, 20)
+		assert.Equal(t, "Item 19", diversifyInput[0], "boost must re-rank the pool before MMR")
+		assert.False(t, searcher.diversifyCalledRelevanceFromDist, "boost active ⇒ score relevance")
+
+		assert.Equal(t, []string{"Item 19", "Item 18", "Item 17"}, idsFromResponse(res))
+	})
+
+	t.Run("nearVector + MMR without boost uses raw distance relevance", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).Return(makeVectorResults(20), nil)
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 20},
+			NearVector: &searchparams.NearVector{Vectors: []models.Vector{[]float32{0.1, 0.2, 0.3}}},
+			Selection:  mmrSel(3, 0.5),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		assert.True(t, searcher.diversifyCalledRelevanceFromDist, "no boost ⇒ raw distance relevance")
+	})
+}
+
+// newHybridDepthTestExplorer builds an Explorer configured for the hybrid
+// boost-depth tests below, with QueryHybridMaximumResults deliberately much
+// smaller than the Boost.Depth used in those tests.
+func newHybridDepthTestExplorer(searcher *fakeVectorSearcher) *Explorer {
+	log, _ := test.NewNullLogger()
+	metrics := &fakeMetrics{}
+	metrics.On("AddUsageDimensions", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	conf := config.Config{
+		QueryDefaults:             config.QueryDefaults{Limit: 100},
+		QueryMaximumResults:       10000,
+		QueryHybridMaximumResults: 100,
+	}
+	explorer := NewExplorer(searcher, log, getFakeModulesProvider(), metrics, conf)
+	explorer.SetSchemaGetter(newFakeSchemaGetter("TestClass"))
+	return explorer
+}
+
+// Test_Explorer_HybridBoostDepthBeyondHybridMaximum: a candidate can only be
+// boosted if some leg actually fetched it into the fused pool, so all legs
+// exercised by a hybrid query (vector, keyword/BM25, or both under a mixed
+// Alpha) must fetch Boost.Depth deep, not silently stop at
+// QueryHybridMaximumResults.
+func Test_Explorer_HybridBoostDepthBeyondHybridMaximum(t *testing.T) {
+	t.Run("vector leg (Alpha=1) fetches Boost.Depth deep when it exceeds QueryHybridMaximumResults", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newHybridDepthTestExplorer(searcher)
+
+		var fetchLimit int
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).
+			Run(func(args mock.Arguments) {
+				fetchLimit = args.Get(0).(dto.GetParams).Pagination.Limit
+			}).
+			Return(makeHybridVectorResults(150), nil)
+
+		params := dto.GetParams{
+			ClassName:    "TestClass",
+			Pagination:   &filters.Pagination{Offset: 0, Limit: 1},
+			HybridSearch: &searchparams.HybridSearch{Query: "needle", Alpha: 1, Vector: []float32{0.1, 0.2, 0.3}},
+			Boost:        likesBoost(1.0, 150),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		// A candidate can only be boosted if a leg fetched it: with depth=150 the
+		// legs must fetch 150, not silently stop at QueryHybridMaximumResults=100
+		// (which would make e.g. a top-boost candidate at BM25 rank 121 unreachable).
+		assert.Equal(t, 150, fetchLimit,
+			"hybrid sub-searches must fetch Boost.Depth deep, not stop at QueryHybridMaximumResults")
+	})
+
+	t.Run("keyword/BM25 leg (Alpha=0) fetches Boost.Depth deep when it exceeds QueryHybridMaximumResults", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newHybridDepthTestExplorer(searcher)
+
+		var fetchLimit int
+		searcher.sparseObjectSearchFn = func(params dto.GetParams) ([]*storobj.Object, []float32, error) {
+			fetchLimit = params.Pagination.Limit
+			return nil, nil, nil
+		}
+
+		params := dto.GetParams{
+			ClassName:    "TestClass",
+			Pagination:   &filters.Pagination{Offset: 0, Limit: 1},
+			HybridSearch: &searchparams.HybridSearch{Query: "needle", Alpha: 0},
+			Boost:        likesBoost(1.0, 150),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		// This is the path #12536's own regression check (below) doesn't reach:
+		// the keyword leg computes its own enforced-minimum limit inside
+		// sparseSearch() rather than reusing the vector leg's call site, so a
+		// future change there wouldn't be caught by the Alpha=1 case above.
+		assert.Equal(t, 150, fetchLimit,
+			"the keyword/BM25 leg must also fetch Boost.Depth deep, not stop at QueryHybridMaximumResults")
+	})
+
+	t.Run("mixed Alpha fetches Boost.Depth deep on both legs", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newHybridDepthTestExplorer(searcher)
+
+		var vectorFetchLimit, keywordFetchLimit int
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).
+			Run(func(args mock.Arguments) {
+				vectorFetchLimit = args.Get(0).(dto.GetParams).Pagination.Limit
+			}).
+			Return(makeHybridVectorResults(150), nil)
+		searcher.sparseObjectSearchFn = func(params dto.GetParams) ([]*storobj.Object, []float32, error) {
+			keywordFetchLimit = params.Pagination.Limit
+			return nil, nil, nil
+		}
+
+		params := dto.GetParams{
+			ClassName:    "TestClass",
+			Pagination:   &filters.Pagination{Offset: 0, Limit: 1},
+			HybridSearch: &searchparams.HybridSearch{Query: "needle", Alpha: 0.5, Vector: []float32{0.1, 0.2, 0.3}},
+			Boost:        likesBoost(1.0, 150),
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		assert.Equal(t, 150, vectorFetchLimit, "vector leg must fetch Boost.Depth deep under a mixed Alpha")
+		assert.Equal(t, 150, keywordFetchLimit, "keyword leg must fetch Boost.Depth deep under a mixed Alpha")
+	})
+
+	t.Run("without boost, hybrid legs keep the QueryHybridMaximumResults floor", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newHybridDepthTestExplorer(searcher)
+
+		var fetchLimit int
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).
+			Run(func(args mock.Arguments) {
+				fetchLimit = args.Get(0).(dto.GetParams).Pagination.Limit
+			}).
+			Return(makeHybridVectorResults(10), nil)
+
+		params := dto.GetParams{
+			ClassName:    "TestClass",
+			Pagination:   &filters.Pagination{Offset: 0, Limit: 1},
+			HybridSearch: &searchparams.HybridSearch{Query: "needle", Alpha: 1, Vector: []float32{0.1, 0.2, 0.3}},
+		}
+
+		_, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+
+		assert.Equal(t, 100, fetchLimit,
+			"without boost the legs fetch the QueryHybridMaximumResults floor")
+	})
+}
+
+// Test_Explorer_BoostDepthUnderMMR: Boost.Depth sets the fetch/rerank pool; the query Limit is the MMR pool.
+func Test_Explorer_BoostDepthUnderMMR(t *testing.T) {
+	t.Run("nearVector: Depth deepens fetch/rerank, MMR over top Limit", func(t *testing.T) {
+		searcher := &fakeVectorSearcher{}
+		explorer := newTestExplorer(searcher, getFakeModulesProvider())
+
+		var fetchLimit, fetchOffset int
+		searcher.On("VectorSearch", mock.Anything, mock.Anything).
+			Run(func(args mock.Arguments) {
+				p := args.Get(0).(dto.GetParams)
+				fetchLimit = p.Pagination.Limit
+				fetchOffset = p.Pagination.Offset
+			}).
+			Return(makeVectorResults(50), nil)
+
+		var diversifyInputLen int
+		searcher.diversifyFn = func(sel *searchparams.Selection, class, target string, in []search.Result) ([]search.Result, error) {
+			diversifyInputLen = len(in)
+			return in, nil
+		}
+
+		params := dto.GetParams{
+			ClassName:  "TestClass",
+			Pagination: &filters.Pagination{Offset: 0, Limit: 10}, // MMR candidate pool
+			NearVector: &searchparams.NearVector{Vectors: []models.Vector{[]float32{0.1, 0.2, 0.3}}},
+			Boost:      likesBoost(1.0, 40), // Depth = 40
+			Selection:  mmrSel(5, 0.5),      // MMR.Limit = page size
+		}
+
+		res, err := explorer.GetClass(context.Background(), params)
+		require.NoError(t, err)
+		require.Len(t, res, 5, "page size is MMR.Limit")
+
+		assert.Equal(t, 40, fetchLimit, "fetch must be Boost.Depth deep, not the query Limit")
+		assert.Equal(t, 0, fetchOffset)
+
+		assert.Equal(t, 10, diversifyInputLen, "MMR pool must be the query Limit")
+	})
+}

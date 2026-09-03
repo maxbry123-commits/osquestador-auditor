@@ -1,0 +1,869 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package shardusage
+
+import (
+	"context"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+
+	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/weaviate/weaviate/adapters/repos/db/helpers"
+	"github.com/weaviate/weaviate/adapters/repos/db/lsmkv"
+	"github.com/weaviate/weaviate/cluster/usage/types"
+	"github.com/weaviate/weaviate/entities/cyclemanager"
+)
+
+func TestShardPathDimensionsLSM(t *testing.T) {
+	tests := []struct {
+		name      string
+		indexPath string
+		shardName string
+		expected  string
+	}{
+		{
+			name:      "basic path",
+			indexPath: "/data/index",
+			shardName: "shard1",
+			expected:  "/data/index/shard1/lsm/dimensions",
+		},
+		{
+			name:      "empty shard name",
+			indexPath: "/data/index",
+			shardName: "",
+			expected:  "/data/index/lsm/dimensions",
+		},
+		{
+			name:      "empty index path",
+			indexPath: "",
+			shardName: "shard1",
+			expected:  "shard1/lsm/dimensions",
+		},
+		{
+			name:      "both empty",
+			indexPath: "",
+			shardName: "",
+			expected:  "lsm/dimensions",
+		},
+		{
+			name:      "relative paths",
+			indexPath: "data/index",
+			shardName: "shard1",
+			expected:  "data/index/shard1/lsm/dimensions",
+		},
+		{
+			name:      "with special characters in shard name",
+			indexPath: "/data/index",
+			shardName: "shard-1_test",
+			expected:  "/data/index/shard-1_test/lsm/dimensions",
+		},
+		{
+			name:      "with spaces in shard name",
+			indexPath: "/data/index",
+			shardName: "shard 1",
+			expected:  "/data/index/shard 1/lsm/dimensions",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shardPathDimensionsLSM(tt.indexPath, tt.shardName)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestShardPathObjectsLSM(t *testing.T) {
+	tests := []struct {
+		name      string
+		indexPath string
+		shardName string
+		expected  string
+	}{
+		{
+			name:      "basic path",
+			indexPath: "/data/index",
+			shardName: "shard1",
+			expected:  "/data/index/shard1/lsm/objects",
+		},
+		{
+			name:      "empty shard name",
+			indexPath: "/data/index",
+			shardName: "",
+			expected:  "/data/index/lsm/objects",
+		},
+		{
+			name:      "empty index path",
+			indexPath: "",
+			shardName: "shard1",
+			expected:  "shard1/lsm/objects",
+		},
+		{
+			name:      "both empty",
+			indexPath: "",
+			shardName: "",
+			expected:  "lsm/objects",
+		},
+		{
+			name:      "relative paths",
+			indexPath: "data/index",
+			shardName: "shard1",
+			expected:  "data/index/shard1/lsm/objects",
+		},
+		{
+			name:      "with special characters in shard name",
+			indexPath: "/data/index",
+			shardName: "shard-1_test",
+			expected:  "/data/index/shard-1_test/lsm/objects",
+		},
+		{
+			name:      "with spaces in shard name",
+			indexPath: "/data/index",
+			shardName: "shard 1",
+			expected:  "/data/index/shard 1/lsm/objects",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shardPathObjectsLSM(tt.indexPath, tt.shardName)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestCalculateUnloadedObjectsMetrics(t *testing.T) {
+	logger, _ := test.NewNullLogger()
+	ctx := context.Background()
+	tenantName := "tenant"
+
+	for _, metadata := range []bool{true, false} {
+		t.Run(fmt.Sprintf("metadata=%v", metadata), func(t *testing.T) {
+			dirName := t.TempDir()
+			bucketFolder := shardPathObjectsLSM(dirName, tenantName)
+
+			b, err := lsmkv.NewBucketCreator().NewBucket(ctx, bucketFolder, "", logger, nil,
+				cyclemanager.NewCallbackGroupNoop(), cyclemanager.NewCallbackGroupNoop(), lsmkv.WithStrategy(lsmkv.StrategyReplace), lsmkv.WithCalcCountNetAdditions(true), lsmkv.WithWriteMetadata(metadata))
+			require.NoError(t, err)
+			defer b.Shutdown(ctx)
+
+			require.NoError(t, b.Put([]byte("hello1"), []byte("world1")))
+			require.NoError(t, b.FlushMemtable())
+			require.NoError(t, b.Put([]byte("hello2"), []byte("world2")))
+			require.NoError(t, b.FlushMemtable())
+			require.NoError(t, b.Put([]byte("hello3"), []byte("world3")))
+			require.NoError(t, b.FlushMemtable())
+			require.NoError(t, b.Put([]byte("hello4"), []byte("world4")))
+			require.NoError(t, b.FlushMemtable())
+
+			fileTypes := getFileTypeCount(t, bucketFolder)
+			require.Equal(t, 4, fileTypes[".db"])
+			require.Equal(t, 0, fileTypes[".wal"])
+			if metadata {
+				require.Equal(t, 4, fileTypes[".metadata"])
+			} else {
+				require.Equal(t, 4, fileTypes[".cna"])
+			}
+
+			metrics, err := CalculateUnloadedObjectsMetrics(logger, dirName, "tenant", true)
+			require.NoError(t, err)
+			require.Equal(t, metrics.Count, int64(4))
+
+			// add another key but dont flush => will not be included in count
+			require.NoError(t, b.Put([]byte("hello5"), []byte("world5")))
+
+			fileTypes = getFileTypeCount(t, bucketFolder)
+			require.Equal(t, 4, fileTypes[".db"])
+			require.Equal(t, 1, fileTypes[".wal"])
+			if metadata {
+				require.Equal(t, 4, fileTypes[".metadata"])
+			} else {
+				require.Equal(t, 4, fileTypes[".cna"])
+			}
+
+			metrics, err = CalculateUnloadedObjectsMetrics(logger, dirName, "tenant", true)
+			require.NoError(t, err)
+			require.Equal(t, metrics.Count, int64(4))
+		})
+	}
+}
+
+func getFileTypeCount(t *testing.T, path string) map[string]int {
+	t.Helper()
+	fileTypes := map[string]int{}
+	entries, err := os.ReadDir(path)
+	require.NoError(t, err)
+	for _, entry := range entries {
+		fileTypes[filepath.Ext(entry.Name())] += 1
+	}
+	return fileTypes
+}
+
+func TestStorageCalculation(t *testing.T) {
+	logger, _ := test.NewNullLogger()
+
+	dirName := t.TempDir()
+
+	// create a LSM path for a shard
+	lsmFolder := shardPathLSM(dirName, "shard1")
+	require.NoError(t, os.MkdirAll(lsmFolder, 0o777))
+
+	// a bucket that exists but holds nothing yet
+	emptyBucket := helpers.BucketNestedFromPropNameLSM("emptyNestedProp")
+	indexBuckets := []string{
+		helpers.DimensionsBucketLSM,
+		"property_someProp_searchable", "property_someProp", "property__id",
+		helpers.BucketNestedFromPropNameLSM("someNestedProp"),
+		helpers.BucketNestedMetaFromPropNameLSM("someNestedProp"),
+		emptyBucket,
+	}
+	buckets := append([]string{helpers.ObjectsBucketLSM, "vectors", "vectors_compressed", "vectors_compressed_named_vector"}, indexBuckets...)
+	sizeTracker := make(map[string]uint64, len(buckets))
+
+	// create different buckets with dummy files with varying sizes
+	for _, bucket := range buckets {
+		bucketPath := filepath.Join(lsmFolder, bucket)
+		require.NoError(t, os.MkdirAll(bucketPath, 0o777))
+		sizeTracker[bucket] = 0
+
+		if bucket == emptyBucket {
+			continue
+		}
+
+		// non-empty, so a bucket left out of the calculation always changes the result
+		numFiles := rand.Intn(10) + 1
+		for i := 0; i < numFiles; i++ {
+			filePath := filepath.Join(bucketPath, fmt.Sprintf("file%d.db", i))
+			f, err := os.Create(filePath)
+			require.NoError(t, err)
+
+			size := rand.Intn(10000) + 1
+			sizeTracker[bucket] += uint64(size)
+			data := make([]byte, size)
+			_, err = f.Write(data)
+			require.NoError(t, err)
+			require.NoError(t, f.Close())
+		}
+	}
+
+	// calculate storage and compare
+	expectedTotal := uint64(0)
+	for _, size := range sizeTracker {
+		expectedTotal += size
+	}
+
+	objectsBytes, err := CalculateUnloadedObjectsMetrics(logger, dirName, "shard1", false)
+	require.NoError(t, err)
+	require.Equal(t, sizeTracker[helpers.ObjectsBucketLSM], uint64(objectsBytes.StorageBytes))
+
+	vectorMetrics, err := CalculateUnloadedVectorsMetrics(lsmFolder, buckets)
+	require.NoError(t, err)
+	vectorBytes := uint64(vectorMetrics.StorageBytes)
+	require.Equal(t, sizeTracker["vectors"]+sizeTracker["vectors_compressed"]+sizeTracker["vectors_compressed_named_vector"], vectorBytes)
+
+	indexBytes, err := CalculateUnloadedIndicesSize(lsmFolder, buckets)
+	require.NoError(t, err)
+	expectedIndexBytes := uint64(0)
+	for _, bucket := range indexBuckets {
+		expectedIndexBytes += sizeTracker[bucket]
+	}
+	require.Equal(t, expectedIndexBytes, indexBytes)
+
+	vectorCommitLogsStorageSize, otherNonLSMFoldersStorageSize, err := CalculateNonLSMStorage(dirName, "shard1")
+	require.NoError(t, err)
+	require.Equal(t, expectedTotal, vectorCommitLogsStorageSize+otherNonLSMFoldersStorageSize+indexBytes+uint64(objectsBytes.StorageBytes)+vectorBytes)
+}
+
+func TestQuantizedVectorsExist(t *testing.T) {
+	tests := []struct {
+		name string
+		// bucket is created when named, and holds a file when fileSize > 0
+		bucket   string
+		fileSize int
+		want     bool
+	}{
+		{
+			name:   "no bucket at all",
+			bucket: "",
+		},
+		{
+			name:   "bucket created empty for a downgrade",
+			bucket: "vectors_compressed_named",
+		},
+		{
+			name:     "bucket holding quantized vectors",
+			bucket:   "vectors_compressed_named",
+			fileSize: 1,
+			want:     true,
+		},
+		{
+			name:     "another target vector's bucket does not count",
+			bucket:   "vectors_compressed_other",
+			fileSize: 100,
+		},
+		{
+			name:     "the target vector's uncompressed bucket does not count",
+			bucket:   "vectors_named",
+			fileSize: 100,
+		},
+		{
+			name:     "legacy unnamed vector",
+			bucket:   "vectors_compressed",
+			fileSize: 100,
+			want:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			targetVector := "named"
+			if tt.bucket == "vectors_compressed" {
+				targetVector = ""
+			}
+
+			lsmPath := filepath.Join(t.TempDir(), "lsm")
+			require.NoError(t, os.MkdirAll(lsmPath, 0o777))
+			var directories []string
+			if tt.bucket != "" {
+				bucketPath := filepath.Join(lsmPath, tt.bucket)
+				require.NoError(t, os.MkdirAll(bucketPath, 0o777))
+				directories = append(directories, tt.bucket)
+				if tt.fileSize > 0 {
+					require.NoError(t, os.WriteFile(filepath.Join(bucketPath, "segment.db"),
+						make([]byte, tt.fileSize), 0o600))
+				}
+			}
+
+			metrics, err := CalculateUnloadedVectorsMetrics(lsmPath, directories)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, metrics.QuantizedVectorsExist(targetVector))
+		})
+	}
+}
+
+func BenchmarkStorageCalculation(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		logger, _ := test.NewNullLogger()
+
+		dirName := b.TempDir()
+
+		// create a LSM path for a shard
+		lsmFolder := shardPathLSM(dirName, "shard1")
+		require.NoError(b, os.MkdirAll(lsmFolder, 0o777))
+
+		buckets := []string{helpers.ObjectsBucketLSM, helpers.DimensionsBucketLSM, "vectors", "vectors_compressed", "vectors_compressed_named_vector", "property_someProp_searchable", "property_someProp", "property__id"}
+		sizeTracker := make(map[string]uint64, len(buckets))
+
+		// create different buckets with dummy files with varying sizes
+		for _, bucket := range buckets {
+			bucketPath := filepath.Join(lsmFolder, bucket)
+			require.NoError(b, os.MkdirAll(bucketPath, 0o777))
+			sizeTracker[bucket] = 0
+
+			// create some dummy files
+			for i := 0; i < 10; i++ {
+				filePath := filepath.Join(bucketPath, fmt.Sprintf("file%d.db", i))
+				f, err := os.Create(filePath)
+				require.NoError(b, err)
+
+				size := 8000
+				sizeTracker[bucket] += uint64(size)
+				data := make([]byte, size)
+				_, err = f.Write(data)
+				require.NoError(b, err)
+				require.NoError(b, f.Close())
+			}
+		}
+
+		// calculate storage and compare
+		expectedTotal := uint64(0)
+		for _, size := range sizeTracker {
+			expectedTotal += size
+		}
+
+		objectsBytes, err := CalculateUnloadedObjectsMetrics(logger, dirName, "shard1", false)
+		require.NoError(b, err)
+		require.Equal(b, sizeTracker[helpers.ObjectsBucketLSM], uint64(objectsBytes.StorageBytes))
+
+		vectorMetrics, err := CalculateUnloadedVectorsMetrics(lsmFolder, buckets)
+		require.NoError(b, err)
+		vectorBytes := uint64(vectorMetrics.StorageBytes)
+		require.Equal(b, sizeTracker["vectors"]+sizeTracker["vectors_compressed"]+sizeTracker["vectors_compressed_named_vector"], vectorBytes)
+
+		indexBytes, err := CalculateUnloadedIndicesSize(lsmFolder, buckets)
+		require.NoError(b, err)
+		require.Equal(b, sizeTracker["property_someProp_searchable"]+sizeTracker["property_someProp"]+sizeTracker["property__id"]+sizeTracker[helpers.DimensionsBucketLSM], indexBytes)
+
+		vectorCommitLogsStorageSize, otherNonLSMFoldersStorageSize, err := CalculateNonLSMStorage(dirName, "shard1")
+		require.NoError(b, err)
+		require.Equal(b, expectedTotal, vectorCommitLogsStorageSize+otherNonLSMFoldersStorageSize+indexBytes+uint64(objectsBytes.StorageBytes)+vectorBytes)
+
+	}
+}
+
+func TestCalculateNonLSMStorage_NestedHFreshDirectories(t *testing.T) {
+	dirName := t.TempDir()
+	shardPath := filepath.Join(dirName, "shard1")
+	require.NoError(t, os.MkdirAll(shardPath, 0o777))
+
+	topLevelCommitLog := filepath.Join(shardPath, "main.hnsw.commitlog.d")
+	require.NoError(t, os.MkdirAll(topLevelCommitLog, 0o777))
+	topLevelCommitLogFile := filepath.Join(topLevelCommitLog, "file1")
+	require.NoError(t, os.WriteFile(topLevelCommitLogFile, make([]byte, 1000), 0o644))
+
+	topLevelSnapshot := filepath.Join(shardPath, "main.hnsw.snapshot.d")
+	require.NoError(t, os.MkdirAll(topLevelSnapshot, 0o777))
+	topLevelSnapshotFile := filepath.Join(topLevelSnapshot, "file2")
+	require.NoError(t, os.WriteFile(topLevelSnapshotFile, make([]byte, 2000), 0o644))
+
+	hfreshDir := filepath.Join(shardPath, "main.hfresh.d")
+	require.NoError(t, os.MkdirAll(hfreshDir, 0o777))
+
+	nestedCommitLog := filepath.Join(hfreshDir, "main_centroids.hnsw.commitlog.d")
+	require.NoError(t, os.MkdirAll(nestedCommitLog, 0o777))
+	nestedCommitLogFile := filepath.Join(nestedCommitLog, "file3")
+	require.NoError(t, os.WriteFile(nestedCommitLogFile, make([]byte, 3000), 0o644))
+
+	nestedSnapshot := filepath.Join(hfreshDir, "main_centroids.hnsw.snapshot.d")
+	require.NoError(t, os.MkdirAll(nestedSnapshot, 0o777))
+	nestedSnapshotFile := filepath.Join(nestedSnapshot, "file4")
+	require.NoError(t, os.WriteFile(nestedSnapshotFile, make([]byte, 4000), 0o644))
+
+	nestedQueue := filepath.Join(hfreshDir, "analyze.queue.d")
+	require.NoError(t, os.MkdirAll(nestedQueue, 0o777))
+	nestedQueueFile := filepath.Join(nestedQueue, "file5")
+	require.NoError(t, os.WriteFile(nestedQueueFile, make([]byte, 5000), 0o644))
+
+	otherDir := filepath.Join(hfreshDir, "other_dir")
+	require.NoError(t, os.MkdirAll(otherDir, 0o777))
+	otherDirFile := filepath.Join(otherDir, "file6")
+	require.NoError(t, os.WriteFile(otherDirFile, make([]byte, 6000), 0o644))
+
+	hfreshFile := filepath.Join(hfreshDir, "file7")
+	require.NoError(t, os.WriteFile(hfreshFile, make([]byte, 7000), 0o644))
+
+	otherTopLevel := filepath.Join(shardPath, "other_top_level")
+	require.NoError(t, os.MkdirAll(otherTopLevel, 0o777))
+	otherTopLevelFile := filepath.Join(otherTopLevel, "file8")
+	require.NoError(t, os.WriteFile(otherTopLevelFile, make([]byte, 8000), 0o644))
+
+	topLevelFile := filepath.Join(shardPath, "file9")
+	require.NoError(t, os.WriteFile(topLevelFile, make([]byte, 9000), 0o644))
+
+	// the shard's own saved usage sits next to it and must not be billed as shard data
+	require.NoError(t, os.WriteFile(usageTmpFilePath(dirName, "shard1"), make([]byte, 500), 0o644))
+
+	vectorCommitLogsStorageSize, otherNonLSMFoldersStorageSize, err := CalculateNonLSMStorage(dirName, "shard1")
+	require.NoError(t, err)
+
+	// Expected commitlog storage:
+	// - topLevelCommitLog: 1000
+	// - topLevelSnapshot: 2000
+	// - nestedCommitLog: 3000
+	// - nestedSnapshot: 4000
+	// - nestedQueue: 5000
+	expectedCommitLogSize := uint64(1000 + 2000 + 3000 + 4000 + 5000)
+
+	// Expected other storage:
+	// - otherDir: 6000
+	// - hfreshFile: 7000
+	// - otherTopLevel: 8000
+	// - topLevelFile: 9000
+	expectedOtherSize := uint64(6000 + 7000 + 8000 + 9000)
+
+	assert.Equal(t, expectedCommitLogSize, vectorCommitLogsStorageSize, "commitlog/snapshot/queue storage should match")
+	assert.Equal(t, expectedOtherSize, otherNonLSMFoldersStorageSize, "other storage should match")
+}
+
+func TestCalculateNonLSMStorage_HFreshOneLevelDeep(t *testing.T) {
+	dirName := t.TempDir()
+	shardPath := filepath.Join(dirName, "shard1")
+	require.NoError(t, os.MkdirAll(shardPath, 0o777))
+
+	// Create hfresh.d directory
+	hfreshDir := filepath.Join(shardPath, "main.hfresh.d")
+	require.NoError(t, os.MkdirAll(hfreshDir, 0o777))
+
+	// Create nested commitlog.d (one level deep)
+	nestedCommitLog := filepath.Join(hfreshDir, "main_centroids.hnsw.commitlog.d")
+	require.NoError(t, os.MkdirAll(nestedCommitLog, 0o777))
+	nestedCommitLogFile := filepath.Join(nestedCommitLog, "file1")
+	require.NoError(t, os.WriteFile(nestedCommitLogFile, make([]byte, 1000), 0o644))
+
+	// Create nested snapshot.d (one level deep)
+	nestedSnapshot := filepath.Join(hfreshDir, "main_centroids.hnsw.snapshot.d")
+	require.NoError(t, os.MkdirAll(nestedSnapshot, 0o777))
+	nestedSnapshotFile := filepath.Join(nestedSnapshot, "file2")
+	require.NoError(t, os.WriteFile(nestedSnapshotFile, make([]byte, 2000), 0o644))
+
+	// Create nested queue.d (one level deep)
+	nestedQueue := filepath.Join(hfreshDir, "analyze.queue.d")
+	require.NoError(t, os.MkdirAll(nestedQueue, 0o777))
+	nestedQueueFile := filepath.Join(nestedQueue, "file3")
+	require.NoError(t, os.WriteFile(nestedQueueFile, make([]byte, 3000), 0o644))
+
+	// Calculate storage - nested directories should be counted
+	vectorCommitLogsStorageSize, otherNonLSMFoldersStorageSize, err := CalculateNonLSMStorage(dirName, "shard1")
+	require.NoError(t, err)
+
+	// The nested commitlog.d, snapshot.d, and queue.d should be found and counted
+	expectedCommitLogSize := uint64(1000 + 2000 + 3000)
+	assert.Equal(t, expectedCommitLogSize, vectorCommitLogsStorageSize, "nested commitlog/snapshot/queue.d should be counted")
+	assert.Equal(t, uint64(0), otherNonLSMFoldersStorageSize, "no other storage expected")
+}
+
+// TestCalculateUnloadedDimensionsUsage_Concurrent pins the "bucket already registered" error:
+// concurrent usage reports (overlapping periodic collections, /debug/usage) used to open the
+// same unloaded dimensions bucket at once, which lsmkv's GlobalBucketRegistry rejects.
+func TestCalculateUnloadedDimensionsUsage_Concurrent(t *testing.T) {
+	logger, _ := test.NewNullLogger()
+	ctx := context.Background()
+	tenantName := "tenant"
+
+	dirName := t.TempDir()
+	bucketFolder := shardPathDimensionsLSM(dirName, tenantName)
+	b, err := lsmkv.NewBucketCreator().NewBucket(ctx, bucketFolder, "", logger, nil,
+		cyclemanager.NewCallbackGroupNoop(), cyclemanager.NewCallbackGroupNoop(),
+		lsmkv.WithStrategy(lsmkv.StrategyRoaringSet))
+	require.NoError(t, err)
+
+	writeDims(t, b, "text", 128, []uint64{1})
+	require.NoError(t, b.FlushMemtable())
+	require.NoError(t, b.Shutdown(ctx))
+
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	errs := make(chan error, 80)
+	for range 4 {
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			<-start
+			for range 10 {
+				if _, err := CalculateUnloadedDimensionsUsage(ctx, logger, dirName, tenantName, "text"); err != nil {
+					errs <- err
+				}
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			<-start
+			for range 10 {
+				if _, err := CalculateUnloadedDimensionsUsageAll(ctx, logger, dirName, tenantName, map[string]int{"text": 0}); err != nil {
+					errs <- err
+				}
+			}
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		require.NoError(t, err)
+	}
+}
+
+// writeDims writes the dimensions-bucket row of a target vector, in whichever strategy the
+// bucket uses.
+func writeDims(t *testing.T, b *lsmkv.Bucket, targetVector string, dims uint32, docIDs []uint64) {
+	t.Helper()
+
+	key := make([]byte, len(targetVector)+4)
+	copy(key, targetVector)
+	binary.LittleEndian.PutUint32(key[len(targetVector):], dims)
+
+	if b.Strategy() == lsmkv.StrategyMapCollection {
+		for _, docID := range docIDs {
+			docIDBytes := make([]byte, 8)
+			binary.LittleEndian.PutUint64(docIDBytes, docID)
+			require.NoError(t, b.MapSet(key, lsmkv.MapPair{Key: docIDBytes, Value: []byte{}}))
+		}
+		return
+	}
+	for _, docID := range docIDs {
+		require.NoError(t, b.RoaringSetAddOne(key, docID))
+	}
+}
+
+func TestCalculateUnloadedDimensionsUsageAll(t *testing.T) {
+	logger, _ := test.NewNullLogger()
+	ctx := context.Background()
+	tenantName := "tenant"
+
+	dirName := t.TempDir()
+	bucketFolder := shardPathDimensionsLSM(dirName, tenantName)
+	b, err := lsmkv.NewBucketCreator().NewBucket(ctx, bucketFolder, "", logger, nil,
+		cyclemanager.NewCallbackGroupNoop(), cyclemanager.NewCallbackGroupNoop(),
+		lsmkv.WithStrategy(lsmkv.StrategyRoaringSet))
+	require.NoError(t, err)
+
+	writeDims(t, b, "text", 128, []uint64{1, 2, 3, 4, 5})
+	writeDims(t, b, "image", 512, []uint64{1, 2, 3})
+	require.NoError(t, b.FlushMemtable())
+	require.NoError(t, b.Shutdown(ctx))
+
+	targetVectors := map[string]int{"text": 0, "image": 0, "missing": 0}
+	all, err := CalculateUnloadedDimensionsUsageAll(ctx, logger, dirName, tenantName, targetVectors)
+	require.NoError(t, err)
+	require.Len(t, all, len(targetVectors))
+	assert.Equal(t, types.Dimensionality{Dimensions: 128, Count: 5}, all["text"].Reported)
+	assert.Equal(t, types.Dimensionality{Dimensions: 512, Count: 3}, all["image"].Reported)
+	assert.Equal(t, DimensionsScan{}, all["missing"])
+
+	// parity with the single-vector variant
+	for targetVector := range targetVectors {
+		single, err := CalculateUnloadedDimensionsUsage(ctx, logger, dirName, tenantName, targetVector)
+		require.NoError(t, err)
+		assert.Equal(t, all[targetVector].Raw, single, targetVector)
+	}
+
+	withEncoded, err := CalculateUnloadedDimensionsUsageAll(ctx, logger, dirName, tenantName,
+		map[string]int{"text": 2560, "image": 0})
+	require.NoError(t, err)
+	assert.Equal(t, types.Dimensionality{Dimensions: 2560, Count: 5}, withEncoded["text"].Reported)
+	assert.Equal(t, types.Dimensionality{Dimensions: 128, Count: 5}, withEncoded["text"].Raw)
+	assert.Equal(t, types.Dimensionality{Dimensions: 512, Count: 3}, withEncoded["image"].Reported)
+
+	// no target vectors → nothing to calculate, no bucket open
+	none, err := CalculateUnloadedDimensionsUsageAll(ctx, logger, dirName, tenantName, nil)
+	require.NoError(t, err)
+	assert.Nil(t, none)
+}
+
+// TestScanTargetVectorDimensions pins that a vector name which is a prefix of a
+// longer name still reports its own dimensions and object count: its dimension bytes sort after
+// the longer name's keys ("texts…" before "text\x80…" at 384 dimensions), so the scan has to skip
+// past those instead of stopping at them. Every vector gets its own dimensions and object count,
+// so a scan that lands on a neighbour's key cannot pass.
+func TestScanTargetVectorDimensions(t *testing.T) {
+	logger, _ := test.NewNullLogger()
+	ctx := context.Background()
+
+	const encodedDims = 2560
+
+	stored := []struct {
+		targetVector string
+		dims         uint32
+		docIDs       []uint64
+	}{
+		{targetVector: "image", dims: 512, docIDs: []uint64{1, 2, 3, 4}},
+		{targetVector: "text", dims: 384, docIDs: []uint64{1, 2, 3}},
+		{targetVector: "texts", dims: 256, docIDs: []uint64{4, 5}},
+		{targetVector: "textbook", dims: 192, docIDs: []uint64{1, 2, 3, 4, 5}},
+		{targetVector: "", dims: 128, docIDs: []uint64{1, 2, 3, 4, 5, 6}},
+		// multi-vector objects vary in per-object total dims, dims=0 rows have no vector
+		{targetVector: "colbert", dims: 0, docIDs: []uint64{7, 8}},
+		{targetVector: "colbert", dims: 1280, docIDs: []uint64{1, 2}},
+		{targetVector: "colbert", dims: 2560, docIDs: []uint64{3, 4, 5}},
+		{targetVector: "colbert", dims: 12800, docIDs: []uint64{6}},
+		{targetVector: "novectors", dims: 0, docIDs: []uint64{1, 2, 3}},
+	}
+
+	tests := []struct {
+		name              string
+		targetVector      string
+		encodedDimensions int
+		expectedRaw       types.Dimensionality
+		expectedReported  types.Dimensionality
+	}{
+		{
+			name:             "no other name shares the prefix",
+			targetVector:     "image",
+			expectedRaw:      types.Dimensionality{Dimensions: 512, Count: 4},
+			expectedReported: types.Dimensionality{Dimensions: 512, Count: 4},
+		},
+		{
+			name:             "name is a prefix of two longer names",
+			targetVector:     "text",
+			expectedRaw:      types.Dimensionality{Dimensions: 384, Count: 3},
+			expectedReported: types.Dimensionality{Dimensions: 384, Count: 3},
+		},
+		{
+			name:             "name extends a shorter name",
+			targetVector:     "texts",
+			expectedRaw:      types.Dimensionality{Dimensions: 256, Count: 2},
+			expectedReported: types.Dimensionality{Dimensions: 256, Count: 2},
+		},
+		{
+			name:             "name extends a shorter name and precedes a sibling",
+			targetVector:     "textbook",
+			expectedRaw:      types.Dimensionality{Dimensions: 192, Count: 5},
+			expectedReported: types.Dimensionality{Dimensions: 192, Count: 5},
+		},
+		{
+			name:             "unnamed vector alongside named ones",
+			targetVector:     "",
+			expectedRaw:      types.Dimensionality{Dimensions: 128, Count: 6},
+			expectedReported: types.Dimensionality{Dimensions: 128, Count: 6},
+		},
+		{
+			name:             "vector without entries",
+			targetVector:     "missing",
+			expectedRaw:      types.Dimensionality{},
+			expectedReported: types.Dimensionality{},
+		},
+		{
+			name:              "muvera vector sums the count across all its rows",
+			targetVector:      "colbert",
+			encodedDimensions: encodedDims,
+			expectedRaw:       types.Dimensionality{Dimensions: 1280, Count: 2},
+			expectedReported:  types.Dimensionality{Dimensions: encodedDims, Count: 6},
+		},
+		{
+			name:             "muvera vector without muvera reporting keeps the raw reading",
+			targetVector:     "colbert",
+			expectedRaw:      types.Dimensionality{Dimensions: 1280, Count: 2},
+			expectedReported: types.Dimensionality{Dimensions: 1280, Count: 2},
+		},
+		{
+			name:              "muvera single-vector name is unaffected by the summing",
+			targetVector:      "image",
+			encodedDimensions: encodedDims,
+			expectedRaw:       types.Dimensionality{Dimensions: 512, Count: 4},
+			expectedReported:  types.Dimensionality{Dimensions: encodedDims, Count: 4},
+		},
+		{
+			name:              "muvera vector with only objects without a vector",
+			targetVector:      "novectors",
+			encodedDimensions: encodedDims,
+			expectedRaw:       types.Dimensionality{},
+			expectedReported:  types.Dimensionality{},
+		},
+		{
+			name:              "muvera vector without entries",
+			targetVector:      "missing",
+			encodedDimensions: encodedDims,
+			expectedRaw:       types.Dimensionality{},
+			expectedReported:  types.Dimensionality{},
+		},
+	}
+
+	// unloaded shards are read from segments only, loaded ones can still hold the entries in the
+	// memtable
+	for _, strategy := range []string{lsmkv.StrategyRoaringSet, lsmkv.StrategyMapCollection} {
+		for _, flushed := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/flushed=%v", strategy, flushed), func(t *testing.T) {
+				b, err := lsmkv.NewBucketCreator().NewBucket(ctx, filepath.Join(t.TempDir(), "dimensions"), "",
+					logger, nil, cyclemanager.NewCallbackGroupNoop(), cyclemanager.NewCallbackGroupNoop(),
+					lsmkv.WithStrategy(strategy))
+				require.NoError(t, err)
+				defer b.Shutdown(ctx)
+
+				for _, entry := range stored {
+					writeDims(t, b, entry.targetVector, entry.dims, entry.docIDs)
+				}
+				if flushed {
+					require.NoError(t, b.FlushMemtable())
+				}
+
+				for _, tt := range tests {
+					t.Run(tt.name, func(t *testing.T) {
+						scan, err := ScanTargetVectorDimensions(ctx, b, tt.targetVector, tt.encodedDimensions)
+						require.NoError(t, err)
+						assert.Equal(t, tt.expectedRaw, scan.Raw, "raw reading")
+						assert.Equal(t, tt.expectedReported, scan.Reported, "reported reading")
+					})
+				}
+			})
+		}
+	}
+
+	t.Run("unsupported strategy", func(t *testing.T) {
+		b, err := lsmkv.NewBucketCreator().NewBucket(ctx, filepath.Join(t.TempDir(), "dimensions"), "",
+			logger, nil, cyclemanager.NewCallbackGroupNoop(), cyclemanager.NewCallbackGroupNoop(),
+			lsmkv.WithStrategy(lsmkv.StrategyReplace))
+		require.NoError(t, err)
+		defer b.Shutdown(ctx)
+
+		_, err = ScanTargetVectorDimensions(ctx, b, "text", 0)
+		require.Error(t, err)
+	})
+}
+
+// Only a record of the current format version that holds usage is served; anything
+// else is rejected so the caller recomputes. Nothing deletes the record of a shard
+// that stays cold, so this and the fingerprint the caller compares are the only
+// guards against serving outdated sizes.
+func TestLoadComputedUsageData(t *testing.T) {
+	stored := &types.ShardUsage{Name: "shard", ObjectsCount: 7, ObjectsStorageBytes: 1234}
+
+	tests := []struct {
+		name      string
+		version   int
+		usage     *types.ShardUsage
+		wantErr   bool
+		wantErrIs error
+	}{
+		{
+			name:    "current version",
+			version: types.UsageDiskVersion,
+			usage:   stored,
+		},
+		{
+			name:      "version from an older release",
+			version:   types.UsageDiskVersion - 1,
+			usage:     stored,
+			wantErr:   true,
+			wantErrIs: ErrUsageVersionMismatch,
+		},
+		{
+			name:      "version from a newer release",
+			version:   types.UsageDiskVersion + 1,
+			usage:     stored,
+			wantErr:   true,
+			wantErrIs: ErrUsageVersionMismatch,
+		},
+		{
+			// serving this would drop the shard from the report instead of billing it
+			name:    "no usage in the record",
+			version: types.UsageDiskVersion,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			indexPath := t.TempDir()
+			shardName := "shard"
+			require.NoError(t, os.MkdirAll(filepath.Join(indexPath, shardName), 0o755))
+
+			data, err := json.Marshal(&types.UsageDisk{
+				Version:                  tt.version,
+				ShardUsage:               tt.usage,
+				VectorConfigsFingerprint: "fingerprint",
+			})
+			require.NoError(t, err)
+			require.NoError(t, os.WriteFile(usageTmpFilePath(indexPath, shardName), data, 0o600))
+
+			loaded, err := LoadComputedUsageData(indexPath, shardName)
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.wantErrIs != nil {
+					require.ErrorIs(t, err, tt.wantErrIs,
+						"callers tell a stale version from an unreadable file by this error")
+				}
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.usage, loaded.ShardUsage)
+			assert.Equal(t, "fingerprint", loaded.VectorConfigsFingerprint)
+		})
+	}
+}

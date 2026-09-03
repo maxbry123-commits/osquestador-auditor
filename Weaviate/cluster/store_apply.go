@@ -1,0 +1,663 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package cluster
+
+import (
+	"encoding/json"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/hashicorp/raft"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/weaviate/weaviate/cluster/proto/api"
+	enterrors "github.com/weaviate/weaviate/entities/errors"
+	usecasesNamespaces "github.com/weaviate/weaviate/usecases/namespaces"
+	"github.com/weaviate/weaviate/usecases/schema/namespacing"
+)
+
+func (st *Store) Execute(req *api.ApplyRequest) (uint64, error) {
+	st.log.WithFields(logrus.Fields{
+		"type":  api.ApplyRequest_Type_name[int32(req.Type)],
+		"class": req.Class,
+	}).Debug("server.execute")
+
+	// Serialize AddTenants per class so the pre-commit cap check can't race the
+	// apply that increments the count (Execute blocks until apply). Skipped when
+	// the cap is unlimited — nothing to make race-free.
+	if req.Type == api.ApplyRequest_TYPE_ADD_TENANT && st.schemaManager.TenantLimitEnforced() {
+		st.tenantAddLocks.Lock(req.Class)
+		defer st.tenantAddLocks.Unlock(req.Class)
+	}
+
+	// Parse the underlying command before pre execute filtering to avoid queryinf the schema is the underlying command
+	// is invalid
+	cmdBytes, err := proto.Marshal(req)
+	if err != nil {
+		return 0, fmt.Errorf("marshal command: %w", err)
+	}
+
+	// Namespace admission runs before the schema-shape filter so a suspended
+	// namespace answers with its own state rather than a complaint about the
+	// entity the caller named.
+	if err := st.admitPropose(req); err != nil {
+		return 0, err
+	}
+
+	// Call the filtering to avoid committing to the FSM unnecessary updates
+	if err := st.schemaManager.PreApplyFilter(req); err != nil {
+		return 0, err
+	}
+
+	// The change is validated, we can apply it in RAFT
+	fut := st.raft.Apply(cmdBytes, st.applyTimeout)
+
+	// Always call Error first otherwise the response can't  be read from the future
+	if err := fut.Error(); err != nil {
+		return 0, err
+	}
+
+	// Always wait for the response
+	futureResponse := fut.Response()
+	resp, ok := futureResponse.(Response)
+	if !ok {
+		// This should not happen, but it's better to log an error *if* it happens than panic and crash.
+		return 0, fmt.Errorf("response returned from raft apply is not of type Response instead got: %T, this should not happen", futureResponse)
+	}
+	return resp.Version, resp.Error
+}
+
+// admitPropose refuses a command whose namespace is not in a state that admits
+// it. It runs on the leader before the entry is appended, which is the only
+// place such a refusal can live: Apply must be a pure function of the log, so a
+// check there would have an older binary carry out what an upgraded one refuses,
+// live during a rolling update and again on every replay of that entry.
+// Refusing before the append means no node ever sees a committed entry it has to
+// reject, so the set of commands checked here can grow without becoming a
+// compatibility event.
+//
+// The check reads the leader's namespace state and the entry commits shortly
+// after, so a state flip landing in between still lets an accepted command
+// through. That is deliberate, and matches the rule that a suspend does not
+// cancel work already accepted. Every node applies the entry either way, so the
+// outcome stays the same across the cluster.
+//
+// A command that materializes a shard is checked here too. The flip it can race
+// leaves the schema entry standing with its shard still to open, which is the
+// state namespaces.AppliedChangeMayOpenShard already governs for every other
+// apply whose schema half has committed. An Apply-side check would not close
+// that window either: the DB half runs after the schema half commits, so a flip
+// landing in between produces the same state.
+func (st *Store) admitPropose(req *api.ApplyRequest) error {
+	if err := st.admitDestructive(req); err != nil {
+		return err
+	}
+	if err := st.admitCreateLike(req); err != nil {
+		return err
+	}
+	return st.admitShardStatus(req)
+}
+
+// admitShardStatus refuses a manual shard status change outside the active
+// state. It writes no schema, only the status of a shard the namespace holds
+// open, which a namespace that serves no requests has nothing to set.
+func (st *Store) admitShardStatus(req *api.ApplyRequest) error {
+	if req.Type != api.ApplyRequest_TYPE_UPDATE_SHARD_STATUS {
+		return nil
+	}
+	// The command names its class outright, and Handler.UpdateShardStatus
+	// qualifies it before the propose.
+	return usecasesNamespaces.RequireActive(st.namespaceManager, namespacing.NamespaceFromQualified(req.Class))
+}
+
+// admitCreateLike refuses a create-like command outside the active state. The
+// alias commands write schema and no store, and the RBAC and user commands write
+// neither, so a late one leaves nothing half-built. The class and tenant commands
+// do materialize a shard, and admitPropose says why a late one is still safe.
+func (st *Store) admitCreateLike(req *api.ApplyRequest) error {
+	switch req.Type {
+	case api.ApplyRequest_TYPE_ADD_CLASS,
+		api.ApplyRequest_TYPE_RESTORE_CLASS,
+		api.ApplyRequest_TYPE_ADD_TENANT,
+		api.ApplyRequest_TYPE_UPDATE_TENANT:
+		// These name their class outright, so the namespace comes off the
+		// request rather than a subcommand.
+		return usecasesNamespaces.RequireActive(st.namespaceManager, namespacing.NamespaceFromQualified(req.Class))
+
+	case api.ApplyRequest_TYPE_CREATE_ALIAS:
+		sub := &api.CreateAliasRequest{}
+		if err := proto.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal create-alias subcommand: %w", err)
+		}
+		return usecasesNamespaces.RequireActive(st.namespaceManager, namespacing.NamespaceFromQualified(sub.Alias))
+
+	case api.ApplyRequest_TYPE_REPLACE_ALIAS:
+		sub := &api.ReplaceAliasRequest{}
+		if err := proto.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal replace-alias subcommand: %w", err)
+		}
+		return usecasesNamespaces.RequireActive(st.namespaceManager, namespacing.NamespaceFromQualified(sub.Alias))
+
+	case api.ApplyRequest_TYPE_UPSERT_ROLES_PERMISSIONS:
+		// Permission-only upserts re-mint the role row too, so gate every name
+		// regardless of RoleCreation.
+		sub := &api.CreateRolesRequest{}
+		if err := json.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal upsert-roles subcommand: %w", err)
+		}
+		for name := range sub.Roles {
+			if err := usecasesNamespaces.RequireActive(st.namespaceManager, namespacing.NamespaceFromQualified(name)); err != nil {
+				return err
+			}
+		}
+		return nil
+
+	case api.ApplyRequest_TYPE_ADD_ROLES_FOR_USER:
+		// While deleting, a late assignment would leave a grouping row behind
+		// after the cleanup cascade has emptied the namespace.
+		sub := &api.AddRolesForUsersRequest{}
+		if err := json.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal add-roles-for-user subcommand: %w", err)
+		}
+		ns, err := subjectNamespace(sub.User)
+		if err != nil {
+			return fmt.Errorf("resolve namespace of subject %q: %w", sub.User, err)
+		}
+		return usecasesNamespaces.RequireActive(st.namespaceManager, ns)
+
+	case api.ApplyRequest_TYPE_UPSERT_USER:
+		// The request carries its namespace outright. The empty-namespace
+		// validation stays in the dynusers manager: it reads node-local config,
+		// not namespace state.
+		sub := &api.CreateUsersRequest{}
+		if err := json.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal upsert-user subcommand: %w", err)
+		}
+		return usecasesNamespaces.RequireActive(st.namespaceManager, sub.Namespace)
+
+	default:
+		return nil
+	}
+}
+
+// admitDestructive refuses a data-destroying command whose namespace is not in a
+// state that admits one. Unlike the create-like commands it also passes while
+// deleting, so the cleanup cascade can empty a namespace.
+func (st *Store) admitDestructive(req *api.ApplyRequest) error {
+	var name string
+	switch req.Type {
+	case api.ApplyRequest_TYPE_DELETE_CLASS:
+		// Index.drop renames the whole class directory, taking every tenant
+		// with it, loaded or not.
+		name = req.Class
+	case api.ApplyRequest_TYPE_DELETE_TENANT:
+		// Index.dropShards destroys the data on both arms: shard.drop when the
+		// shard is loaded, os.RemoveAll on its path when it is not.
+		name = req.Class
+	case api.ApplyRequest_TYPE_DELETE_ALIAS:
+		// The command carries no Class, so the namespace comes off the alias
+		// name. An alias may target a class in another namespace, and
+		// AliasesInNamespace lists by alias prefix, so that is the same key.
+		sub := &api.DeleteAliasRequest{}
+		if err := proto.Unmarshal(req.SubCommand, sub); err != nil {
+			return fmt.Errorf("unmarshal delete-alias subcommand: %w", err)
+		}
+		name = sub.Alias
+	default:
+		return nil
+	}
+	return usecasesNamespaces.AdmitDestructiveApply(st.namespaceManager, namespacing.NamespaceFromQualified(name))
+}
+
+// StoreConfiguration is invoked once a log entry containing a configuration
+// change is committed. It takes the index at which the configuration was
+// written and the configuration value.
+
+// We implemented this to keep `lastAppliedIndex` metric to correct value
+// to also handle `LogConfiguration` type of Raft command.
+func (st *Store) StoreConfiguration(index uint64, _ raft.Configuration) {
+	st.metrics.raftLastAppliedIndex.Set(float64(index))
+}
+
+// Apply is called once a log entry is committed by a majority of the cluster.
+// Apply should apply the log to the FSM. Apply must be deterministic and
+// produce the same result on all peers in the cluster.
+// The returned value is returned to the client as the ApplyFuture.Response.
+//
+// That determinism is why no arm below refuses a command for its namespace
+// state: [Store.admitPropose] does it before the entry is appended.
+func (st *Store) Apply(l *raft.Log) any {
+	ret := Response{Version: l.Index}
+
+	start := time.Now()
+	defer func() {
+		// this defer is final one that called before returning and thus capturing the
+		// applyDuration correctly.
+		st.metrics.applyDuration.Observe(float64(time.Since(start).Seconds()))
+	}()
+
+	if l.Type != raft.LogCommand {
+		st.log.WithFields(logrus.Fields{
+			"type":  l.Type,
+			"index": l.Index,
+		}).Warn("not a valid command")
+		return ret
+	}
+	cmd := api.ApplyRequest{}
+	if err := proto.Unmarshal(l.Data, &cmd); err != nil {
+		st.log.WithError(err).Error("decode command")
+		panic("error proto un-marshalling log data")
+	}
+
+	// schemaOnly is necessary so that on restart when we are re-applying RAFT log entries to our in-memory schema we
+	// don't update the database. This can lead to data loss for example if we drop then re-add a class.
+	// If we don't have any last applied index on start, schema only is always false.
+	// we check for index !=0 to force apply of the 1st index in both db and schema
+	catchingUp := l.Index != 0 && l.Index <= st.lastAppliedIndexToDB.Load()
+	// TODO: get rid off schema only as it causes more trouble than it's worth
+	// T-Nr: DB-306
+	schemaOnly := catchingUp || st.cfg.MetadataOnlyVoters
+	defer func() {
+		// If we have an applied index from the previous store (i.e from disk). Then reload the DB once we catch up as
+		// that means we're done doing schema only.
+		// we do this at the beginning to handle situation were schema was catching up
+		// and to make sure no matter is the error status we are going to open the db on startup
+		// we reload the db only if we have a previous state and the db is not loaded
+		dbReloadRequired := st.lastAppliedIndexToDB.Load() != 0 && !st.dbLoaded.Load()
+		if dbReloadRequired && l.Index != 0 && l.Index >= st.lastAppliedIndexToDB.Load() {
+			st.log.WithFields(logrus.Fields{
+				"log_type":                     l.Type,
+				"log_name":                     l.Type.String(),
+				"log_index":                    l.Index,
+				"last_store_log_applied_index": st.lastAppliedIndexToDB.Load(),
+			}).Info("reloading local DB as RAFT and local DB are now caught up")
+			st.reloadDBFromSchema()
+		}
+
+		// we update no mater the error status to avoid any edge cases in the DB layer for already released versions,
+		// however we do not update the metrics so the metric will be the source of truth
+		// about AppliedIndex
+		st.lastAppliedIndex.Store(l.Index)
+
+		if ret.Error != nil {
+			st.metrics.applyFailures.Inc()
+			_, leaderID := st.LeaderWithID()
+			nodeState := ""
+			if st.raft != nil {
+				nodeState = st.raft.State().String()
+			}
+			st.log.WithFields(logrus.Fields{
+				"log_type":        l.Type,
+				"log_name":        l.Type.String(),
+				"log_index":       l.Index,
+				"cmd_type":        cmd.Type,
+				"cmd_type_name":   cmd.Type.String(),
+				"cmd_class":       cmd.Class,
+				"raft_leader":     string(leaderID),
+				"raft_node_state": nodeState,
+			}).WithError(ret.Error).Error("apply command")
+			return
+		}
+
+		st.metrics.fsmLastAppliedIndex.Set(float64(l.Index))
+		st.metrics.raftLastAppliedIndex.Set(float64(l.Index))
+	}()
+
+	cmd.Version = l.Index
+	// Report only when not ready the progress made on applying log entries. This help users with big schema and long
+	// startup time to keep track of progress.
+	// We check for ready state and index <= lastAppliedIndexToDB because just checking ready state would mean this log line
+	// would keep printing if the node has caught up but there's no leader in the cluster.
+	// This can happen for example if quorum is lost briefly.
+	// By checking lastAppliedIndexToDB we ensure that we never print past that index
+	if !st.Ready() && l.Index <= st.lastAppliedIndexToDB.Load() {
+		st.log.Debugf("Schema catching up: applying log entry: [%d/%d]", l.Index, st.lastAppliedIndexToDB.Load())
+	}
+	st.log.WithFields(logrus.Fields{
+		"log_type":        l.Type,
+		"log_name":        l.Type.String(),
+		"log_index":       l.Index,
+		"cmd_type":        cmd.Type,
+		"cmd_type_name":   cmd.Type.String(),
+		"cmd_class":       cmd.Class,
+		"cmd_schema_only": schemaOnly,
+	}).Debug("server.apply")
+
+	f := func() {}
+
+	switch cmd.Type {
+
+	case api.ApplyRequest_TYPE_ADD_CLASS:
+		f = func() {
+			ret.Error = st.schemaManager.AddClass(&cmd, st.cfg.NodeID, schemaOnly, !catchingUp)
+		}
+
+	case api.ApplyRequest_TYPE_RESTORE_CLASS:
+		f = func() {
+			ret.Error = st.schemaManager.RestoreClass(&cmd, st.cfg.NodeID, schemaOnly, !catchingUp)
+		}
+
+	case api.ApplyRequest_TYPE_UPDATE_CLASS:
+		f = func() {
+			ret.Error = st.schemaManager.UpdateClass(&cmd, st.cfg.NodeID, schemaOnly, !catchingUp)
+		}
+
+	case api.ApplyRequest_TYPE_DELETE_CLASS:
+		f = func() {
+			// During RAFT log replay (schemaOnly=true), apply case-insensitive handling
+			// to prevent silent failures due to case mismatches in log entries.
+			// This ensures we capture the correct class name as stored in memory,
+			// regardless of what the user used in the original request.
+			//
+			// Example scenario:
+			// - Old RAFT entry: add Class "FooBar"
+			// - New RAFT entry: delete Class "foobar"
+			//
+			// Without case-insensitive handling, we would never delete "FooBar"
+			// because the new log entry contains "foobar", leading to class
+			// reappearance during rollout.
+			if schemaOnly {
+				existingClass := st.SchemaReader().ClassEqual(cmd.Class)
+				if existingClass != "" {
+					cmd.Class = existingClass
+				}
+			}
+			ret.Error = st.schemaManager.DeleteClass(&cmd, schemaOnly, !catchingUp)
+		}
+
+	case api.ApplyRequest_TYPE_ADD_PROPERTY:
+		f = func() {
+			ret.Error = st.schemaManager.AddProperty(&cmd, schemaOnly, !catchingUp)
+		}
+	case api.ApplyRequest_TYPE_UPDATE_PROPERTY:
+		f = func() {
+			ret.Error = st.schemaManager.UpdateProperty(&cmd, schemaOnly, !catchingUp)
+		}
+	case api.ApplyRequest_TYPE_CREATE_ALIAS:
+		f = func() {
+			ret.Error = st.schemaManager.CreateAlias(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLACE_ALIAS:
+		f = func() {
+			ret.Error = st.schemaManager.ReplaceAlias(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DELETE_ALIAS:
+		f = func() {
+			ret.Error = st.schemaManager.DeleteAlias(&cmd)
+		}
+	case api.ApplyRequest_TYPE_UPDATE_SHARD_STATUS:
+		f = func() {
+			ret.Error = st.schemaManager.UpdateShardStatus(&cmd, schemaOnly)
+		}
+	case api.ApplyRequest_TYPE_ADD_REPLICA_TO_SHARD:
+		f = func() {
+			ret.Error = st.schemaManager.AddReplicaToShard(&cmd, schemaOnly)
+		}
+	case api.ApplyRequest_TYPE_DELETE_REPLICA_FROM_SHARD:
+		f = func() {
+			ret.Error = st.schemaManager.DeleteReplicaFromShard(&cmd, schemaOnly)
+		}
+
+	case api.ApplyRequest_TYPE_ADD_TENANT:
+		f = func() {
+			ret.Error = st.schemaManager.AddTenants(&cmd, schemaOnly)
+		}
+
+	case api.ApplyRequest_TYPE_UPDATE_TENANT:
+		f = func() {
+			ret.Error = st.schemaManager.UpdateTenants(&cmd, schemaOnly)
+		}
+
+	case api.ApplyRequest_TYPE_DELETE_TENANT:
+		f = func() {
+			ret.Error = st.schemaManager.DeleteTenants(&cmd, schemaOnly)
+		}
+
+	case api.ApplyRequest_TYPE_TENANT_PROCESS:
+		f = func() {
+			ret.Error = st.schemaManager.UpdateTenantsProcess(&cmd, schemaOnly)
+		}
+
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_SYNC_SHARD: //nolint:staticcheck // deliberate use of the deprecated tombstone type
+	case api.ApplyRequest_TYPE_UPSERT_ROLES_PERMISSIONS:
+		f = func() {
+			ret.Error = st.authZManager.UpsertRolesPermissions(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DELETE_ROLES:
+		f = func() {
+			ret.Error = st.authZManager.DeleteRoles(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REMOVE_PERMISSIONS:
+		f = func() {
+			ret.Error = st.authZManager.RemovePermissions(&cmd)
+		}
+	case api.ApplyRequest_TYPE_ADD_ROLES_FOR_USER:
+		f = func() {
+			ret.Error = st.authZManager.AddRolesForUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REVOKE_ROLES_FOR_USER:
+		f = func() {
+			ret.Error = st.authZManager.RevokeRolesForUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_RESTORE_ROLES_AND_USERS:
+		// The payload replaces both stores in full, so checking namespaces row by
+		// row would drop rows silently. applyRestoreRolesAndUsers rejects the
+		// whole entry instead.
+		f = func() {
+			ret.Error = applyRestoreRolesAndUsers(&cmd, st.authZManager, st.dynUserManager, st.namespaceManager)
+		}
+
+	case api.ApplyRequest_TYPE_UPSERT_USER:
+		f = func() {
+			ret.Error = st.dynUserManager.CreateUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DELETE_USER:
+		f = func() {
+			ret.Error = st.dynUserManager.DeleteUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_ROTATE_USER_API_KEY:
+		f = func() {
+			ret.Error = st.dynUserManager.RotateKey(&cmd)
+		}
+	case api.ApplyRequest_TYPE_SUSPEND_USER:
+		f = func() {
+			ret.Error = st.dynUserManager.SuspendUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_ACTIVATE_USER:
+		f = func() {
+			ret.Error = st.dynUserManager.ActivateUser(&cmd)
+		}
+	case api.ApplyRequest_TYPE_CREATE_USER_WITH_KEY:
+		f = func() {
+			ret.Error = st.dynUserManager.CreateUserWithKeyRequest(&cmd)
+		}
+
+	case api.ApplyRequest_TYPE_ADD_NAMESPACE:
+		f = func() {
+			ret.Error = st.namespaceManager.Add(&cmd)
+		}
+	case api.ApplyRequest_TYPE_UPDATE_NAMESPACE:
+		f = func() {
+			ret.Error = st.namespaceManager.Update(&cmd)
+		}
+	case api.ApplyRequest_TYPE_CHANGE_NAMESPACE_STATE:
+		f = func() {
+			ret.Error = st.namespaceManager.ChangeState(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REMOVE_NAMESPACE_ENTITY:
+		f = func() {
+			ret.Error = st.namespaceManager.RemoveEntity(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DELETE_USERS_IN_NAMESPACE:
+		f = func() {
+			ret.Error = st.dynUserManager.DeleteUsersInNamespace(&cmd)
+		}
+
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE:
+		f = func() {
+			ret.Error = st.replicationManager.Replicate(l.Index, &cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_REGISTER_ERROR:
+		f = func() {
+			ret.Error = st.replicationManager.RegisterError(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_UPDATE_STATE:
+		f = func() {
+			ret.Error = st.replicationManager.UpdateReplicateOpState(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_NODE_REACHED_STATE:
+		f = func() {
+			ret.Error = st.replicationManager.NodeReachedState(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_CANCEL:
+		f = func() {
+			ret.Error = st.replicationManager.CancelReplication(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_DELETE:
+		f = func() {
+			ret.Error = st.replicationManager.DeleteReplication(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_DELETE_ALL:
+		f = func() {
+			ret.Error = st.replicationManager.DeleteAllReplications(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_REMOVE:
+		f = func() {
+			ret.Error = st.replicationManager.RemoveReplicaOp(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_CANCELLATION_COMPLETE:
+		f = func() {
+			ret.Error = st.replicationManager.ReplicationCancellationComplete(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_DELETE_BY_COLLECTION:
+		f = func() {
+			ret.Error = st.replicationManager.DeleteReplicationsByCollection(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_DELETE_BY_TENANTS:
+		f = func() {
+			ret.Error = st.replicationManager.DeleteReplicationsByTenants(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REGISTER_SCHEMA_VERSION:
+		f = func() {
+			ret.Error = st.replicationManager.StoreSchemaVersion(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_ADD_REPLICA_TO_SHARD:
+		f = func() {
+			ret.Error = st.schemaManager.ReplicationAddReplicaToShard(&cmd, schemaOnly)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_ALL:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteAll(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_BY_COLLECTION:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteByCollection(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_BY_COLLECTION_AND_SHARD:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteByCollectionAndShard(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_BY_TARGET_NODE:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteByTargetNode(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_BY_UUID:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteByUuid(&cmd)
+		}
+	case api.ApplyRequest_TYPE_REPLICATION_REPLICATE_FORCE_DELETE_BY_IDS:
+		f = func() {
+			ret.Error = st.replicationManager.ForceDeleteByIds(&cmd)
+		}
+
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_ADD:
+		f = func() {
+			ret.Error = st.distributedTasksManager.AddTask(&cmd, l.Index)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_CANCEL:
+		f = func() {
+			ret.Error = st.distributedTasksManager.CancelTask(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_CLEAN_UP:
+		f = func() {
+			ret.Error = st.distributedTasksManager.CleanUpTask(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_RECORD_UNIT_COMPLETED:
+		f = func() {
+			ret.Error = st.distributedTasksManager.RecordUnitCompletion(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_UPDATE_UNIT_PROGRESS:
+		f = func() {
+			ret.Error = st.distributedTasksManager.UpdateUnitProgress(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_MARK_FINALIZED:
+		f = func() {
+			ret.Error = st.distributedTasksManager.MarkTaskFinalized(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_MARK_FAILED:
+		f = func() {
+			ret.Error = st.distributedTasksManager.MarkTaskFailed(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_RECORD_POST_COMPLETION_ACK:
+		f = func() {
+			ret.Error = st.distributedTasksManager.RecordPostCompletionAck(&cmd)
+		}
+	case api.ApplyRequest_TYPE_DISTRIBUTED_TASK_RECORD_PREPARATION_COMPLETE_ACK:
+		f = func() {
+			ret.Error = st.distributedTasksManager.RecordPreparationCompleteAck(&cmd)
+		}
+	case api.ApplyRequest_TYPE_CLUSTER_ID_SET:
+		f = func() {
+			ret.Error = st.applyClusterIDSet(&cmd)
+		}
+
+	default:
+		// A command introduced by a newer app version. Log and no-op rather than
+		// panic: a crash would wedge the FSM on every unknown entry during a
+		// rolling upgrade. The applied index still advances, so the node stays
+		// consistent and skips the command's effect until it upgrades.
+		const msg = "consider upgrading to newer version"
+		st.log.WithFields(logrus.Fields{
+			"type":  cmd.Type,
+			"class": cmd.Class,
+			"more":  msg,
+		}).Error("unknown command")
+	}
+
+	// Wrap the function in a go routine to ensure panic recovery. This is necessary as this function is run in an
+	// unwrapped goroutine in the raft library
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	g := func() {
+		defer wg.Done()
+		f()
+	}
+	enterrors.GoWrapper(g, st.log)
+	wg.Wait()
+
+	return ret
+}
+
+// applyClusterIDSet applies a TYPE_CLUSTER_ID_SET log entry, set-once.
+func (st *Store) applyClusterIDSet(cmd *api.ApplyRequest) error {
+	req := &api.SetClusterIDRequest{}
+	if err := proto.Unmarshal(cmd.SubCommand, req); err != nil {
+		return fmt.Errorf("unmarshal cluster-id set command: %w", err)
+	}
+	if req.ClusterId == "" {
+		return fmt.Errorf("empty cluster_id in cluster-id set command")
+	}
+	st.setClusterID(req.ClusterId)
+	return nil
+}

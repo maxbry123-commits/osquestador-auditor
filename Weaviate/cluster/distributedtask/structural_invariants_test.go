@@ -1,0 +1,324 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package distributedtask
+
+import (
+	"context"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
+	logrustest "github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/require"
+)
+
+// Structural invariant tests for the DTM package.
+// weaviate/0-weaviate-issues#243.
+
+// TestStructuralInvariant_SchedulerClose_WaitsForLoopExit: after
+// Close returns, no run-loop goroutine exists and no clock-waiter is
+// parked on the ticker. Two independent signals — a surviving
+// goroutine OR a surviving waiter — each detect "Close skipped the
+// join" under race detector + GC pressure.
+func TestStructuralInvariant_SchedulerClose_WaitsForLoopExit(t *testing.T) {
+	h := newTestHarness(t).init(t)
+
+	// Let any prior goroutines settle so the baseline is stable. Read
+	// twice and force scheduler swap-in.
+	runtime.Gosched()
+	runtime.GC()
+	runtime.Gosched()
+	beforeStart := runtime.NumGoroutine()
+
+	require.NoError(t, h.scheduler.Start(context.Background()))
+
+	// Give Start's spawned loop time to actually enter its select{}.
+	// We do NOT use the harness sleep helper here — we want
+	// deterministic confirmation that the loop is registered as a
+	// clock waiter. clock.BlockUntilContext(1) waits until the
+	// ticker is the registered waiter.
+	blockCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	require.NoError(t, h.clock.BlockUntilContext(blockCtx, 1))
+	cancel()
+
+	// At this point we expect exactly one extra goroutine compared
+	// to baseline: the loop goroutine. Confirm at least one was
+	// spawned (sanity check on the harness).
+	require.Greater(t, runtime.NumGoroutine(), beforeStart,
+		"sanity: starting scheduler must have spawned at least one goroutine")
+
+	// Close should synchronously drain the loop. After Close returns
+	// the count must return to baseline (no leftover loop goroutine).
+	h.scheduler.Close()
+
+	// Drain any test-only goroutines (e.g. logging) the same way as
+	// the baseline measurement.
+	runtime.Gosched()
+	runtime.GC()
+	runtime.Gosched()
+
+	afterClose := runtime.NumGoroutine()
+	// Soft signal — runtime.NumGoroutine() is sampled from the global
+	// runtime and unrelated background goroutines (test fixtures,
+	// loggers, GC sweep) can spawn or exit between the two reads. The
+	// load-bearing check is the FakeClock waiter probe in
+	// TestStructuralInvariant_SchedulerClose_NoTickAfterReturn; this
+	// is a complementary indicator that we log rather than fail on.
+	if afterClose > beforeStart {
+		t.Logf("Scheduler.Close left %d goroutines (before=%d); "+
+			"may be the loop, may be unrelated. NoTickAfterReturn is the load-bearing pin.",
+			afterClose-beforeStart, beforeStart)
+	}
+}
+
+// TestStructuralInvariant_SchedulerClose_NoTickAfterReturn is a
+// complementary invariant: even if Close does not strictly join the
+// loop, no tick body must execute after Close returns. We pin this
+// using clockwork's waiter introspection — after Close returns, no
+// ticker waiter should remain on the FakeClock. A surviving waiter
+// means the loop is still parked in its select waiting for the next
+// tick, i.e. capable of running a tick body that races with shared
+// state.
+//
+// Like TestStructuralInvariant_SchedulerClose_WaitsForLoopExit this
+// will be RED while Close does not join. We keep both tests because
+// they fail in different ways and a future fix should make both
+// green simultaneously.
+func TestStructuralInvariant_SchedulerClose_NoTickAfterReturn(t *testing.T) {
+	h := newTestHarness(t).init(t)
+
+	require.NoError(t, h.scheduler.Start(context.Background()))
+
+	// Ensure the loop is parked on its ticker (so we have a known
+	// waiter count to invert after Close).
+	blockCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	require.NoError(t, h.clock.BlockUntilContext(blockCtx, 1))
+	cancel()
+
+	h.scheduler.Close()
+
+	// After Close, the loop must be gone — no remaining ticker waiter
+	// on the fake clock. We allow a short bounded poll because the
+	// FakeClock waiter accounting is updated by the loop goroutine
+	// itself (via the deferred ticker.Stop()) — but the bound is
+	// small enough that a Close that does NOT join would not even
+	// have unblocked the loop yet (the loop is parked in select).
+	deadline := time.Now().Add(200 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if !structuralInvariantClockHasWaiter(h.clock.BlockUntilContext) {
+			return // success: loop exited
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	require.Fail(t, "Scheduler.Close returned but the run loop is still parked on the fake clock ticker; this is the very race the WaitsForLoopExit invariant forbids")
+}
+
+// structuralInvariantClockHasWaiter probes whether the FakeClock has
+// at least one waiter. clockwork.BlockUntilContext(ctx, n) blocks until
+// the waiter count is >= n; with n=1 and a tiny deadline:
+//
+//   - returns nil immediately → at least 1 waiter is registered (loop
+//     is parked on its ticker).
+//   - returns context.DeadlineExceeded → zero waiters (loop has exited).
+//
+// clockwork does not export NumWaiters, so this asymmetric probe is
+// the only externally-observable way to tell the two states apart.
+func structuralInvariantClockHasWaiter(
+	blockUntil func(context.Context, int) error,
+) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
+	err := blockUntil(ctx, 1)
+	return err == nil
+}
+
+// TestStructuralInvariant_ManagerRestore_ReplacesExistingState pins
+// the RAFT FSM Restore contract: post-Restore state == snapshot, not
+// pre-state ∪ snapshot. Exercises the three failure modes the merge
+// implementation allows: (a) different ID in shared namespace,
+// (b) unrelated namespace, (c) intersection (correctly overwritten —
+// positive control).
+//
+// Pins the replace-not-merge fix in Manager.Restore
+// (`m.tasks = make(...)` before populating).
+func TestStructuralInvariant_ManagerRestore_ReplacesExistingState(t *testing.T) {
+	now := time.Now().Truncate(time.Millisecond)
+
+	nullLogger, _ := logrustest.NewNullLogger()
+
+	// Build a manager and ingest two pre-existing tasks: one in
+	// namespace "ns-shared" and one in namespace "ns-orphan".
+	preRestore := NewManager(ManagerParameters{
+		CompletedTaskTTL: 24 * time.Hour,
+		Logger:           nullLogger,
+	})
+	structuralInvariantSeedTask(t, preRestore, "ns-shared", "pre-existing-task", []byte("pre"), now, 1)
+	structuralInvariantSeedTask(t, preRestore, "ns-orphan", "orphan-task", []byte("orph"), now, 2)
+
+	// Build the snapshot source manager separately. It contains a
+	// DIFFERENT task in "ns-shared" (different ID, so a merge would
+	// keep both) and nothing in "ns-orphan".
+	snapshotSource := NewManager(ManagerParameters{
+		CompletedTaskTTL: 24 * time.Hour,
+		Logger:           nullLogger,
+	})
+	structuralInvariantSeedTask(t, snapshotSource, "ns-shared", "snapshot-task", []byte("snap"), now, 3)
+
+	snapBytes, err := snapshotSource.Snapshot()
+	require.NoError(t, err)
+
+	// Restore the snapshot into the pre-populated manager.
+	require.NoError(t, preRestore.Restore(snapBytes))
+
+	got, err := preRestore.ListDistributedTasks(context.Background())
+	require.NoError(t, err)
+
+	// Invariant (replacement, not merge):
+	//
+	//   - ns-orphan must NOT exist post-restore (it was absent in the snapshot).
+	//   - ns-shared must contain exactly the snapshot task ("snapshot-task")
+	//     and NOT the pre-existing task ("pre-existing-task").
+	require.NotContains(t, got, "ns-orphan",
+		"Manager.Restore must drop namespaces absent in the snapshot; "+
+			"keeping ns-orphan means the FSM merged instead of replaced (real bug)")
+
+	sharedTasks, ok := got["ns-shared"]
+	require.True(t, ok, "snapshot did contain ns-shared; it must survive")
+	require.Len(t, sharedTasks, 1,
+		"ns-shared must contain ONLY the snapshotted task; "+
+			"a length > 1 means Manager.Restore merged pre-existing task into snapshot state")
+	require.Equal(t, "snapshot-task", sharedTasks[0].ID,
+		"the surviving task in ns-shared must be the one from the snapshot, "+
+			"not the pre-existing task (replacement contract)")
+}
+
+// structuralInvariantSeedTask is a tight helper that injects a
+// hand-built Task directly into the Manager's in-memory store,
+// bypassing the AddTask RAFT-apply path. This keeps the test
+// independent of the AddTask command shape and immune to changes in
+// the AddTask validation surface — we are testing the Restore
+// contract, not AddTask. Caller-supplied seqNum becomes the task
+// Version.
+func structuralInvariantSeedTask(
+	t *testing.T,
+	m *Manager,
+	namespace, id string,
+	payload []byte,
+	now time.Time,
+	seqNum uint64,
+) {
+	t.Helper()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.tasks[namespace]; !ok {
+		m.tasks[namespace] = map[string]*Task{}
+	}
+	m.tasks[namespace][id] = &Task{
+		Namespace: namespace,
+		TaskDescriptor: TaskDescriptor{
+			ID:      id,
+			Version: seqNum,
+		},
+		Payload:   payload,
+		Status:    TaskStatusStarted,
+		StartedAt: now,
+		Units: map[string]*Unit{
+			"u-1": {ID: "u-1", Status: UnitStatusPending},
+		},
+	}
+}
+
+// TestStructuralInvariant_TTLSweepIsTheOnlyCleanUpProposer pins the fact
+// [Manager.CleanUpTask]'s unrecognized-status exit rests on. That exit is
+// only sound because the sweep filters on the leader's view, so a CLEAN_UP
+// for a task this build cannot classify exists only once the cluster
+// already considers it done. A second proposer reading local state would
+// let one node delete a task the rest still considers live, so adding one
+// has to fail here rather than in production.
+//
+// Two spellings count as proposing: calling the service method, and
+// building the command directly. The second is how the first one is
+// implemented, so a scan for the method name alone would miss a caller
+// that skipped it.
+func TestStructuralInvariant_TTLSweepIsTheOnlyCleanUpProposer(t *testing.T) {
+	root := filepath.Join("..", "..")
+	require.FileExists(t, filepath.Join(root, "go.mod"),
+		"expected the repo root two levels up; this test scans the whole tree")
+
+	// The leading dot on the first is what separates a call from the
+	// interface method and from the Raft method that implements it. The
+	// second is the command that method builds, which is what makes it a
+	// proposal in the first place.
+	proposes := func(line string) bool {
+		return strings.Contains(line, ".CleanUpDistributedTask(") ||
+			strings.Contains(line, "ApplyRequest_TYPE_DISTRIBUTED_TASK_CLEAN_UP")
+	}
+
+	var callSites []string
+	require.NoError(t, filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			// Dot-directories are skipped wholesale: this repo keeps git
+			// worktrees under .claude/worktrees/, and a nested checkout
+			// would report every call site once per checkout.
+			if path != root && (d.Name() == "vendor" || strings.HasPrefix(d.Name(), ".")) {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		name := d.Name()
+		if !strings.HasSuffix(name, ".go") ||
+			strings.HasSuffix(name, "_test.go") ||
+			strings.HasSuffix(name, ".pb.go") ||
+			strings.HasPrefix(name, "mock_") {
+			return nil
+		}
+		src, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		for i, line := range strings.Split(string(src), "\n") {
+			if proposes(line) {
+				callSites = append(callSites, fmt.Sprintf("%s:%d", filepath.ToSlash(path), i+1))
+			}
+		}
+		return nil
+	}))
+
+	// The one proposer, plus the two sites it goes through. Naming the
+	// command is not proposing it: the endpoint builds what the sweep
+	// asked for, and the apply is the receiving end.
+	wantFiles := []string{
+		"cluster/distributedtask/scheduler.go",
+		"cluster/raft_distributed_tasks_apply_endpoints.go",
+		"cluster/store_apply.go",
+	}
+	// Compared as a multiset. The walk hands sites back in lexical path
+	// order, so an index-by-index comparison would break on a rename for
+	// a reason that has nothing to do with the invariant.
+	gotFiles := make([]string, 0, len(callSites))
+	for _, site := range callSites {
+		file := site[:strings.LastIndex(site, ":")]
+		gotFiles = append(gotFiles, strings.TrimPrefix(file, filepath.ToSlash(root)+"/"))
+	}
+	require.Len(t, callSites, len(wantFiles),
+		"CLEAN_UP must have exactly one proposer, found: %v", callSites)
+	require.ElementsMatch(t, wantFiles, gotFiles,
+		"unexpected CLEAN_UP site; only the TTL sweep may propose one (found: %v)", callSites)
+}

@@ -1,0 +1,2441 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package config
+
+import (
+	"math"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/weaviate/weaviate/usecases/cluster"
+	configRuntime "github.com/weaviate/weaviate/usecases/config/runtime"
+)
+
+const DefaultGoroutineFactor = 1.5
+
+func TestEnvironmentImportGoroutineFactor(t *testing.T) {
+	factors := []struct {
+		name            string
+		goroutineFactor []string
+		expected        float64
+		expectedErr     bool
+	}{
+		{"Valid factor", []string{"1"}, 1, false},
+		{"Low factor", []string{"0.5"}, 0.5, false},
+		{"not given", []string{}, DefaultGoroutineFactor, false},
+		{"High factor", []string{"5"}, 5, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.goroutineFactor) == 1 {
+				t.Setenv("MAX_IMPORT_GOROUTINES_FACTOR", tt.goroutineFactor[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.MaxImportGoroutinesFactor)
+			}
+		})
+	}
+}
+
+func TestEnvironmentSetFlushAfter_AllNames(t *testing.T) {
+	factors := []struct {
+		name        string
+		flushAfter  []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"1"}, 1, false},
+		{"not given", []string{}, DefaultPersistenceMemtablesFlushDirtyAfter, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	envNames := []struct {
+		name    string
+		envName string
+	}{
+		{name: "fallback idle (1st)", envName: "PERSISTENCE_FLUSH_IDLE_MEMTABLES_AFTER"},
+		{name: "fallback idle (2nd)", envName: "PERSISTENCE_MEMTABLES_FLUSH_IDLE_AFTER_SECONDS"},
+		{name: "dirty", envName: "PERSISTENCE_MEMTABLES_FLUSH_DIRTY_AFTER_SECONDS"},
+	}
+
+	for _, n := range envNames {
+		t.Run(n.name, func(t *testing.T) {
+			for _, tt := range factors {
+				t.Run(tt.name, func(t *testing.T) {
+					if len(tt.flushAfter) == 1 {
+						t.Setenv(n.envName, tt.flushAfter[0])
+					}
+					conf := Config{}
+					err := FromEnv(&conf)
+
+					if tt.expectedErr {
+						require.NotNil(t, err)
+					} else {
+						require.Equal(t, tt.expected, conf.Persistence.MemtablesFlushDirtyAfter)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestEnvironmentFlushConflictingValues(t *testing.T) {
+	// if all 3 variable names are used, the newest variable name
+	// should be taken into consideration
+	os.Clearenv()
+	t.Setenv("PERSISTENCE_FLUSH_IDLE_MEMTABLES_AFTER", "16")
+	t.Setenv("PERSISTENCE_MEMTABLES_FLUSH_IDLE_AFTER_SECONDS", "17")
+	t.Setenv("PERSISTENCE_MEMTABLES_FLUSH_DIRTY_AFTER_SECONDS", "18")
+	conf := Config{}
+	err := FromEnv(&conf)
+	require.Nil(t, err)
+
+	assert.Equal(t, 18, conf.Persistence.MemtablesFlushDirtyAfter)
+}
+
+func TestEnvironmentPersistence_dataPath(t *testing.T) {
+	factors := []struct {
+		name     string
+		value    []string
+		config   Config
+		expected string
+	}{
+		{
+			name:     "given",
+			value:    []string{"/var/lib/weaviate"},
+			config:   Config{},
+			expected: "/var/lib/weaviate",
+		},
+		{
+			name:  "given with config set",
+			value: []string{"/var/lib/weaviate"},
+			config: Config{
+				Persistence: Persistence{
+					DataPath: "/var/data/weaviate",
+				},
+			},
+			expected: "/var/lib/weaviate",
+		},
+		{
+			name:     "not given",
+			value:    []string{},
+			config:   Config{},
+			expected: DefaultPersistenceDataPath,
+		},
+		{
+			name:  "not given with config set",
+			value: []string{},
+			config: Config{
+				Persistence: Persistence{
+					DataPath: "/var/data/weaviate",
+				},
+			},
+			expected: "/var/data/weaviate",
+		},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_DATA_PATH", tt.value[0])
+			}
+			conf := tt.config
+			err := FromEnv(&conf)
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.Persistence.DataPath)
+		})
+	}
+}
+
+func TestEnvironmentDropVectorReconcileInterval(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       []string
+		expected    time.Duration
+		expectedErr bool
+	}{
+		{"valid", []string{"5"}, 5 * time.Second, false},
+		{"not given", []string{}, DefaultDropVectorReconcileInterval, false},
+		{"zero", []string{"0"}, -1, true},
+		{"negative", []string{"-30"}, -1, true},
+		{"not parsable", []string{"garbage"}, -1, true},
+		// Above the cap: unchecked, seconds*time.Second would overflow negative
+		// and the reconcile loop would spin flat out.
+		{"over the cap", []string{"10000000000"}, -1, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("DROP_VECTOR_INDEX_RECONCILE_INTERVAL_SECONDS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, conf.DistributedTasks.DropVectorReconcileInterval)
+			}
+		})
+	}
+}
+
+// TestEnvironmentDistributedTasksIntervals pins the caps on the two sibling
+// DTM knobs: unchecked, seconds*time.Second (hours*time.Hour) overflows into
+// a negative duration — the tick interval panics time.NewTicker after boot,
+// and a negative TTL silently expires every completed task record.
+func TestEnvironmentDistributedTasksIntervals(t *testing.T) {
+	tests := []struct {
+		name        string
+		env         string
+		value       []string
+		expected    time.Duration
+		read        func(c *Config) time.Duration
+		expectedErr bool
+	}{
+		{
+			name: "tick valid", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS",
+			value: []string{"5"}, expected: 5 * time.Second,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.SchedulerTickInterval },
+		},
+		{
+			name: "tick not given", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS",
+			value: []string{}, expected: DefaultDistributedTasksSchedulerTickInterval,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.SchedulerTickInterval },
+		},
+		{name: "tick zero", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS", value: []string{"0"}, expectedErr: true},
+		{name: "tick negative", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS", value: []string{"-30"}, expectedErr: true},
+		{name: "tick over the cap", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS", value: []string{"10000000000"}, expectedErr: true},
+		{
+			name: "ttl valid", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS",
+			value: []string{"48"}, expected: 48 * time.Hour,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.CompletedTaskTTL },
+		},
+		{
+			name: "ttl not given", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS",
+			value: []string{}, expected: DefaultDistributedTasksCompletedTaskTTL,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.CompletedTaskTTL },
+		},
+		{
+			// 0 is the "clean completed tasks on the next tick" sentinel.
+			name: "ttl zero", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS",
+			value: []string{"0"}, expected: 0,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.CompletedTaskTTL },
+		},
+		{name: "ttl negative", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS", value: []string{"-1"}, expectedErr: true},
+		{name: "ttl over the cap", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS", value: []string{"10000000000"}, expectedErr: true},
+		// Exact bounds of validateIntRange: the cap itself passes, cap+1 fails.
+		{
+			name: "tick lower bound", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS",
+			value: []string{"1"}, expected: time.Second,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.SchedulerTickInterval },
+		},
+		{
+			name: "tick at the cap", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS",
+			value: []string{"604800"}, expected: 604800 * time.Second,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.SchedulerTickInterval },
+		},
+		{name: "tick just over the cap", env: "DISTRIBUTED_TASKS_SCHEDULER_TICK_INTERVAL_SECONDS", value: []string{"604801"}, expectedErr: true},
+		{
+			name: "ttl at the cap", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS",
+			value: []string{"87600"}, expected: 87600 * time.Hour,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.CompletedTaskTTL },
+		},
+		{name: "ttl just over the cap", env: "DISTRIBUTED_TASKS_COMPLETED_TASK_TTL_HOURS", value: []string{"87601"}, expectedErr: true},
+		{
+			name: "reconcile lower bound", env: "DROP_VECTOR_INDEX_RECONCILE_INTERVAL_SECONDS",
+			value: []string{"1"}, expected: time.Second,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.DropVectorReconcileInterval },
+		},
+		{
+			name: "reconcile at the cap", env: "DROP_VECTOR_INDEX_RECONCILE_INTERVAL_SECONDS",
+			value: []string{"604800"}, expected: 604800 * time.Second,
+			read: func(c *Config) time.Duration { return c.DistributedTasks.DropVectorReconcileInterval },
+		},
+		{name: "reconcile just over the cap", env: "DROP_VECTOR_INDEX_RECONCILE_INTERVAL_SECONDS", value: []string{"604801"}, expectedErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv(tt.env, tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, tt.read(&conf))
+			}
+		})
+	}
+}
+
+func TestEnvironmentMemtable_MaxSize(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"100"}, 100, false},
+		{"not given", []string{}, DefaultPersistenceMemtablesMaxSize, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_MEMTABLES_MAX_SIZE_MB", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.MemtablesMaxSizeMB)
+			}
+		})
+	}
+}
+
+func TestEnvironmentMemtable_MinDuration(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"100"}, 100, false},
+		{"not given", []string{}, DefaultPersistenceMemtablesMinDuration, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_MEMTABLES_MIN_ACTIVE_DURATION_SECONDS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.MemtablesMinActiveDurationSeconds)
+			}
+		})
+	}
+}
+
+func TestEnvironmentMemtable_MaxDuration(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"100"}, 100, false},
+		{"not given", []string{}, DefaultPersistenceMemtablesMaxDuration, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_MEMTABLES_MAX_ACTIVE_DURATION_SECONDS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.MemtablesMaxActiveDurationSeconds)
+			}
+		})
+	}
+}
+
+func TestEnvironmentLazyLoadShardCountThreshold(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    int
+		expectError bool
+	}{
+		{"custom value", "5000", 5000, false},
+		{"default when not set", "", DefaultLazyLoadShardCountThreshold, false},
+		{"invalid string", "not-a-number", 0, true},
+		{"negative rejected", "-1", 0, true},
+		{"zero is valid", "0", 0, false},
+		{"one is valid", "1", 1, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("LAZY_LOAD_SHARD_COUNT_THRESHOLD", "")
+
+			if tt.value != "" {
+				t.Setenv("LAZY_LOAD_SHARD_COUNT_THRESHOLD", tt.value)
+			}
+
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, conf.LazyLoadShardCountThreshold)
+				if tt.name == "zero is valid" {
+					require.NotNil(t, conf.EnableLazyLoadShards)
+					assert.True(t, *conf.EnableLazyLoadShards)
+				}
+			}
+		})
+	}
+}
+
+func TestEnvironmentBM25FilterTombMergeGateRatio(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    float64
+		expectError bool
+	}{
+		{"default when unset", "", DefaultBM25FilterTombMergeGateRatio, false},
+		{"explicit 1", "1", 1, false},
+		{"zero always merges", "0", 0, false},
+		{"custom ratio", "2.5", 2.5, false},
+		{"plus inf disables the fold", "+Inf", math.Inf(1), false},
+		{"inf lowercase", "inf", math.Inf(1), false},
+		{"negative rejected", "-1", 0, true},
+		{"NaN rejected", "NaN", 0, true},
+		{"unparseable rejected", "abc", 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("BM25_FILTER_TOMBSTONE_MERGE_GATE_RATIO", tt.value)
+
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, conf.BM25FilterTombMergeGateRatio.Get())
+			}
+		})
+	}
+}
+
+func TestBM25GateRatioRuntimeValidation(t *testing.T) {
+	// The env value is validated at startup; NewDynamicValueWithValidation carries
+	// the same validator, so runtime config updates via SetValue are rejected too.
+	conf := Config{}
+	require.NoError(t, FromEnv(&conf))
+	dv := conf.BM25FilterTombMergeGateRatio
+	require.NotNil(t, dv)
+	require.Equal(t, DefaultBM25FilterTombMergeGateRatio, dv.Get())
+
+	// valid runtime updates apply
+	require.NoError(t, dv.SetValue(2.5))
+	assert.Equal(t, 2.5, dv.Get())
+	require.NoError(t, dv.SetValue(math.Inf(1)))
+
+	// invalid runtime updates are rejected; the last valid value is retained
+	require.Error(t, dv.SetValue(-1))
+	require.Error(t, dv.SetValue(math.NaN()))
+	assert.Equal(t, math.Inf(1), dv.Get())
+}
+
+func TestEnvironmentDisableLazyLoadShardsBackwardCompat(t *testing.T) {
+	t.Run("DISABLE_LAZY_LOAD_SHARDS=true sets EnableLazyLoadShards=false", func(t *testing.T) {
+		t.Setenv("DISABLE_LAZY_LOAD_SHARDS", "true")
+		t.Setenv("LAZY_LOAD_SHARD_COUNT_THRESHOLD", "")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		require.NotNil(t, conf.EnableLazyLoadShards)
+		assert.False(t, *conf.EnableLazyLoadShards)
+	})
+
+	t.Run("DISABLE_LAZY_LOAD_SHARDS=true coexists with explicit LAZY_LOAD_SHARD_COUNT_THRESHOLD", func(t *testing.T) {
+		t.Setenv("DISABLE_LAZY_LOAD_SHARDS", "true")
+		t.Setenv("LAZY_LOAD_SHARD_COUNT_THRESHOLD", "500")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		require.NotNil(t, conf.EnableLazyLoadShards)
+		assert.False(t, *conf.EnableLazyLoadShards)
+		assert.Equal(t, 500, conf.LazyLoadShardCountThreshold)
+	})
+}
+
+func TestEnvironmentBackupMaxIndividualFiles(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    string
+		expected int
+		wantErr  bool
+	}{
+		{name: "unset uses the default", value: "", expected: DefaultBackupMaxIndividualFiles},
+		{name: "valid value is parsed", value: "250", expected: 250},
+		{name: "one is the smallest accepted value", value: "1", expected: 1},
+		{name: "zero is rejected", value: "0", wantErr: true},
+		{name: "negative is rejected", value: "-1", wantErr: true},
+		{name: "non-numeric is rejected", value: "many", wantErr: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("BACKUP_MAX_INDIVIDUAL_FILES", tc.value)
+
+			conf := Config{}
+			err := FromEnv(&conf)
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "BACKUP_MAX_INDIVIDUAL_FILES")
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, conf.Backup.MaxIndividualFiles.Get())
+		})
+	}
+}
+
+func TestEnvironmentSkipAccessCheck(t *testing.T) {
+	t.Run("unset defaults to false for both", func(t *testing.T) {
+		t.Setenv("BACKUP_SKIP_ACCESS_CHECK", "")
+		t.Setenv("EXPORT_SKIP_ACCESS_CHECK", "")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		assert.False(t, conf.Backup.SkipAccessCheck)
+		assert.False(t, conf.Export.SkipAccessCheck)
+	})
+
+	t.Run("BACKUP_SKIP_ACCESS_CHECK toggles only backup", func(t *testing.T) {
+		t.Setenv("BACKUP_SKIP_ACCESS_CHECK", "true")
+		t.Setenv("EXPORT_SKIP_ACCESS_CHECK", "")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		assert.True(t, conf.Backup.SkipAccessCheck)
+		assert.False(t, conf.Export.SkipAccessCheck)
+	})
+
+	t.Run("EXPORT_SKIP_ACCESS_CHECK toggles only export", func(t *testing.T) {
+		t.Setenv("BACKUP_SKIP_ACCESS_CHECK", "")
+		t.Setenv("EXPORT_SKIP_ACCESS_CHECK", "true")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		assert.False(t, conf.Backup.SkipAccessCheck)
+		assert.True(t, conf.Export.SkipAccessCheck)
+	})
+
+	t.Run("both set toggles both independently", func(t *testing.T) {
+		t.Setenv("BACKUP_SKIP_ACCESS_CHECK", "true")
+		t.Setenv("EXPORT_SKIP_ACCESS_CHECK", "true")
+
+		conf := Config{}
+		require.NoError(t, FromEnv(&conf))
+		assert.True(t, conf.Backup.SkipAccessCheck)
+		assert.True(t, conf.Export.SkipAccessCheck)
+	})
+}
+
+func TestEnvironmentBackupGCS(t *testing.T) {
+	tests := []struct {
+		name     string
+		start    BackupGCS
+		env      map[string]string
+		expected BackupGCS
+		wantErr  string
+	}{
+		{
+			name:     "unset leaves the transport unset, which means grpc",
+			expected: BackupGCS{GRPCConnPool: DefaultBackupGCSGRPCConnPool},
+		},
+		{
+			name:     "empty leaves the transport unset, which means grpc",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": ""},
+			expected: BackupGCS{GRPCConnPool: DefaultBackupGCSGRPCConnPool},
+		},
+		{
+			name:     "http",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "http"},
+			expected: BackupGCS{UseGRPC: new(false), GRPCConnPool: DefaultBackupGCSGRPCConnPool},
+		},
+		{
+			name:     "grpc",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "grpc"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: DefaultBackupGCSGRPCConnPool},
+		},
+		{
+			name:     "transport is case insensitive and trimmed",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": " gRPC "},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: DefaultBackupGCSGRPCConnPool},
+		},
+		{
+			name:    "unknown transport is rejected",
+			env:     map[string]string{"GCS_MODULE_TRANSPORT": "https"},
+			wantErr: `GCS_MODULE_TRANSPORT must be "http" or "grpc". Got: https`,
+		},
+		{
+			name:     "connection pool overrides the default",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "grpc", "GCS_MODULE_GRPC_CONN_POOL": "16"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 16},
+		},
+		{
+			name:     "connection pool of one is accepted",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "grpc", "GCS_MODULE_GRPC_CONN_POOL": "1"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 1},
+		},
+		{
+			name:     "connection pool at the cap is accepted",
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "grpc", "GCS_MODULE_GRPC_CONN_POOL": "64"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: MaxBackupGCSGRPCConnPool},
+		},
+		{
+			name:    "connection pool of zero is rejected",
+			env:     map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "0"},
+			wantErr: "GCS_MODULE_GRPC_CONN_POOL must be an integer between 1 and 64. Got: 0",
+		},
+		{
+			name:    "negative connection pool is rejected",
+			env:     map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "-1"},
+			wantErr: "GCS_MODULE_GRPC_CONN_POOL must be an integer between 1 and 64",
+		},
+		{
+			name:    "connection pool past the cap is rejected",
+			env:     map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "65"},
+			wantErr: "GCS_MODULE_GRPC_CONN_POOL must be an integer between 1 and 64",
+		},
+		{
+			name:    "absurd connection pool is rejected",
+			env:     map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "9223372036854775807"},
+			wantErr: "GCS_MODULE_GRPC_CONN_POOL must be an integer between 1 and 64",
+		},
+		{
+			name:    "non-numeric connection pool is rejected",
+			env:     map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "many"},
+			wantErr: "parse GCS_MODULE_GRPC_CONN_POOL as int",
+		},
+		{
+			name:     "unset transport keeps the config file value",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+		},
+		{
+			name:     "empty transport keeps the config file value",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": ""},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+		},
+		{
+			name:     "a config file pinned to http stays on http",
+			start:    BackupGCS{UseGRPC: new(false), GRPCConnPool: 32},
+			expected: BackupGCS{UseGRPC: new(false), GRPCConnPool: 32},
+		},
+		{
+			name:     "http overrides the config file transport",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "http"},
+			expected: BackupGCS{UseGRPC: new(false), GRPCConnPool: 32},
+		},
+		{
+			name:     "grpc overrides the config file transport",
+			start:    BackupGCS{UseGRPC: new(false), GRPCConnPool: 32},
+			env:      map[string]string{"GCS_MODULE_TRANSPORT": "grpc"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+		},
+		{
+			name:     "connection pool overrides the config file value",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 32},
+			env:      map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "16"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 16},
+		},
+		{
+			name:     "config file connection pool out of range is left for validation",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 100},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 100},
+		},
+		{
+			name:     "connection pool overrides an out of range config file value",
+			start:    BackupGCS{UseGRPC: new(true), GRPCConnPool: 100},
+			env:      map[string]string{"GCS_MODULE_GRPC_CONN_POOL": "8"},
+			expected: BackupGCS{UseGRPC: new(true), GRPCConnPool: 8},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, key := range []string{"GCS_MODULE_TRANSPORT", "GCS_MODULE_GRPC_CONN_POOL"} {
+				t.Setenv(key, tt.env[key])
+			}
+
+			conf := Config{BackupGCS: tt.start}
+			err := FromEnv(&conf)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, conf.BackupGCS)
+		})
+	}
+}
+
+func TestEnvironmentLazyLoadShardSizeThreshold(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    float64
+		expectError bool
+	}{
+		{"custom value", "50.5", 50.5, false},
+		{"default when not set", "", DefaultLazyLoadShardSizeThresholdGB, false},
+		{"invalid string", "not-a-number", 0, true},
+		{"negative rejected", "-1", 0, true},
+		{"zero is valid", "0", 0, false},
+		{"large value", "1000", 1000.0, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Ensure hermetic behavior regardless of outer environment
+			t.Setenv("LAZY_LOAD_SHARD_SIZE_THRESHOLD_GB", "")
+
+			if tt.value != "" {
+				t.Setenv("LAZY_LOAD_SHARD_SIZE_THRESHOLD_GB", tt.value)
+			}
+
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, conf.LazyLoadShardSizeThresholdGB)
+			}
+		})
+	}
+}
+
+func TestEnvironmentLazyLoadShardWarmupMinObjects(t *testing.T) {
+	tests := []struct {
+		name string
+		// preset mirrors a value coming from the config file, which is parsed
+		// before FromEnv runs.
+		preset      int64
+		value       string
+		expected    int64
+		expectedErr bool
+	}{
+		{name: "unset keeps the zero value", value: "", expected: 0},
+		{name: "negative turns the sweep off", value: "-1", expected: -1},
+		{name: "zero sweeps every non-empty shard", value: "0", expected: 0},
+		{name: "positive sets a threshold", value: "1000", expected: 1000},
+		{name: "unparsable value is rejected", value: "not-an-int", expectedErr: true},
+		{name: "config file value survives an unset env var", preset: 500, value: "", expected: 500},
+		{name: "env var overrides the config file", preset: 500, value: "-1", expected: -1},
+		{name: "zero overrides a config-file threshold", preset: 500, value: "0", expected: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Ensure hermetic behavior regardless of outer environment
+			t.Setenv("LAZY_LOAD_SHARD_WARMUP_MIN_OBJECTS", "")
+
+			if tt.value != "" {
+				t.Setenv("LAZY_LOAD_SHARD_WARMUP_MIN_OBJECTS", tt.value)
+			}
+
+			conf := Config{LazyLoadShardWarmupMinObjects: tt.preset}
+			err := FromEnv(&conf)
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, conf.LazyLoadShardWarmupMinObjects)
+		})
+	}
+}
+
+func TestEnvironmentHaltForTransferTimeout(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    time.Duration
+		expectedErr bool
+	}{
+		{name: "default", expected: DefaultHaltForTransferTimeout},
+		{name: "configured", value: "30m", expected: 30 * time.Minute},
+		{name: "invalid", value: "not-a-duration", expectedErr: true},
+		{name: "zero", value: "0s", expectedErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("HALT_FOR_TRANSFER_TIMEOUT", tt.value)
+
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, conf.HaltForTransferTimeout)
+		})
+	}
+}
+
+func TestEnvironmentParseClusterConfig(t *testing.T) {
+	hostname, _ := os.Hostname()
+	tests := []struct {
+		name           string
+		envVars        map[string]string
+		expectedResult cluster.Config
+		expectedErr    error
+	}{
+		{
+			name: "valid cluster config - ports and advertiseaddr provided",
+			envVars: map[string]string{
+				"CLUSTER_GOSSIP_BIND_PORT": "7100",
+				"CLUSTER_DATA_BIND_PORT":   "7101",
+				"CLUSTER_ADVERTISE_ADDR":   "193.0.0.1",
+				"CLUSTER_ADVERTISE_PORT":   "9999",
+			},
+			expectedResult: cluster.Config{
+				Hostname:         hostname,
+				GossipBindPort:   7100,
+				DataBindPort:     7101,
+				AdvertiseAddr:    "193.0.0.1",
+				AdvertisePort:    9999,
+				MaintenanceNodes: make([]string, 0),
+			},
+		},
+		{
+			name: "valid cluster config - no ports and advertiseaddr provided",
+			expectedResult: cluster.Config{
+				Hostname:         hostname,
+				GossipBindPort:   DefaultGossipBindPort,
+				DataBindPort:     DefaultGossipBindPort + 1,
+				AdvertiseAddr:    "",
+				MaintenanceNodes: make([]string, 0),
+			},
+		},
+		{
+			name: "valid cluster config - only gossip bind port provided",
+			envVars: map[string]string{
+				"CLUSTER_GOSSIP_BIND_PORT": "7777",
+			},
+			expectedResult: cluster.Config{
+				Hostname:         hostname,
+				GossipBindPort:   7777,
+				DataBindPort:     7778,
+				MaintenanceNodes: make([]string, 0),
+			},
+		},
+		{
+			name: "valid cluster config - all ports provided",
+			envVars: map[string]string{
+				"CLUSTER_GOSSIP_BIND_PORT": "7100",
+				"CLUSTER_DATA_BIND_PORT":   "7111",
+			},
+			expectedResult: cluster.Config{
+				Hostname:         hostname,
+				GossipBindPort:   7100,
+				DataBindPort:     7111,
+				MaintenanceNodes: make([]string, 0),
+			},
+		},
+		{
+			name: "schema sync disabled",
+			envVars: map[string]string{
+				"CLUSTER_IGNORE_SCHEMA_SYNC": "true",
+			},
+			expectedResult: cluster.Config{
+				Hostname:                hostname,
+				GossipBindPort:          7946,
+				DataBindPort:            7947,
+				IgnoreStartupSchemaSync: true,
+				MaintenanceNodes:        make([]string, 0),
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			for k, v := range test.envVars {
+				t.Setenv(k, v)
+			}
+			cfg, err := parseClusterConfig()
+			if test.expectedErr != nil {
+				assert.EqualError(t, err, test.expectedErr.Error(),
+					"expected err: %v, got: %v", test.expectedErr, err)
+			} else {
+				assert.Nil(t, err, "expected nil, got: %v", err)
+				assert.EqualValues(t, test.expectedResult, cfg)
+			}
+		})
+	}
+}
+
+func TestEnvironmentSetDefaultVectorDistanceMetric(t *testing.T) {
+	t.Run("DefaultVectorDistanceMetricIsEmpty", func(t *testing.T) {
+		os.Clearenv()
+		conf := Config{}
+		FromEnv(&conf)
+		require.Equal(t, "", conf.DefaultVectorDistanceMetric)
+	})
+
+	t.Run("NonEmptyDefaultVectorDistanceMetric", func(t *testing.T) {
+		os.Clearenv()
+		t.Setenv("DEFAULT_VECTOR_DISTANCE_METRIC", "l2-squared")
+		conf := Config{}
+		FromEnv(&conf)
+		require.Equal(t, "l2-squared", conf.DefaultVectorDistanceMetric)
+	})
+}
+
+func TestEnvironmentDebugEndpointsEnabled(t *testing.T) {
+	tests := []struct {
+		name     string
+		envSet   bool
+		envValue string
+		initial  *configRuntime.DynamicValue[bool] // value from config file
+		expected bool
+	}{
+		{name: "env true overrides unset", envSet: true, envValue: "true", expected: true},
+		{name: "env false overrides unset", envSet: true, envValue: "false", expected: false},
+		{name: "env true overrides config file false", envSet: true, envValue: "true", initial: configRuntime.NewDynamicValue(false), expected: true},
+		{name: "env false overrides config file true", envSet: true, envValue: "false", initial: configRuntime.NewDynamicValue(true), expected: false},
+		{name: "env unset preserves config file true", envSet: false, initial: configRuntime.NewDynamicValue(true), expected: true},
+		{name: "env unset preserves config file false", envSet: false, initial: configRuntime.NewDynamicValue(false), expected: false},
+		{name: "env unset and no config file defaults to false", envSet: false, expected: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if tt.envSet {
+				t.Setenv("DEBUG_ENDPOINTS_ENABLED", tt.envValue)
+			}
+			conf := Config{}
+			conf.Profiling.DebugEndpointsEnabled = tt.initial
+			require.NoError(t, FromEnv(&conf))
+			require.NotNil(t, conf.Profiling.DebugEndpointsEnabled)
+			require.Equal(t, tt.expected, conf.Profiling.DebugEndpointsEnabled.Get())
+		})
+	}
+}
+
+func TestEnvironmentMaxConcurrentGetRequests(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"100"}, 100, false},
+		{"not given", []string{}, DefaultMaxConcurrentGetRequests, false},
+		{"unlimited", []string{"-1"}, -1, false},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("MAXIMUM_CONCURRENT_GET_REQUESTS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.MaximumConcurrentGetRequests)
+			}
+		})
+	}
+}
+
+func TestEnvironmentCORS_Origin(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    string
+		expectedErr bool
+	}{
+		{"Valid", []string{"http://foo.com"}, "http://foo.com", false},
+		{"not given", []string{}, DefaultCORSAllowOrigin, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if len(tt.value) == 1 {
+				os.Setenv("CORS_ALLOW_ORIGIN", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.CORS.AllowOrigin)
+			}
+		})
+	}
+}
+
+func TestEnvironmentGRPCPort(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"50052"}, 50052, false},
+		{"not given", []string{}, DefaultGRPCPort, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("GRPC_PORT", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.GRPC.Port)
+			}
+		})
+	}
+}
+
+// TestEnvironmentGRPCWebEnabledDefaultsTrue pins that grpc-web is on by default
+// on every construction path now that the enable env var is gone: FromEnv seeds a
+// non-nil DynamicValue(true) (so the runtime override has a live value to flip),
+// and a bare Config resolves true via the nil-safe accessor (nil.Get() would
+// otherwise be false and silently disable the default).
+func TestEnvironmentGRPCWebEnabledDefaultsTrue(t *testing.T) {
+	t.Run("bare Config resolves true via accessor", func(t *testing.T) {
+		require.True(t, Config{}.GRPC.GrpcWebEnabledOrDefault())
+	})
+
+	// The config file is parsed into GRPC.GrpcWebEnabled before FromEnv runs, so
+	// FromEnv must only default when nothing set the value. Anything already there
+	// (an operator's grpc.grpcWebEnabled off-switch, in particular) has to survive.
+	preset := []struct {
+		name string
+		seed *configRuntime.DynamicValue[bool]
+		want bool
+	}{
+		{name: "nil is seeded to default true", seed: nil, want: true},
+		{name: "file-set false survives", seed: configRuntime.NewDynamicValue(false), want: false},
+		{name: "file-set true survives", seed: configRuntime.NewDynamicValue(true), want: true},
+	}
+	for _, tt := range preset {
+		t.Run("FromEnv preserves file value: "+tt.name, func(t *testing.T) {
+			conf := Config{}
+			conf.GRPC.GrpcWebEnabled = tt.seed
+			require.NoError(t, FromEnv(&conf))
+			require.NotNil(t, conf.GRPC.GrpcWebEnabled, "runtime override needs a live value to toggle")
+			require.Equal(t, tt.want, conf.GRPC.GrpcWebEnabled.Get())
+			require.Equal(t, tt.want, conf.GRPC.GrpcWebEnabledOrDefault())
+		})
+	}
+}
+
+func TestEnvironmentCORS_Methods(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    string
+		expectedErr bool
+	}{
+		{"Valid", []string{"POST"}, "POST", false},
+		{"not given", []string{}, DefaultCORSAllowMethods, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if len(tt.value) == 1 {
+				os.Setenv("CORS_ALLOW_METHODS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.CORS.AllowMethods)
+			}
+		})
+	}
+}
+
+func TestEnvironmentDisableGraphQL(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    bool
+		expectedErr bool
+	}{
+		{"Valid: true", []string{"true"}, true, false},
+		{"Valid: false", []string{"false"}, false, false},
+		{"Valid: 1", []string{"1"}, true, false},
+		{"Valid: 0", []string{"0"}, false, false},
+		{"Valid: on", []string{"on"}, true, false},
+		{"Valid: off", []string{"off"}, false, false},
+		{"not given", []string{}, false, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("DISABLE_GRAPHQL", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.DisableGraphQL.Get())
+			}
+		})
+	}
+}
+
+func TestEnvironmentExperimentalRESTSearchEnabled(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    bool
+		expectedErr bool
+	}{
+		{"Valid: true", []string{"true"}, true, false},
+		{"Valid: false", []string{"false"}, false, false},
+		{"Valid: 1", []string{"1"}, true, false},
+		{"Valid: 0", []string{"0"}, false, false},
+		{"Valid: on", []string{"on"}, true, false},
+		{"Valid: off", []string{"off"}, false, false},
+		// experimental feature: unset means disabled (opt-in)
+		{"not given", []string{}, false, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("EXPERIMENTAL_REST_SEARCH_ENABLED", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.ExperimentalRESTSearchEnabled.Get())
+			}
+		})
+	}
+}
+
+func TestEnvironmentCORS_Headers(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    string
+		expectedErr bool
+	}{
+		{"Valid", []string{"Authorization"}, "Authorization", false},
+		{"not given", []string{}, DefaultCORSAllowHeaders, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if len(tt.value) == 1 {
+				os.Setenv("CORS_ALLOW_HEADERS", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.CORS.AllowHeaders)
+			}
+		})
+	}
+}
+
+func TestEnvironmentPrometheusGroupClasses_OldName(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    bool
+		expectedErr bool
+	}{
+		{"Valid: true", []string{"true"}, true, false},
+		{"Valid: false", []string{"false"}, false, false},
+		{"Valid: 1", []string{"1"}, true, false},
+		{"Valid: 0", []string{"0"}, false, false},
+		{"Valid: on", []string{"on"}, true, false},
+		{"Valid: off", []string{"off"}, false, false},
+		{"not given", []string{}, false, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("PROMETHEUS_MONITORING_ENABLED", "true")
+			if len(tt.value) == 1 {
+				t.Setenv("PROMETHEUS_MONITORING_GROUP_CLASSES", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Monitoring.Group)
+			}
+		})
+	}
+}
+
+func TestEnvironmentPrometheusGroupClasses_NewName(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    bool
+		expectedErr bool
+	}{
+		{"Valid: true", []string{"true"}, true, false},
+		{"Valid: false", []string{"false"}, false, false},
+		{"Valid: 1", []string{"1"}, true, false},
+		{"Valid: 0", []string{"0"}, false, false},
+		{"Valid: on", []string{"on"}, true, false},
+		{"Valid: off", []string{"off"}, false, false},
+		{"not given", []string{}, false, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("PROMETHEUS_MONITORING_ENABLED", "true")
+			if len(tt.value) == 1 {
+				t.Setenv("PROMETHEUS_MONITORING_GROUP", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Monitoring.Group)
+			}
+		})
+	}
+}
+
+func TestEnvironmentMinimumReplicationFactor(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"3"}, 3, false},
+		{"not given", []string{}, DefaultMinimumReplicationFactor, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"zero factor", []string{"0"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("REPLICATION_MINIMUM_FACTOR", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Replication.MinimumFactor)
+			}
+		})
+	}
+}
+
+func TestEnvironmentQueryDefaults_Limit(t *testing.T) {
+	factors := []struct {
+		name     string
+		value    []string
+		config   Config
+		expected int64
+	}{
+		{
+			name:     "Valid",
+			value:    []string{"3"},
+			config:   Config{},
+			expected: 3,
+		},
+		{
+			name:  "Valid with config already set",
+			value: []string{"3"},
+			config: Config{
+				QueryDefaults: QueryDefaults{
+					Limit: 20,
+				},
+			},
+			expected: 3,
+		},
+		{
+			name:  "not given with config set",
+			value: []string{},
+			config: Config{
+				QueryDefaults: QueryDefaults{
+					Limit: 20,
+				},
+			},
+			expected: 20,
+		},
+		{
+			name:     "not given with config set",
+			value:    []string{},
+			config:   Config{},
+			expected: DefaultQueryDefaultsLimit,
+		},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("QUERY_DEFAULTS_LIMIT", tt.value[0])
+			}
+			conf := tt.config
+			err := FromEnv(&conf)
+
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.QueryDefaults.Limit)
+		})
+	}
+}
+
+func TestEnvironmentAuthentication(t *testing.T) {
+	factors := []struct {
+		name         string
+		auth_env_var []string
+		expected     Authentication
+	}{
+		{
+			name:         "Valid API Key",
+			auth_env_var: []string{"AUTHENTICATION_APIKEY_ENABLED"},
+			expected: Authentication{
+				APIKey: StaticAPIKey{
+					Enabled: true,
+				},
+			},
+		},
+		{
+			name:         "Valid Anonymous Access",
+			auth_env_var: []string{"AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED"},
+			expected: Authentication{
+				AnonymousAccess: AnonymousAccess{
+					Enabled: true,
+				},
+			},
+		},
+		{
+			name:         "Valid OIDC Auth",
+			auth_env_var: []string{"AUTHENTICATION_OIDC_ENABLED"},
+			expected: Authentication{
+				OIDC: OIDC{
+					Enabled:              true,
+					Issuer:               configRuntime.NewDynamicValue(""),
+					ClientID:             configRuntime.NewDynamicValue(""),
+					SkipClientIDCheck:    configRuntime.NewDynamicValue(false),
+					UsernameClaim:        configRuntime.NewDynamicValue(""),
+					GroupsClaim:          configRuntime.NewDynamicValue(""),
+					NamespaceClaim:       configRuntime.NewDynamicValue(""),
+					GlobalPrincipalClaim: configRuntime.NewDynamicValue(""),
+					Scopes:               configRuntime.NewDynamicValue([]string(nil)),
+					Certificate:          configRuntime.NewDynamicValue(""),
+					JWKSUrl:              configRuntime.NewDynamicValue(""),
+					SkipTLSVerify:        configRuntime.NewDynamicValue(false),
+				},
+			},
+		},
+		{
+			name:         "Valid OIDC Auth with SkipTLSVerify",
+			auth_env_var: []string{"AUTHENTICATION_OIDC_ENABLED", "AUTHENTICATION_OIDC_INSECURE_SKIP_TLS_VERIFY"},
+			expected: Authentication{
+				OIDC: OIDC{
+					Enabled:              true,
+					Issuer:               configRuntime.NewDynamicValue(""),
+					ClientID:             configRuntime.NewDynamicValue(""),
+					SkipClientIDCheck:    configRuntime.NewDynamicValue(false),
+					UsernameClaim:        configRuntime.NewDynamicValue(""),
+					GroupsClaim:          configRuntime.NewDynamicValue(""),
+					NamespaceClaim:       configRuntime.NewDynamicValue(""),
+					GlobalPrincipalClaim: configRuntime.NewDynamicValue(""),
+					Scopes:               configRuntime.NewDynamicValue([]string(nil)),
+					Certificate:          configRuntime.NewDynamicValue(""),
+					JWKSUrl:              configRuntime.NewDynamicValue(""),
+					SkipTLSVerify:        configRuntime.NewDynamicValue(true),
+				},
+			},
+		},
+		{
+			name:         "Enabled db user",
+			auth_env_var: []string{"AUTHENTICATION_DB_USERS_ENABLED"},
+			expected: Authentication{
+				DBUsers: DbUsers{Enabled: true},
+			},
+		},
+		{
+			name:         "not given",
+			auth_env_var: []string{},
+			expected: Authentication{
+				AnonymousAccess: AnonymousAccess{
+					Enabled: true,
+				},
+			},
+		},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, envVar := range tt.auth_env_var {
+				t.Setenv(envVar, "true")
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.Authentication)
+		})
+	}
+}
+
+func TestEnvironmentHNSWMaxLogSize(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int64
+		expectedErr bool
+	}{
+		{"Valid no unit", []string{"3"}, 3, false},
+		{"Valid IEC unit", []string{"3KB"}, 3000, false},
+		{"Valid SI unit", []string{"3KiB"}, 3 * 1024, false},
+		{"not given", []string{}, DefaultPersistenceHNSWMaxLogSize, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_HNSW_MAX_LOG_SIZE", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.HNSWMaxLogSize)
+			}
+		})
+	}
+}
+
+func TestEnvironmentHNSWWaitForPrefill(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    bool
+		expectedErr bool
+	}{
+		{"Valid: true", []string{"true"}, true, false},
+		{"Valid: false", []string{"false"}, false, false},
+		{"Valid: 1", []string{"1"}, true, false},
+		{"Valid: 0", []string{"0"}, false, false},
+		{"Valid: on", []string{"on"}, true, false},
+		{"Valid: off", []string{"off"}, false, false},
+		{"not given", []string{}, true, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if len(tt.value) == 1 {
+				t.Setenv("HNSW_STARTUP_WAIT_FOR_VECTOR_CACHE", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.HNSWStartupWaitForVectorCache)
+			}
+		})
+	}
+}
+
+func TestEnvironmentHNSWVisitedListPoolMaxSize(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"3"}, 3, false},
+		{"not given", []string{}, DefaultHNSWVisitedListPoolSize, false},
+		{"valid negative", []string{"-1"}, -1, false},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("HNSW_VISITED_LIST_POOL_MAX_SIZE", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.HNSWVisitedListPoolMaxSize)
+			}
+		})
+	}
+}
+
+func TestEnvironmentHNSWFlatSearchConcurrency(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int
+		expectedErr bool
+	}{
+		{"Valid", []string{"3"}, 3, false},
+		{"not given", []string{}, DefaultHNSWFlatSearchConcurrency, false},
+		{"valid negative", []string{"-1"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("HNSW_FLAT_SEARCH_CONCURRENCY", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.HNSWFlatSearchConcurrency)
+			}
+		})
+	}
+}
+
+func TestEnvironmentHNSWAcornFilterRatio(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    float64
+		expectedErr bool
+	}{
+		{"Valid", []string{"0.5"}, 0.5, false},
+		{"not given", []string{}, 0.4, false},
+		{"max", []string{"0.0"}, 0.0, false},
+		{"min", []string{"1.0"}, 1.0, false},
+		{"negative", []string{"-1.2"}, -1.0, true},
+		{"too large", []string{"1.2"}, -1.0, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("HNSW_ACORN_FILTER_RATIO", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.HNSWAcornFilterRatio)
+			}
+		})
+	}
+}
+
+func TestParseCollectionPropsTenants(t *testing.T) {
+	type testCase struct {
+		env            string
+		expected       []CollectionPropsTenants
+		expectedErrMsg string
+	}
+
+	p := newCollectionPropsTenantsParser()
+
+	testCases := []testCase{
+		{
+			env:      "",
+			expected: []CollectionPropsTenants{},
+		},
+
+		// collections
+		{
+			env: "Collection1",
+			expected: []CollectionPropsTenants{
+				{Collection: "Collection1"},
+			},
+		},
+		{
+			env: "Collection1; Collection2; ;",
+			expected: []CollectionPropsTenants{
+				{Collection: "Collection1"},
+				{Collection: "Collection2"},
+			},
+		},
+		{
+			env: "Collection1:; Collection2::; ;",
+			expected: []CollectionPropsTenants{
+				{Collection: "Collection1"},
+				{Collection: "Collection2"},
+			},
+		},
+
+		// collections + props
+		{
+			env: "Collection1:prop1,prop2",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Props:      []string{"prop1", "prop2"},
+				},
+			},
+		},
+		{
+			env: "Collection1:prop1, prop2;Collection2:prop3: ;",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Props:      []string{"prop1", "prop2"},
+				},
+				{
+					Collection: "Collection2",
+					Props:      []string{"prop3"},
+				},
+			},
+		},
+
+		// collections + tenants
+		{
+			env: "Collection1::tenant1,tenant2",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Tenants:    []string{"tenant1", "tenant2"},
+				},
+			},
+		},
+		{
+			env: "Collection1::tenant1, tenant2;Collection2::tenant3",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Tenants:    []string{"tenant1", "tenant2"},
+				},
+				{
+					Collection: "Collection2",
+					Tenants:    []string{"tenant3"},
+				},
+			},
+		},
+
+		// collections + props + tenants
+		{
+			env: "Collection1:prop1:tenant1,tenant2",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Props:      []string{"prop1"},
+					Tenants:    []string{"tenant1", "tenant2"},
+				},
+			},
+		},
+		{
+			env: "Collection1:prop1 :tenant1, tenant2;Collection2:prop2,prop3 :tenant3 ; ",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Props:      []string{"prop1"},
+					Tenants:    []string{"tenant1", "tenant2"},
+				},
+				{
+					Collection: "Collection2",
+					Props:      []string{"prop2", "prop3"},
+					Tenants:    []string{"tenant3"},
+				},
+			},
+		},
+
+		// unique / merged
+		{
+			env: "Collection1:prop1,prop2:tenant1,tenant2;Collection2:propX;Collection1:prop2,prop3;Collection3::tenantY;Collection1:prop4:tenant2,tenant3",
+			expected: []CollectionPropsTenants{
+				{
+					Collection: "Collection1",
+					Props:      []string{"prop1", "prop2", "prop3", "prop4"},
+					Tenants:    []string{"tenant1", "tenant2", "tenant3"},
+				},
+				{
+					Collection: "Collection2",
+					Props:      []string{"propX"},
+				},
+				{
+					Collection: "Collection3",
+					Tenants:    []string{"tenantY"},
+				},
+			},
+		},
+
+		// errors
+		{
+			env:            "lowerCaseCollectionName",
+			expectedErrMsg: "invalid collection name",
+		},
+		{
+			env:            "InvalidChars#",
+			expectedErrMsg: "invalid collection name",
+		},
+		{
+			env:            "Collection1:InvalidChars#",
+			expectedErrMsg: "invalid property name",
+		},
+		{
+			env:            "Collection1::InvalidChars#",
+			expectedErrMsg: "invalid tenant/shard name",
+		},
+		{
+			env:            ":prop",
+			expectedErrMsg: "missing collection name",
+		},
+		{
+			env:            "::tenant",
+			expectedErrMsg: "missing collection name",
+		},
+		{
+			env:            ":prop:tenant",
+			expectedErrMsg: "missing collection name",
+		},
+		{
+			env:            "Collection1:::",
+			expectedErrMsg: "too many parts",
+		},
+		{
+			env:            "Collection1:prop:tenant:",
+			expectedErrMsg: "too many parts",
+		},
+		{
+			env:            "Collection1:prop:tenant:something",
+			expectedErrMsg: "too many parts",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.env, func(t *testing.T) {
+			cpts, err := p.parse(tc.env)
+
+			if tc.expectedErrMsg != "" {
+				assert.ErrorContains(t, err, tc.expectedErrMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.ElementsMatch(t, tc.expected, cpts)
+		})
+	}
+}
+
+func TestEnvironmentPersistenceMinMMapSize(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int64
+		expectedErr bool
+	}{
+		{"Valid no unit", []string{"3"}, 3, false},
+		{"Valid IEC unit", []string{"3KB"}, 3000, false},
+		{"Valid SI unit", []string{"3KiB"}, 3 * 1024, false},
+		{"not given", []string{}, DefaultPersistenceMinMMapSize, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_MIN_MMAP_SIZE", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.MinMMapSize)
+			}
+		})
+	}
+}
+
+func TestEnvironmentPersistenceMaxReuseWalSize(t *testing.T) {
+	factors := []struct {
+		name        string
+		value       []string
+		expected    int64
+		expectedErr bool
+	}{
+		{"Valid no unit", []string{"3"}, 3, false},
+		{"Valid IEC unit", []string{"3KB"}, 3000, false},
+		{"Valid SI unit", []string{"3KiB"}, 3 * 1024, false},
+		{"not given", []string{}, DefaultPersistenceMaxReuseWalSize, false},
+		{"invalid factor", []string{"-1"}, -1, true},
+		{"not parsable", []string{"I'm not a number"}, -1, true},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("PERSISTENCE_MAX_REUSE_WAL_SIZE", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr {
+				require.NotNil(t, err)
+			} else {
+				require.Equal(t, tt.expected, conf.Persistence.MaxReuseWalSize)
+			}
+		})
+	}
+}
+
+func TestParsePositiveFloat(t *testing.T) {
+	tests := []struct {
+		name         string
+		envName      string
+		envValue     string
+		defaultValue float64
+		expected     float64
+		expectError  bool
+	}{
+		{
+			name:         "valid positive float",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "1.5",
+			defaultValue: 2.0,
+			expected:     1.5,
+			expectError:  false,
+		},
+		{
+			name:         "valid integer as float",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "2",
+			defaultValue: 1.0,
+			expected:     2.0,
+			expectError:  false,
+		},
+		{
+			name:         "use default when env not set",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "",
+			defaultValue: 3.0,
+			expected:     3.0,
+			expectError:  false,
+		},
+		{
+			name:         "zero value should error",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "0",
+			defaultValue: 1.0,
+			expected:     0,
+			expectError:  true,
+		},
+		{
+			name:         "negative value should error",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "-1.5",
+			defaultValue: 1.0,
+			expected:     0,
+			expectError:  true,
+		},
+		{
+			name:         "invalid float should error",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "not-a-float",
+			defaultValue: 1.0,
+			expected:     0,
+			expectError:  true,
+		},
+		{
+			name:         "very small positive float",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "0.0000001",
+			defaultValue: 1.0,
+			expected:     0.0000001,
+			expectError:  false,
+		},
+		{
+			name:         "very large positive float",
+			envName:      "TEST_POSITIVE_FLOAT",
+			envValue:     "999999.999999",
+			defaultValue: 1.0,
+			expected:     999999.999999,
+			expectError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set up environment
+			if tt.envValue != "" {
+				t.Setenv(tt.envName, tt.envValue)
+			} else {
+				os.Unsetenv(tt.envName)
+			}
+
+			// Create a variable to store the result
+			var result float64
+
+			// Call the function
+			err := parsePositiveFloat(tt.envName, func(val float64) {
+				result = val
+			}, tt.defaultValue)
+
+			// Check error
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.envValue != "" {
+					assert.Contains(t, err.Error(), tt.envName)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestParsePositiveDuration(t *testing.T) {
+	tests := []struct {
+		name         string
+		envValue     string
+		defaultValue time.Duration
+		expected     time.Duration
+		expectError  bool
+	}{
+		{
+			name:         "valid duration",
+			envValue:     "5s",
+			defaultValue: 1 * time.Second,
+			expected:     5 * time.Second,
+			expectError:  false,
+		},
+		{
+			name:         "valid duration with milliseconds",
+			envValue:     "500ms",
+			defaultValue: 1 * time.Second,
+			expected:     500 * time.Millisecond,
+			expectError:  false,
+		},
+		{
+			name:         "valid duration with minutes",
+			envValue:     "2m",
+			defaultValue: 1 * time.Second,
+			expected:     2 * time.Minute,
+			expectError:  false,
+		},
+		{
+			name:         "empty env uses default",
+			envValue:     "",
+			defaultValue: 3 * time.Second,
+			expected:     3 * time.Second,
+			expectError:  false,
+		},
+		{
+			name:         "invalid duration format",
+			envValue:     "invalid",
+			defaultValue: 1 * time.Second,
+			expected:     0,
+			expectError:  true,
+		},
+		{
+			name:         "zero duration not allowed",
+			envValue:     "0s",
+			defaultValue: 1 * time.Second,
+			expected:     0,
+			expectError:  true,
+		},
+		{
+			name:         "negative duration not allowed",
+			envValue:     "-1s",
+			defaultValue: 1 * time.Second,
+			expected:     0,
+			expectError:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Set environment variable
+			if tt.envValue != "" {
+				t.Setenv("TEST_DURATION", tt.envValue)
+			} else {
+				t.Setenv("TEST_DURATION", "")
+			}
+
+			var result time.Duration
+			err := parsePositiveDuration("TEST_DURATION", func(val time.Duration) {
+				result = val
+			}, tt.defaultValue)
+
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestEnvironmentExportDefaultPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		envValue []string
+		// preset simulates a value coming from the startup config file
+		// (YAML/JSON), which is parsed into Config before FromEnv runs.
+		preset   *string
+		expected string
+	}{
+		{
+			name:     "env set",
+			envValue: []string{"custom/prefix"},
+			expected: "custom/prefix",
+		},
+		{
+			name:     "env set with whitespace trimmed",
+			envValue: []string{"  some/path  "},
+			expected: "some/path",
+		},
+		{
+			name:     "env set to empty string",
+			envValue: []string{""},
+			expected: "",
+		},
+		{
+			name:     "not set defaults to empty",
+			envValue: []string{},
+			expected: "",
+		},
+		{
+			name:     "preset via startup config is preserved",
+			envValue: []string{},
+			preset:   stringPtr("from/config/file"),
+			expected: "from/config/file",
+		},
+		{
+			name:     "preset via startup config with empty string is preserved",
+			envValue: []string{},
+			preset:   stringPtr(""),
+			expected: "",
+		},
+		{
+			name:     "env overrides preset from startup config",
+			envValue: []string{"from/env"},
+			preset:   stringPtr("from/config/file"),
+			expected: "from/env",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.envValue) == 1 {
+				t.Setenv("EXPORT_DEFAULT_PATH", tt.envValue[0])
+			}
+			conf := Config{}
+			if tt.preset != nil {
+				conf.Export.DefaultPath = configRuntime.NewDynamicValue(*tt.preset)
+			}
+			err := FromEnv(&conf)
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.Export.DefaultPath.Get())
+		})
+	}
+}
+
+func stringPtr(s string) *string { return &s }
+
+func TestEnvironmentExportDefaultBucket(t *testing.T) {
+	tests := []struct {
+		name     string
+		envValue []string
+		expected string
+	}{
+		{
+			name:     "set",
+			envValue: []string{"my-bucket"},
+			expected: "my-bucket",
+		},
+		{
+			name:     "set with whitespace trimmed",
+			envValue: []string{"  my-bucket  "},
+			expected: "my-bucket",
+		},
+		{
+			name:     "not set defaults to empty",
+			envValue: []string{},
+			expected: "",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.envValue) == 1 {
+				t.Setenv("EXPORT_DEFAULT_BUCKET", tt.envValue[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.Export.DefaultBucket.Get())
+		})
+	}
+}
+
+func TestEnvironmentDefaultVectorIndex(t *testing.T) {
+	tests := []struct {
+		name        string
+		value       string
+		expected    string
+		expectedErr string
+	}{
+		{"not set", "", "", ""},
+		{"hnsw", "hnsw", "hnsw", ""},
+		{"flat", "flat", "flat", ""},
+		{"dynamic", "dynamic", "dynamic", ""},
+		{"hfresh", "hfresh", "hfresh", ""},
+		{"uppercase FLAT", "FLAT", "flat", ""},
+		{"mixed case Hnsw", "Hnsw", "hnsw", ""},
+		{"invalid value", "invalid", "", `invalid DEFAULT_VECTOR_INDEX "invalid"`},
+		{"none sentinel rejected", "none", "", `invalid DEFAULT_VECTOR_INDEX "none"`},
+		{"noop sentinel rejected", "noop", "", `invalid DEFAULT_VECTOR_INDEX "noop"`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.value != "" {
+				t.Setenv("DEFAULT_VECTOR_INDEX", tt.value)
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			if tt.expectedErr != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, conf.DefaultVectorIndexType.Get())
+			}
+		})
+	}
+}
+
+func TestEnvironmentAsyncIndexing(t *testing.T) {
+	factors := []struct {
+		name     string
+		value    []string
+		expected bool
+	}{
+		{"Valid: true", []string{"true"}, true},
+		{"Valid: false", []string{"false"}, false},
+		{"Valid: 1", []string{"1"}, true},
+		{"Valid: 0", []string{"0"}, false},
+		{"Valid: on", []string{"on"}, true},
+		{"Valid: off", []string{"off"}, false},
+		{"not given", []string{}, false},
+	}
+	for _, tt := range factors {
+		t.Run(tt.name, func(t *testing.T) {
+			if len(tt.value) == 1 {
+				t.Setenv("ASYNC_INDEXING", tt.value[0])
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+
+			require.Nil(t, err)
+			require.Equal(t, tt.expected, conf.AsyncIndexingEnabled)
+		})
+	}
+}
+
+func TestEnvironmentReplicaMovementCleanup(t *testing.T) {
+	tests := []struct {
+		name                 string
+		env                  map[string]string
+		errContains          string
+		wantEnabled          bool
+		wantMaxAge           time.Duration
+		wantInterval         time.Duration
+		wantIncludeCancelled bool
+	}{
+		{
+			name:         "defaults: off, 7 days, hourly, READY only",
+			wantEnabled:  false,
+			wantMaxAge:   DefaultReplicaMovementCleanupMaxAge,
+			wantInterval: DefaultReplicaMovementCleanupInterval,
+		},
+		{
+			name: "explicit values are parsed",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_ENABLED":           "true",
+				"REPLICA_MOVEMENT_CLEANUP_MAX_AGE":           "24h",
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL":          "5m",
+				"REPLICA_MOVEMENT_CLEANUP_INCLUDE_CANCELLED": "true",
+			},
+			wantEnabled:          true,
+			wantMaxAge:           24 * time.Hour,
+			wantInterval:         5 * time.Minute,
+			wantIncludeCancelled: true,
+		},
+		{
+			// Zero passes the >= 0 validator and is the only disable sentinel.
+			// The sweeper reads it as "off", never as "delete every READY op".
+			name: "zero max age is accepted and handled downstream",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_MAX_AGE": "0s",
+			},
+			wantMaxAge:   0,
+			wantInterval: DefaultReplicaMovementCleanupInterval,
+		},
+		{
+			name: "zero interval is accepted and handled downstream",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "0s",
+			},
+			wantMaxAge:   DefaultReplicaMovementCleanupMaxAge,
+			wantInterval: 0,
+		},
+		{
+			// A negative duration fails startup rather than coercing to zero.
+			// Both rows go red if the parse-time validators are dropped.
+			name: "negative max age fails startup, naming the variable",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_MAX_AGE": "-1h",
+			},
+			errContains: "REPLICA_MOVEMENT_CLEANUP_MAX_AGE",
+		},
+		{
+			name: "negative interval fails startup, naming the variable",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "-1s",
+			},
+			errContains: "REPLICA_MOVEMENT_CLEANUP_INTERVAL",
+		},
+		{
+			// Below the floor a sweep hammers the leader with full-FSM scans.
+			name: "interval below the 1m floor fails startup",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "1ms",
+			},
+			errContains: "REPLICA_MOVEMENT_CLEANUP_INTERVAL",
+		},
+		{
+			// Above the ceiling the sweep silently never runs; 0 is the only
+			// sanctioned way to disable it.
+			name: "interval above the 168h ceiling fails startup",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "169h",
+			},
+			errContains: "REPLICA_MOVEMENT_CLEANUP_INTERVAL",
+		},
+		{
+			name: "interval bounds are inclusive",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "1m",
+			},
+			wantMaxAge:   DefaultReplicaMovementCleanupMaxAge,
+			wantInterval: time.Minute,
+		},
+		{
+			name: "interval ceiling is inclusive",
+			env: map[string]string{
+				"REPLICA_MOVEMENT_CLEANUP_INTERVAL": "168h",
+			},
+			wantMaxAge:   DefaultReplicaMovementCleanupMaxAge,
+			wantInterval: 168 * time.Hour,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.env {
+				t.Setenv(k, v)
+			}
+
+			conf := Config{}
+			err := FromEnv(&conf)
+			if tt.errContains != "" {
+				require.ErrorContains(t, err, tt.errContains,
+					"a rejected value must tell the operator which variable to fix")
+				return
+			}
+			require.NoError(t, err)
+
+			require.Equal(t, tt.wantEnabled, conf.Replication.ReplicaMovementCleanupEnabled.Get())
+			require.Equal(t, tt.wantMaxAge, conf.Replication.ReplicaMovementCleanupMaxAge.Get())
+			require.Equal(t, tt.wantInterval, conf.Replication.ReplicaMovementCleanupInterval.Get())
+			require.Equal(t, tt.wantIncludeCancelled, conf.Replication.ReplicaMovementCleanupIncludeCancelled.Get())
+		})
+	}
+}
+
+// TestEnvironmentRuntimeReindexEnabled pins the kill switch's precedence:
+// the env var wins when set, and an absent one leaves a config-file value
+// alone. Getting the absent case wrong silently forces every
+// file-configured cluster back to off.
+func TestEnvironmentRuntimeReindexEnabled(t *testing.T) {
+	tests := []struct {
+		name     string
+		envValue []string
+		fromFile bool
+		expected bool
+	}{
+		{name: "absent env keeps file default off"},
+		{name: "absent env keeps file value on", fromFile: true, expected: true},
+		{name: "env true enables", envValue: []string{"true"}, expected: true},
+		{name: "env false disables", envValue: []string{"false"}},
+		{name: "env false overrides file on", envValue: []string{"false"}, fromFile: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Clearenv()
+			if len(tt.envValue) == 1 {
+				t.Setenv("RUNTIME_REINDEX_ENABLED", tt.envValue[0])
+			}
+			conf := Config{RuntimeReindexEnabled: tt.fromFile}
+			require.NoError(t, FromEnv(&conf))
+			require.Equal(t, tt.expected, conf.RuntimeReindexEnabled)
+		})
+	}
+}
+
+func TestEnvironmentAsyncReplicationGlobalSentinels(t *testing.T) {
+	tests := []struct {
+		name        string
+		env         map[string]string
+		wantHeight  int
+		wantFreq    time.Duration
+		expectedErr bool
+	}{
+		{name: "unset means zero sentinel (per-class or code defaults apply)"},
+		{name: "explicit height", env: map[string]string{"ASYNC_REPLICATION_HASHTREE_HEIGHT": "12"}, wantHeight: 12},
+		{name: "explicit frequency", env: map[string]string{"ASYNC_REPLICATION_FREQUENCY": "7s"}, wantFreq: 7 * time.Second},
+		{name: "negative height rejected", env: map[string]string{"ASYNC_REPLICATION_HASHTREE_HEIGHT": "-1"}, expectedErr: true},
+		{name: "non-numeric height rejected", env: map[string]string{"ASYNC_REPLICATION_HASHTREE_HEIGHT": "tall"}, expectedErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for k, v := range tt.env {
+				t.Setenv(k, v)
+			}
+			conf := Config{}
+			err := FromEnv(&conf)
+			if tt.expectedErr {
+				require.NotNil(t, err)
+				return
+			}
+			require.Nil(t, err)
+			require.Equal(t, tt.wantHeight, conf.Replication.AsyncReplicationHashtreeHeight.Get())
+			require.Equal(t, tt.wantFreq, conf.Replication.AsyncReplicationFrequency.Get())
+		})
+	}
+}
+
+func TestNamespaceCleanupIntervalValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		env     string
+		wantErr string
+		wantGet time.Duration
+	}{
+		{name: "a sub-second interval fails the boot", env: "500ms", wantErr: "NAMESPACE_CLEANUP_INTERVAL"},
+		{name: "unset yields the default", wantGet: DefaultNamespaceCleanupInterval},
+		// newCronsNamespaceCleanup substitutes the default; Get() keeps the 0 the
+		// operator wrote, and /debug/config omits a zero interval entirely.
+		{name: "a value at or below zero is kept as configured", env: "0"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.env != "" {
+				t.Setenv("NAMESPACE_CLEANUP_INTERVAL", tt.env)
+			}
+			var conf Config
+
+			err := FromEnv(&conf)
+
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantGet, conf.Namespaces.CleanupInterval.Get())
+		})
+	}
+
+	t.Run("a sub-second runtime push is refused and the interval stands", func(t *testing.T) {
+		t.Setenv("NAMESPACE_CLEANUP_INTERVAL", "1m")
+		var conf Config
+		require.NoError(t, FromEnv(&conf))
+
+		require.Error(t, conf.Namespaces.CleanupInterval.SetValue(500*time.Millisecond))
+		assert.Equal(t, time.Minute, conf.Namespaces.CleanupInterval.Get(),
+			"a refused push must leave the previous interval in place")
+	})
+}

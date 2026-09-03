@@ -1,0 +1,1021 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package rest
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"runtime"
+	"runtime/debug"
+	"slices"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/dustin/go-humanize"
+
+	"github.com/weaviate/weaviate/adapters/handlers/rest/state"
+	"github.com/weaviate/weaviate/adapters/repos/db"
+	"github.com/weaviate/weaviate/adapters/repos/db/helpers"
+	"github.com/weaviate/weaviate/adapters/repos/db/lsmkv"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/hfresh"
+	"github.com/weaviate/weaviate/adapters/repos/db/vector/hnsw"
+	"github.com/weaviate/weaviate/cluster/usage"
+	"github.com/weaviate/weaviate/entities/config"
+	enterrors "github.com/weaviate/weaviate/entities/errors"
+	"github.com/weaviate/weaviate/entities/schema"
+	"github.com/weaviate/weaviate/usecases/telemetry"
+)
+
+func setupDebugHandlers(appState *state.State) {
+	logger := appState.Logger.WithField("handler", "debug")
+
+	// newLogLevel can be one of: panic, fatal, error, warn, info, debug, trace (defaults to info)
+	http.HandleFunc("/debug/config/logger/level", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		newLogLevel := r.URL.Query().Get("newLogLevel")
+		if newLogLevel == "" {
+			http.Error(w, "newLogLevel is required", http.StatusBadRequest)
+			return
+		}
+		level, err := logLevelFromString(newLogLevel)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		appState.Logger.SetLevel(level)
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	http.HandleFunc("/debug/usage", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		service := usage.NewService(appState.SchemaManager, appState.DB, appState.Modules, appState.Logger)
+		if param := r.URL.Query().Get("shardConcurrency"); param != "" {
+			shardConcurrency, err := strconv.Atoi(param)
+			if err != nil || shardConcurrency < 1 {
+				http.Error(w, "shardConcurrency must be a positive integer", http.StatusBadRequest)
+				return
+			}
+			service.SetShardConcurrency(shardConcurrency)
+		}
+
+		exactCountParam := r.URL.Query().Get("exactObjectCount")
+		exactObjectCount := exactCountParam == "true" // false by default
+
+		stats, err := service.Usage(r.Context(), exactObjectCount)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonBytes, err := json.Marshal(stats)
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on stats")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	http.HandleFunc("/debug/index/rebuild/vector", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !appState.DB.AsyncIndexingEnabled {
+			http.Error(w, "async indexing is not enabled", http.StatusNotImplemented)
+			return
+		}
+
+		colName := r.URL.Query().Get("collection")
+		shardName := r.URL.Query().Get("shard")
+		targetVector := r.URL.Query().Get("vector")
+
+		if colName == "" || shardName == "" {
+			http.Error(w, "collection and shard are required", http.StatusBadRequest)
+			return
+		}
+
+		idx := appState.DB.GetIndex(schema.ClassName(colName))
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found")
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		}
+
+		err := idx.DebugResetVectorIndex(context.Background(), shardName, targetVector)
+		if err != nil {
+			logger.
+				WithField("shard", shardName).
+				WithField("targetVector", targetVector).
+				WithError(err).
+				Error("failed to reset vector index")
+			if errTxt := err.Error(); strings.Contains(errTxt, "not found") {
+				http.Error(w, "shard not found", http.StatusNotFound)
+			}
+
+			http.Error(w, "failed to reset vector index", http.StatusInternalServerError)
+			return
+		}
+
+		logger.WithField("shard", shardName).Info("reindexing started")
+
+		w.WriteHeader(http.StatusAccepted)
+	}))
+
+	http.HandleFunc("/debug/index/repair/vector", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !appState.DB.AsyncIndexingEnabled {
+			http.Error(w, "async indexing is not enabled", http.StatusNotImplemented)
+			return
+		}
+
+		colName := r.URL.Query().Get("collection")
+		shardName := r.URL.Query().Get("shard")
+		targetVector := r.URL.Query().Get("vector")
+
+		if colName == "" || shardName == "" {
+			http.Error(w, "collection and shard are required", http.StatusBadRequest)
+			return
+		}
+
+		idx := appState.DB.GetIndex(schema.ClassName(colName))
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found")
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		}
+
+		err := idx.DebugRepairIndex(context.Background(), shardName, targetVector)
+		if err != nil {
+			logger.
+				WithField("shard", shardName).
+				WithField("targetVector", targetVector).
+				WithError(err).
+				Error("failed to repair vector index")
+			if errTxt := err.Error(); strings.Contains(errTxt, "not found") {
+				http.Error(w, "shard not found", http.StatusNotFound)
+			}
+
+			http.Error(w, "failed to repair vector index", http.StatusInternalServerError)
+			return
+		}
+
+		logger.
+			WithField("shard", shardName).
+			WithField("targetVector", targetVector).
+			Info("repair started")
+
+		w.WriteHeader(http.StatusAccepted)
+	}))
+
+	http.HandleFunc("/debug/index/requantize/vector", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		colName := r.URL.Query().Get("collection")
+		shardName := r.URL.Query().Get("shard")
+		targetVector := r.URL.Query().Get("vector")
+
+		if colName == "" || shardName == "" {
+			http.Error(w, "collection and shard are required", http.StatusBadRequest)
+			return
+		}
+
+		idx := appState.DB.GetIndex(schema.ClassName(colName))
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found")
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		}
+
+		err := idx.DebugRequantizeIndex(context.Background(), shardName, targetVector)
+		if err != nil {
+			logger.
+				WithField("shard", shardName).
+				WithField("targetVector", targetVector).
+				WithError(err).
+				Error("failed to requantize vector index")
+			if errTxt := err.Error(); strings.Contains(errTxt, "not found") {
+				http.Error(w, "shard not found", http.StatusNotFound)
+			}
+
+			http.Error(w, "failed to requantize vector index", http.StatusInternalServerError)
+			return
+		}
+
+		logger.
+			WithField("shard", shardName).
+			WithField("targetVector", targetVector).
+			Info("requantize started")
+
+		w.WriteHeader(http.StatusAccepted)
+	}))
+
+	// Enqueues a reassignment for every live vector of one shard's hfresh
+	// index, re-routing vectors that earlier maintenance left in the wrong
+	// postings. The reassignment tasks only write for vectors whose current
+	// posting is no longer among their RNG-selected targets, so this is safe
+	// to run on a healthy index. Call via something like:
+	// curl -X POST "localhost:6060/debug/index/reassign/vector?collection=Foo&shard=abc123&vector=default"
+	http.HandleFunc("/debug/index/reassign/vector", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// unlike its read-only siblings, this endpoint starts a corpus-wide
+		// mutating job — do not let a probing GET trigger it
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed, use POST", http.StatusMethodNotAllowed)
+			return
+		}
+
+		colName := r.URL.Query().Get("collection")
+		shardName := r.URL.Query().Get("shard")
+		targetVector := r.URL.Query().Get("vector")
+
+		if colName == "" || shardName == "" {
+			http.Error(w, "collection and shard are required", http.StatusBadRequest)
+			return
+		}
+
+		idx := appState.DB.GetIndex(schema.ClassName(colName))
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found")
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		}
+
+		shard, release, err := idx.GetShard(context.Background(), shardName)
+		if err != nil {
+			logger.WithField("shard", shardName).Error(err)
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if shard == nil {
+			release()
+			logger.WithField("shard", shardName).Error("shard not found")
+			http.Error(w, "shard not found", http.StatusNotFound)
+			return
+		}
+
+		vidx, ok := shard.GetVectorIndex(targetVector)
+		if !ok {
+			release()
+			logger.WithField("shard", shardName).Error("vector index not found")
+			http.Error(w, "vector index not found", http.StatusNotFound)
+			return
+		}
+
+		h, ok := vidx.(hfreshReassignAller)
+		if !ok {
+			release()
+			http.Error(w, "not an hfresh index", http.StatusBadRequest)
+			return
+		}
+
+		// The scan needs no shard reference: EnqueueReassignAll also watches
+		// the index's own lifecycle context and stops when the shard shuts
+		// down or is dropped, like the version map warmup does.
+		release()
+
+		reassignLogger := logger.
+			WithField("collection", colName).
+			WithField("shard", shardName).
+			WithField("targetVector", targetVector)
+
+		enterrors.GoWrapper(func() {
+			stats, err := h.EnqueueReassignAll(context.Background())
+			statsLogger := reassignLogger.
+				WithField("postings", stats.Postings).
+				WithField("enqueued", stats.Enqueued).
+				WithField("skippedDeleted", stats.SkippedDeleted).
+				WithField("skippedStale", stats.SkippedStale)
+			if err != nil {
+				statsLogger.Error(err)
+				return
+			}
+			statsLogger.Info("reassign-all enqueue completed")
+		}, reassignLogger)
+
+		reassignLogger.Info("reassign-all enqueue started")
+		w.WriteHeader(http.StatusAccepted)
+	}))
+
+	http.HandleFunc("/debug/stats/collection/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimSpace(strings.TrimPrefix(r.URL.Path, "/debug/stats/collection/"))
+		parts := strings.Split(path, "/")
+		if len(parts) < 3 || len(parts) > 5 || parts[1] != "shards" {
+			logger.WithField("parts", parts).Info("invalid path")
+			http.Error(w, "invalid path", http.StatusNotFound)
+			return
+		}
+
+		colName, shardName := parts[0], parts[2]
+		var targetVector string
+		if len(parts) == 4 {
+			targetVector = parts[3]
+		}
+
+		idx := appState.DB.GetIndex(schema.ClassName(colName))
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found")
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		}
+
+		shard, release, err := idx.GetShard(context.Background(), shardName)
+		if err != nil {
+			logger.WithField("shard", shardName).Error(err)
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		defer release()
+
+		if shard == nil {
+			logger.WithField("shard", shardName).Error("shard not found")
+			http.Error(w, "shard not found", http.StatusNotFound)
+			return
+		}
+
+		vidx, ok := shard.GetVectorIndex(targetVector)
+		if !ok {
+			logger.WithField("shard", shardName).Error("vector index not found")
+			http.Error(w, "vector index not found", http.StatusNotFound)
+			return
+		}
+
+		h, ok := vidx.(hnswStats)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		stats, err := h.Stats()
+		if err != nil {
+			logger.Error(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonBytes, err := json.Marshal(stats)
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on stats")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		logger.Info("Stats on HNSW started")
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	// Call via something like: curl -X GET localhost:6060/debug/config/maintenance_mode (can replace GET w/ POST or DELETE)
+	// The port is Weaviate's configured Go profiling port (defaults to 6060)
+	http.HandleFunc("/debug/config/maintenance_mode", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var bytesToWrite []byte = nil
+		switch r.Method {
+		case http.MethodGet:
+			jsonBytes, err := json.Marshal(MaintenanceMode{Enabled: appState.Cluster.MaintenanceModeEnabledForLocalhost()})
+			if err != nil {
+				logger.WithError(err).Error("marshal failed on stats")
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			bytesToWrite = jsonBytes
+		case http.MethodPost:
+			appState.Cluster.SetMaintenanceModeForLocalhost(true)
+		case http.MethodDelete:
+			appState.Cluster.SetMaintenanceModeForLocalhost(false)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+		w.WriteHeader(http.StatusOK)
+		if bytesToWrite != nil {
+			w.Write(bytesToWrite)
+		}
+	}))
+
+	// Call via something like:
+	// - current limit: curl -X GET localhost:6060/debug/config/gomemlimit
+	// - set limit: curl -X POST localhost:6060/debug/config/gomemlimit?limit=XXXMiB - can also be bytes or GiB
+	// The port is Weaviate's configured Go profiling port (defaults to 6060)
+	http.HandleFunc("/debug/config/gomemlimit", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var prevLimit int64
+		switch r.Method {
+		case http.MethodGet:
+			prevLimit = debug.SetMemoryLimit(-1)
+		case http.MethodPost:
+			limitStr := r.URL.Query().Get("limit")
+			if limitStr == "" {
+				http.Error(w, "limit is required", http.StatusBadRequest)
+				return
+			}
+			limitBytes, err := humanize.ParseBytes(limitStr)
+			if err != nil {
+				http.Error(w, "invalid limit: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			prevLimit = debug.SetMemoryLimit(int64(limitBytes))
+			appState.Logger.
+				WithField("new_memory_limit_in_bytes", limitBytes).
+				WithField("previous_memory_limit_in_bytes", prevLimit).
+				Info("updating go-runtime memory limit")
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+		w.WriteHeader(http.StatusOK)
+		jsonBytes, err := json.Marshal(prevLimit)
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on stats")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if jsonBytes != nil {
+			w.Write(jsonBytes)
+		}
+	}))
+
+	// Call via something like:
+	// - current limit: curl -X GET localhost:6060/debug/config/gomemlimit
+	// - set limit: curl -X POST localhost:6060/debug/config/gomemlimit?limit=XXXMiB - can also be bytes or GiB
+	// The port is Weaviate's configured Go profiling port (defaults to 6060)
+	http.HandleFunc("/debug/config/gomaxprocs", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var prevMaxProcs int
+		switch r.Method {
+		case http.MethodGet:
+			prevMaxProcs = runtime.GOMAXPROCS(-1)
+		case http.MethodPost:
+			procsStr := r.URL.Query().Get("procs")
+			if procsStr == "" {
+				http.Error(w, "procs is required", http.StatusBadRequest)
+				return
+			}
+			procsInt, err := strconv.Atoi(procsStr)
+			if err != nil {
+				http.Error(w, "invalid procs value: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+			prevMaxProcs = runtime.GOMAXPROCS(procsInt)
+			appState.Logger.
+				WithField("new_cpu_limit", procsInt).
+				WithField("previous_cpu_limit", prevMaxProcs).
+				Info("updating go-runtime CPU limit")
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+		w.WriteHeader(http.StatusOK)
+		jsonBytes, err := json.Marshal(prevMaxProcs)
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on stats")
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if jsonBytes != nil {
+			w.Write(jsonBytes)
+		}
+	}))
+
+	http.HandleFunc("/debug/lsm/deadlock", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+		colName := r.URL.Query().Get("collection")
+		w.Header().Set("Content-Type", "application/json")
+		anyLocked := false
+
+		if colName == "" {
+			response := map[string]interface{}{
+				"error": "collection name is required",
+			}
+			jsonBytes, _ := json.Marshal(response)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonBytes)
+			return
+		}
+
+		shardsToLockStr := strings.TrimSpace(r.URL.Query().Get("shards"))
+
+		shardsToLock := []string{}
+		if shardsToLockStr != "" {
+			shardsToLock = strings.Split(shardsToLockStr, ",")
+		}
+
+		locksToTestStr := strings.TrimSpace(r.URL.Query().Get("locks"))
+
+		var locksToTest []string
+		if locksToTestStr != "" {
+			locksToTest = strings.Split(locksToTestStr, ",")
+		} else {
+			locksToTest = []string{helpers.ObjectsBucketLSM}
+		}
+
+		timeoutDurationString := strings.TrimSpace(r.URL.Query().Get("timeout"))
+		var timeout time.Duration
+		if timeoutDurationString != "" {
+			var err error
+			timeout, err = time.ParseDuration(timeoutDurationString)
+			if err != nil {
+				response := map[string]interface{}{
+					"error": "invalid timeout duration format",
+				}
+				jsonBytes, _ := json.Marshal(response)
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write(jsonBytes)
+				return
+			}
+		} else {
+			timeout = 30 * time.Second
+		}
+
+		className := schema.ClassName(colName)
+		idx := appState.DB.GetIndex(className)
+
+		if idx == nil {
+			logger.WithField("collection", colName).Error("collection not found or not ready")
+			response := map[string]interface{}{
+				"error": "collection not found or not ready",
+			}
+			jsonBytes, _ := json.Marshal(response)
+			w.WriteHeader(http.StatusNotFound)
+			w.Write(jsonBytes)
+			return
+		}
+
+		var err error
+
+		output := make(map[string]map[string]map[string]interface{})
+		idx.ForEachLoadedShard(
+			func(shardName string, shard db.ShardLike) error {
+				output[shardName] = make(map[string]map[string]interface{})
+				return nil
+			},
+		)
+		outputLock := sync.Mutex{}
+		eg := enterrors.NewErrorGroupWrapper(logger)
+		eg.SetLimit(-1)
+
+		for _, lockName := range locksToTest {
+			eg.Go(func() (err error) {
+				// shards will not be force loaded, as we are only getting the name
+				err = idx.ForEachLoadedShardConcurrently(
+					func(shardName string, shard db.ShardLike) error {
+						timeoutAfter := time.After(timeout)
+						if len(shardsToLock) == 0 || slices.Contains(shardsToLock, shardName) {
+
+							var checkStatusOperation func() (bool, error)
+							if lockName == "docIds" {
+								checkStatusOperation = shard.DebugGetDocIdLockStatus
+							} else {
+								b := shard.Store().Bucket(lockName)
+								if b == nil {
+									output[shardName][lockName] = map[string]interface{}{
+										"error":   "error",
+										"locked":  false,
+										"took_ms": time.Since(startTime).Milliseconds(),
+										"message": fmt.Sprintf("bucket %s not found", lockName),
+									}
+									return nil
+								}
+
+								checkStatusOperation = b.DebugGetSegmentGroupLockStatus
+							}
+
+							running := true
+							tries := 0
+							statusString := "unknown"
+							isLocked := false
+							startTimeInternal := time.Now()
+							for running {
+								select {
+								case <-timeoutAfter:
+									statusString = fmt.Sprintf("locked after %d tries and %s", tries, time.Since(startTimeInternal))
+									running = false
+									isLocked = true
+									anyLocked = true
+								default:
+									tries++
+									locked, err := checkStatusOperation()
+									if err != nil {
+										statusString = "error: " + err.Error()
+										running = false
+										break
+									} else if !locked {
+										statusString = fmt.Sprintf("unlocked after %d tries and %s", tries, time.Since(startTimeInternal))
+										running = false
+										break
+									}
+									time.Sleep(10 * time.Millisecond)
+								}
+							}
+							took := time.Since(startTimeInternal).Milliseconds()
+							outputLock.Lock()
+							output[shardName][lockName] = map[string]interface{}{
+								"locked":  isLocked,
+								"tries":   tries,
+								"took_ms": took,
+								"message": fmt.Sprintf("shard %s %s", shardName, statusString),
+							}
+							outputLock.Unlock()
+
+						} else {
+							outputLock.Lock()
+							output[shardName][lockName] = map[string]interface{}{
+								"status":  "skipped",
+								"locked":  false,
+								"took_ms": time.Since(startTime).Milliseconds(),
+								"message": fmt.Sprintf("shard %s not selected", shardName),
+							}
+							outputLock.Unlock()
+						}
+						return nil
+					},
+				)
+				return err
+			})
+		}
+
+		err = eg.Wait()
+
+		response := map[string]interface{}{
+			"shards": output,
+			"response": map[string]interface{}{
+				"took_ms": time.Since(startTime).Milliseconds(),
+				"locked":  anyLocked,
+			},
+		}
+
+		if err != nil {
+			logger.WithField("collection", colName).Error("failed to get shard names")
+			http.Error(w, "failed to get shard names", http.StatusInternalServerError)
+			response["error"] = "failed to get shard names: " + err.Error()
+		}
+
+		jsonBytes, err := json.Marshal(response)
+		if err != nil {
+			response := map[string]interface{}{
+				"error": "marshal failed on stats: " + err.Error(),
+			}
+			jsonBytes, _ := json.Marshal(response)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonBytes)
+			return
+		}
+		if anyLocked {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		w.Write(jsonBytes)
+	}))
+
+	// Dumps all server config. e.g. curl localhost:6060/debug/config
+	// Secrets are redacted by redactDebugConfigSecrets before returning.
+	http.HandleFunc("/debug/config", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		jsonBytes, err := json.Marshal(appState.ServerConfig.Config)
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on config")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Unmarshal to map to clean up empty values
+		var configMap map[string]any
+		if err := json.Unmarshal(jsonBytes, &configMap); err != nil {
+			logger.WithError(err).Error("unmarshal failed on config")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		cleaned := cleanEmptyValues(configMap)
+		redactDebugConfigSecrets(cleaned)
+
+		// for human readability
+		jsonBytes, err = json.MarshalIndent(cleaned, "", "  ")
+		if err != nil {
+			logger.WithError(err).Error("marshal failed on cleaned config")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(jsonBytes)
+	}))
+
+	http.HandleFunc("/debug/ttl/deleteall", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		expiration := r.URL.Query().Get("expiration")
+		targetOwnNodeStr := r.URL.Query().Get("targetOwnNode")
+
+		var err error
+		var expirationTime time.Time
+
+		if expiration != "" {
+			expirationTime, err = time.Parse(time.RFC3339, expiration)
+			if err != nil {
+				http.Error(w, fmt.Errorf("invalid expiration: %w", err).Error(), http.StatusBadRequest)
+				return
+			}
+		} else {
+			expirationTime = time.Now()
+		}
+
+		targetOwnNode := config.Enabled(targetOwnNodeStr)
+
+		err = appState.ObjectTTLCoordinator.Start(context.Background(), targetOwnNode, expirationTime, expirationTime)
+		if err != nil {
+			http.Error(w, "failed to delete expired objects", http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+	}))
+
+	http.HandleFunc("/debug/ttl/abort", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		targetOwnNodeStr := r.URL.Query().Get("targetOwnNode")
+		targetOwnNode := config.Enabled(targetOwnNodeStr)
+
+		aborted, err := appState.ObjectTTLCoordinator.Abort(context.Background(), targetOwnNode)
+		var errMsg string
+		if err != nil {
+			errMsg = err.Error()
+		}
+		resp := map[string]any{"aborted": aborted, "error": errMsg}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, "failed to encode response", http.StatusInternalServerError)
+			return
+		}
+	}))
+
+	// Debug endpoint to hold/release/check a consistent view of segments on a bucket.
+	// Holding a consistent view increments ref counts on all segments, blocking compaction
+	// from deleting old segments. Useful for debugging compaction scheduling.
+	//
+	// POST   /debug/consistent-view/{collection}/shards/{shard}/buckets/{bucket} → hold view
+	// DELETE /debug/consistent-view/{collection}/shards/{shard}/buckets/{bucket} → release view
+	// GET    /debug/consistent-view/{collection}/shards/{shard}/buckets/{bucket} → check if held
+	http.HandleFunc("/debug/consistent-view/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		path := strings.TrimPrefix(r.URL.Path, "/debug/consistent-view/")
+		parts := strings.Split(path, "/")
+		// expect: [collection, "shards", shard, "buckets", bucket]
+		if len(parts) != 5 || parts[1] != "shards" || parts[3] != "buckets" {
+			http.Error(w, `{"error":"invalid path, expected /debug/consistent-view/{collection}/shards/{shard}/buckets/{bucket}"}`, http.StatusBadRequest)
+			return
+		}
+		colName, shardName, bucketName := parts[0], parts[2], parts[4]
+		key := colName + "/" + shardName + "/" + bucketName
+
+		switch r.Method {
+		case http.MethodPost:
+			// Resolve bucket
+			idx := appState.DB.GetIndex(schema.ClassName(colName))
+			if idx == nil {
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": "collection not found"})
+				return
+			}
+			shard, release, err := idx.GetShard(context.Background(), shardName)
+			if err != nil {
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": err.Error()})
+				return
+			}
+			defer release()
+			if shard == nil {
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": "shard not found"})
+				return
+			}
+			b := shard.Store().Bucket(bucketName)
+			if b == nil {
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": fmt.Sprintf("bucket %q not found", bucketName)})
+				return
+			}
+
+			debugConsistentViewsLock.Lock()
+			if _, exists := debugConsistentViews[key]; exists {
+				debugConsistentViewsLock.Unlock()
+				writeJSON(w, http.StatusConflict, map[string]any{"error": "view already held"})
+				return
+			}
+			view := b.GetConsistentView()
+			debugConsistentViews[key] = view
+			debugConsistentViewsLock.Unlock()
+
+			addr := "empty"
+			if len(view.Disk) > 0 {
+				addr = fmt.Sprintf("%p", &view.Disk[0])
+			}
+			writeJSON(w, http.StatusOK, map[string]any{
+				"held":     true,
+				"segments": len(view.Disk),
+				"address":  addr,
+			})
+
+		case http.MethodDelete:
+			debugConsistentViewsLock.Lock()
+			view, exists := debugConsistentViews[key]
+			if !exists {
+				debugConsistentViewsLock.Unlock()
+				writeJSON(w, http.StatusNotFound, map[string]any{"error": "no view held for this bucket"})
+				return
+			}
+			view.ReleaseView()
+			delete(debugConsistentViews, key)
+			debugConsistentViewsLock.Unlock()
+
+			writeJSON(w, http.StatusOK, map[string]any{"released": true})
+
+		case http.MethodGet:
+			debugConsistentViewsLock.Lock()
+			view, exists := debugConsistentViews[key]
+			debugConsistentViewsLock.Unlock()
+
+			if !exists {
+				writeJSON(w, http.StatusOK, map[string]any{"held": false})
+				return
+			}
+			addr := "empty"
+			if len(view.Disk) > 0 {
+				addr = fmt.Sprintf("%p", &view.Disk[0])
+			}
+			writeJSON(w, http.StatusOK, map[string]any{
+				"held":     true,
+				"segments": len(view.Disk),
+				"address":  addr,
+			})
+
+		default:
+			http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		}
+	}))
+}
+
+// cleanEmptyValues recursively removes empty values from a JSON map.
+//
+// TODO: This is a workaround because:
+//   - The config struct doesn't use omitempty tags for all fields
+//   - Composed structs are not defined as pointers, so empty structs still marshal as {}
+//
+// See: https://github.com/weaviate/weaviate/blob/main/usecases/config/config_handler.go#L106
+func cleanEmptyValues(m map[string]any) map[string]any {
+	result := make(map[string]any)
+	for k, v := range m {
+		cleaned := cleanValue(v)
+		if cleaned != nil {
+			result[k] = cleaned
+		}
+	}
+	return result
+}
+
+// cleanValue recursively cleans a JSON value, removing empty nested structures
+func cleanValue(v any) any {
+	if v == nil {
+		return nil
+	}
+
+	switch val := v.(type) {
+	case map[string]any:
+		cleaned := cleanEmptyValues(val)
+		if len(cleaned) == 0 {
+			return nil
+		}
+		return cleaned
+	case []any:
+		cleaned := make([]any, 0, len(val))
+		for _, item := range val {
+			if cleanedItem := cleanValue(item); cleanedItem != nil {
+				cleaned = append(cleaned, cleanedItem)
+			}
+		}
+		if len(cleaned) == 0 {
+			return nil
+		}
+		return cleaned
+	case string:
+		if val == "" {
+			return nil
+		}
+		return val
+	case bool:
+		// Keep bool values (false is a valid value, but we can omit it if desired)
+		// For now, keep all bools to preserve configuration state
+		return val
+	case float64:
+		// JSON numbers are unmarshaled as float64
+		if val == 0 {
+			return nil
+		}
+		return val
+	default:
+		// For any other type, preserve the value
+		return v
+	}
+}
+
+// redactDebugConfigSecrets replaces each known secret value with "<redacted>",
+// leaving the field present so an operator can see it's configured without
+// exposing the value. Add the JSON path of any new secret field here.
+func redactDebugConfigSecrets(m map[string]any) {
+	redactPath(m, "<redacted>", "authentication", "APIKey", "allowed_keys")
+	redactPath(m, "<redacted>", "cluster", "auth", "basic", "password")
+	// The DSN's userinfo segment is the project key, so the whole string is a secret.
+	redactPath(m, "<redacted>", "sentry", "dsn")
+}
+
+// redactPath replaces the value at the given key path with placeholder; for a
+// slice, each element is replaced so the element count is preserved. Missing
+// keys are a no-op.
+func redactPath(m map[string]any, placeholder string, path ...string) {
+	if len(path) == 0 {
+		return
+	}
+	for i := 0; i < len(path)-1; i++ {
+		sub, ok := m[path[i]].(map[string]any)
+		if !ok {
+			return
+		}
+		m = sub
+	}
+	last := path[len(path)-1]
+	v, ok := m[last]
+	if !ok {
+		return
+	}
+	switch x := v.(type) {
+	case []any:
+		out := make([]any, len(x))
+		for i := range x {
+			out[i] = placeholder
+		}
+		m[last] = out
+	default:
+		m[last] = placeholder
+	}
+}
+
+var (
+	debugConsistentViews     = map[string]lsmkv.BucketConsistentView{}
+	debugConsistentViewsLock sync.Mutex
+)
+
+type MaintenanceMode struct {
+	Enabled bool `json:"enabled"`
+}
+
+type hnswStats interface {
+	Stats() (*hnsw.HnswStats, error)
+}
+
+type hfreshReassignAller interface {
+	EnqueueReassignAll(ctx context.Context) (hfresh.ReassignAllStats, error)
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	jsonBytes, err := json.Marshal(v)
+	if err != nil {
+		http.Error(w, `{"error":"json marshal failed"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(status)
+	w.Write(jsonBytes)
+}
+
+// setupTelemetryDebugHandlers registers debug endpoints for inspecting live telemetry data.
+// It must be called after the telemeter has been created.
+func setupTelemetryDebugHandlers(telemeter *telemetry.Telemeter) {
+	http.HandleFunc("/debug/telemetry/clients", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		type clientsResponse struct {
+			ClientUsage            map[telemetry.ClientType]map[string]int64 `json:"clientUsage"`
+			ClientIntegrationUsage map[string]map[string]int64               `json:"clientIntegrationUsage"`
+		}
+
+		resp := clientsResponse{}
+		if ct := telemeter.GetClientTracker(); ct != nil {
+			resp.ClientUsage = ct.Get()
+		}
+		if it := telemeter.GetIntegrationTracker(); it != nil {
+			resp.ClientIntegrationUsage = it.Get()
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		writeJSON(w, http.StatusOK, resp)
+	}))
+}

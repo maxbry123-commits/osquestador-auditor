@@ -1,0 +1,1512 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package schema
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"reflect"
+	"sync"
+	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
+
+	"github.com/weaviate/weaviate/cluster/proto/api"
+	"github.com/weaviate/weaviate/entities/models"
+	dynamicent "github.com/weaviate/weaviate/entities/vectorindex/dynamic"
+	flatent "github.com/weaviate/weaviate/entities/vectorindex/flat"
+	hfreshent "github.com/weaviate/weaviate/entities/vectorindex/hfresh"
+	hnswent "github.com/weaviate/weaviate/entities/vectorindex/hnsw"
+	"github.com/weaviate/weaviate/usecases/sharding"
+)
+
+func TestCollectionNameConflictWithAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "CoolCar"}, ss, 1))
+
+	err := sc.createAlias("CoolCar", "MyCar")
+	require.NoError(t, err)
+
+	// checking to see if class exists should consider the existing alias as well
+	got, isAlias := sc.ClassEqual("MyCar")
+	assert.NotEmpty(t, got)
+	assert.True(t, isAlias)
+}
+
+func Test_schemaCollectionMetrics(t *testing.T) {
+	r := prometheus.NewPedanticRegistry()
+
+	s := NewSchema("testNode", nil, r)
+	ss := &sharding.State{}
+
+	c1 := &models.Class{
+		Class: "collection1",
+		MultiTenancyConfig: &models.MultiTenancyConfig{
+			Enabled: true,
+		},
+		ReplicationConfig: &models.ReplicationConfig{
+			Factor: 1,
+		},
+	}
+	c2 := &models.Class{
+		Class: "collection2",
+		MultiTenancyConfig: &models.MultiTenancyConfig{
+			Enabled: true,
+		},
+		ReplicationConfig: &models.ReplicationConfig{
+			Factor: 1,
+		},
+	}
+
+	// Collection metrics. These classes carry no namespace, so they land on
+	// the empty-namespace series.
+	unnamespaced := func() float64 {
+		return testutil.ToFloat64(s.collectionsCount.WithLabelValues(""))
+	}
+
+	assert.Equal(t, float64(0), unnamespaced())
+	require.NoError(t, s.addClass(c1, ss, 0)) // adding c1 collection
+	assert.Equal(t, float64(1), unnamespaced())
+
+	require.NoError(t, s.addClass(c2, ss, 0)) // adding c2 collection
+	assert.Equal(t, float64(2), unnamespaced())
+
+	// delete c2
+	s.deleteClass("collection2")
+	assert.Equal(t, float64(1), unnamespaced())
+
+	// delete c1
+	s.deleteClass("collection1")
+	assert.Equal(t, float64(0), unnamespaced())
+}
+
+func Test_schemaShardMetrics(t *testing.T) {
+	r := prometheus.NewPedanticRegistry()
+
+	s := NewSchema("testNode", nil, r)
+	ss := &sharding.State{}
+
+	c1 := &models.Class{
+		Class: "collection1",
+		MultiTenancyConfig: &models.MultiTenancyConfig{
+			Enabled: true,
+		},
+		ReplicationConfig: &models.ReplicationConfig{
+			Factor: 1,
+		},
+	}
+	c2 := &models.Class{
+		Class: "collection2",
+		MultiTenancyConfig: &models.MultiTenancyConfig{
+			Enabled: true,
+		},
+		ReplicationConfig: &models.ReplicationConfig{
+			Factor: 1,
+		},
+	}
+
+	require.NoError(t, s.addClass(c1, ss, 0)) // adding c1 collection
+	require.NoError(t, s.addClass(c2, ss, 0)) // adding c2 collection
+
+	// Shard metrics
+	// no shards now.
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("")))
+
+	// add shard to c1 collection
+	err := s.addTenants(c1.Class, 0, &api.AddTenantsRequest{
+		ClusterNodes: []string{"testNode"},
+		Tenants: []*api.Tenant{
+			{
+				Name:   "tenant1",
+				Status: "HOT",
+			},
+			nil, // nil tenant shouldn't be counted in the metrics
+		},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+
+	// add shard to c2 collection
+	err = s.addTenants(c2.Class, 0, &api.AddTenantsRequest{
+		ClusterNodes: []string{"testNode"},
+		Tenants: []*api.Tenant{
+			{
+				Name:   "tenant2",
+				Status: "FROZEN",
+			},
+			nil, // nil tenant shouldn't be counted in the metrics
+		},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("FROZEN")))
+
+	// delete "existing" tenant
+	err = s.deleteTenants(c1.Class, 0, &api.DeleteTenantsRequest{
+		Tenants: []string{"tenant1"},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("FROZEN")))
+
+	// delete "non-existing" tenant
+	err = s.deleteTenants(c1.Class, 0, &api.DeleteTenantsRequest{
+		Tenants: []string{"tenant1"},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("FROZEN")))
+
+	// update tenant status
+	fsm := NewMockreplicationFSM(t)
+	fsm.On("HasActiveReplicationForShard", mock.Anything, mock.Anything).Return(false).Maybe()
+	err = s.updateTenants(c2.Class, 0, &api.UpdateTenantsRequest{
+		Tenants:      []*api.Tenant{{Name: "tenant2", Status: "HOT"}}, // FROZEN -> HOT
+		ClusterNodes: []string{"testNode"},
+	}, fsm, map[string]string{})
+	require.NoError(t, err)
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("UNFREEZING")))
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("FROZEN")))
+
+	// update tenant status
+	err = s.updateTenantsProcess(c2.Class, 0, &api.TenantProcessRequest{
+		Node:   "testNode",
+		Action: api.TenantProcessRequest_ACTION_UNFREEZING,
+		TenantsProcesses: []*api.TenantsProcess{
+			{
+				Tenant: &api.Tenant{Name: "tenant2", Status: "HOT"},
+				Op:     api.TenantsProcess_OP_DONE,
+			},
+		},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("UNFREEZING")))
+
+	// Deleting collection with non-zero shards should decrement the shards count as well.
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+	require.True(t, s.deleteClass(c2.Class))
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+
+	// Adding class with non empty shard should increase the shard count
+	ss = &sharding.State{
+		Physical: make(map[string]sharding.Physical),
+	}
+	ss.Physical["random"] = sharding.Physical{
+		Name:   "random",
+		Status: "",
+	}
+	assert.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("")))
+	require.NoError(t, s.addClass(c2, ss, 0))
+	assert.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("")))
+}
+
+// Test_UpdateTenants_TransitionalStateRejection verifies that status changes are
+// rejected when a tenant is mid-freeze (FREEZING) or mid-unfreeze (UNFREEZING).
+// Without this guard a HOT request arriving while FREEZING would immediately
+// trigger UNFREEZE, creating a race that can result in permanent data loss.
+func Test_UpdateTenants_TransitionalStateRejection(t *testing.T) {
+	const (
+		nodeID     = "testNode"
+		tenantName = "tenant1"
+		className  = "TestClass"
+	)
+	newSchema := func() *schema {
+		return NewSchema(nodeID, nil, prometheus.NewPedanticRegistry())
+	}
+	newClass := func() *models.Class {
+		return &models.Class{
+			Class:              className,
+			MultiTenancyConfig: &models.MultiTenancyConfig{Enabled: true},
+			ReplicationConfig:  &models.ReplicationConfig{Factor: 1},
+		}
+	}
+	fsm := NewMockreplicationFSM(t)
+	fsm.On("HasActiveReplicationForShard", mock.Anything, mock.Anything).Return(false).Maybe()
+
+	t.Run("FREEZING rejects HOT", func(t *testing.T) {
+		s := newSchema()
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "HOT"}},
+		}))
+		// HOT → FROZEN puts the tenant into FREEZING
+		require.NoError(t, s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "FROZEN"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{}))
+
+		// HOT request while FREEZING must be rejected
+		err := s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "HOT"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{})
+		require.ErrorIs(t, err, ErrTenantTransitionalState)
+	})
+
+	t.Run("FREEZING rejects COLD", func(t *testing.T) {
+		s := newSchema()
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "HOT"}},
+		}))
+		require.NoError(t, s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "FROZEN"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{}))
+
+		err := s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "COLD"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{})
+		require.ErrorIs(t, err, ErrTenantTransitionalState)
+	})
+
+	t.Run("FREEZING allows FROZEN (idempotent)", func(t *testing.T) {
+		s := newSchema()
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "HOT"}},
+		}))
+		require.NoError(t, s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "FROZEN"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{}))
+
+		// Second FROZEN request while already FREEZING must succeed (idempotent)
+		require.NoError(t, s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "FROZEN"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{}))
+	})
+
+	t.Run("UNFREEZING rejects conflicting status", func(t *testing.T) {
+		s := newSchema()
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "FROZEN"}},
+		}))
+		// FROZEN → HOT puts the tenant into UNFREEZING
+		require.NoError(t, s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "HOT"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{}))
+
+		// COLD request while UNFREEZING-to-HOT must be rejected
+		err := s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: "COLD"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{})
+		require.ErrorIs(t, err, ErrTenantTransitionalState)
+	})
+}
+
+// Test_UpdateTenants_MovementRejection verifies that tenant transitions which take the source
+// shard away (HOT→COLD shutdown, freeze, unfreeze) are rejected with a partial
+// ErrReplicaMovementInProgress while a movement is active, that transitions toward availability
+// are allowed, and that the decision is node-independent.
+func Test_UpdateTenants_MovementRejection(t *testing.T) {
+	const (
+		nodeID     = "testNode"
+		tenantName = "tenant1"
+		className  = "TestClass"
+	)
+	newClass := func() *models.Class {
+		return &models.Class{
+			Class:              className,
+			MultiTenancyConfig: &models.MultiTenancyConfig{Enabled: true},
+			ReplicationConfig:  &models.ReplicationConfig{Factor: 1},
+		}
+	}
+	setup := func(t *testing.T, node, startStatus string) *schema {
+		t.Helper()
+		s := NewSchema(node, nil, prometheus.NewPedanticRegistry())
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{node},
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: startStatus}},
+		}))
+		return s
+	}
+	movementFSM := func(t *testing.T, active bool) replicationFSM {
+		t.Helper()
+		fsm := NewMockreplicationFSM(t)
+		fsm.On("HasActiveReplicationForShard", mock.Anything, mock.Anything).Return(active).Maybe()
+		return fsm
+	}
+	update := func(s *schema, status string, fsm replicationFSM) error {
+		return s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: tenantName, Status: status}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{})
+	}
+
+	t.Run("HOT→COLD blocked during movement", func(t *testing.T) {
+		s := setup(t, nodeID, "HOT")
+		err := update(s, "COLD", movementFSM(t, true))
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")), "tenant must stay HOT")
+		require.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("COLD")))
+	})
+
+	t.Run("HOT→FROZEN (freeze) blocked during movement", func(t *testing.T) {
+		s := setup(t, nodeID, "HOT")
+		err := update(s, "FROZEN", movementFSM(t, true))
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+		require.Equal(t, float64(0), testutil.ToFloat64(s.shardsCount.WithLabelValues("FREEZING")))
+	})
+
+	t.Run("FROZEN→HOT (unfreeze) blocked during movement", func(t *testing.T) {
+		s := setup(t, nodeID, "FROZEN")
+		err := update(s, "HOT", movementFSM(t, true))
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("FROZEN")))
+	})
+
+	t.Run("COLD→HOT (toward available) allowed during movement", func(t *testing.T) {
+		s := setup(t, nodeID, "COLD")
+		err := update(s, "HOT", movementFSM(t, true))
+		require.NoError(t, err)
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")))
+	})
+
+	t.Run("HOT→COLD allowed when no movement", func(t *testing.T) {
+		s := setup(t, nodeID, "HOT")
+		err := update(s, "COLD", movementFSM(t, false))
+		require.NoError(t, err)
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("COLD")))
+	})
+
+	t.Run("partial: only the moving tenant is blocked, sibling still applies", func(t *testing.T) {
+		s := NewSchema(nodeID, nil, prometheus.NewPedanticRegistry())
+		require.NoError(t, s.addClass(newClass(), &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      []*api.Tenant{{Name: "tenant1", Status: "HOT"}, {Name: "tenant2", Status: "HOT"}},
+		}))
+		// Active movement on tenant1 only.
+		fsm := NewMockreplicationFSM(t)
+		fsm.On("HasActiveReplicationForShard", className, "tenant1").Return(true)
+		fsm.On("HasActiveReplicationForShard", mock.Anything, mock.Anything).Return(false).Maybe()
+
+		err := s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      []*api.Tenant{{Name: "tenant1", Status: "COLD"}, {Name: "tenant2", Status: "COLD"}},
+			ClusterNodes: []string{nodeID},
+		}, fsm, map[string]string{})
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		// tenant1 blocked (stays HOT), tenant2 applied (COLD).
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("HOT")), "blocked tenant1 stays HOT")
+		require.Equal(t, float64(1), testutil.ToFloat64(s.shardsCount.WithLabelValues("COLD")), "tenant2 still transitions COLD")
+	})
+
+	t.Run("node-independent: COLD blocked on every node", func(t *testing.T) {
+		for _, node := range []string{"nodeA", "nodeB", "uninvolved"} {
+			s := setup(t, node, "HOT")
+			err := update(s, "COLD", movementFSM(t, true))
+			require.ErrorIs(t, err, ErrReplicaMovementInProgress, "must block on %s", node)
+		}
+	})
+}
+
+// Test_UpdateTenants_RecordsPreFreezeStatus verifies that starting a freeze records the
+// status the tenant held beforehand. The node reports that status back when a freeze
+// aborts, so a wrong or missing entry silently deactivates a tenant that was HOT.
+func Test_UpdateTenants_RecordsPreFreezeStatus(t *testing.T) {
+	const (
+		nodeID    = "testNode"
+		className = "TestClass"
+	)
+	setup := func(t *testing.T, existing []*api.Tenant) *schema {
+		t.Helper()
+		s := NewSchema(nodeID, nil, prometheus.NewPedanticRegistry())
+		require.NoError(t, s.addClass(&models.Class{
+			Class:              className,
+			MultiTenancyConfig: &models.MultiTenancyConfig{Enabled: true},
+			ReplicationConfig:  &models.ReplicationConfig{Factor: 1},
+		}, &sharding.State{}, 0))
+		require.NoError(t, s.addTenants(className, 0, &api.AddTenantsRequest{
+			ClusterNodes: []string{nodeID},
+			Tenants:      existing,
+		}))
+		return s
+	}
+	newFSM := func(t *testing.T) replicationFSM {
+		t.Helper()
+		fsm := NewMockreplicationFSM(t)
+		fsm.On("HasActiveReplicationForShard", mock.Anything, mock.Anything).Return(false).Maybe()
+		return fsm
+	}
+	update := func(s *schema, tenants []*api.Tenant, recorded map[string]string, fsm replicationFSM) error {
+		return s.updateTenants(className, 0, &api.UpdateTenantsRequest{
+			Tenants:      tenants,
+			ClusterNodes: []string{nodeID},
+		}, fsm, recorded)
+	}
+
+	cases := []struct {
+		name     string
+		existing []*api.Tenant
+		update   []*api.Tenant
+		want     map[string]string
+		wantErr  error
+	}{
+		{
+			name:     "HOT tenant freezing records HOT",
+			existing: []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusHOT}},
+			update:   []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusFROZEN}},
+			want:     map[string]string{"t1": models.TenantActivityStatusHOT},
+		},
+		{
+			name:     "COLD tenant freezing records COLD",
+			existing: []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusCOLD}},
+			update:   []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusFROZEN}},
+			want:     map[string]string{"t1": models.TenantActivityStatusCOLD},
+		},
+		{
+			name:     "unset status normalizes to HOT",
+			existing: []*api.Tenant{{Name: "t1", Status: ""}},
+			update:   []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusFROZEN}},
+			want:     map[string]string{"t1": models.TenantActivityStatusHOT},
+		},
+		{
+			name:     "non-freeze update records nothing",
+			existing: []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusHOT}},
+			update:   []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusCOLD}},
+			want:     map[string]string{},
+		},
+		{
+			name: "batch records only the freezing tenants",
+			existing: []*api.Tenant{
+				{Name: "t1", Status: models.TenantActivityStatusCOLD},
+				{Name: "t2", Status: models.TenantActivityStatusHOT},
+				{Name: "t3", Status: models.TenantActivityStatusHOT},
+			},
+			update: []*api.Tenant{
+				{Name: "t1", Status: models.TenantActivityStatusFROZEN},
+				{Name: "t2", Status: models.TenantActivityStatusCOLD},
+				{Name: "t3", Status: models.TenantActivityStatusFROZEN},
+			},
+			want: map[string]string{
+				"t1": models.TenantActivityStatusCOLD,
+				"t3": models.TenantActivityStatusHOT,
+			},
+		},
+		{
+			name:     "unknown tenant records nothing",
+			existing: []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusHOT}},
+			update:   []*api.Tenant{{Name: "absent", Status: models.TenantActivityStatusFROZEN}},
+			want:     map[string]string{},
+			wantErr:  ErrShardNotFound,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := setup(t, tc.existing)
+			recorded := map[string]string{}
+
+			err := update(s, tc.update, recorded, newFSM(t))
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, tc.want, recorded)
+		})
+	}
+
+	t.Run("an already FREEZING tenant records nothing again", func(t *testing.T) {
+		s := setup(t, []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusHOT}})
+		fsm := newFSM(t)
+		require.NoError(t, update(s, []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusFROZEN}},
+			map[string]string{}, fsm))
+
+		recorded := map[string]string{}
+		require.NoError(t, update(s, []*api.Tenant{{Name: "t1", Status: models.TenantActivityStatusFROZEN}},
+			recorded, fsm))
+		require.Empty(t, recorded)
+	})
+}
+
+func boolPtr(b bool) *bool { return &b }
+
+// fixedParser returns a preset parsed class from ParseClassUpdate, standing in for the
+// production parser that sets concrete vector-config types (which a JSON round-trip would strip).
+type fixedParser struct{ updated *models.Class }
+
+func (p *fixedParser) ParseClass(*models.Class) error { return nil }
+
+func (p *fixedParser) ParseClassUpdate(_, _ *models.Class) (*models.Class, error) {
+	return p.updated, nil
+}
+
+type failingParser struct{}
+
+func (failingParser) ParseClass(*models.Class) error { return errors.New("corrupt class") }
+
+func (failingParser) ParseClassUpdate(_, _ *models.Class) (*models.Class, error) {
+	return nil, nil
+}
+
+// restoreClasses restores a snapshot holding exactly the named classes.
+func restoreClasses(t *testing.T, sc *schema, names ...string) {
+	t.Helper()
+	classes := make(map[string]*metaClass, len(names))
+	for _, name := range names {
+		classes[name] = &metaClass{Class: models.Class{Class: name}}
+	}
+	require.NoError(t, sc.Restore(mustMarshal(t, classes), &fixedParser{}))
+}
+
+// Test_UpdateClass_MovementRejection verifies that an UpdateClass which would rewrite on-disk
+// vector structure is forbidden while a movement is active on the collection, that safe
+// (query-time-only) changes are allowed, and that a rejected update leaves the schema untouched.
+func Test_UpdateClass_MovementRejection(t *testing.T) {
+	const className = "TestClass"
+	legacy := func(cfg any) *models.Class { return &models.Class{Class: className, VectorIndexConfig: cfg} }
+	named := func(vecs map[string]any) *models.Class {
+		vc := make(map[string]models.VectorConfig, len(vecs))
+		for n, c := range vecs {
+			vc[n] = models.VectorConfig{VectorIndexConfig: c}
+		}
+		return &models.Class{Class: className, VectorConfig: vc}
+	}
+	// run registers oldClass, then applies an UpdateClass whose parser yields newClass.
+	run := func(t *testing.T, oldClass, newClass *models.Class, movementActive bool) (*SchemaManager, error) {
+		t.Helper()
+		sm := NewSchemaManager("testNode", nil, &fixedParser{updated: newClass}, prometheus.NewPedanticRegistry(), logrus.New())
+		fsm := NewMockreplicationFSM(t)
+		fsm.On("HasActiveReplicationForCollection", mock.Anything).Return(movementActive).Maybe()
+		sm.SetReplicationFSM(fsm)
+		require.NoError(t, sm.schema.addClass(oldClass, &sharding.State{}, 0))
+		sub, err := json.Marshal(&api.UpdateClassRequest{Class: &models.Class{Class: className}})
+		require.NoError(t, err)
+		// schemaOnly=true exercises the guard + schema apply without needing a real DB.
+		return sm, sm.UpdateClass(&api.ApplyRequest{
+			Type: api.ApplyRequest_TYPE_UPDATE_CLASS, Class: className, Version: 1, SubCommand: sub,
+		}, "testNode", true, false)
+	}
+
+	t.Run("structural change forbidden during movement", func(t *testing.T) {
+		cases := []struct {
+			name     string
+			old, new *models.Class
+		}{
+			// One representative per distinct guard path. Field-by-field structural coverage lives
+			// in Test_vectorConfigClassificationComplete, which proves normalize preserves exactly
+			// the structural leaves — and that is what decides block-vs-allow here.
+			{"hnsw quantizer toggled", legacy(hnswent.UserConfig{}), legacy(hnswent.UserConfig{PQ: hnswent.PQConfig{Enabled: true}})},
+			{"hnsw distance change", legacy(hnswent.UserConfig{Distance: "cosine"}), legacy(hnswent.UserConfig{Distance: "l2-squared"})},
+			{"index type change", legacy(hnswent.UserConfig{}), legacy(flatent.UserConfig{})},
+			{"flat structural param", legacy(flatent.UserConfig{RQ: flatent.RQUserConfig{Enabled: true, Bits: 8}}), legacy(flatent.UserConfig{RQ: flatent.RQUserConfig{Enabled: true, Bits: 1}})},
+			{"dynamic phase quantizer toggled", legacy(dynamicent.UserConfig{HnswUC: hnswent.UserConfig{}}), legacy(dynamicent.UserConfig{HnswUC: hnswent.UserConfig{PQ: hnswent.PQConfig{Enabled: true}}})},
+			{"named vector added", &models.Class{Class: className}, named(map[string]any{"v1": hnswent.UserConfig{}})},
+			{"named vector removed", named(map[string]any{"v1": hnswent.UserConfig{}}), &models.Class{Class: className}},
+			{"named vector structural change", named(map[string]any{"v1": hnswent.UserConfig{}}), named(map[string]any{"v1": hnswent.UserConfig{PQ: hnswent.PQConfig{Enabled: true}}})},
+			// hfresh is an unclassified (experimental) index type: any real change fails closed.
+			{"hfresh field change", legacy(hfreshent.UserConfig{MaxPostingSizeKB: 48}), legacy(hfreshent.UserConfig{MaxPostingSizeKB: 64})},
+			{"hfresh distance change", legacy(hfreshent.UserConfig{Distance: "cosine"}), legacy(hfreshent.UserConfig{Distance: "l2-squared"})},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				_, err := run(t, tc.old, tc.new, true)
+				require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+				require.ErrorIs(t, err, ErrBadRequest)
+			})
+		}
+	})
+
+	t.Run("safe change allowed during movement", func(t *testing.T) {
+		cases := []struct {
+			name     string
+			old, new *models.Class
+		}{
+			// One representative per distinct guard path; field-by-field safe coverage lives in
+			// Test_vectorConfigClassificationComplete. dynamic-threshold and a deferred-safe field
+			// are kept explicitly because both are deliberate, contestable classifications.
+			{"no vector change", legacy(hnswent.UserConfig{Distance: "cosine"}), legacy(hnswent.UserConfig{Distance: "cosine"})},
+			// A no-op update on an unclassified (hfresh) config must pass — nothing changed on disk.
+			{"hfresh no-op", legacy(hfreshent.UserConfig{MaxPostingSizeKB: 48, Distance: "cosine"}), legacy(hfreshent.UserConfig{MaxPostingSizeKB: 48, Distance: "cosine"})},
+			{"hnsw query-time knob", legacy(hnswent.UserConfig{EF: 10}), legacy(hnswent.UserConfig{EF: 20})},
+			{"hnsw deferred-safe field", legacy(hnswent.UserConfig{MaxConnections: 16}), legacy(hnswent.UserConfig{MaxConnections: 32})},
+			{"dynamic threshold", legacy(dynamicent.UserConfig{Threshold: 1000}), legacy(dynamicent.UserConfig{Threshold: 2000})},
+			{"named vector query-time knob", named(map[string]any{"v1": hnswent.UserConfig{EF: 10}}), named(map[string]any{"v1": hnswent.UserConfig{EF: 20}})},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				_, err := run(t, tc.old, tc.new, true)
+				require.NoError(t, err)
+			})
+		}
+	})
+
+	t.Run("structural change allowed when no movement", func(t *testing.T) {
+		_, err := run(t, legacy(hnswent.UserConfig{}), legacy(hnswent.UserConfig{PQ: hnswent.PQConfig{Enabled: true}}), false)
+		require.NoError(t, err)
+	})
+
+	t.Run("rejected update does not mutate the schema", func(t *testing.T) {
+		sm, err := run(t, legacy(hnswent.UserConfig{}), legacy(hnswent.UserConfig{PQ: hnswent.PQConfig{Enabled: true}}), true)
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		cls, _ := sm.schema.ReadOnlyClass(className)
+		require.NotNil(t, cls)
+		require.Equal(t, hnswent.UserConfig{}, cls.VectorIndexConfig, "config must stay uncompressed after a rejected update")
+	})
+}
+
+// querySafeLeaves and structuralLeaves classify every leaf of the parsed vector-config structs by
+// dotted path (rooted at the index type; dynamic's HnswUC/FlatUC reuse the hnsw/flat paths). Every
+// leaf must appear in exactly one — that is the fail-closed guarantee: a newly-added field fails
+// Test_vectorConfigClassificationComplete until it is consciously placed here, so it cannot silently
+// slip past the move guard. normalize must zero exactly the safe leaves and preserve the structural.
+var (
+	querySafeLeaves = []string{
+		"hnsw.Skip", "hnsw.CleanupIntervalSeconds", "hnsw.MaxConnections", "hnsw.EFConstruction", "hnsw.EF",
+		"hnsw.DynamicEFMin", "hnsw.DynamicEFMax", "hnsw.DynamicEFFactor", "hnsw.VectorCacheMaxObjects", "hnsw.FlatSearchCutoff",
+		"hnsw.FilterStrategy", "hnsw.SkipDefaultQuantization", "hnsw.TrackDefaultQuantization", "hnsw.SQ.RescoreLimit", "hnsw.RQ.RescoreLimit",
+		"hnsw.Multivector.Enabled", "hnsw.Multivector.Aggregation", "hnsw.Multivector.MuveraConfig.Enabled",
+		"hnsw.Multivector.MuveraConfig.KSim", "hnsw.Multivector.MuveraConfig.DProjections", "hnsw.Multivector.MuveraConfig.Repetitions",
+		"flat.VectorCacheMaxObjects", "flat.SkipDefaultQuantization", "flat.TrackDefaultQuantization",
+		"flat.PQ.RescoreLimit", "flat.PQ.Cache", "flat.BQ.RescoreLimit", "flat.BQ.Cache",
+		"flat.SQ.RescoreLimit", "flat.SQ.Cache", "flat.RQ.RescoreLimit", "flat.RQ.Cache", "dynamic.Threshold",
+	}
+	structuralLeaves = []string{
+		"hnsw.Distance", "hnsw.PQ.Enabled", "hnsw.PQ.BitCompression", "hnsw.PQ.Segments", "hnsw.PQ.Centroids",
+		"hnsw.PQ.TrainingLimit", "hnsw.PQ.Encoder.Type", "hnsw.PQ.Encoder.Distribution", "hnsw.BQ.Enabled",
+		"hnsw.SQ.Enabled", "hnsw.SQ.TrainingLimit", "hnsw.RQ.Enabled", "hnsw.RQ.Bits",
+		"hnsw.RQ.Centering", "hnsw.RQ.TrainingLimit",
+		"flat.Distance", "flat.PQ.Enabled", "flat.BQ.Enabled", "flat.SQ.Enabled", "flat.RQ.Enabled", "flat.RQ.Bits",
+		"dynamic.Distance",
+	}
+)
+
+// Test_vectorConfigClassificationComplete is the fail-closed guarantee: it forces every leaf of
+// every parsed vector-config struct to be classified safe or structural, and verifies normalize
+// zeroes exactly the safe leaves. A newly-added field is unclassified until placed in
+// querySafeLeaves or structuralLeaves, so it cannot silently default to safe and slip past the guard.
+func Test_vectorConfigClassificationComplete(t *testing.T) {
+	toSet := func(xs []string) map[string]struct{} {
+		s := make(map[string]struct{}, len(xs))
+		for _, x := range xs {
+			s[x] = struct{}{}
+		}
+		return s
+	}
+	safe, structural := toSet(querySafeLeaves), toSet(structuralLeaves)
+
+	// Walk a normalized, fully-populated config of each index type. Every leaf must be in exactly
+	// one bucket, and normalize must have zeroed it iff it is safe. Any field-typed struct is
+	// recursed into; dynamic's HnswUC/FlatUC reuse the hnsw/flat paths.
+	var walk func(prefix string, v reflect.Value)
+	walk = func(prefix string, v reflect.Value) {
+		for i := 0; i < v.NumField(); i++ {
+			f, fv := v.Type().Field(i), v.Field(i)
+			switch {
+			case f.Name == "HnswUC":
+				walk("hnsw", fv)
+			case f.Name == "FlatUC":
+				walk("flat", fv)
+			case f.Type.Kind() == reflect.Struct:
+				walk(prefix+"."+f.Name, fv)
+			default:
+				path := prefix + "." + f.Name
+				_, inSafe := safe[path]
+				_, inStructural := structural[path]
+				require.True(t, inSafe != inStructural,
+					"vector-config leaf %q must be classified in exactly one of querySafeLeaves / structuralLeaves", path)
+				if inSafe {
+					require.True(t, fv.IsZero(), "%s is query-time-safe and must be zeroed by normalize", path)
+				} else {
+					require.False(t, fv.IsZero(), "%s is structural and must be preserved by normalize", path)
+				}
+			}
+		}
+	}
+	for _, root := range []struct {
+		prefix string
+		typ    reflect.Type
+	}{
+		{"hnsw", reflect.TypeOf(hnswent.UserConfig{})},
+		{"flat", reflect.TypeOf(flatent.UserConfig{})},
+		{"dynamic", reflect.TypeOf(dynamicent.UserConfig{})},
+	} {
+		filled := reflect.New(root.typ).Elem()
+		fillNonZero(filled)
+		norm, ok := normalizeVectorConfig(filled.Interface())
+		require.True(t, ok, "normalizeVectorConfig(%s) returned ok=false", root.prefix)
+		walk(root.prefix, reflect.ValueOf(norm))
+	}
+}
+
+// fillNonZero sets every scalar leaf of the addressable struct value v to a non-zero sentinel,
+// recursing into nested structs. It lets the meta-test prove normalize zeroes exactly the safe
+// leaves without a hand-maintained fixture, and panics on an unhandled leaf kind so a new field
+// type cannot slip through unpopulated.
+func fillNonZero(v reflect.Value) {
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		switch f.Kind() {
+		case reflect.Struct:
+			fillNonZero(f)
+		case reflect.Bool:
+			f.SetBool(true)
+		case reflect.String:
+			f.SetString("x")
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			f.SetInt(1)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			f.SetUint(1)
+		default:
+			panic(fmt.Sprintf("fillNonZero: unhandled leaf kind %s (add a case)", f.Kind()))
+		}
+	}
+}
+
+// Test_UpdateProperty_MovementRejection verifies that disabling a property index is forbidden
+// while a movement is active, that the migration-completion path bypasses the guard, and that
+// non-disabling updates are allowed.
+func Test_UpdateProperty_MovementRejection(t *testing.T) {
+	const className = "TestClass"
+	build := func(t *testing.T, movementActive bool) *SchemaManager {
+		t.Helper()
+		sm := NewSchemaManager("testNode", nil, &fixedParser{}, prometheus.NewPedanticRegistry(), logrus.New())
+		fsm := NewMockreplicationFSM(t)
+		fsm.On("HasActiveReplicationForCollection", mock.Anything).Return(movementActive).Maybe()
+		sm.SetReplicationFSM(fsm)
+		// property p starts with its filterable index enabled
+		cls := &models.Class{Class: className, Properties: []*models.Property{
+			{Name: "p", DataType: []string{"text"}, IndexFilterable: boolPtr(true), IndexSearchable: boolPtr(false)},
+		}}
+		require.NoError(t, sm.schema.addClass(cls, &sharding.State{}, 0))
+		return sm
+	}
+	mkCmd := func(t *testing.T, disable, fromMigration bool) *api.ApplyRequest {
+		t.Helper()
+		filterable := boolPtr(true)
+		if disable {
+			filterable = boolPtr(false)
+		}
+		sub, err := json.Marshal(&api.UpdatePropertyRequest{
+			Property:              &models.Property{Name: "p", DataType: []string{"text"}, IndexFilterable: filterable, IndexSearchable: boolPtr(false)},
+			FromInFlightMigration: fromMigration,
+		})
+		require.NoError(t, err)
+		return &api.ApplyRequest{Type: api.ApplyRequest_TYPE_UPDATE_PROPERTY, Class: className, Version: 1, SubCommand: sub}
+	}
+
+	t.Run("index disable forbidden during movement", func(t *testing.T) {
+		err := build(t, true).UpdateProperty(mkCmd(t, true, false), true, false)
+		require.ErrorIs(t, err, ErrReplicaMovementInProgress)
+		require.ErrorIs(t, err, ErrBadRequest)
+	})
+
+	t.Run("FromInFlightMigration bypasses the guard", func(t *testing.T) {
+		err := build(t, true).UpdateProperty(mkCmd(t, true, true), true, false)
+		require.NotErrorIs(t, err, ErrReplicaMovementInProgress)
+	})
+
+	t.Run("non-disabling update allowed during movement", func(t *testing.T) {
+		err := build(t, true).UpdateProperty(mkCmd(t, false, false), true, false)
+		require.NotErrorIs(t, err, ErrReplicaMovementInProgress)
+	})
+
+	t.Run("index disable allowed when no movement", func(t *testing.T) {
+		err := build(t, false).UpdateProperty(mkCmd(t, true, false), true, false)
+		require.NotErrorIs(t, err, ErrReplicaMovementInProgress)
+	})
+}
+
+func Test_schemaDeepCopy(t *testing.T) {
+	r := prometheus.NewPedanticRegistry()
+	s := NewSchema("testNode", nil, r)
+
+	class := &models.Class{
+		Class: "test",
+		MultiTenancyConfig: &models.MultiTenancyConfig{
+			Enabled: true,
+		},
+	}
+	shardState := &sharding.State{
+		Physical: map[string]sharding.Physical{
+			"shard1": {
+				Name:           "shard1",
+				Status:         "HOT",
+				BelongsToNodes: []string{"node1"},
+			},
+		},
+	}
+
+	require.NoError(t, s.addClass(class, shardState, 1))
+
+	t.Run("MetaClasses deep copy", func(t *testing.T) {
+		copied := s.MetaClasses()
+
+		original := s.classes["test"]
+		copiedClass := copied["test"]
+
+		copiedClass.Class.Class = "modified"
+		physical := copiedClass.Sharding.Physical["shard1"]
+		physical.Status = "COLD"
+		copiedClass.Sharding.Physical["shard1"] = physical
+
+		assert.Equal(t, "test", original.Class.Class)
+		assert.Equal(t, "HOT", original.Sharding.Physical["shard1"].Status)
+
+		assert.Equal(t, original.ClassVersion, copiedClass.ClassVersion)
+		assert.Equal(t, original.ShardVersion, copiedClass.ShardVersion)
+	})
+
+	t.Run("Concurrent access", func(t *testing.T) {
+		done := make(chan bool)
+		go func() {
+			for i := 0; i < 100; i++ {
+				s.MetaClasses()
+				s.States()
+			}
+			done <- true
+		}()
+
+		for i := 0; i < 100; i++ {
+			s.addClass(&models.Class{Class: fmt.Sprintf("concurrent%d", i)}, shardState, uint64(i))
+		}
+		<-done
+	})
+}
+
+func TestSchemaRestoreLegacyWithEmptyClasses(t *testing.T) {
+	// Test the scenario where snapshot contains "classes":{} which should unmarshal to empty map
+	t.Run("empty classes object", func(t *testing.T) {
+		s := NewSchema("test-node", &MockShardReader{}, nil)
+
+		// Create snapshot JSON with empty classes object
+		snapData := `{"node_id":"test-node","snapshot_id":"test-snapshot","classes":{}}`
+
+		// Test RestoreLegacy
+		mockParser := NewMockParser(t)
+
+		err := s.RestoreLegacy([]byte(snapData), mockParser)
+		require.NoError(t, err)
+
+		// Verify that s.classes is an empty map, not nil
+		assert.NotNil(t, s.classes)
+		assert.Equal(t, 0, len(s.classes))
+	})
+}
+
+func TestSchemaRestoreLegacyWithNilClasses(t *testing.T) {
+	// Test the scenario where snapshot JSON unmarshaling results in nil Classes
+	t.Run("nil classes after unmarshal", func(t *testing.T) {
+		s := NewSchema("test-node", &MockShardReader{}, nil)
+
+		// Create a snapshot struct with nil Classes to simulate unmarshal failure
+		snap := snapshot{
+			NodeID:     "test-node",
+			SnapshotID: "test-snapshot",
+			Classes:    nil, // This simulates the problematic case
+		}
+
+		// Marshal it back to JSON
+		snapData, err := json.Marshal(snap)
+		require.NoError(t, err)
+
+		// Test RestoreLegacy
+		mockParser := NewMockParser(t)
+		err = s.RestoreLegacy(snapData, mockParser)
+		require.NoError(t, err)
+
+		// Verify that s.classes is initialized, not nil
+		assert.NotNil(t, s.classes)
+		assert.Equal(t, 0, len(s.classes))
+	})
+}
+
+func TestSchemaAddClassAfterRestoreWithEmptyClasses(t *testing.T) {
+	// Test the scenario where addClass is called after restoring empty classes
+	t.Run("add class after empty restore", func(t *testing.T) {
+		s := NewSchema("test-node", &MockShardReader{}, nil)
+
+		// First restore with empty classes
+		snapData := `{"node_id":"test-node","snapshot_id":"test-snapshot","classes":{}}`
+		mockParser := NewMockParser(t)
+		err := s.RestoreLegacy([]byte(snapData), mockParser)
+		require.NoError(t, err)
+
+		// Verify s.classes is not nil
+		assert.NotNil(t, s.classes)
+
+		// Now try to add a class - this should not panic
+		cls := &models.Class{Class: "TestClass"}
+		ss := &sharding.State{Physical: map[string]sharding.Physical{}}
+
+		err = s.addClass(cls, ss, 1)
+		require.NoError(t, err)
+
+		// Verify the class was added
+		assert.Equal(t, 1, len(s.classes))
+		assert.NotNil(t, s.classes["TestClass"])
+	})
+}
+
+func TestSchemaAddClassAfterRestoreWithNilClasses(t *testing.T) {
+	// Test the scenario where addClass is called after restoring with nil classes
+	t.Run("add class after nil restore", func(t *testing.T) {
+		s := NewSchema("test-node", &MockShardReader{}, nil)
+
+		// First restore with nil classes (simulating unmarshal failure)
+		snap := snapshot{
+			NodeID:     "test-node",
+			SnapshotID: "test-snapshot",
+			Classes:    nil,
+		}
+		snapData, err := json.Marshal(snap)
+		require.NoError(t, err)
+
+		mockParser := NewMockParser(t)
+		err = s.RestoreLegacy(snapData, mockParser)
+		require.NoError(t, err)
+
+		// Verify s.classes is not nil
+		assert.NotNil(t, s.classes)
+
+		// Now try to add a class - this should not panic
+		cls := &models.Class{Class: "TestClass"}
+		ss := &sharding.State{Physical: map[string]sharding.Physical{}}
+
+		err = s.addClass(cls, ss, 1)
+		require.NoError(t, err)
+
+		// Verify the class was added
+		assert.Equal(t, 1, len(s.classes))
+		assert.NotNil(t, s.classes["TestClass"])
+	})
+}
+
+func TestCreateAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "C"}, ss, 1))
+	require.Nil(t, sc.addClass(&models.Class{Class: "AnotherClass"}, ss, 1))
+
+	t.Run("successfully create alias", func(t *testing.T) {
+		err := sc.createAlias("C", "A1")
+		require.Nil(t, err)
+	})
+
+	t.Run("fail on conflicting creation", func(t *testing.T) {
+		err := sc.createAlias("C", "A1")
+		require.EqualError(t, err, "create alias: A1, alias already exists")
+	})
+
+	t.Run("fail on non-existing class", func(t *testing.T) {
+		err := sc.createAlias("D", "newAlias")
+		require.EqualError(t, err, "create alias: NewAlias, class not found, D")
+	})
+
+	t.Run("fail on non-existing alias", func(t *testing.T) {
+		err := sc.createAlias("D", "A1")
+		require.EqualError(t, err, "create alias: A1, alias already exists")
+	})
+	t.Run("fail on creating alias with existing class name", func(t *testing.T) {
+		// We have two collection. "C" and "AnotherClass"
+		// 1. We try to create alias with name "AnotherClass" to class "C".
+		// 2. Should fail saying class with "AnotherClass" already exists.
+		err := sc.createAlias("C", "AnotherClass")
+		require.EqualError(t, err, "create alias: class AnotherClass already exists")
+	})
+}
+
+func TestSchemaAliasCasing(t *testing.T) {
+	// Alias name should be case-insensitive similar to collection.
+	// Meaning, MyCar, MYCar, myCar all same.
+
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "CoolCar"}, ss, 1))
+	err := sc.createAlias("CoolCar", "MyCar")
+	require.Nil(t, err)
+
+	// Try creating it with different cases.
+	err = sc.createAlias("CoolCar", "MYCar")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+
+	err = sc.createAlias("CoolCar", "mYCar")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+
+	err = sc.createAlias("CoolCar", "mycar")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+
+	err = sc.createAlias("CoolCar", "MYCAR")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+}
+
+func TestReplaceAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "C1"}, ss, 1))
+	require.Nil(t, sc.addClass(&models.Class{Class: "C2"}, ss, 1))
+	require.Nil(t, sc.createAlias("C1", "A1"))
+
+	t.Run("successfully replace alias", func(t *testing.T) {
+		err := sc.replaceAlias("C2", "A1")
+		require.Nil(t, err)
+	})
+
+	t.Run("fail on non-existing alias", func(t *testing.T) {
+		err := sc.replaceAlias("C1", "A2")
+		require.EqualError(t, err, "replace alias: alias A2 does not exist")
+	})
+
+	t.Run("fail on non-existing class", func(t *testing.T) {
+		err := sc.replaceAlias("D", "A1")
+		require.EqualError(t, err, "replace alias: class D does not exist")
+	})
+}
+
+func TestDeleteAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "C"}, ss, 1))
+	require.Nil(t, sc.createAlias("C", "A1"))
+
+	t.Run("successfully delete alias", func(t *testing.T) {
+		err := sc.deleteAlias("A1")
+		require.Nil(t, err)
+	})
+
+	t.Run("idempotent deletion with non-existent alias", func(t *testing.T) {
+		err := sc.deleteAlias("A2")
+		require.Nil(t, err)
+	})
+}
+
+func TestResolveAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "C1"}, ss, 1))
+	require.Nil(t, sc.createAlias("C1", "A1"))
+
+	t.Run("successfully resolve alias", func(t *testing.T) {
+		alias := sc.ResolveAlias("A1")
+		assert.Equal(t, alias, "C1")
+	})
+
+	t.Run("empty response for non-existent alias", func(t *testing.T) {
+		alias := sc.ResolveAlias("A2")
+		assert.Empty(t, alias)
+	})
+}
+
+func TestGetAlias(t *testing.T) {
+	var (
+		sc = NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+		ss = &sharding.State{Physical: make(map[string]sharding.Physical)}
+	)
+
+	require.Nil(t, sc.addClass(&models.Class{Class: "C1"}, ss, 1))
+	require.Nil(t, sc.addClass(&models.Class{Class: "C2"}, ss, 1))
+	require.Nil(t, sc.addClass(&models.Class{Class: "C3"}, ss, 1))
+	require.Nil(t, sc.createAlias("C1", "A1"))
+	require.Nil(t, sc.createAlias("C2", "A2"))
+	require.Nil(t, sc.createAlias("C2", "A3"))
+
+	t.Run("get aliases", func(t *testing.T) {
+		aliases := sc.getAliases("", "")
+		expected := map[string]string{
+			"A1": "C1",
+			"A2": "C2",
+			"A3": "C2",
+		}
+		assert.EqualValues(t, expected, aliases)
+	})
+
+	t.Run("get aliases for alias A1", func(t *testing.T) {
+		aliases := sc.getAliases("A1", "")
+		expected := map[string]string{
+			"A1": "C1",
+		}
+		assert.EqualValues(t, expected, aliases)
+	})
+
+	t.Run("get aliases for class C2", func(t *testing.T) {
+		aliases := sc.getAliases("", "C2")
+		expected := map[string]string{
+			"A2": "C2",
+			"A3": "C2",
+		}
+		assert.EqualValues(t, expected, aliases)
+	})
+
+	t.Run("get updated aliases", func(t *testing.T) {
+		require.Nil(t, sc.replaceAlias("C3", "A2"))
+
+		aliases := sc.getAliases("", "")
+		expected := map[string]string{
+			"A1": "C1",
+			"A2": "C3",
+			"A3": "C2",
+		}
+		assert.EqualValues(t, expected, aliases)
+	})
+}
+
+// TestAliasNamespacePrefixPreserved checks that creating an alias with a
+// namespace-qualified name stores it under a key whose namespace prefix is
+// kept lowercase, and that ResolveAlias still finds it under that key. Only
+// the class portion of the name is normalized.
+func TestAliasNamespacePrefixPreserved(t *testing.T) {
+	sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+	ss := &sharding.State{Physical: make(map[string]sharding.Physical)}
+	require.NoError(t, sc.addClass(&models.Class{Class: "delhappy:Movies"}, ss, 1))
+	require.NoError(t, sc.createAlias("delhappy:Movies", "delhappy:Films"))
+
+	stored := sc.getAliases("", "")
+	require.Contains(t, stored, "delhappy:Films",
+		"alias stored under lowercase-namespace key; got %v", stored)
+
+	require.Equal(t, "delhappy:Movies", sc.ResolveAlias("delhappy:Films"))
+}
+
+func TestCollectionsCount_Namespaced(t *testing.T) {
+	newState := func() *sharding.State {
+		return &sharding.State{Physical: make(map[string]sharding.Physical)}
+	}
+
+	tests := []struct {
+		name  string
+		setup func(t *testing.T, sc *schema)
+		// want maps a namespace onto the count CollectionsCount must report;
+		// the empty namespace is the cluster-global total.
+		want map[string]int
+	}{
+		{
+			name:  "no classes",
+			setup: func(*testing.T, *schema) {},
+			want:  map[string]int{"": 0, "customer1": 0},
+		},
+		{
+			name: "classes across namespaces alongside an unqualified class",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Films"}, newState(), 2))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer2:Movies"}, newState(), 3))
+				require.NoError(t, sc.addClass(&models.Class{Class: "Global"}, newState(), 4))
+			},
+			want: map[string]int{"": 4, "customer1": 2, "customer2": 1, "unknown": 0},
+		},
+		{
+			name: "a namespace that prefixes another does not absorb its classes",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer:Movies"}, newState(), 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 2))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Films"}, newState(), 3))
+			},
+			want: map[string]int{"": 3, "customer": 1, "customer1": 2},
+		},
+		{
+			name: "a rejected duplicate add is not counted twice",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.ErrorIs(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 2), ErrClassExists)
+			},
+			want: map[string]int{"": 1, "customer1": 1},
+		},
+		{
+			name: "delete removes the class from its namespace only",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Films"}, newState(), 2))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer2:Movies"}, newState(), 3))
+				require.True(t, sc.deleteClass("customer1:Movies"))
+			},
+			want: map[string]int{"": 2, "customer1": 1, "customer2": 1},
+		},
+		{
+			name: "deleting the last class empties the namespace",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.True(t, sc.deleteClass("customer1:Movies"))
+			},
+			want: map[string]int{"": 0, "customer1": 0},
+		},
+		{
+			name: "deleting a class that is not there leaves the count alone",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.False(t, sc.deleteClass("customer1:Missing"))
+				require.False(t, sc.deleteClass("customer2:Missing"))
+			},
+			want: map[string]int{"": 1, "customer1": 1, "customer2": 0},
+		},
+		{
+			name: "re-adding a deleted class counts it once",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.True(t, sc.deleteClass("customer1:Movies"))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 2))
+			},
+			want: map[string]int{"": 1, "customer1": 1},
+		},
+		{
+			name: "restoring a snapshot replaces the counts of the namespaces it had",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Films"}, newState(), 2))
+
+				restoreClasses(t, sc, "customer2:Books", "Global")
+			},
+			want: map[string]int{"": 2, "customer1": 0, "customer2": 1},
+		},
+		{
+			name: "restoring an empty snapshot clears every namespace",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, newState(), 1))
+
+				restoreClasses(t, sc)
+			},
+			want: map[string]int{"": 0, "customer1": 0},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+			tt.setup(t, sc)
+
+			for namespace, want := range tt.want {
+				assert.Equal(t, want, sc.CollectionsCount(namespace), "namespace %q", namespace)
+			}
+		})
+	}
+}
+
+// A namespace that loses its last class must leave no entry behind: a cluster
+// that churns namespaces would otherwise grow the map for the life of the node.
+func TestClassCountByNamespace_DropsEmptyNamespace(t *testing.T) {
+	sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+	ss := &sharding.State{Physical: make(map[string]sharding.Physical)}
+
+	require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+	require.True(t, sc.deleteClass("customer1:Movies"))
+	assert.Empty(t, sc.classCountByNamespace, "after the last class is deleted")
+
+	require.NoError(t, sc.addClass(&models.Class{Class: "customer2:Books"}, ss, 2))
+	restoreClasses(t, sc)
+	assert.Empty(t, sc.classCountByNamespace, "after an empty snapshot is restored")
+}
+
+// A snapshot the parser rejects must leave the previous classes and their gauge
+// series untouched: replaceClasses runs only after every class has parsed.
+func TestRestore_RejectedSnapshotLeavesStateIntact(t *testing.T) {
+	sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+	ss := &sharding.State{Physical: make(map[string]sharding.Physical)}
+	require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+
+	data := mustMarshal(t, map[string]*metaClass{
+		"customer2:Books": {Class: models.Class{Class: "customer2:Books"}},
+	})
+	require.Error(t, sc.Restore(data, failingParser{}))
+
+	assert.Equal(t, 2, testutil.CollectAndCount(sc.collectionsCount))
+	assert.Equal(t, float64(1), testutil.ToFloat64(sc.collectionsCount.WithLabelValues("customer1")))
+	assert.Equal(t, 1, sc.CollectionsCount("customer1"))
+	assert.Equal(t, 0, sc.CollectionsCount("customer2"))
+}
+
+// TestCollectionsGauge_ByNamespace pins the observable half of the count: the
+// per-namespace series an operator reads to explain a rejected create, and the
+// pruning that keeps a namespace-churning cluster from growing series without
+// bound.
+func TestCollectionsGauge_ByNamespace(t *testing.T) {
+	ss := &sharding.State{Physical: make(map[string]sharding.Physical)}
+
+	tests := []struct {
+		name   string
+		setup  func(t *testing.T, sc *schema)
+		want   map[string]float64
+		series int
+	}{
+		{
+			name:   "a fresh schema publishes zero, not nothing",
+			setup:  func(t *testing.T, sc *schema) {},
+			want:   map[string]float64{"": 0},
+			series: 1,
+		},
+		{
+			name: "each namespace gets its own series and unqualified classes share one",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Films"}, ss, 2))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer2:Movies"}, ss, 3))
+				require.NoError(t, sc.addClass(&models.Class{Class: "Unqualified"}, ss, 4))
+			},
+			want:   map[string]float64{"": 1, "customer1": 2, "customer2": 1},
+			series: 3,
+		},
+		{
+			name: "emptying a namespace drops its series",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer2:Movies"}, ss, 2))
+				require.True(t, sc.deleteClass("customer1:Movies"))
+			},
+			want:   map[string]float64{"": 0, "customer2": 1},
+			series: 2,
+		},
+		{
+			name: "deleting the last unqualified class keeps its series at zero",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "Unqualified"}, ss, 1))
+				require.True(t, sc.deleteClass("Unqualified"))
+			},
+			want:   map[string]float64{"": 0},
+			series: 1,
+		},
+		{
+			name: "a rejected duplicate add does not move the series",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				require.ErrorIs(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 2), ErrClassExists)
+			},
+			want:   map[string]float64{"": 0, "customer1": 1},
+			series: 2,
+		},
+		{
+			name: "deleting a class that is not there leaves the series alone",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				require.False(t, sc.deleteClass("customer1:Missing"))
+				require.False(t, sc.deleteClass("customer2:Missing"))
+			},
+			want:   map[string]float64{"": 0, "customer1": 1},
+			series: 2,
+		},
+		{
+			name: "a restore republishes the series and discards the old ones",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				restoreClasses(t, sc, "customer2:Books", "Unqualified")
+			},
+			want:   map[string]float64{"": 1, "customer2": 1},
+			series: 2,
+		},
+		{
+			name: "a restore of an empty snapshot leaves only the zero series",
+			setup: func(t *testing.T, sc *schema) {
+				require.NoError(t, sc.addClass(&models.Class{Class: "customer1:Movies"}, ss, 1))
+				restoreClasses(t, sc)
+			},
+			want:   map[string]float64{"": 0},
+			series: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+			tt.setup(t, sc)
+
+			// Counted before any read below: WithLabelValues creates the series
+			// it names, so reading first would manufacture the very series this
+			// asserts on.
+			assert.Equal(t, tt.series, testutil.CollectAndCount(sc.collectionsCount),
+				"no series beyond the ones asserted")
+
+			for namespace, want := range tt.want {
+				assert.Equal(t, want, testutil.ToFloat64(sc.collectionsCount.WithLabelValues(namespace)),
+					"namespace %q", namespace)
+			}
+		})
+	}
+}
+
+// The count is read under a read lock, so all three writers of the map must
+// write it under the lock that guards s.classes. Run with -race.
+func TestCollectionsCount_ConcurrentAccess(t *testing.T) {
+	sc := NewSchema(t.Name(), nil, prometheus.NewPedanticRegistry())
+	ss := &sharding.State{Physical: make(map[string]sharding.Physical)}
+
+	snapshot, err := json.Marshal(map[string]*metaClass{
+		"customer2:Books": {Class: models.Class{Class: "customer2:Books"}},
+	})
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+	wg.Add(3)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 2000; i++ {
+			sc.CollectionsCount("customer1")
+			sc.CollectionsCount("")
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		// Adds its own class before deleting it, so deleteClass reaches the
+		// counter every iteration instead of returning early once the names
+		// the other goroutines write are gone.
+		for i := 0; i < 2000; i++ {
+			name := fmt.Sprintf("customer3:C%d", i)
+			assert.NoError(t, sc.addClass(&models.Class{Class: name}, ss, uint64(i)))
+			sc.deleteClass(name)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < 200; i++ {
+			// assert, not require: only the test goroutine may call FailNow.
+			assert.NoError(t, sc.Restore(snapshot, &fixedParser{}))
+		}
+	}()
+
+	for i := 0; i < 100; i++ {
+		require.NoError(t, sc.addClass(&models.Class{Class: fmt.Sprintf("customer1:C%d", i)}, ss, uint64(i)))
+	}
+	wg.Wait()
+
+	// The racing writers leave an arbitrary map; a final restore settles it so
+	// the counts are deterministic.
+	require.NoError(t, sc.Restore(snapshot, &fixedParser{}))
+	assert.Equal(t, 1, sc.CollectionsCount("customer2"))
+	assert.Equal(t, 0, sc.CollectionsCount("customer1"))
+}

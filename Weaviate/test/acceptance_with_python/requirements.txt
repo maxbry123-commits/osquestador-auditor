@@ -1,0 +1,11 @@
+git+https://github.com/weaviate/weaviate-python-client.git@b82cd81cd93b7b5d9480e16ac4680c096cea7446
+pytest>=8.0.1,<9.0.0
+pytest-xdist==3.6.1
+pytest-benchmark==4.0.0
+
+black>=26.3.1,<27.0.0
+loguru>=0.7.2
+
+numpy==2.1.2
+
+Faker

@@ -1,0 +1,169 @@
+//                           _       _
+// __      _____  __ ___   ___  __ _| |_ ___
+// \ \ /\ / / _ \/ _` \ \ / / |/ _` | __/ _ \
+//  \ V  V /  __/ (_| |\ V /| | (_| | ||  __/
+//   \_/\_/ \___|\__,_| \_/ |_|\__,_|\__\___|
+//
+//  Copyright © 2016 - 2026 Weaviate B.V. All rights reserved.
+//
+//  CONTACT: hello@weaviate.io
+//
+
+package hashtree
+
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"math/bits"
+)
+
+// ErrInvalidBsetSerialization rejects wire payloads whose header disagrees with their bits.
+var ErrInvalidBsetSerialization = errors.New("invalid bset serialization")
+
+type Bitset struct {
+	size     int
+	bits     []int64
+	setCount int
+}
+
+func NewBitset(size int) *Bitset {
+	return &Bitset{
+		size: size,
+		bits: make([]int64, (size+63)/64),
+	}
+}
+
+func (bset *Bitset) Size() int {
+	return bset.size
+}
+
+func (bset *Bitset) Set(i int) *Bitset {
+	if bset.IsSet(i) {
+		return bset
+	}
+
+	bset.bits[i/64] |= 1 << (i % 64)
+	bset.setCount++
+
+	return bset
+}
+
+func (bset *Bitset) Unset(i int) *Bitset {
+	if !bset.IsSet(i) {
+		return bset
+	}
+
+	bset.bits[i/64] &= ^(1 << (i % 64))
+	bset.setCount--
+
+	return bset
+}
+
+func (bset *Bitset) IsSet(i int) bool {
+	if bset.size <= i {
+		panic("index out of range")
+	}
+
+	return bset.bits[i/64]&(1<<(i%64)) != 0
+}
+
+func (bset *Bitset) AllSet() bool {
+	return bset.SetCount() == bset.size
+}
+
+func (bset *Bitset) SetCount() int {
+	return bset.setCount
+}
+
+func (bset *Bitset) SetAll() *Bitset {
+	for i := 0; i < len(bset.bits); i++ {
+		bset.bits[i] = -1
+	}
+
+	bset.setCount = bset.size
+
+	return bset
+}
+
+func (bset *Bitset) Reset() *Bitset {
+	for i := 0; i < len(bset.bits); i++ {
+		bset.bits[i] = 0
+	}
+
+	bset.setCount = 0
+
+	return bset
+}
+
+func (bset *Bitset) Marshal() ([]byte, error) {
+	b := make([]byte, 8+8*len(bset.bits))
+
+	binary.BigEndian.PutUint32(b, uint32(bset.size))
+	binary.BigEndian.PutUint32(b[4:], uint32(bset.setCount))
+
+	off := 8
+	for _, n := range bset.bits {
+		binary.BigEndian.PutUint64(b[off:], uint64(n))
+		off += 8
+	}
+
+	return b, nil
+}
+
+// Unmarshal leaves the receiver untouched unless the whole payload validates.
+func (bset *Bitset) Unmarshal(b []byte) error {
+	if len(b) < 8 {
+		return fmt.Errorf("%w: buffer shorter than header", ErrInvalidBsetSerialization)
+	}
+
+	size := int(binary.BigEndian.Uint32(b))
+	carriedSetCount := int(binary.BigEndian.Uint32(b[4:]))
+
+	n := (size + 63) / 64
+
+	if len(b) != 8+n*8 {
+		return fmt.Errorf("%w: %d bytes for size %d", ErrInvalidBsetSerialization, len(b), size)
+	}
+
+	words := make([]int64, n)
+
+	off := 8
+	setCount := 0
+	for i := 0; i < n; i++ {
+		words[i] = int64(binary.BigEndian.Uint64(b[off:]))
+		off += 8
+
+		w := uint64(words[i])
+		if i == n-1 && size%64 != 0 {
+			// SetAll legitimately leaves trailing bits beyond size in the last word
+			lastWordMask := uint64(1)<<(size%64) - 1
+			w &= lastWordMask
+		}
+		setCount += bits.OnesCount64(w)
+	}
+
+	// receivers size digest buffers from the carried count, so it must match the bits
+	if setCount != carriedSetCount {
+		return fmt.Errorf("%w: set count %d, actual set bits %d",
+			ErrInvalidBsetSerialization, carriedSetCount, setCount)
+	}
+
+	bset.size = size
+	bset.setCount = carriedSetCount
+	bset.bits = words
+
+	return nil
+}
+
+func (bset *Bitset) Clone() *Bitset {
+	clone := &Bitset{
+		size:     bset.size,
+		bits:     make([]int64, len(bset.bits)),
+		setCount: bset.setCount,
+	}
+
+	copy(clone.bits, bset.bits)
+
+	return clone
+}
