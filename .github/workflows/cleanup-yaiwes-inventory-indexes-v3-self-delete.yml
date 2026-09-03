@@ -84,3 +84,5 @@ jobs:
               *) echo "UNAUTHORIZED_CHANGE $p"; exit 1 ;;
             esac
           done <<< "$changed"
+
+# trigger final surgical cleanup
