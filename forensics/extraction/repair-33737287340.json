@@ -1,0 +1,150 @@
+{
+  "schema": "yaiwes.extraction.guardian.v1",
+  "run_id": "33737287340",
+  "archive_groups": 40,
+  "pending_before": 22,
+  "processed": [
+    {
+      "slug": "phoenix",
+      "target": "phoenix",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 2,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/phoenix_0001.zip": "cdd7c9679fc88f81beaf613f241eda2eccdf5bf4df45b63c0bfbe54c417146a2",
+        "Download code osquestador auditor memoria/phoenix_0002.zip": "e9bb785f6554b9e2c7689b97a5b10194c3f4e06993b852c792fb2ecfa01c172e"
+      },
+      "copied": 7254,
+      "mirrors": [],
+      "files": 7254,
+      "bytes": 60754906,
+      "tree_sha256": "4cd84945030511bd7bab2774d9efdc05449f30b93d8c7e92384084b334f82cb2"
+    },
+    {
+      "slug": "agents-deep-research",
+      "target": "agents-deep-research",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/agents-deep-research_0001.zip": "d8d461cf8e3f8a5f04ac17f52782a5584e59a8e8d5a23bb0040601bef0352aba"
+      },
+      "copied": 49,
+      "mirrors": [],
+      "files": 49,
+      "bytes": 303855,
+      "tree_sha256": "f069af476f8049f2366b27826a10cc517d3ddb81eb9d9ddb1b829a25f383da1c"
+    },
+    {
+      "slug": "deep-research",
+      "target": "deep-research",
+      "status": "EXTRACTED_VERIFIED",
+      "parts": 1,
+      "part_sha256": {
+        "Download code osquestador auditor memoria/deep-research_0001.zip": "95d4e684589926c25113315e1f038edbdec2a4ad9c5fba1f1bd50f1059600062"
+      },
+      "copied": 21,
+      "mirrors": [],
+      "files": 21,
+      "bytes": 137472,
+      "tree_sha256": "982c47c6004800d414ac6c1d4897bf2b3e83a2e0401c2d6dc3ca561d3a46084f"
+    }
+  ],
+  "failures": [],
+  "remaining_gaps": [
+    {
+      "slug": "ytmusicapi",
+      "target": "ytmusicapi",
+      "mirror": null
+    },
+    {
+      "slug": "LangChain",
+      "target": "LangChain",
+      "mirror": null
+    },
+    {
+      "slug": "zustand",
+      "target": "zustand",
+      "mirror": null
+    },
+    {
+      "slug": "pyyaml",
+      "target": "pyyaml",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic-settings",
+      "target": "pydantic-settings",
+      "mirror": null
+    },
+    {
+      "slug": "pydantic",
+      "target": "pydantic",
+      "mirror": null
+    },
+    {
+      "slug": "aiomysql",
+      "target": "aiomysql",
+      "mirror": null
+    },
+    {
+      "slug": "lancedb",
+      "target": "lancedb",
+      "mirror": null
+    },
+    {
+      "slug": "Weaviate",
+      "target": "Weaviate",
+      "mirror": null
+    },
+    {
+      "slug": "Chart.js",
+      "target": "Chart.js",
+      "mirror": null
+    },
+    {
+      "slug": "qdrant",
+      "target": "qdrant",
+      "mirror": null
+    },
+    {
+      "slug": "pgvector",
+      "target": "pgvector",
+      "mirror": null
+    },
+    {
+      "slug": "tailwindcss",
+      "target": "tailwindcss",
+      "mirror": null
+    },
+    {
+      "slug": "ollama",
+      "target": "ollama",
+      "mirror": null
+    },
+    {
+      "slug": "lucide",
+      "target": "lucide",
+      "mirror": null
+    },
+    {
+      "slug": "bm25s",
+      "target": "bm25s",
+      "mirror": null
+    },
+    {
+      "slug": "asyncpg",
+      "target": "asyncpg",
+      "mirror": null
+    },
+    {
+      "slug": "docmost",
+      "target": "docmost",
+      "mirror": null
+    },
+    {
+      "slug": "starlette",
+      "target": "starlette",
+      "mirror": null
+    }
+  ],
+  "verdict": "GAPS_PENDING"
+}
