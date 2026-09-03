@@ -1,0 +1,37 @@
+{
+  "task_id": "RDC-MEMORY-ADDITIONAL-20260903",
+  "components": [
+    {
+      "slug": "Mem0",
+      "status": "EXTRACTED_VERIFIED",
+      "target": "componentes open soure osquestador auditor memoria/Mem0",
+      "source_commit": "9a7924befd7026e41e445ba809370009e5e985a6",
+      "files": 1788,
+      "tree_sha256": "5278655d6f7fe9109fc174e22ad9313247cf76e90a521ed785b9f6127471fc40"
+    },
+    {
+      "slug": "Cognee",
+      "status": "EXTRACTED_VERIFIED",
+      "target": "componentes open soure osquestador auditor memoria/Cognee",
+      "source_commit": "e8dd3d93de4699f0f59bedccace94408ecb6058c",
+      "files": 3150,
+      "tree_sha256": "ef242ee579c6b8b18ea05558596da2268cb12f5bd792a3e75ce660bcbc287925"
+    },
+    {
+      "slug": "Neo4j-Agent-Memory",
+      "status": "EXTRACTED_VERIFIED",
+      "target": "componentes open soure osquestador auditor memoria/Neo4j-Agent-Memory",
+      "source_commit": "5b4e00af88342707d011bb9d4f2b34503f43a8c3",
+      "files": 1049,
+      "tree_sha256": "275ea9066c771f1ea2786d52ea5d1a9b31138e1149b0924f5e40296095a47804"
+    },
+    {
+      "slug": "LangGraph",
+      "status": "EXTRACTED_VERIFIED",
+      "target": "componentes open soure osquestador auditor memoria/LangGraph",
+      "source_commit": "11738d83db4320bb191804342b5c76ae7eca54a0",
+      "files": 673,
+      "tree_sha256": "e3e1f4fd1c7361e54af1d7d108a3c470098fd8bc4d496aada54b903b24321be2"
+    }
+  ]
+}

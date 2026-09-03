@@ -1,0 +1,1 @@
+LICENSE; typescript/LICENSE; typescript/packages/vercel-ai-provider/LICENSE
