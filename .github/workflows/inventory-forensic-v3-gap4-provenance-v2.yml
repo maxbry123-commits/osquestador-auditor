@@ -1,0 +1,112 @@
+name: inventory-forensic-v3-gap4-provenance-v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/inventory-forensic-v3-gap4-provenance-v2.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  provenance-gap4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Cross-repo provenance for four remaining components
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, re, urllib.request
+
+          repos = [
+            'maxbry123-commits/agentes',
+            'maxbry123-commits/nct-core',
+            'maxbry123-commits/router-universal-router-inteligente-',
+            'maxbry123-commits/Orquestador-Maxbry-',
+            'maxbry123-commits/osquestador-auditor',
+            'maxbry123-commits/Agentes-motores-Wordflow-YAIWES',
+            'maxbry123-commits/frontend',
+          ]
+          targets = {
+            'ladybug': {'source':'https://github.com/LadybugDB/ladybug.git','sha':'dd9ca6cc70f8e57add26d132cc0d386a87b326c9','parts':2},
+            'kuzu': {'source':'https://github.com/kuzudb/kuzu.git','sha':'89f0263cc7a1fd9c396d2c4953747a013556a7f9','parts':12},
+            'hypermem': {'source':'https://github.com/EverMind-AI/HyperMem.git','sha':'15c700908f3ec64d6931f253695e42c679a4c958','parts':1},
+            'airflow': {'source':'https://github.com/apache/airflow.git','sha':'b0721979b92e4cddc13afe294b5a034ec90d0e49','parts':9},
+          }
+          token=os.environ.get('GH_TOKEN','')
+          headers={'Accept':'application/vnd.github+json','User-Agent':'yaiwes-inventory-v3'}
+          if token: headers['Authorization']=f'Bearer {token}'
+          def get(url):
+            req=urllib.request.Request(url,headers=headers)
+            with urllib.request.urlopen(req,timeout=60) as r: return json.load(r)
+          def raw(repo,branch,path):
+            url=f'https://raw.githubusercontent.com/{repo}/{branch}/'+urllib.parse.quote(path,safe='/')
+            req=urllib.request.Request(url,headers=headers)
+            try:
+              with urllib.request.urlopen(req,timeout=60) as r: return r.read().decode('utf-8','replace')
+            except Exception: return ''
+          import urllib.parse
+          rows=[]
+          for repo in repos:
+            meta=get(f'https://api.github.com/repos/{repo}')
+            branch=meta['default_branch']
+            ref=get(f'https://api.github.com/repos/{repo}/git/ref/heads/{branch}')
+            commit=get(f"https://api.github.com/repos/{repo}/git/commits/{ref['object']['sha']}")
+            tree=get(f"https://api.github.com/repos/{repo}/git/trees/{commit['tree']['sha']}?recursive=1")
+            paths=[x.get('path','') for x in tree.get('tree',[]) if x.get('type')=='blob']
+            manifests=[p for p in paths if p.endswith('RESEARCH_DOWNLOAD_MANIFEST.jsonl')]
+            zip_paths=[p for p in paths if p.lower().endswith('.zip')]
+            manifest_texts=[]
+            for p in manifests:
+              txt=raw(repo,branch,p)
+              if txt: manifest_texts.append((p,txt))
+            for slug,t in targets.items():
+              aliases={slug.lower()}
+              if slug=='airflow': aliases.add('apache-airflow')
+              zhits=[p for p in zip_paths if any(a in p.lower() for a in aliases)]
+              mhits=[]
+              exact_sha_hits=[]
+              exact_source_hits=[]
+              for mp,txt in manifest_texts:
+                for ln in txt.splitlines():
+                  low=ln.lower()
+                  if slug in low or t['source'].lower() in low or t['sha'] in ln:
+                    mhits.append({'manifest':mp,'line':ln[:1200]})
+                  if t['sha'] in ln: exact_sha_hits.append({'manifest':mp,'line':ln[:1200]})
+                  if t['source'].lower() in low: exact_source_hits.append({'manifest':mp,'line':ln[:1200]})
+              rows.append({
+                'repository':repo,'branch':branch,'slug':slug,'target':t,
+                'zip_hits':zhits,'manifest_hits':mhits,
+                'exact_sha_hits':exact_sha_hits,'exact_source_hits':exact_source_hits,
+                'zip_count':len(zhits),'exact_sha_count':len(exact_sha_hits),'exact_source_count':len(exact_source_hits)
+              })
+          with open('gap4-provenance-v2.json','w',encoding='utf-8') as f: json.dump(rows,f,indent=2,ensure_ascii=False)
+          with open('gap4-provenance-v2.md','w',encoding='utf-8') as f:
+            f.write('# YAIWES INVENTORY V3 — GAP4 provenance v2\n\n')
+            for r in rows:
+              f.write(f"## {r['repository']} — {r['slug']}\n")
+              f.write(f"- ZIP hits: {r['zip_count']}\n- exact SHA hits: {r['exact_sha_count']}\n- exact source hits: {r['exact_source_count']}\n")
+              for p in r['zip_hits'][:30]: f.write(f'- ZIP `{p}`\n')
+              for h in r['exact_sha_hits'][:10]: f.write(f"- SHA manifest `{h['manifest']}` :: `{h['line']}`\n")
+              for h in r['exact_source_hits'][:10]: f.write(f"- SOURCE manifest `{h['manifest']}` :: `{h['line']}`\n")
+          PY
+
+      - name: Validate evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s gap4-provenance-v2.json
+          test -s gap4-provenance-v2.md
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-forensic-v3-gap4-provenance-v2
+          path: |
+            gap4-provenance-v2.json
+            gap4-provenance-v2.md
+          if-no-files-found: error
