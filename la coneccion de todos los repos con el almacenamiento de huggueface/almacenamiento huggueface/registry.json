@@ -1,0 +1,26 @@
+{
+  "verified_count": 19,
+  "bucket": "COMAND-CENTER-1/claude-github-mcp-backup-storage",
+  "namespace_root": "/repos",
+  "repositories": {
+    "maxbry123-commits/Agentes-motores-Wordflow-YAIWES": "maxbry123-commits__Agentes-motores-Wordflow-YAIWES",
+    "maxbry123-commits/BIBLIOTECA": "maxbry123-commits__BIBLIOTECA",
+    "maxbry123-commits/BITACORA-MAXBRY": "maxbry123-commits__BITACORA-MAXBRY",
+    "maxbry123-commits/Cerebro": "maxbry123-commits__Cerebro",
+    "maxbry123-commits/Grupo-Trabajo-1": "maxbry123-commits__Grupo-Trabajo-1",
+    "maxbry123-commits/Grupo-Trabajo-2": "maxbry123-commits__Grupo-Trabajo-2",
+    "maxbry123-commits/MEMORIA": "maxbry123-commits__MEMORIA",
+    "maxbry123-commits/Maxbry-AGI": "maxbry123-commits__Maxbry-AGI",
+    "maxbry123-commits/Orquestador-Maxbry-": "maxbry123-commits__Orquestador-Maxbry-",
+    "maxbry123-commits/TAREA-1": "maxbry123-commits__TAREA-1",
+    "maxbry123-commits/TAREA-2": "maxbry123-commits__TAREA-2",
+    "maxbry123-commits/agentes": "maxbry123-commits__agentes",
+    "maxbry123-commits/comand-Center": "maxbry123-commits__comand-Center",
+    "maxbry123-commits/frontend": "maxbry123-commits__frontend",
+    "maxbry123-commits/informaci-n-auditor-": "maxbry123-commits__informaci-n-auditor-",
+    "maxbry123-commits/nct-core": "maxbry123-commits__nct-core",
+    "maxbry123-commits/nct-hub": "maxbry123-commits__nct-hub",
+    "maxbry123-commits/osquestador-auditor": "maxbry123-commits__osquestador-auditor",
+    "maxbry123-commits/router-universal-router-inteligente-": "maxbry123-commits__router-universal-router-inteligente-"
+  }
+}
