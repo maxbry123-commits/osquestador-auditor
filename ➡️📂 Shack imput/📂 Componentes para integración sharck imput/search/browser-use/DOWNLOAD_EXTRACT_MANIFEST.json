@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 4955546,
+  "bundle_sha256": "ace9f79578ba35266e5486fcc34782d14ba7c686ee8f2542f4e747bde3771828",
+  "extracted_tree": {
+    "bytes": 8727182,
+    "files": 518,
+    "sha256": "c56d6661bed7c4aa7936c88d09b59fe7d2b2750fecd383dccb4cf7d6b0ba1699"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 4955546,
+      "name": "browser-use.bundle.zip.part-0001",
+      "sha256": "ace9f79578ba35266e5486fcc34782d14ba7c686ee8f2542f4e747bde3771828"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "browser-use",
+  "source_bytes": 8727182,
+  "source_commit": "50f205533fe10ba35b553d2a3689c77b87bd5d0a",
+  "source_files": 518,
+  "source_ref": "HEAD",
+  "source_repo": "browser-use/browser-use",
+  "source_tree": {
+    "bytes": 8727182,
+    "files": 518,
+    "sha256": "c56d6661bed7c4aa7936c88d09b59fe7d2b2750fecd383dccb4cf7d6b0ba1699"
+  }
+}
