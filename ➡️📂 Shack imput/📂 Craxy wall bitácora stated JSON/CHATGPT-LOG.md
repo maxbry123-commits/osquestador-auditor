@@ -14,4 +14,17 @@
 - Test local del Core: 4/4 PASS después de corregir detección de React y limpiar trailing whitespace.
 - Motores canónicos: NO modificados.
 
-`NEXT=PUBLICAR_COLAS + WORKFLOW_DESCARGA + READBACK + WATCHDOG`
+## 2026-09-10 — Adquisición
+
+`NODE=T04_ACQUISITION_MONITOR`
+
+- Publicadas 6 colas; suma total = 77 componentes.
+- Publicado `.github/workflows/shack-input-components.yml`.
+- Run inicial `34470498878`: seis lanes arrancaron, pero quedaron en checkout del repo completo.
+- GitHub reportó repo size `9516442 KB` (~9.1 GB), por lo que el checkout completo fue identificado como cuello físico previo al motor.
+- Se corrigió únicamente el cable del workflow: partial clone `--filter=blob:none` + sparse paths para motores/colas/Craxy Wall. Ningún motor fue editado.
+- Run optimizado `34470821525` creado; se conserva `NO_COMPONENT_PASS_YET` hasta recibir verdicts físicos.
+- Watchdog ChatGPT horario activado, timezone America/Bogota.
+- Arquitectura, índice y STATE tuvieron read-back desde `main`.
+
+`NEXT=VERIFICAR_CANCELACION_RUN_PESADO → VERIFICAR_RUN_OPTIMIZADO → LEER_BALANCES → T05_WIRE_TEST`
