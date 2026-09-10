@@ -1,27 +1,30 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-BOOTSTRAP-001",
+  "checkpoint_id": "CP-V2-MOTORS-MOUNTED-002",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "ARCH_AND_INDEX_PUBLISHED",
-  "resume_from": "M03_CREATE_3_BATCHES_OF_10",
+  "last_verified_node": "M03_MOTORS_AND_QUEUES_MOUNTED",
+  "resume_from": "MONITOR_V2_RUN_34514168678",
   "verified_artifacts": [
     {"path":"➡️📂 sharck imput/README-METODO-TRABAJO-MULTIAGENTE.md","commit":"e3dd941e2aa48875654dc7fbed7074eb4abb8fe0"},
     {"path":"➡️📂 sharck imput/➡️📂 readme indice de componentes sharck imput.md","commit":"c77cdbbe64b80ae4ff1ec040155bc023f7007189"},
     {"path":"➡️📂 sharck imput/📁 readme arquitectura sharck imput.md","commit":"e8d160185e8088b59809d0f73e402d7df227b3a5"},
-    {"path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/PLAN.json","commit":"e34d137b22499e5a9a5300406de2f4557d6aa14e"},
-    {"path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/STATE.json","commit":"dad7a761abefac3cbfac78bf7a18596cb6624bfe"}
+    {"path":"➡️📂 sharck imput/➡️📂 handoff Readme shark imput.md","commit":"9c0cf7b1122165de4e7de35d9454db44aeb4140b"},
+    {"path":"➡️📂 sharck imput/PARCHE-RECUPERACION-SHARK-IMPUT.md","commit":"2fb21038b1a38fb0fea4a34e11c377d1039c2062"},
+    {"path":".github/workflows/sharck-input-v2-components.yml","commit":"c276f51a56f5c0bc433d2991240c72f14142d464"}
   ],
-  "open_gaps": [
-    {"id":"G-V1-30","detail":"legacy V1 still has 30 acquisition gaps","policy":"do not block independent V2 research batches; do not mark legacy closed"},
-    {"id":"G-V2-ACQ","detail":"30 new components not yet acquired","policy":"mount 3 canonical-motor jobs of 10"},
-    {"id":"G-REVIEW","detail":"ASTRA/GROK/CLAUDE independent reviews not yet performed","policy":"integration remains blocked"},
-    {"id":"G-EXTERNAL","detail":"no evidence of external engineering review yet","policy":"never claim reviewed/supervised until evidence exists"}
-  ],
-  "owner_locks": {
-    "M03":"SOL",
-    "M06":"ASTRA",
-    "M07":"CLAUDE",
-    "M08":"GROK"
+  "acquisition": {
+    "run_id":34514168678,
+    "last_observed_status":"QUEUED",
+    "verified_closed_new_components":0,
+    "pending_new_components":30,
+    "batches":["B01","B02","B03"]
   },
-  "next_safe_actions": ["create B01 queue","create B02 queue","create B03 queue","create acquisition workflow","update watchdog","read-back"]
+  "open_gaps": [
+    {"id":"G-V1-30","detail":"legacy V1 still has 30 acquisition gaps","policy":"preserve and handle separately"},
+    {"id":"G-V2-RUN","detail":"V2 run has not yet produced acquisition verdicts","policy":"watch run; no false PASS"},
+    {"id":"G-REVIEW","detail":"ASTRA/GROK/CLAUDE independent reviews not yet recorded","policy":"Step 3 blocked"},
+    {"id":"G-EXTERNAL","detail":"no evidence of external engineering review","policy":"do not claim external review/supervision"}
+  ],
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","MONITOR":"SOL"},
+  "next_safe_actions": ["update hourly watchdog to V2","read back all control artifacts","monitor run 34514168678","record batch verdicts when available","collect independent reviews"]
 }
