@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 7,
+  "revision": 8,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -15,7 +15,7 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622,"upstream_byte_preserving_repair_run":34488269513},
     {"id":"T05","name":"wire/test integracion","status":"PENDING_BLOCKED_BY_T04"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
@@ -39,10 +39,11 @@
     "failure_classes":{"DESTINATION_EXISTS":17,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":19,"OTHER":8},
     "gap_audit":{"schema":"wanted-shark.acquisition-gap-audit.v3","run_id":34483405056,"status":"PUBLISHED_AND_READBACK_VERIFIED","finding":"PARTIAL_PUBLICATION_CAUSED_BY_IGNORED_TRACKED_PATHS","examples":{"Vane":"235/238; missing searxng limiter/settings/uwsgi","MindSearch":"116/117; missing .DS_Store","deer-flow":"2650/2653; missing .vscode paths","pyright":"7561/7584; missing build paths"}},
     "ignored_publication_repair":{"workflow":".github/workflows/shack-input-ignored-repair.yml","run_id":34483843389,"status":"COMPLETED_SUCCESS_BUT_0_REPAIRED","candidates":19,"ready_for_publish":0,"failed_closed":19,"finding":"HELPER_PATH_PARSING_QUOTED_GIT_PATHS","motor_integrity":"PASS_NO_CANONICAL_MOTOR_EDIT"},
-    "nul_safe_repair":{"run_id":34484946622,"status":"IN_PROGRESS","helper_commit":"3f03ec86e231673f7ceae293217a9e5850c12bc1","change":"NUL_DELIMITED_STAGED_PATH_PARSING_ONLY","motor_blob_gate":"PASS","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + ADDITIVE_ONLY + REMOTE_REAUDIT"},
+    "nul_safe_repair":{"run_id":34484946622,"status":"COMPLETED_FAILURE_AT_PUBLICATION_GATE","helper_commit":"3f03ec86e231673f7ceae293217a9e5850c12bc1","candidates":19,"ready_for_publish":19,"failed_closed":0,"finding":"GIT_DIFF_CHECK_REJECTED_LEGITIMATE_UPSTREAM_TRAILING_WHITESPACE","motor_blob_gate":"PASS","publication":"NOT_PERSISTED","remote_reaudit":"SKIPPED"},
+    "upstream_byte_preserving_repair":{"run_id":34488269513,"status":"IN_PROGRESS","workflow_commit":"6038a3e6e065c78efe354236a05b4a5aff0d9558","change":"REPLACE_WHITESPACE_STYLE_GATE_WITH_ADDITIVE_PATH_ALLOWLIST_AND_NO_DELETE_GATE","policy":"PRESERVE_SOURCE_BYTES + MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + NO_DELETE + COMPONENT_PATH_ALLOWLIST + NO_FORCE + REMOTE_REAUDIT","motor_blob_gate":"PASS"},
     "status":"GAPS_PENDING_NO_BLIND_RETRY"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T08:49:00-05:00"
+  "updated_at":"2026-09-10T09:20:00-05:00"
 }
