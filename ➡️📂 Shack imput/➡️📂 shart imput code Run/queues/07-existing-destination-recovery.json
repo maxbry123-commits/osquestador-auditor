@@ -1,3 +1,175 @@
 {
-  "queue": []
+  "queue": [
+    {
+      "id": "recover-search-search-02",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-02",
+      "slug": "Vane",
+      "source_ref": "348feca3e378fb4157b217724ed508dc707f853f",
+      "source_repo": "ItzCrazyKns/Vane"
+    },
+    {
+      "id": "recover-search-search-04",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-04",
+      "slug": "gpt-researcher",
+      "source_ref": "6f998577d547b1e54ec662dac63583aa11e3b84b",
+      "source_repo": "assafelovic/gpt-researcher"
+    },
+    {
+      "id": "recover-search-search-07",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-07",
+      "slug": "MindSearch",
+      "source_ref": "7952c5f8a956fe6a44228a6a7d528a35340e7c87",
+      "source_repo": "InternLM/MindSearch"
+    },
+    {
+      "id": "recover-search-search-08",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-08",
+      "slug": "deer-flow",
+      "source_ref": "48a8978b7b6e1ce84454103f1831bf0c5cc3b1eb",
+      "source_repo": "bytedance/deer-flow"
+    },
+    {
+      "id": "recover-search-search-11",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-11",
+      "slug": "crawl4ai",
+      "source_ref": "862f6bccb9c063f49b9d42701baa0eea17a4993f",
+      "source_repo": "unclecode/crawl4ai"
+    },
+    {
+      "id": "recover-search-search-12",
+      "lane": "search",
+      "publish": false,
+      "recovery_of": "search-12",
+      "slug": "browser-use",
+      "source_ref": "50f205533fe10ba35b553d2a3689c77b87bd5d0a",
+      "source_repo": "browser-use/browser-use"
+    },
+    {
+      "id": "recover-code-code-05",
+      "lane": "code",
+      "publish": false,
+      "recovery_of": "code-05",
+      "slug": "opengrok",
+      "source_ref": "74f9e21e2e1dc6dbfe7d3e0f0e2cd53642b9a3dd",
+      "source_repo": "oracle/opengrok"
+    },
+    {
+      "id": "recover-code-code-06",
+      "lane": "code",
+      "publish": false,
+      "recovery_of": "code-06",
+      "slug": "ast-grep",
+      "source_ref": "fc2b1530db74de49131b725221de98036a552a9f",
+      "source_repo": "ast-grep/ast-grep"
+    },
+    {
+      "id": "recover-code-code-08",
+      "lane": "code",
+      "publish": false,
+      "recovery_of": "code-08",
+      "slug": "pyright",
+      "source_ref": "0653de232eef08dd1ee79373e26f59cfcc0c015f",
+      "source_repo": "microsoft/pyright"
+    },
+    {
+      "id": "recover-rag-rag-01",
+      "lane": "rag",
+      "publish": false,
+      "recovery_of": "rag-01",
+      "slug": "llama_index",
+      "source_ref": "5be447943168d8ac800901a623ca50bdbdee1c8e",
+      "source_repo": "run-llama/llama_index"
+    },
+    {
+      "id": "recover-rag-rag-12",
+      "lane": "rag",
+      "publish": false,
+      "recovery_of": "rag-12",
+      "slug": "ColBERT",
+      "source_ref": "cc4f3dc91c0b45d2d08c251d9d95178285c65f1c",
+      "source_repo": "stanford-futuredata/ColBERT"
+    },
+    {
+      "id": "recover-skills-skills-08",
+      "lane": "skills",
+      "publish": false,
+      "recovery_of": "skills-08",
+      "slug": "mcp-registry",
+      "source_ref": "739b70e8bc1bea203c5a35ab699f1df51d091568",
+      "source_repo": "modelcontextprotocol/registry"
+    },
+    {
+      "id": "recover-skills-skills-10",
+      "lane": "skills",
+      "publish": false,
+      "recovery_of": "skills-10",
+      "slug": "skill-hub",
+      "source_ref": "a4aa9b21a05c180246e86ad484cbabee421bad85",
+      "source_repo": "yaogdu/skill-hub"
+    },
+    {
+      "id": "recover-skills-skills-14",
+      "lane": "skills",
+      "publish": false,
+      "recovery_of": "skills-14",
+      "slug": "ToolBench",
+      "source_ref": "d56fdd89faf8c91fa135090b212bb9057ee5cfc2",
+      "source_repo": "OpenBMB/ToolBench"
+    },
+    {
+      "id": "recover-skills-skills-15",
+      "lane": "skills",
+      "publish": false,
+      "recovery_of": "skills-15",
+      "slug": "ToolUniverse",
+      "source_ref": "7a0ceb2f3a2ae28594e55ec27344e839df8bc9f7",
+      "source_repo": "mims-harvard/ToolUniverse"
+    },
+    {
+      "id": "recover-media-input-router-input-08",
+      "lane": "media-input-router",
+      "publish": false,
+      "recovery_of": "input-08",
+      "slug": "guidance",
+      "source_ref": "21b1d90dfbebff4b141df70c714c8af15aa5f4af",
+      "source_repo": "guidance-ai/guidance"
+    },
+    {
+      "id": "recover-media-input-router-input-09",
+      "lane": "media-input-router",
+      "publish": false,
+      "recovery_of": "input-09",
+      "slug": "antlr4",
+      "source_ref": "7d5770395bb7b02eb56e7c62662cb1d7c08f42a3",
+      "source_repo": "antlr/antlr4"
+    },
+    {
+      "id": "recover-media-input-router-media-04",
+      "lane": "media-input-router",
+      "publish": false,
+      "recovery_of": "media-04",
+      "slug": "whisper.cpp",
+      "source_ref": "a2b36eb677918d4f9ab1db7b8a7ff968563ed163",
+      "source_repo": "ggml-org/whisper.cpp"
+    },
+    {
+      "id": "recover-orchestration-orch-01",
+      "lane": "orchestration",
+      "publish": false,
+      "recovery_of": "orch-01",
+      "slug": "langgraph",
+      "source_ref": "e539ac122f4126f6dd850581c1494948cf620e31",
+      "source_repo": "langchain-ai/langgraph"
+    }
+  ]
 }
