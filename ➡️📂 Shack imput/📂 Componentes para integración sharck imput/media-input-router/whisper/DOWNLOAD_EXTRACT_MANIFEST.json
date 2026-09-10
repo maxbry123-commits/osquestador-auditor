@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 7266213,
+  "bundle_sha256": "a899b42f35238b2f423a9393520db6f2b2c4e5af0b342dd85a405512d7ea54f5",
+  "extracted_tree": {
+    "bytes": 10356705,
+    "files": 45,
+    "sha256": "f16d5c4bd0292e6b5fd8eedb151542c38be1e08d6b9dd7b7d17fa9ce3de8ba66"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 7266213,
+      "name": "whisper.bundle.zip.part-0001",
+      "sha256": "a899b42f35238b2f423a9393520db6f2b2c4e5af0b342dd85a405512d7ea54f5"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "whisper",
+  "source_bytes": 10356705,
+  "source_commit": "86098128c0b4f24f0e2aa2994de830614b474227",
+  "source_files": 45,
+  "source_ref": "HEAD",
+  "source_repo": "openai/whisper",
+  "source_tree": {
+    "bytes": 10356705,
+    "files": 45,
+    "sha256": "f16d5c4bd0292e6b5fd8eedb151542c38be1e08d6b9dd7b7d17fa9ce3de8ba66"
+  }
+}
