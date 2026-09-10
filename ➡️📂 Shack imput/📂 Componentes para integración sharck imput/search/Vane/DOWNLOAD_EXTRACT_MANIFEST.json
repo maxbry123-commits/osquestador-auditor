@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 35874748,
+  "bundle_sha256": "f80ad4466350ef376d62e87c35f31129e42c9c810afae50582131ef898dc87dd",
+  "extracted_tree": {
+    "bytes": 37302397,
+    "files": 238,
+    "sha256": "8e426a7f2854770331ac2150e433a8b60246163d63e368e50ec1bbc3ef8e39aa"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "Vane.bundle.zip.part-0001",
+      "sha256": "782d29ae5c034daca5528ac77789d9ee5e8f177fedecf12f60314b49c89ef535"
+    },
+    {
+      "bytes": 12582912,
+      "name": "Vane.bundle.zip.part-0002",
+      "sha256": "b5e79e4cf10e7b11be0e81fc7110e320d4396971a9d991571a56877425ee5ad5"
+    },
+    {
+      "bytes": 10708924,
+      "name": "Vane.bundle.zip.part-0003",
+      "sha256": "65164b75ad4e795a5d0821c5b5948ccf0475ad87791d9146b67059399c0cc02d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "Vane",
+  "source_bytes": 37302397,
+  "source_commit": "348feca3e378fb4157b217724ed508dc707f853f",
+  "source_files": 238,
+  "source_ref": "HEAD",
+  "source_repo": "ItzCrazyKns/Vane",
+  "source_tree": {
+    "bytes": 37302397,
+    "files": 238,
+    "sha256": "8e426a7f2854770331ac2150e433a8b60246163d63e368e50ec1bbc3ef8e39aa"
+  }
+}
