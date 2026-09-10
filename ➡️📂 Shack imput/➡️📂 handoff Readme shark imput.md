@@ -55,8 +55,9 @@ Catálogo: **77 componentes** distribuidos en 6 lanes:
 Workflow:
 `.github/workflows/shack-input-components.yml`
 
-Run inicial:
-`34470498878` — no declarar PASS mientras continúe `in_progress` o exista cualquier lane fallida.
+Runs de adquisición:
+- `34470498878`: run inicial con checkout completo; identificado como cuello de botella por repo ~9.1 GB; NO PASS.
+- `34470821525`: run optimizado con partial clone `--filter=blob:none` + sparse paths; verificar su estado real antes de actuar.
 
 Destino físico:
 `➡️📂 Shack imput/📂 Componentes para integración sharck imput/<lane>/<slug>/`
