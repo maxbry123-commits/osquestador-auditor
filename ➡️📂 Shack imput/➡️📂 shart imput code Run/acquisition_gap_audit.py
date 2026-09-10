@@ -14,8 +14,26 @@ DEST_ROOT = ROOT / "📂 Componentes para integración sharck imput"
 REPORT = WALL / "ACQUISITION-GAP-AUDIT.json"
 RECOVERY_QUEUE = CODE_ROOT / "queues" / "07-existing-destination-recovery.json"
 TOKEN = os.getenv("GITHUB_TOKEN", "")
-
 LANES = ["search", "code", "rag", "skills", "media-input-router", "orchestration"]
+
+
+def run(argv: list[str], check: bool = True) -> str:
+    p = subprocess.run(argv, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if check and p.returncode:
+        raise RuntimeError(f"COMMAND_FAILED:{argv}:{p.stdout[-2000:]}")
+    return p.stdout.strip()
+
+
+def git_object_exists(path: pathlib.Path) -> bool:
+    return subprocess.run(
+        ["git", "cat-file", "-e", f"HEAD:{path.as_posix()}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0
+
+
+def git_read_json(path: pathlib.Path) -> dict:
+    return json.loads(run(["git", "show", f"HEAD:{path.as_posix()}"]))
 
 
 def api_json(url: str) -> dict:
@@ -31,6 +49,8 @@ def source_tree(repo: str, commit: str) -> tuple[dict[str, str], list[str]]:
     commit_obj = api_json(f"https://api.github.com/repos/{repo}/git/commits/{commit}")
     tree_sha = commit_obj["tree"]["sha"]
     tree = api_json(f"https://api.github.com/repos/{repo}/git/trees/{tree_sha}?recursive=1")
+    if tree.get("truncated"):
+        raise RuntimeError("SOURCE_TREE_TRUNCATED")
     blobs: dict[str, str] = {}
     special: list[str] = []
     for row in tree.get("tree", []):
@@ -46,21 +66,15 @@ def source_tree(repo: str, commit: str) -> tuple[dict[str, str], list[str]]:
 
 def destination_tree(prefix: pathlib.Path) -> dict[str, str]:
     prefix_s = prefix.as_posix().rstrip("/") + "/"
-    p = subprocess.run(
-        ["git", "ls-tree", "-r", "HEAD", "--", prefix.as_posix()],
-        check=True,
-        text=True,
-        stdout=subprocess.PIPE,
-    )
+    text = run(["git", "ls-tree", "-r", "HEAD", "--", prefix.as_posix()])
     out: dict[str, str] = {}
-    for line in p.stdout.splitlines():
+    for line in text.splitlines():
         if not line.strip():
             continue
         meta, fullpath = line.split("\t", 1)
         _mode, kind, sha = meta.split()
-        if kind != "blob" or not fullpath.startswith(prefix_s):
-            continue
-        out[fullpath[len(prefix_s):]] = sha
+        if kind == "blob" and fullpath.startswith(prefix_s):
+            out[fullpath[len(prefix_s):]] = sha
     return out
 
 
@@ -91,26 +105,28 @@ def main() -> None:
             slug = row.get("slug", item_id)
             dest = DEST_ROOT / lane / slug
             manifest_path = dest / "DOWNLOAD_EXTRACT_MANIFEST.json"
+            manifest_exists = git_object_exists(manifest_path)
+            destination_exists = bool(destination_tree(dest))
             result = {
                 "lane": lane,
                 "item_id": item_id,
                 "slug": slug,
                 "source_repo": row.get("source_repo"),
                 "error_class": error_class,
-                "destination_exists": dest.exists(),
-                "manifest_exists": manifest_path.exists(),
+                "destination_exists": destination_exists,
+                "manifest_exists": manifest_exists,
                 "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
             }
 
             if error_class not in {"DESTINATION_EXISTS", "READBACK_TREE_HASH_GAP"}:
                 audit_rows.append(result)
                 continue
-            if not manifest_path.exists():
+            if not manifest_exists:
                 result["audit_verdict"] = "EXISTING_DESTINATION_MANIFEST_MISSING"
                 audit_rows.append(result)
                 continue
 
-            manifest = json.loads(manifest_path.read_text())
+            manifest = git_read_json(manifest_path)
             source_repo = manifest.get("source_repo") or row.get("source_repo")
             source_commit = manifest.get("source_commit")
             if not source_repo or not source_commit:
