@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 10,
+  "revision": 11,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -15,7 +15,7 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622,"upstream_byte_preserving_repair_run":34488269513,"residual_gap_audit_run":34494879182,"existing_destination_exact_audit_run":34501468676,"firecrawl_additive_repair_run":34501597027},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622,"upstream_byte_preserving_repair_run":34488269513,"residual_gap_audit_run":34494879182,"existing_destination_exact_audit_run":34501468676,"firecrawl_additive_repair_run":34501597027,"firecrawl_missing_only_repair_run":34507876211,"firecrawl_content_audit_run":34508058192,"firecrawl_exact_one_repair_run":34508225891},
     {"id":"T05","name":"wire/test integracion","status":"PENDING_BLOCKED_BY_T04"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
@@ -33,14 +33,17 @@
     "upstream_byte_preserving_repair":{"run_id":34488269513,"status":"COMPLETED_SUCCESS_REMOTE_REAUDIT_PASS","workflow_commit":"6038a3e6e065c78efe354236a05b4a5aff0d9558","repair_commit":"72e5a22601ade382975e9fbecd1a8a7caf3a30c6","post_audit_commit":"12e045a2e","candidates":19,"ready_for_publish":19,"failed_closed":0,"exact_existing_destinations":19,"change":"REPLACE_WHITESPACE_STYLE_GATE_WITH_ADDITIVE_PATH_ALLOWLIST_AND_NO_DELETE_GATE","policy":"PRESERVE_SOURCE_BYTES + MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + NO_DELETE + COMPONENT_PATH_ALLOWLIST + NO_FORCE + REMOTE_REAUDIT","motor_blob_gate":"PASS"},
     "residual_gap_audit":{"run_id":34494879182,"status":"COMPLETED_SUCCESS_PUBLISHED","remaining_failed":30,"remaining_failure_classes":{"DESTINATION_EXISTS":2,"OTHER":8,"READBACK_TREE_HASH_GAP":1,"SOURCE_SPECIAL_FILE_GAP":19},"motor_blob_gate":"PASS"},
     "existing_destination_exact_audit":{"run_id":34501468676,"status":"COMPLETED_FAILURE_GAPS_CONFIRMED","targets":2,"verified":0,"motor_blob_gate":"PASS","firecrawl":{"expected_files":1872,"actual_files":1870,"archive_parts_ok":true,"finding":"2_FILES_MISSING_ADDITIVE_CANDIDATE"},"tree-sitter":{"expected_files":616,"actual_files":616,"expected_bytes":4340154,"actual_bytes":4340153,"archive_parts_ok":true,"finding":"CONTENT_MISMATCH_1_BYTE_NO_AUTO_OVERWRITE"}},
-    "firecrawl_additive_repair":{"run_id":34501597027,"status":"QUEUED_OR_RUNNING","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + ADDITIVE_ONLY + NO_DELETE + NO_FORCE","expected_missing_files":2},
+    "firecrawl_additive_repair":{"run_id":34501597027,"status":"COMPLETED_FAILURE_MOTOR3_COLLISION","finding":"HELPER_PASSED_FULL_EXTRACTED_TREE_INSTEAD_OF_MISSING_ONLY","expected_missing_files":2,"motor_integrity":"PASS"},
+    "firecrawl_missing_only_repair":{"run_id":34507876211,"status":"PUBLISHED_BUT_REMOTE_TREE_MISMATCH","restored_files":2,"restored_paths":["apps/api/.env.example","apps/api/.env.local"],"motor_1":"VERIFIED_CLOSED","motor_3":"VERIFIED_CLOSED","publication":"SUCCESS_NO_FORCE","actual_tree":{"files":1872,"bytes":52345072,"sha256":"f48a656c16232a3c06e5cb40513c3bae4311f57d94b8974014e3bbfa8ae05399"},"expected_tree":{"files":1872,"bytes":52345224,"sha256":"6b0862a94ee6d28bb57f03654d489ee9366046ee62cd129f8fbad10f33a6ec50"},"finding":"ALL_FILES_PRESENT_BUT_CONTENT_MISMATCH_MINUS_152_BYTES"},
+    "firecrawl_content_audit":{"run_id":34508058192,"status":"AUDIT_COMPUTE_PASS_EVIDENCE_PUBLISH_GATE_FAILED","motor_blob_gate":"PASS","expected_files":1872,"actual_files":1872,"missing":0,"extra":0,"mismatch_count":1,"mismatch":{"path":"examples/o1_web_crawler/o1_web_crawler.py","actual_blob":"45bbd1eeae6e9be5684e7efdd86b637517759023","expected_blob":"ebe4bcbf7a5d8a2df5a6c1e8c9257de691152a4e","actual_bytes":6557,"expected_bytes":6709,"byte_delta":-152},"finding":"ONE_EXACT_PREEXISTING_CONTENT_MISMATCH"},
+    "firecrawl_exact_one_repair":{"run_id":34508225891,"status":"QUEUED_OR_RUNNING","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_EXPLICIT_REPLACE_ONE_PATH + CURRENT_BLOB_PRECONDITION + SOURCE_BLOB_PRECONDITION + NO_FORCE + FULL_REMOTE_TREE_READBACK"},
     "verified_closed":47,
     "failed":30,
     "pending":0,
-    "remaining_failure_classification":"SOURCE_SPECIAL_FILE_GAP=19; OTHER=8; READBACK_TREE_HASH_GAP=1; DESTINATION_EXISTS firecrawl targeted additive repair + tree-sitter content mismatch",
+    "remaining_failure_classification":"SOURCE_SPECIAL_FILE_GAP=19; OTHER=8; READBACK_TREE_HASH_GAP=1; DESTINATION_EXISTS firecrawl exact-one repair active + tree-sitter content mismatch",
     "status":"GAPS_PENDING_TARGETED_REPAIR_ACTIVE"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T11:23:00-05:00"
+  "updated_at":"2026-09-10T12:27:00-05:00"
 }
