@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 24726285,
+  "bundle_sha256": "3e073710efacc740e0418ea4e1a2caf6f62c1efa40168c4ea77e120f4ca4e941",
+  "extracted_tree": {
+    "bytes": 83578497,
+    "files": 8496,
+    "sha256": "e9adf70d68cab18ef29601911ae4252408a498ba8dd531bb049783366387b8fc"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "ToolUniverse.bundle.zip.part-0001",
+      "sha256": "399a51386222352c6140d70e4b5e8f7b78f2c2c7a36fa1009d9026e6652670c8"
+    },
+    {
+      "bytes": 12143373,
+      "name": "ToolUniverse.bundle.zip.part-0002",
+      "sha256": "9712172d1d51a3caed104a254c5acc834edcb2f55717362d609daf9134b18182"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ToolUniverse",
+  "source_bytes": 83578497,
+  "source_commit": "7a0ceb2f3a2ae28594e55ec27344e839df8bc9f7",
+  "source_files": 8496,
+  "source_ref": "HEAD",
+  "source_repo": "mims-harvard/ToolUniverse",
+  "source_tree": {
+    "bytes": 83578497,
+    "files": 8496,
+    "sha256": "e9adf70d68cab18ef29601911ae4252408a498ba8dd531bb049783366387b8fc"
+  }
+}
