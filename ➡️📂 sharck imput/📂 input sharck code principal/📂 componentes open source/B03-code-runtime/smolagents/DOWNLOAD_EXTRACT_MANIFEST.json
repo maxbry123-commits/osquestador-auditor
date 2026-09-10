@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1291242,
+  "bundle_sha256": "c31948299988dd6e55e198b22f3524e90d00c8b2c478bbc213713fd7d9a25779",
+  "extracted_tree": {
+    "bytes": 2694061,
+    "files": 185,
+    "sha256": "1d60dd45b53b94c12f48c80c072071eb3e6340fe4c9284602d77ca4cacfd9294"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1291242,
+      "name": "smolagents.bundle.zip.part-0001",
+      "sha256": "c31948299988dd6e55e198b22f3524e90d00c8b2c478bbc213713fd7d9a25779"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "smolagents",
+  "source_bytes": 2694061,
+  "source_commit": "30bb1161095dbae2271e6bc3cc4c219cc3897a57",
+  "source_files": 185,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/huggingface/smolagents",
+  "source_tree": {
+    "bytes": 2694061,
+    "files": 185,
+    "sha256": "1d60dd45b53b94c12f48c80c072071eb3e6340fe4c9284602d77ca4cacfd9294"
+  }
+}
