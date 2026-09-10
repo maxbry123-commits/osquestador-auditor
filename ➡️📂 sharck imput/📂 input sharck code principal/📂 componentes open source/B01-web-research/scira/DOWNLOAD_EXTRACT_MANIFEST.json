@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 17109835,
+  "bundle_sha256": "aa2fc5d8fc05d15ffc648c70800eb3bdabd141393569bb117e95f33f0284fad7",
+  "extracted_tree": {
+    "bytes": 29089180,
+    "files": 451,
+    "sha256": "14e47fa9bf01f5eb6a026de0e9d37bc816e478b71e873813f8889471b2a23a7c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "scira.bundle.zip.part-0001",
+      "sha256": "19f16d6b8af09d5d3eab6c4dfe0a01076629d826f8dfdf71e80928d7de7ce58b"
+    },
+    {
+      "bytes": 4526923,
+      "name": "scira.bundle.zip.part-0002",
+      "sha256": "5b493cc2133d2b6b46d2ab268b661dd952f1e898271c83460eb88060f9910873"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "scira",
+  "source_bytes": 29089180,
+  "source_commit": "e1692f5bdec7ec3f6482a24e0c6cf9b483d810f9",
+  "source_files": 451,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/zaidmukaddam/scira",
+  "source_tree": {
+    "bytes": 29089180,
+    "files": 451,
+    "sha256": "14e47fa9bf01f5eb6a026de0e9d37bc816e478b71e873813f8889471b2a23a7c"
+  }
+}
