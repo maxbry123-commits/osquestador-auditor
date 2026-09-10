@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 16790543,
+  "bundle_sha256": "023c90973cf4fb4d8a11816ab43aaa54c7310f991dae7cfb14e2aa4c2cd64e1b",
+  "extracted_tree": {
+    "bytes": 18616513,
+    "files": 34,
+    "sha256": "cfd4f4454eb36d962f8bea1fdabe03826edef0354f9c2c28d6e049d76b32fb62"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "WhisperX.bundle.zip.part-0001",
+      "sha256": "8dba75896d7fd586ad6119d8319c1d1b1215cdf1ea917c0b7a9fe6c3925008c2"
+    },
+    {
+      "bytes": 4207631,
+      "name": "WhisperX.bundle.zip.part-0002",
+      "sha256": "06cc548306d2c4c880afd47cddac0bdbd584e21564880eae51afc165973fd9a5"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "WhisperX",
+  "source_bytes": 18616513,
+  "source_commit": "2cfd7b7c5c7bba144954364db747319b50e8232b",
+  "source_files": 34,
+  "source_ref": "HEAD",
+  "source_repo": "m-bain/whisperX",
+  "source_tree": {
+    "bytes": 18616513,
+    "files": 34,
+    "sha256": "cfd4f4454eb36d962f8bea1fdabe03826edef0354f9c2c28d6e049d76b32fb62"
+  }
+}
