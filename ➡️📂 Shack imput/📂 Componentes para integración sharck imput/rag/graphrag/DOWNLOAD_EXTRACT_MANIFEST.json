@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 12226511,
+  "bundle_sha256": "a6bf5e7b571099c24104277495681b46d1b0b28a94a719fbfeb45b14d74e8bb5",
+  "extracted_tree": {
+    "bytes": 17663470,
+    "files": 908,
+    "sha256": "f2623977b48ddc79129f60e6e20a89740bc32d697c5e3d0c86ee1fb226717f3a"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12226511,
+      "name": "graphrag.bundle.zip.part-0001",
+      "sha256": "a6bf5e7b571099c24104277495681b46d1b0b28a94a719fbfeb45b14d74e8bb5"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "graphrag",
+  "source_bytes": 17663470,
+  "source_commit": "f40e9a26ce62ba0b3fef8837d24aafdcc6e6c704",
+  "source_files": 908,
+  "source_ref": "HEAD",
+  "source_repo": "microsoft/graphrag",
+  "source_tree": {
+    "bytes": 17663470,
+    "files": 908,
+    "sha256": "f2623977b48ddc79129f60e6e20a89740bc32d697c5e3d0c86ee1fb226717f3a"
+  }
+}
