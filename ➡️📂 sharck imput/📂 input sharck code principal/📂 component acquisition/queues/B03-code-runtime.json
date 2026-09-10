@@ -1,0 +1,17 @@
+{
+  "schema": "sharck-input.acquisition-queue.v2",
+  "batch": "B03",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime",
+  "queue": [
+    {"id":"B03-01","source_repo":"https://github.com/cocoindex-io/cocoindex","source_ref":"HEAD","slug":"cocoindex","publish":true},
+    {"id":"B03-02","source_repo":"https://github.com/kythe/kythe","source_ref":"HEAD","slug":"kythe","publish":true},
+    {"id":"B03-03","source_repo":"https://github.com/verivus-oss/sqry","source_ref":"HEAD","slug":"sqry","publish":true},
+    {"id":"B03-04","source_repo":"https://github.com/Helweg/open-codebase-index","source_ref":"HEAD","slug":"open-codebase-index","publish":true},
+    {"id":"B03-05","source_repo":"https://github.com/sourcebot-dev/sourcebot","source_ref":"HEAD","slug":"sourcebot","publish":true},
+    {"id":"B03-06","source_repo":"https://github.com/continuedev/continue","source_ref":"HEAD","slug":"continue","publish":true},
+    {"id":"B03-07","source_repo":"https://github.com/pydantic/pydantic-ai","source_ref":"HEAD","slug":"pydantic-ai","publish":true},
+    {"id":"B03-08","source_repo":"https://github.com/huggingface/smolagents","source_ref":"HEAD","slug":"smolagents","publish":true},
+    {"id":"B03-09","source_repo":"https://github.com/BerriAI/litellm","source_ref":"HEAD","slug":"litellm","publish":true},
+    {"id":"B03-10","source_repo":"https://github.com/PrefectHQ/fastmcp","source_ref":"HEAD","slug":"fastmcp","publish":true}
+  ]
+}
