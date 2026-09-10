@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 702590,
+  "bundle_sha256": "3ab59622603c549c655a73aee0c1d616f2b2c742985d98ba5f97096f8751796d",
+  "extracted_tree": {
+    "bytes": 1776245,
+    "files": 203,
+    "sha256": "e485bbd3f9e83f5a67237245bf5f15f4a6a1bf5c147e45bf9481eb4479e3496f"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 702590,
+      "name": "huggingface-skills.bundle.zip.part-0001",
+      "sha256": "3ab59622603c549c655a73aee0c1d616f2b2c742985d98ba5f97096f8751796d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "huggingface-skills",
+  "source_bytes": 1776245,
+  "source_commit": "f3186efbbc322121eb5d0f31e8a1d669ee961159",
+  "source_files": 203,
+  "source_ref": "HEAD",
+  "source_repo": "huggingface/skills",
+  "source_tree": {
+    "bytes": 1776245,
+    "files": 203,
+    "sha256": "e485bbd3f9e83f5a67237245bf5f15f4a6a1bf5c147e45bf9481eb4479e3496f"
+  }
+}
