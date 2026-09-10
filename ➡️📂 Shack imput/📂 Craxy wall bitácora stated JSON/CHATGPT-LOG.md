@@ -123,3 +123,19 @@
 - ASTRA/GROK no fueron reclamados. Motores canónicos intactos. No LFS. No force. No sobrescritura silenciosa.
 
 `NEXT=RUN_34501597027_VERDICT → READBACK_FIRECRAWL → ACTUALIZAR_BALANCE_SOLO_SI_EXACTO → AUDITAR_TREE_SITTER_1_BYTE → SEPARAR_8_OTHER → SOURCE_SPECIAL_FILE_GAP_STRATEGY`
+
+## 2026-09-10 — Watchdog T04 / firecrawl missing-only + mismatch exacto
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Run `34501597027` confirmó que la primera reparación aditiva alimentaba a `motor_3` un árbol demasiado amplio: terminó `1871/1872`, una colisión, sin cierre.
+- Se corrigió únicamente el helper `repair_firecrawl_additive.py`; los motores permanecieron inmutables. La versión nueva crea un staging temporal con sólo los paths físicamente ausentes y verifica sus Git blobs contra el commit fuente antes de llamar a `motor_3` con `COLLISION_POLICY=fail`.
+- Run `34507876211`: lock de seis motores PASS; `motor_1=VERIFIED_CLOSED`; `motor_3=VERIFIED_CLOSED`; restauró exactamente `apps/api/.env.example` y `apps/api/.env.local`; publicación sin force PASS.
+- Read-back del árbol completo: `1872/1872` archivos, pero actual `52345072 bytes / f48a656c...` frente a esperado `52345224 bytes / 6b0862a9...`; por tanto firecrawl NO se reclasifica todavía.
+- Auditoría read-only run `34508058192`: comparación de los 1872 Git blobs contra `firecrawl/firecrawl@4d9847872f3c8e89ff7080e48778c778c04b3fb3` aisló un solo mismatch: `examples/o1_web_crawler/o1_web_crawler.py`; actual blob `45bbd1eeae6e9be5684e7efdd86b637517759023` (6557 bytes), esperado `ebe4bcbf7a5d8a2df5a6c1e8c9257de691152a4e` (6709 bytes), delta exacto `-152`. No faltan ni sobran paths.
+- El cómputo de esa auditoría fue PASS; su publicación de JSON falló por gate de `git add` sobre ruta ignorada, pero la evidencia quedó en logs del run. No se usó ese fallo de publicación como PASS documental.
+- Se creó reparación específica `repair_firecrawl_exact_one.py` y workflow `shack-input-firecrawl-exact-one-repair.yml`: exige blob actual exacto como precondición, extrae desde archives verificados mediante motor_1, exige blob fuente exacto, llama motor_3 con `COLLISION_POLICY=replace` únicamente para ese path explícito, limita staged changes al archivo + reporte y exige full-tree read-back remoto.
+- Run exact-one `34508225891` iniciado; aún no se contabiliza recuperación. Balance oficial permanece `47 VERIFIED_CLOSED / 30 FAILED / 0 PENDING`.
+- `STATE.json` revision 11. ASTRA/GROK no reclamados. No LFS. No force. No overwrite silencioso: el único replace está declarado, condicionado por blob previo y registrado.
+
+`NEXT=RUN_34508225891_VERDICT → FULL_REMOTE_TREE_READBACK → SI_EXACTO_RECLASIFICAR_FIRECRAWL_48/29 → TREE_SITTER_1_BYTE_READONLY_AUDIT → 8_OTHER_CLASSIFICATION → SOURCE_SPECIAL_FILE_GAP_STRATEGY`
