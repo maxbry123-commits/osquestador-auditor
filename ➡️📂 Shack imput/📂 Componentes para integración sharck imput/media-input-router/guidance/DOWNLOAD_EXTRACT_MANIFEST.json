@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 14768324,
+  "bundle_sha256": "8209847cb0967498314f10a7fdc80f29e3efd22e041249ce75a7ee618fd273f2",
+  "extracted_tree": {
+    "bytes": 38251066,
+    "files": 323,
+    "sha256": "af063a2656d6e0ab7bf094c75b037053ec7dcb2927f0c251afd6bd6d51437046"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "guidance.bundle.zip.part-0001",
+      "sha256": "39d678e75428215550909f624269d13509549a3b4270f8415daa4c31eb1442e2"
+    },
+    {
+      "bytes": 2185412,
+      "name": "guidance.bundle.zip.part-0002",
+      "sha256": "8595f851760d859feb3028a31d1eb38679de4cfe82164833e1a031a7ffc73de9"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "guidance",
+  "source_bytes": 38251066,
+  "source_commit": "21b1d90dfbebff4b141df70c714c8af15aa5f4af",
+  "source_files": 323,
+  "source_ref": "HEAD",
+  "source_repo": "guidance-ai/guidance",
+  "source_tree": {
+    "bytes": 38251066,
+    "files": 323,
+    "sha256": "af063a2656d6e0ab7bf094c75b037053ec7dcb2927f0c251afd6bd6d51437046"
+  }
+}
