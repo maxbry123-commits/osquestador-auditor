@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 4640489,
+  "bundle_sha256": "105fb3b9c9d1a74f42feb6e9f61f8b5d32ada677c9cbca6a2ce38571a150d429",
+  "extracted_tree": {
+    "bytes": 32694852,
+    "files": 596,
+    "sha256": "7619ccc303e34a293281123ba9b31f3b2002833491ca5fe0d20c0723ab5370d9"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 4640489,
+      "name": "tantivy.bundle.zip.part-0001",
+      "sha256": "105fb3b9c9d1a74f42feb6e9f61f8b5d32ada677c9cbca6a2ce38571a150d429"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "tantivy",
+  "source_bytes": 32694852,
+  "source_commit": "dd0bc2336080ccb5b078fab6e8e21f99eca56fbd",
+  "source_files": 596,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/quickwit-oss/tantivy",
+  "source_tree": {
+    "bytes": 32694852,
+    "files": 596,
+    "sha256": "7619ccc303e34a293281123ba9b31f3b2002833491ca5fe0d20c0723ab5370d9"
+  }
+}
