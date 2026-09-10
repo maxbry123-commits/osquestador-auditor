@@ -1,0 +1,143 @@
+{
+  "bundle_bytes": 288207319,
+  "bundle_sha256": "e22586e7becd4af73a156da7982010b739e9b40d2ba9ec01c8e115d8a71d8580",
+  "extracted_tree": {
+    "bytes": 766193388,
+    "files": 9848,
+    "sha256": "c325d55793240a8eb7624e2a23cfb2f12a41ee657d028e3b35e593adfa09f8e9"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0001",
+      "sha256": "9f0650d7bc7cca6524c3b2af02eda17d021f55041797f5a7622aa1913e91905e"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0002",
+      "sha256": "a5b860471713fa7752adcb4c5649c157af9bf23f450f8eecdb497bb1388ce35b"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0003",
+      "sha256": "72d89660bbbae7cb02a03ef6628dc055697d17b7aa852ca9000e09b80e888596"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0004",
+      "sha256": "0689eced80ba844ac9628a5f39b01acaefac5bcd024e865bc103e2ba1f498e6c"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0005",
+      "sha256": "fcbb3a1bd0074255a8dfc40f0b1019fab3e04e04ab8c2ab6d1b5c22c1a184153"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0006",
+      "sha256": "5942283a93731074cef37814eebed9d9e72e51eeba2aefbec9cd927a37becfad"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0007",
+      "sha256": "1c9fd5b82fcd9c266cbf6c07b240a5f32962efbbce5a2212759991419fdc37bf"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0008",
+      "sha256": "d74d4404dd8b98ad968b84063a5dc34e940f5dfe73ecac3667dad20a9c315329"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0009",
+      "sha256": "3cb2b21b196d0213408402c6251a2019f8bd94e90c0754b769c746738fe6dae2"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0010",
+      "sha256": "bfbfd3dc1a0c3d54c8f6b751dda0e808e0ea076d49732ea847fdcddcb9b646f2"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0011",
+      "sha256": "af4e54d35d42934611ab72fcc851be1e397af3440c14e4043308fac3215453d5"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0012",
+      "sha256": "bc85e49ee6dc38d0153c41ac696658331b5b4489ed80cc0bcd3bd06dcec42051"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0013",
+      "sha256": "85dfa207f2f41041af1270a5c3c5ef897961e2ea4395b1ac1f0192182afb9816"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0014",
+      "sha256": "821fb029287a72fd01b54cd490b08643735ed1408a40aa6999cff1f7b407d260"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0015",
+      "sha256": "a629c8d6b609abd1375f49721850bbbf4a3b1afe4ee5d8c1665cb3fe0ddc8703"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0016",
+      "sha256": "4c90844f8d9fe19e80de6a14017473ea31becc31ccad773c3dc5156105bed8c8"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0017",
+      "sha256": "872a607b6cd7bffef88ed79e0f5b460bd458054069da5ed3d712a0cbaebe76a2"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0018",
+      "sha256": "bf3e697656c2f1c48c8e1a5b645b9c9c66599cb518ace573069f581c6c436648"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0019",
+      "sha256": "63a18213092716498115be1facc943b4eb69c7ab98a7826d5d544848dbd3c8b8"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0020",
+      "sha256": "801e69b217dfaff34461df8eb727aee9f60c4a1222a72f2c1727388494b613cc"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0021",
+      "sha256": "eb40c46e19f5881a354195489ee114bf7ec3ae5f66bf38443ca4b7861bc2df86"
+    },
+    {
+      "bytes": 12582912,
+      "name": "llama_index.bundle.zip.part-0022",
+      "sha256": "13070c3e088ffe7ebbccb5db56b8b07de24f617c3ad8b770f0091a2a5b09c987"
+    },
+    {
+      "bytes": 11383255,
+      "name": "llama_index.bundle.zip.part-0023",
+      "sha256": "b2c729149b32f5ec10624dc99da7c654ba2ad8e2bd36c5492de9d57e579f0853"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "llama_index",
+  "source_bytes": 766193388,
+  "source_commit": "5be447943168d8ac800901a623ca50bdbdee1c8e",
+  "source_files": 9848,
+  "source_ref": "HEAD",
+  "source_repo": "run-llama/llama_index",
+  "source_tree": {
+    "bytes": 766193388,
+    "files": 9848,
+    "sha256": "c325d55793240a8eb7624e2a23cfb2f12a41ee657d028e3b35e593adfa09f8e9"
+  }
+}
