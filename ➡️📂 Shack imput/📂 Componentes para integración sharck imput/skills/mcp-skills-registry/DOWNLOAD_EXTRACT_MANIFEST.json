@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 307451,
+  "bundle_sha256": "324f5870b037ac6b2d556b4707690e75ff5be11b2a07582ba7651d3b613f8509",
+  "extracted_tree": {
+    "bytes": 832412,
+    "files": 227,
+    "sha256": "d8541b520ca4101b64f1f63a52d6f128f1751a10a905efe840eee86f71d5ed4d"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 307451,
+      "name": "mcp-skills-registry.bundle.zip.part-0001",
+      "sha256": "324f5870b037ac6b2d556b4707690e75ff5be11b2a07582ba7651d3b613f8509"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "mcp-skills-registry",
+  "source_bytes": 832412,
+  "source_commit": "3291a9408d67338cfdbaf61c63ee90fc7a549cec",
+  "source_files": 227,
+  "source_ref": "HEAD",
+  "source_repo": "sarveshtalele/mcp-skills-registry",
+  "source_tree": {
+    "bytes": 832412,
+    "files": 227,
+    "sha256": "d8541b520ca4101b64f1f63a52d6f128f1751a10a905efe840eee86f71d5ed4d"
+  }
+}
