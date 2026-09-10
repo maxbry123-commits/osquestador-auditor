@@ -105,7 +105,7 @@ jobs:
         run: |
           set -euo pipefail
           REPORT='➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/FIRECRAWL-CONTENT-AUDIT.json'
-          git add -- "$REPORT"
+          git add -f -- "$REPORT"
           git diff --cached --name-only | grep -Fx "$REPORT" >/dev/null || { echo AUDIT_ALLOWLIST_GAP; exit 41; }
           test "$(git diff --cached --name-only | wc -l)" -eq 1 || { echo AUDIT_ALLOWLIST_GAP; exit 42; }
           git config user.name 'wanted-shark-watchdog'
