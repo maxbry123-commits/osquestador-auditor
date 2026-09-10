@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 477024,
+  "bundle_sha256": "2ab02db55899af8b0b58ad250bf08fcc351bc995f09cfd73f91c2983003237c6",
+  "extracted_tree": {
+    "bytes": 1257800,
+    "files": 189,
+    "sha256": "41b80747f079ba01ed30eb6e3a85e3e4797308a5386c90bd76ce4278b0c97c75"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 477024,
+      "name": "lark.bundle.zip.part-0001",
+      "sha256": "2ab02db55899af8b0b58ad250bf08fcc351bc995f09cfd73f91c2983003237c6"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "lark",
+  "source_bytes": 1257800,
+  "source_commit": "9a4fb9c7458e8155636773a3cded0016d52516da",
+  "source_files": 189,
+  "source_ref": "HEAD",
+  "source_repo": "lark-parser/lark",
+  "source_tree": {
+    "bytes": 1257800,
+    "files": 189,
+    "sha256": "41b80747f079ba01ed30eb6e3a85e3e4797308a5386c90bd76ce4278b0c97c75"
+  }
+}
