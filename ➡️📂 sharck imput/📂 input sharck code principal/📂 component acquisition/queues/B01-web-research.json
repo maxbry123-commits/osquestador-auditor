@@ -1,0 +1,17 @@
+{
+  "schema": "sharck-input.acquisition-queue.v2",
+  "batch": "B01",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research",
+  "queue": [
+    {"id":"B01-01","source_repo":"https://github.com/zaidmukaddam/scira","source_ref":"HEAD","slug":"scira","publish":true},
+    {"id":"B01-02","source_repo":"https://github.com/yacy/yacy_search_server","source_ref":"HEAD","slug":"yacy_search_server","publish":true},
+    {"id":"B01-03","source_repo":"https://github.com/apache/nutch","source_ref":"HEAD","slug":"nutch","publish":true},
+    {"id":"B01-04","source_repo":"https://github.com/internetarchive/heritrix3","source_ref":"HEAD","slug":"heritrix3","publish":true},
+    {"id":"B01-05","source_repo":"https://github.com/apache/stormcrawler","source_ref":"HEAD","slug":"stormcrawler","publish":true},
+    {"id":"B01-06","source_repo":"https://github.com/scrapy/scrapy","source_ref":"HEAD","slug":"scrapy","publish":true},
+    {"id":"B01-07","source_repo":"https://github.com/adbar/trafilatura","source_ref":"HEAD","slug":"trafilatura","publish":true},
+    {"id":"B01-08","source_repo":"https://github.com/apache/tika","source_ref":"HEAD","slug":"tika","publish":true},
+    {"id":"B01-09","source_repo":"https://github.com/docling-project/docling","source_ref":"HEAD","slug":"docling","publish":true},
+    {"id":"B01-10","source_repo":"https://github.com/opendatalab/MinerU","source_ref":"HEAD","slug":"MinerU","publish":true}
+  ]
+}
