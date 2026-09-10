@@ -9,33 +9,31 @@
   "mode": "FAIL_CLOSED_LOOP",
   "steps": [
     {"id":1,"name":"ANOTAR_ARQUITECTURA_INVENTARIO","status":"VERIFIED_DOCUMENTED"},
-    {"id":2,"name":"ADQUIRIR_COMPONENTES_GRUPOS_10","status":"MOTORS_RUNNING"},
-    {"id":3,"name":"WIRE_PRUNE_MIN_CODE_TEST","status":"BLOCKED_UNTIL_REVIEWS_AND_ACQUISITION_EVIDENCE"}
+    {"id":2,"name":"ADQUIRIR_COMPONENTES_GRUPOS_10","status":"INITIAL_RUN_COMPLETED_WITH_GAPS"},
+    {"id":3,"name":"WIRE_PRUNE_MIN_CODE_TEST","status":"BLOCKED_UNTIL_REVIEWS_AND_GAP_DECISIONS"}
   ],
   "tasks": [
-    {"id":"M01","owner":"SOL","name":"método multiagente + 5 refutaciones + 12 goals + Council12 + 6 simulaciones","status":"VERIFIED_PUBLISHED"},
-    {"id":"M02","owner":"GROK","name":"investigación y catálogo 30 OSS adicionales","status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW"},
-    {"id":"M03","owner":"SOL","name":"montar 3 batches de 10 con motores canónicos","status":"MOUNTED_RUN_IN_PROGRESS","evidence":{"workflow_commit":"c276f51a56f5c0bc433d2991240c72f14142d464","run_id":34514168678,"checkout_gate":"PASS_3_OF_3","motor_blob_gate":"PASS_3_OF_3"}},
-    {"id":"M04","owner":"SOL","name":"actualizar watchdog horario a V2 y batches","status":"VERIFIED_ENABLED"},
-    {"id":"M05","owner":"SOL","name":"read-back método/índice/plan/state/checkpoint/handoff/recovery/review","status":"VERIFIED_CLOSED"},
-    {"id":"M06","owner":"ASTRA","name":"auditoría independiente previa a integración","status":"READY_FOR_REVIEW"},
-    {"id":"M07","owner":"CLAUDE","name":"revisión code/ports/adapters y plan de tests","status":"READY_FOR_REVIEW"},
-    {"id":"M08","owner":"GROK","name":"refutar componentes/alternativas/licencias/mantenimiento","status":"READY_FOR_REVIEW"},
-    {"id":"M09","owner":"EXTERNAL_REVIEW","name":"revisión por equipo de ingeniería indicado por director","status":"NOT_PERFORMED_NO_EVIDENCE"},
-    {"id":"M10","owner":"SOL+CLAUDE","name":"integración 1x1 de componentes aprobados","status":"BLOCKED_BY_M06_M07_M08_AND_DIRECTOR_GATE"}
+    {"id":"M01","owner":"SOL","status":"VERIFIED_PUBLISHED","name":"método multiagente + refutaciones/goals/council/simulaciones"},
+    {"id":"M02","owner":"GROK","status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW","name":"catálogo 30 OSS nuevos"},
+    {"id":"M03","owner":"SOL","status":"COMPLETED_WITH_GAPS","name":"3 batches de 10 ejecutados con motores canónicos","evidence":{"run_id":34514168678,"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"}},
+    {"id":"M04","owner":"SOL","status":"VERIFIED_ENABLED","name":"watchdog horario V2"},
+    {"id":"M05","owner":"SOL","status":"VERIFIED_CLOSED","name":"read-back control plane"},
+    {"id":"M06","owner":"ASTRA","status":"READY_FOR_REVIEW","name":"XRAY + prior-work audit + versioned improvement + component gap + independent verify"},
+    {"id":"M07","owner":"CLAUDE","status":"READY_FOR_REVIEW","name":"code/ports/adapters/typing/tests + diagnosis acquisition gaps"},
+    {"id":"M08","owner":"GROK","status":"READY_FOR_REVIEW","name":"OSS alternatives/source refs/licenses/maintenance/contradiction"},
+    {"id":"M09","owner":"EXTERNAL_REVIEW","status":"NOT_PERFORMED_NO_EVIDENCE","name":"revisión adicional indicada por director"},
+    {"id":"M10","owner":"SOL+CLAUDE","status":"BLOCKED_BY_REVIEW_GATE","name":"integración 1x1 aprobada"},
+    {"id":"M11","owner":"SOL","status":"WATCHDOG_PENDING_GAP_RESOLUTION","name":"resolver/reintentar sólo StrategyDelta aprobadas para 20 GAPs"}
   ],
+  "acquisition_summary":{"B01":{"verified":3,"failed":7},"B02":{"verified":5,"failed":5},"B03":{"verified":2,"failed":8},"total":{"verified":10,"failed":20,"pending":0}},
+  "workflow_guard":{"original_run_ui":"SUCCESS","semantic":"GAPS_PENDING","fixed_wrapper_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43","future_policy":"job fails unless every state item VERIFIED_CLOSED"},
   "agent_contracts": {
     "SOL":{"exclusive":["state_control","integration","consolidation","motor_watch"],"cannot":["llm_only_pass"]},
     "CLAUDE":{"exclusive":["code_ports_adapters","typing","unit_integration_failure_tests"],"cannot":["overwrite_other_agent"]},
     "GROK":{"exclusive":["oss_research","community","hf_labs","alternatives","contradiction"],"cannot":["auto_install_unverified"]},
     "ASTRA":{"exclusive":["xray_architecture","prior_work_audit","versioned_improvement","component_gap_review","independent_verify"],"cannot":["duplicate_routine_implementation"]}
   },
-  "new_component_batches": [
-    {"id":"B01","count":10,"lane":"web-research","status":"MOTOR_EXECUTION_IN_PROGRESS"},
-    {"id":"B02","count":10,"lane":"ir-evidence","status":"MOTOR_EXECUTION_IN_PROGRESS"},
-    {"id":"B03","count":10,"lane":"code-runtime","status":"MOTOR_EXECUTION_IN_PROGRESS"}
-  ],
-  "legacy_v1": {"root":"➡️📂 Shack imput","catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE_DO_NOT_DESTROY"},
-  "gates": ["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
-  "next_action": "MONITOR_RUN_34514168678_THEN_ASTRA_CLAUDE_GROK_REVIEWS"
+  "legacy_v1":{"catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
+  "gates":["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
+  "next_action":"ASTRA_CLAUDE_GROK_REVIEW_20_GAPS_THEN_APPROVED_STRATEGYDELTA"
 }
