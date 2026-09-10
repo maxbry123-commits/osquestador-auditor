@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 37262043,
+  "bundle_sha256": "8cf283a0cdf82d5d425dacd8cffb70e1a890c38da5ce186798348405b9f90109",
+  "extracted_tree": {
+    "bytes": 57674272,
+    "files": 1152,
+    "sha256": "72c4d97090a3212edc3feb44c7e1bca7a092ff03d8dc79f9147d15411e1ceb68"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "FlagEmbedding.bundle.zip.part-0001",
+      "sha256": "7b4111db8175ba38cc6919fe084bad1ed0266d722e7599f02a4afed75c1e1ac7"
+    },
+    {
+      "bytes": 12582912,
+      "name": "FlagEmbedding.bundle.zip.part-0002",
+      "sha256": "f4c73f5526d4a6599f433fe04dac55c466a593e9f1100c0d1c4fbd72e4dabba7"
+    },
+    {
+      "bytes": 12096219,
+      "name": "FlagEmbedding.bundle.zip.part-0003",
+      "sha256": "45033333ea0160edb549f6f69f60e10bfe8a6f867892e842b1a64ce54d90919d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "FlagEmbedding",
+  "source_bytes": 57674272,
+  "source_commit": "fd1a2bdf69488ffebe0327999d4400d8c8058a0b",
+  "source_files": 1152,
+  "source_ref": "HEAD",
+  "source_repo": "FlagOpen/FlagEmbedding",
+  "source_tree": {
+    "bytes": 57674272,
+    "files": 1152,
+    "sha256": "72c4d97090a3212edc3feb44c7e1bca7a092ff03d8dc79f9147d15411e1ceb68"
+  }
+}
