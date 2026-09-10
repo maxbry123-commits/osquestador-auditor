@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 5578976,
+  "bundle_sha256": "fbaa51446819782afa3f14768c072ed878b978bf9a56ca1c68b39a085a26c20f",
+  "extracted_tree": {
+    "bytes": 13854104,
+    "files": 642,
+    "sha256": "56b32bef21abc63a86e175897cc60671850a96f0d635065b9dfa347fa548bf6b"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 5578976,
+      "name": "skill-hub.bundle.zip.part-0001",
+      "sha256": "fbaa51446819782afa3f14768c072ed878b978bf9a56ca1c68b39a085a26c20f"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "skill-hub",
+  "source_bytes": 13854104,
+  "source_commit": "a4aa9b21a05c180246e86ad484cbabee421bad85",
+  "source_files": 642,
+  "source_ref": "HEAD",
+  "source_repo": "yaogdu/skill-hub",
+  "source_tree": {
+    "bytes": 13854104,
+    "files": 642,
+    "sha256": "56b32bef21abc63a86e175897cc60671850a96f0d635065b9dfa347fa548bf6b"
+  }
+}

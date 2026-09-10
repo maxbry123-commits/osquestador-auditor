@@ -1,0 +1,29 @@
+name: Verify
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  merge_group:
+    branches: [main]
+    types: [checks_requested]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: "go.mod"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.x
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Verify generated code is up to date
+        run: make verify

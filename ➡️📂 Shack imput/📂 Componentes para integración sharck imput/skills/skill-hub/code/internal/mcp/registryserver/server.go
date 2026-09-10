@@ -1,0 +1,441 @@
+package registryserver
+
+import (
+	"context"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"time"
+
+	apitypes "github.com/agentregistry-dev/agentregistry/internal/registry/api/apitypes"
+	agentsvc "github.com/agentregistry-dev/agentregistry/internal/registry/service/agent"
+	serversvc "github.com/agentregistry-dev/agentregistry/internal/registry/service/server"
+	skillsvc "github.com/agentregistry-dev/agentregistry/internal/registry/service/skill"
+	"github.com/agentregistry-dev/agentregistry/internal/version"
+	"github.com/agentregistry-dev/agentregistry/pkg/models"
+	"github.com/agentregistry-dev/agentregistry/pkg/registry/database"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+)
+
+const (
+	defaultPageLimit = 30
+	maxPageLimit     = 100
+)
+
+// NewServer constructs an MCP server that exposes discovery tools backed by focused registry contracts.
+// All endpoints are restricted to published content to keep the surface area safe for unauthenticated agents.
+func NewServer(serverRegistry serversvc.Registry, agentRegistry agentsvc.Registry, skillRegistry skillsvc.Registry) *mcp.Server {
+	server := mcp.NewServer(&mcp.Implementation{
+		Name:    "agentregistry-mcp",
+		Version: version.Version,
+	}, &mcp.ServerOptions{
+		HasTools:   true,
+		HasPrompts: true,
+	})
+
+	addAgentTools(server, agentRegistry)
+	addServerTools(server, serverRegistry)
+	addSkillTools(server, skillRegistry)
+	addMetaTools(server)
+	addServerPrompts(server)
+
+	return server
+}
+
+type listAgentsArgs = apitypes.ListAgentsInput
+
+func addAgentTools(server *mcp.Server, registry agentsvc.Registry) {
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_agents",
+		Description: "List published agents with optional search and pagination. Set semantic_search=true for natural-language queries.",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args listAgentsArgs) (*mcp.CallToolResult, models.AgentListResponse, error) {
+		filter := &database.AgentFilter{}
+
+		if args.UpdatedSince != "" {
+			ts, err := time.Parse(time.RFC3339, args.UpdatedSince)
+			if err != nil {
+				return nil, models.AgentListResponse{}, fmt.Errorf("invalid updated_since: %w", err)
+			}
+			filter.UpdatedSince = &ts
+		}
+		// When semantic search is active, use pure vector similarity.
+		// Otherwise fall back to substring name matching.
+		if args.Semantic {
+			if args.Search == "" {
+				return nil, models.AgentListResponse{}, fmt.Errorf("semantic_search requires the search parameter")
+			}
+			filter.Semantic = &database.SemanticSearchOptions{
+				RawQuery:  args.Search,
+				Threshold: args.SemanticMatchThreshold,
+			}
+		} else if args.Search != "" {
+			filter.SubstringName = &args.Search
+		}
+		if args.Version != "" {
+			if args.Version == "latest" {
+				isLatest := true
+				filter.IsLatest = &isLatest
+			} else {
+				filter.Version = &args.Version
+			}
+		}
+
+		limit := clampLimit(args.Limit)
+		agents, nextCursor, err := registry.ListAgents(ctx, filter, args.Cursor, limit)
+		if err != nil {
+			return nil, models.AgentListResponse{}, err
+		}
+
+		out := models.AgentListResponse{
+			Agents:   make([]models.AgentResponse, len(agents)),
+			Metadata: models.AgentMetadata{NextCursor: nextCursor, Count: len(agents)},
+		}
+		for i, a := range agents {
+			out.Agents[i] = *a
+		}
+		return nil, out, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_agent",
+		Description: "Fetch a single published agent version (defaults to latest)",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args struct {
+		Name    string `json:"name"`
+		Version string `json:"version,omitempty"`
+	}) (*mcp.CallToolResult, models.AgentResponse, error) {
+		if args.Name == "" {
+			return nil, models.AgentResponse{}, fmt.Errorf("name is required")
+		}
+		version := args.Version
+		if version == "" {
+			version = "latest"
+		}
+
+		var agent *models.AgentResponse
+		var err error
+		if version == "latest" {
+			agent, err = registry.GetAgent(ctx, args.Name)
+		} else {
+			agent, err = registry.GetAgentVersion(ctx, args.Name, version)
+		}
+		if err != nil {
+			return nil, models.AgentResponse{}, err
+		}
+		return nil, *agent, nil
+	})
+}
+
+type listServersArgs = apitypes.ListServersInput
+
+func addServerTools(server *mcp.Server, registry serversvc.Registry) {
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_servers",
+		Description: "List published MCP servers with optional search and pagination. Set semantic_search=true for natural-language queries (e.g. 'database management tools').",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args listServersArgs) (*mcp.CallToolResult, apiv0.ServerListResponse, error) {
+		filter := &database.ServerFilter{}
+
+		if args.UpdatedSince != "" {
+			ts, err := time.Parse(time.RFC3339, args.UpdatedSince)
+			if err != nil {
+				return nil, apiv0.ServerListResponse{}, fmt.Errorf("invalid updated_since: %w", err)
+			}
+			filter.UpdatedSince = &ts
+		}
+		// When semantic search is active, use pure vector similarity.
+		// Otherwise fall back to substring name matching.
+		if args.Semantic {
+			if args.Search == "" {
+				return nil, apiv0.ServerListResponse{}, fmt.Errorf("semantic_search requires the search parameter")
+			}
+			filter.Semantic = &database.SemanticSearchOptions{
+				RawQuery:  args.Search,
+				Threshold: args.SemanticMatchThreshold,
+			}
+		} else if args.Search != "" {
+			filter.SubstringName = &args.Search
+		}
+		if args.Version != "" {
+			if args.Version == "latest" {
+				isLatest := true
+				filter.IsLatest = &isLatest
+			} else {
+				filter.Version = &args.Version
+			}
+		}
+
+		limit := clampLimit(args.Limit)
+		servers, nextCursor, err := registry.ListServers(ctx, filter, args.Cursor, limit)
+		if err != nil {
+			return nil, apiv0.ServerListResponse{}, err
+		}
+
+		out := apiv0.ServerListResponse{
+			Servers:  make([]apiv0.ServerResponse, len(servers)),
+			Metadata: apiv0.Metadata{NextCursor: nextCursor, Count: len(servers)},
+		}
+		for i, s := range servers {
+			out.Servers[i] = *s
+		}
+		return nil, out, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_server",
+		Description: "Fetch a published MCP server version. Supports 'latest' or all versions.",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args struct {
+		Name    string `json:"name"`
+		Version string `json:"version,omitempty"`
+		All     bool   `json:"all_versions,omitempty"`
+	}) (*mcp.CallToolResult, apiv0.ServerListResponse, error) {
+		if args.Name == "" {
+			return nil, apiv0.ServerListResponse{}, fmt.Errorf("name is required")
+		}
+		version := args.Version
+		if version == "" {
+			version = "latest"
+		}
+
+		if args.All {
+			servers, err := registry.GetServerVersions(ctx, args.Name)
+			if err != nil {
+				return nil, apiv0.ServerListResponse{}, err
+			}
+			out := apiv0.ServerListResponse{
+				Servers:  make([]apiv0.ServerResponse, len(servers)),
+				Metadata: apiv0.Metadata{Count: len(servers)},
+			}
+			for i, s := range servers {
+				out.Servers[i] = *s
+			}
+			return nil, out, nil
+		}
+
+		serverResp, err := fetchSingleServer(ctx, registry, args.Name, version)
+		if err != nil {
+			return nil, apiv0.ServerListResponse{}, err
+		}
+
+		return nil, apiv0.ServerListResponse{
+			Servers:  []apiv0.ServerResponse{*serverResp},
+			Metadata: apiv0.Metadata{Count: 1},
+		}, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_server_readme",
+		Description: "Fetch the README for a published server version (defaults to latest)",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args struct {
+		Name    string `json:"name"`
+		Version string `json:"version,omitempty"`
+	}) (*mcp.CallToolResult, ServerReadmePayload, error) {
+		if args.Name == "" {
+			return nil, ServerReadmePayload{}, fmt.Errorf("name is required")
+		}
+		version := args.Version
+		if version == "" {
+			version = "latest"
+		}
+
+		var readme *database.ServerReadme
+		var err error
+		if version == "latest" {
+			readme, err = registry.GetLatestServerReadme(ctx, args.Name)
+		} else {
+			readme, err = registry.GetServerReadme(ctx, args.Name, version)
+		}
+		if err != nil {
+			return nil, ServerReadmePayload{}, err
+		}
+
+		return nil, ServerReadmePayload{
+			Server:      readme.ServerName,
+			Version:     readme.Version,
+			Content:     string(readme.Content),
+			ContentType: readme.ContentType,
+			SizeBytes:   readme.SizeBytes,
+			SHA256:      hex.EncodeToString(readme.SHA256),
+			FetchedAt:   readme.FetchedAt,
+		}, nil
+	})
+}
+
+type listSkillsArgs = apitypes.ListSkillsInput
+
+func addSkillTools(server *mcp.Server, registry skillsvc.Registry) {
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "list_skills",
+		Description: "List published skills with optional search and pagination",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args listSkillsArgs) (*mcp.CallToolResult, models.SkillListResponse, error) {
+		filter := &database.SkillFilter{}
+
+		if args.UpdatedSince != "" {
+			ts, err := time.Parse(time.RFC3339, args.UpdatedSince)
+			if err != nil {
+				return nil, models.SkillListResponse{}, fmt.Errorf("invalid updated_since: %w", err)
+			}
+			filter.UpdatedSince = &ts
+		}
+		if args.Search != "" {
+			filter.SubstringName = &args.Search
+		}
+		if args.Version != "" {
+			if args.Version == "latest" {
+				isLatest := true
+				filter.IsLatest = &isLatest
+			} else {
+				filter.Version = &args.Version
+			}
+		}
+
+		limit := clampLimit(args.Limit)
+		skills, nextCursor, err := registry.ListSkills(ctx, filter, args.Cursor, limit)
+		if err != nil {
+			return nil, models.SkillListResponse{}, err
+		}
+
+		out := models.SkillListResponse{
+			Skills:   make([]models.SkillResponse, len(skills)),
+			Metadata: models.SkillMetadata{NextCursor: nextCursor, Count: len(skills)},
+		}
+		for i, s := range skills {
+			out.Skills[i] = *s
+		}
+		return nil, out, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "get_skill",
+		Description: "Fetch a published skill version (defaults to latest)",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, args struct {
+		Name    string `json:"name"`
+		Version string `json:"version,omitempty"`
+	}) (*mcp.CallToolResult, models.SkillResponse, error) {
+		if args.Name == "" {
+			return nil, models.SkillResponse{}, fmt.Errorf("name is required")
+		}
+
+		version := args.Version
+		if version == "" {
+			version = "latest"
+		}
+
+		var skill *models.SkillResponse
+		var err error
+		if version == "latest" {
+			skill, err = registry.GetSkill(ctx, args.Name)
+		} else {
+			skill, err = registry.GetSkillVersion(ctx, args.Name, version)
+		}
+		if err != nil {
+			return nil, models.SkillResponse{}, err
+		}
+		return nil, *skill, nil
+	})
+}
+
+func addMetaTools(server *mcp.Server) {
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "registry_health",
+		Description: "Simple health check for the registry MCP bridge",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, map[string]string, error) {
+		_ = ctx
+		return nil, map[string]string{"status": "ok"}, nil
+	})
+
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "registry_version",
+		Description: "Return registry build metadata",
+	}, func(ctx context.Context, _ *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, map[string]string, error) {
+		return nil, map[string]string{
+			"version":    version.Version,
+			"serverName": "agentregistry-mcp",
+		}, nil
+	})
+}
+
+// ServerReadmePayload is a compact representation of a server README blob.
+type ServerReadmePayload struct {
+	Server      string    `json:"server"`
+	Version     string    `json:"version"`
+	Content     string    `json:"content"`
+	ContentType string    `json:"content_type"`
+	SizeBytes   int       `json:"size_bytes"`
+	SHA256      string    `json:"sha256"`
+	FetchedAt   time.Time `json:"fetched_at"`
+}
+
+func fetchSingleServer(ctx context.Context, registry serversvc.Registry, name, version string) (*apiv0.ServerResponse, error) {
+	if version == "latest" {
+		servers, err := registry.GetServerVersions(ctx, name)
+		if err != nil {
+			return nil, err
+		}
+		if len(servers) == 0 {
+			return nil, errors.New("server not found")
+		}
+		for _, s := range servers {
+			if s.Meta.Official != nil && s.Meta.Official.IsLatest {
+				return s, nil
+			}
+		}
+		return servers[0], nil
+	}
+
+	return registry.GetServerVersion(ctx, name, version)
+}
+
+func clampLimit(limit int) int {
+	if limit <= 0 {
+		return defaultPageLimit
+	}
+	if limit > maxPageLimit {
+		return maxPageLimit
+	}
+	return limit
+}
+
+// addServerPrompts registers MCP prompts that describe how to use the registry server's tools.
+// These are user-facing prompts (per the MCP spec) that help users discover and interact with the registry.
+func addServerPrompts(server *mcp.Server) {
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "search_registry",
+		Description: "Search the agent registry for MCP servers, agents, skills, or prompts by keyword",
+		Arguments: []*mcp.PromptArgument{
+			{Name: "query", Description: "Search term or keyword", Required: true},
+			{Name: "type", Description: "Resource type to search: servers, agents, skills, or prompts (default: all)"},
+		},
+	}, func(_ context.Context, req *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+		query := req.Params.Arguments["query"]
+		resourceType := req.Params.Arguments["type"]
+
+		instruction := "Search the agent registry for \"" + query + "\""
+		if resourceType != "" {
+			instruction += " (filter to " + resourceType + " only)"
+		}
+		instruction += ". Use the appropriate list tool (list_servers, list_agents, list_skills) with the search parameter. Summarize what you find including names, descriptions, and versions."
+
+		return &mcp.GetPromptResult{
+			Description: "Search the registry for resources matching a query",
+			Messages: []*mcp.PromptMessage{
+				{Role: "user", Content: &mcp.TextContent{Text: instruction}},
+			},
+		}, nil
+	})
+
+	server.AddPrompt(&mcp.Prompt{
+		Name:        "registry_overview",
+		Description: "Get an overview of everything available in the agent registry",
+	}, func(_ context.Context, _ *mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+		return &mcp.GetPromptResult{
+			Description: "Overview of registry contents",
+			Messages: []*mcp.PromptMessage{
+				{Role: "user", Content: &mcp.TextContent{
+					Text: "Give me an overview of what's available in the agent registry. " +
+						"Use list_servers, list_agents, and list_skills to see what's published. " +
+						"Summarize the results in a clear table format showing name, description, and latest version for each resource type.",
+				}},
+			},
+		}, nil
+	})
+}
