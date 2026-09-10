@@ -1,40 +1,30 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-PARTIAL-ACQUISITION-004",
+  "checkpoint_id": "CP-V2-PRE-REVIEW-005",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "B01_B02_STATE_INDEX_READBACK",
-  "resume_from": "MONITOR_B03_AND_REVIEW_GAPS",
-  "verified_artifacts": [
-    {"path":"➡️📂 sharck imput/README-METODO-TRABAJO-MULTIAGENTE.md","readback":"PASS"},
-    {"path":"➡️📂 sharck imput/📁 readme arquitectura sharck imput.md","readback":"PASS"},
-    {"path":"➡️📂 sharck imput/➡️📂 readme indice de componentes sharck imput.md","readback":"PASS","catalog_total":107},
-    {"path":"➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/state/B01-INDEX.md","readback":"PASS","verified_closed":3,"failed":7},
-    {"path":"➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/state/B02-INDEX.md","readback":"PASS","verified_closed":5,"failed":5},
-    {"path":"➡️📂 sharck imput/REVIEW-GATE-ASTRA-ENGINEERING.md","readback":"PASS"},
-    {"path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md","commit":"f5ba36176cb62b0fdb267bbec9451cf9c410cd8d"}
-  ],
+  "last_verified_node": "M03_INITIAL_ACQUISITION_RUN_CLOSED_WITH_GAPS",
+  "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY",
+  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS","plan":"PASS","state":"PASS","handoff":"PASS","recovery":"PASS","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
   "acquisition": {
-    "run_id":34514168678,
-    "last_observed_status":"IN_PROGRESS",
-    "gates":{"checkout_no_lfs":"PASS_3_OF_3","motor_blob_sha":"PASS_3_OF_3"},
+    "initial_run_id":34514168678,
+    "initial_run_status":"COMPLETED",
+    "initial_run_ui_conclusion":"SUCCESS_BUT_SEMANTIC_GAPS",
     "batches": {
-      "B01":{"verified_closed":3,"failed":7,"pending":0,"status":"COMPLETED_WITH_GAPS"},
-      "B02":{"verified_closed":5,"failed":5,"pending":0,"status":"COMPLETED_WITH_GAPS"},
-      "B03":{"verified_closed":0,"failed":0,"pending":10,"status":"IN_PROGRESS"}
+      "B01":{"verified_closed":3,"failed":7,"pending":0},
+      "B02":{"verified_closed":5,"failed":5,"pending":0},
+      "B03":{"verified_closed":2,"failed":8,"pending":0}
     },
-    "verified_closed_new_components":8,
-    "failed_new_components":12,
-    "pending_new_components":10
+    "total":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
+    "future_fail_closed_workflow_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43"
   },
-  "gap_classes":["DESTINATION_EXISTS","READBACK_TREE_HASH_GAP","SOURCE_SPECIAL_FILE_GAP"],
-  "watchdog":{"v2_enabled":true,"frequency":"HOURLY"},
+  "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
   "open_gaps":[
-    {"id":"G-V1-30","detail":"legacy V1 30 acquisition gaps"},
-    {"id":"G-V2-12","detail":"12 V2 acquisition failures in B01+B02; see gap ledger"},
-    {"id":"G-V2-B03","detail":"B03 still running"},
-    {"id":"G-REVIEW","detail":"ASTRA/GROK/CLAUDE reviews pending; Step 3 blocked"},
-    {"id":"G-EXTERNAL","detail":"external review not performed/no evidence"}
+    {"id":"G-V1-30","detail":"legacy V1 has 30 unresolved acquisition gaps"},
+    {"id":"G-V2-20","detail":"20 new V2 components FAILED acquisition gates"},
+    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},
+    {"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"}
   ],
-  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","MONITOR":"SOL"},
-  "next_safe_actions":["monitor B03","read B03 state/index","ASTRA review acquisition gap StrategyDelta","CLAUDE diagnose hash/collision/special-file gaps","GROK research alternatives/source refs","director gate"]
+  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL"},
+  "step3_allowed":false,
+  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis","GROK M08 alternatives/refutation","approve StrategyDelta per gap","watchdog monitor and resume","director/external review gate"]
 }
