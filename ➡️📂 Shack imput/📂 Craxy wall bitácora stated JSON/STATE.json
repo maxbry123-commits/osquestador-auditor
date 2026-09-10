@@ -1,13 +1,13 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 4,
+  "revision": 5,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
   "root": "➡️📂 Shack imput",
   "workflow_contract": ["1_ANOTAR_ARQUITECTURA","2_DESCARGAR_EXTRAER","3_CABLEAR_PODAR_MINIMO_CODE_TEST"],
   "agents": {
-    "SOL_CHATGPT": {"status":"ACTIVE","node":"T04_ACQUISITION_MONITOR","log":"CHATGPT-LOG.md"},
+    "SOL_CHATGPT": {"status":"ACTIVE","node":"T04_ACQUISITION_GAP_RECOVERY","log":"CHATGPT-LOG.md"},
     "ASTRA": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"ASTRA-LOG.md"},
     "GROK": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"GROK-LOG.md"}
   },
@@ -15,20 +15,31 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"RUNNING_WITH_OPTIMIZATION","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525},
-    {"id":"T05","name":"wire/test integracion","status":"PENDING"},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525},
+    {"id":"T05","name":"wire/test integracion","status":"PENDING_BLOCKED_BY_T04"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
   "acquisition": {
     "workflow":".github/workflows/shack-input-components.yml",
     "catalog_total":77,
     "lanes":["search","code","rag","skills","media-input-router","orchestration"],
-    "initial_run":{"id":34470498878,"status":"IN_PROGRESS_HEAVY_CHECKOUT","checkout_mode":"full","repo_size_kb":9516442},
-    "optimized_run":{"id":34470821525,"status":"PENDING","checkout_mode":"partial_sparse_blob_none"},
-    "verified_closed":0,
-    "status":"NO_COMPONENT_PASS_YET"
+    "initial_run":{"id":34470498878,"status":"SUPERSEDED_HEAVY_CHECKOUT","checkout_mode":"full","repo_size_kb":9516442},
+    "optimized_run":{"id":34470821525,"status":"COMPLETED_6_OF_6_JOBS_SUCCESS","checkout_mode":"partial_sparse_blob_none","motor_blob_gate":"PASS"},
+    "lane_balance": {
+      "search":{"total":13,"verified_closed":3,"failed":10,"pending":0},
+      "code":{"total":12,"verified_closed":2,"failed":10,"pending":0},
+      "rag":{"total":13,"verified_closed":8,"failed":5,"pending":0},
+      "skills":{"total":15,"verified_closed":5,"failed":10,"pending":0},
+      "media_input_router":{"total":18,"verified_closed":10,"failed":8,"pending":0},
+      "orchestration":{"total":6,"verified_closed":0,"failed":6,"pending":0}
+    },
+    "verified_closed":28,
+    "failed":49,
+    "pending":0,
+    "failure_classes_observed":["SOURCE_SPECIAL_FILE_GAP","READBACK_TREE_HASH_GAP","DESTINATION_EXISTS"],
+    "status":"GAPS_PENDING_NO_BLIND_RETRY"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T06:22:00-05:00"
+  "updated_at":"2026-09-10T07:16:46-05:00"
 }
