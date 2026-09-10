@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1403036,
+  "bundle_sha256": "3e2a49fe5622eb704174e18df1787197db671822a87052985d606788e1b49c6f",
+  "extracted_tree": {
+    "bytes": 4955307,
+    "files": 161,
+    "sha256": "44da98ec5fa8f8ce3e744055338f7b9af0e566958e57ccd4e7595232d594ada9"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1403036,
+      "name": "msgspec.bundle.zip.part-0001",
+      "sha256": "3e2a49fe5622eb704174e18df1787197db671822a87052985d606788e1b49c6f"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "msgspec",
+  "source_bytes": 4955307,
+  "source_commit": "2c34802aae88454751d47aef76e17d4a7cdb4995",
+  "source_files": 161,
+  "source_ref": "HEAD",
+  "source_repo": "jcrist/msgspec",
+  "source_tree": {
+    "bytes": 4955307,
+    "files": 161,
+    "sha256": "44da98ec5fa8f8ce3e744055338f7b9af0e566958e57ccd4e7595232d594ada9"
+  }
+}
