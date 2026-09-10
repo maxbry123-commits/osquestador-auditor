@@ -1,0 +1,107 @@
+name: Shack Input Components — canonical six-lane acquisition
+run-name: Shack Input • 77 components • ${{ github.sha }}
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/shack-input-components.yml'
+      - '➡️📂 Shack imput/➡️📂 shart imput code Run/queues/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shack-input-component-acquisition
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    name: ${{ matrix.lane }} — canonical motor
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - lane: search
+            queue: 01-search.json
+          - lane: code
+            queue: 02-code.json
+          - lane: rag
+            queue: 03-rag.json
+          - lane: skills
+            queue: 04-skills.json
+          - lane: media-input-router
+            queue: 05-media-input-router.json
+          - lane: orchestration
+            queue: 06-orchestration.json
+    env:
+      DEST_REPO: maxbry123-commits/osquestador-auditor
+      DEST_BRANCH: main
+      DEST_ROOT: ➡️📂 Shack imput/📂 Componentes para integración sharck imput/${{ matrix.lane }}
+      ENGINE_PATH: ➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py
+      QUEUE_FILE: ➡️📂 Shack imput/➡️📂 shart imput code Run/queues/${{ matrix.queue }}
+      STATE_FILE: ➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/download-${{ matrix.lane }}-state.json
+      INDEX_PATH: ➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/DOWNLOAD-${{ matrix.lane }}-INDEX.md
+      MAX_RETRIES: '3'
+      LOOP_SLEEP_SECONDS: '0'
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout main — NO LFS
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          lfs: false
+
+      - name: Verify all six canonical motor Git blob SHAs
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor'
+          check_blob() {
+            file="$1"
+            expected="$2"
+            actual="$(git hash-object "$file")"
+            test "$actual" = "$expected" || { echo "MOTOR_CODE_LOCK_GAP $file expected=$expected actual=$actual"; exit 31; }
+          }
+          check_blob "$ROOT/➡️📂 Motor de extracción zip/motor_1_extract_only.py" a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py" 84d566e2ee4e98e42eb3a864026d067d48caabd9
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py" 91e6e4486692eab314be5c7130d8310d3c855397
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_3_copy_batches.py" 3689924361ce4a1a9fde4ae2b6f6009c37a6042d
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_copy_root_to_repo.py" 8281211da76db3080fe1f1ea38b3eb0c45d655cb
+          check_blob "$ROOT/➡️📂motor de moves archivos/motor_4_move_batches.py" 9a21facfe11327cf60a2afca8f415ad52f0ecbe5
+
+      - name: Execute canonical queue download + extraction motor
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py' \
+            | tee "shack-${{ matrix.lane }}-motor-output.jsonl"
+
+      - name: Persist lane state and index after motor verdict
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'wanted-shark-watchdog'
+          git config user.email 'wanted-shark-watchdog@users.noreply.github.com'
+          git fetch origin main
+          git rebase origin/main || { git rebase --abort || true; git reset --hard origin/main; }
+          mkdir -p '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON'
+          git add -- "$STATE_FILE" "$INDEX_PATH" || true
+          if git diff --cached --quiet; then
+            echo 'No lane state/index changes to persist.'
+            exit 0
+          fi
+          git commit -m "chore(shack-input): persist ${{ matrix.lane }} acquisition state"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          echo 'PERSISTENCE_FAILURE'
+          exit 42
