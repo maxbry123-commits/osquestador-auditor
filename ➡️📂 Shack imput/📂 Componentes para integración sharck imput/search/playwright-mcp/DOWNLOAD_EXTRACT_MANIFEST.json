@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 69578,
+  "bundle_sha256": "6cd7238570d08437cd2eb8efe04b8cddff9c997b06c11e19a63781b7dc52aefd",
+  "extracted_tree": {
+    "bytes": 203283,
+    "files": 35,
+    "sha256": "214576e7fc24684c1d8654c61a16f2332f68035ee3242a52e92a80462cb43aee"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 69578,
+      "name": "playwright-mcp.bundle.zip.part-0001",
+      "sha256": "6cd7238570d08437cd2eb8efe04b8cddff9c997b06c11e19a63781b7dc52aefd"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "playwright-mcp",
+  "source_bytes": 203283,
+  "source_commit": "8a13ef8e9f7385a0f89477922127f31cbfde9761",
+  "source_files": 35,
+  "source_ref": "HEAD",
+  "source_repo": "microsoft/playwright-mcp",
+  "source_tree": {
+    "bytes": 203283,
+    "files": 35,
+    "sha256": "214576e7fc24684c1d8654c61a16f2332f68035ee3242a52e92a80462cb43aee"
+  }
+}
