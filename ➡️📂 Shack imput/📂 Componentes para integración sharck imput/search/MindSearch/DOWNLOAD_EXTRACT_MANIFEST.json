@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 4461989,
+  "bundle_sha256": "42ece1881b35d50d70e52cf2f543dc22d9b8407581eb797e49ea52c7170eec42",
+  "extracted_tree": {
+    "bytes": 6513488,
+    "files": 117,
+    "sha256": "7f4bc05eda09d8fdc71483a77503a430a8bf4e6a0f3435068de7a2519577de71"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 4461989,
+      "name": "MindSearch.bundle.zip.part-0001",
+      "sha256": "42ece1881b35d50d70e52cf2f543dc22d9b8407581eb797e49ea52c7170eec42"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "MindSearch",
+  "source_bytes": 6513488,
+  "source_commit": "7952c5f8a956fe6a44228a6a7d528a35340e7c87",
+  "source_files": 117,
+  "source_ref": "HEAD",
+  "source_repo": "InternLM/MindSearch",
+  "source_tree": {
+    "bytes": 6513488,
+    "files": 117,
+    "sha256": "7f4bc05eda09d8fdc71483a77503a430a8bf4e6a0f3435068de7a2519577de71"
+  }
+}
