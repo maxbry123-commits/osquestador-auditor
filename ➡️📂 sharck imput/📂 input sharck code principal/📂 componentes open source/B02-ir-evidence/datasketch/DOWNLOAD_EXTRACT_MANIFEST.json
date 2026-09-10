@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1833384,
+  "bundle_sha256": "c82e8d3a97fb0e3c0b54f64c44f6c1a4879b4ce6b33435031f6be12a53b086a4",
+  "extracted_tree": {
+    "bytes": 2886392,
+    "files": 129,
+    "sha256": "f3cdf4f9c5d157b269cff090ac9bdb4adc175637fa2a02abe66fc60da1531fdc"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1833384,
+      "name": "datasketch.bundle.zip.part-0001",
+      "sha256": "c82e8d3a97fb0e3c0b54f64c44f6c1a4879b4ce6b33435031f6be12a53b086a4"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "datasketch",
+  "source_bytes": 2886392,
+  "source_commit": "ee60290e982be00b6f0a6aea8156e2be4d6921e6",
+  "source_files": 129,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/ekzhu/datasketch",
+  "source_tree": {
+    "bytes": 2886392,
+    "files": 129,
+    "sha256": "f3cdf4f9c5d157b269cff090ac9bdb4adc175637fa2a02abe66fc60da1531fdc"
+  }
+}
