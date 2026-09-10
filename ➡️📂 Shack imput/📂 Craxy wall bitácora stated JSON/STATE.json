@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 5,
+  "revision": 6,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -15,7 +15,7 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389},
     {"id":"T05","name":"wire/test integracion","status":"PENDING_BLOCKED_BY_T04"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
@@ -36,10 +36,12 @@
     "verified_closed":28,
     "failed":49,
     "pending":0,
-    "failure_classes_observed":["SOURCE_SPECIAL_FILE_GAP","READBACK_TREE_HASH_GAP","DESTINATION_EXISTS"],
+    "failure_classes":{"DESTINATION_EXISTS":17,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":19,"OTHER":8},
+    "gap_audit":{"schema":"wanted-shark.acquisition-gap-audit.v3","run_id":34483405056,"status":"PUBLISHED_AND_READBACK_VERIFIED","finding":"PARTIAL_PUBLICATION_CAUSED_BY_IGNORED_TRACKED_PATHS","examples":{"Vane":"235/238; missing searxng limiter/settings/uwsgi","MindSearch":"116/117; missing .DS_Store","deer-flow":"2650/2653; missing .vscode paths","pyright":"7561/7584; missing build paths"}},
+    "ignored_publication_repair":{"workflow":".github/workflows/shack-input-ignored-repair.yml","run_id":34483843389,"status":"IN_PROGRESS","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + ADDITIVE_ONLY + FORCE_ADD_IGNORED_TRACKED + REMOTE_REAUDIT"},
     "status":"GAPS_PENDING_NO_BLIND_RETRY"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T07:16:46-05:00"
+  "updated_at":"2026-09-10T08:40:00-05:00"
 }
