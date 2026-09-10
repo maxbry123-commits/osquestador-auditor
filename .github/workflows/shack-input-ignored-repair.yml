@@ -30,6 +30,7 @@ jobs:
           git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
           git config core.sparseCheckout true
           git config core.sparseCheckoutCone false
+          git config core.quotePath false
           mkdir -p .git/info
           cat > .git/info/sparse-checkout <<'EOF'
           /.github/workflows/shack-input-ignored-repair.yml
