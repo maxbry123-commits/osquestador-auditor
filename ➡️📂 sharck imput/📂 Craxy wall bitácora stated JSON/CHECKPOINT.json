@@ -1,8 +1,8 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-PRE-REVIEW-005",
+  "checkpoint_id": "CP-V2-POST-XRAY-006",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M03_INITIAL_ACQUISITION_RUN_CLOSED_WITH_GAPS",
+  "last_verified_node": "M11_READBACK_XRAY_11_PARTIAL_DESTINATIONS",
   "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY",
   "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS","plan":"PASS","state":"PASS","handoff":"PASS","recovery":"PASS","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
   "acquisition": {
@@ -17,14 +17,25 @@
     "total":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
     "future_fail_closed_workflow_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43"
   },
+  "xray": {
+    "initial_failure_classes":{"DESTINATION_EXISTS":6,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":9},
+    "readback_workflow":".github/workflows/sharck-input-v2-readback-recover.yml",
+    "readback_runs":[34535896880,34536177351],
+    "audited_existing_destinations":11,
+    "recovered":0,
+    "confirmed_partial":11,
+    "source_special_remaining":9,
+    "evidence":"📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md"
+  },
   "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
   "open_gaps":[
     {"id":"G-V1-30","detail":"legacy V1 has 30 unresolved acquisition gaps"},
-    {"id":"G-V2-20","detail":"20 new V2 components FAILED acquisition gates"},
+    {"id":"G-V2-PARTIAL-11","detail":"11 V2 destinations confirmed partial by canonical readback"},
+    {"id":"G-V2-SPECIAL-9","detail":"9 V2 sources rejected by special-file safety gate"},
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},
     {"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"}
   ],
   "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL"},
   "step3_allowed":false,
-  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis","GROK M08 alternatives/refutation","approve StrategyDelta per gap","watchdog monitor and resume","director/external review gate"]
+  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis","GROK M08 alternatives/refutation","SOL monitor/read-only evidence","director review gate after agent evidence"]
 }
