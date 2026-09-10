@@ -80,6 +80,8 @@ Un tema religioso activa dominio de fuentes; no implica ni registra religión de
 
 Los cuatro escriben en Craxy Wall usando owner locks y checkpoints. Ningún agente puede borrar el trabajo de otro; una mejora crea versión nueva o patch.
 
+Anti-colisión: `READ latest STATE → verify owner → CLAIM in own log → execute scope → evidence → checkpoint`. PLAN/STATE/CHECKPOINT/Handoff/Recovery son escrituras compartidas secuenciales con SHA fresco; los logs son separados por agente.
+
 ## Adquisición física
 
 Única lógica autorizada: motores canónicos ya existentes en:
@@ -88,8 +90,27 @@ Los cuatro escriben en Craxy Wall usando owner locks y checkpoints. Ningún agen
 No se editan. Para los 30 nuevos componentes se crean tres jobs/instancias de 10 con queue/state/index independientes y destino explícito bajo:
 `➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/`.
 
+Adquisición inicial comprobada: B01=3/10, B02=5/10, B03=2/10; total **10 VERIFIED_CLOSED + 20 FAILED**. El wrapper posterior es fail-closed aunque el run histórico inicial apareciera verde.
+
+### X-Ray físico posterior
+Los 20 FAILED quedaron clasificados en 6 DESTINATION_EXISTS + 5 READBACK_TREE_HASH_GAP + 9 SOURCE_SPECIAL_FILE_GAP.
+
+Una verificación read-only importó `sha256()` y `tree_hash()` del HF engine canónico blob `91e6e4486692eab314be5c7130d8310d3c855397` y releyó los 11 destinos de las primeras dos clases. Runs `34535896880` y `34536177351`: **0/11 recuperados**; los 11 son árboles parciales/incompletos respecto de sus manifiestos.
+
+Por ello la frontera operacional es:
+`11 PARTIAL_DESTINATION_READBACK_GAP + 9 SOURCE_SPECIAL_FILE_GAP → M06 ASTRA || M07 CLAUDE || M08 GROK → director StrategyDelta gate → repair/acquire autorizado → Step3`.
+
+No se permite convertir presencia física en PASS, borrar un partial, debilitar el special-file gate ni cambiar source/ref/diseño antes del review correspondiente.
+
 ## Gates globales
 
 `INPUT_HASH_OK`, `OWNER_LOCK_OK`, `SOURCE_TRACE_OK`, `MOTOR_HASH_OK`, `NO_LFS`, `NO_FORCE`, `NO_SILENT_OVERWRITE`, `READBACK_OK`, `TESTS_OK`, `CONTRADICTIONS_RECORDED`, `CHECKPOINT_WRITTEN`.
 
 El proyecto no pasa a integración de los 30 componentes hasta que cada adquisición tenga estado individual; los componentes fallidos pueden quedar en GAP mientras otros lotes independientes continúan.
+
+## Checkpoint operativo actual
+
+`CP-V2-POST-XRAY-006`  
+`last_verified_node=M11_READBACK_XRAY_11_PARTIAL_DESTINATIONS`  
+`resume_from=M06_M07_M08_REVIEW_AND_GAP_STRATEGY`  
+`Step3=BLOCKED` hasta revisiones ASTRA/CLAUDE/GROK y gate del director.
