@@ -1,30 +1,35 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-MOTORS-MOUNTED-002",
+  "checkpoint_id": "CP-V2-REVIEW-READY-003",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M03_MOTORS_AND_QUEUES_MOUNTED",
+  "last_verified_node": "M05_CONTROL_PLANE_READBACK_CLOSED",
   "resume_from": "MONITOR_V2_RUN_34514168678",
   "verified_artifacts": [
-    {"path":"➡️📂 sharck imput/README-METODO-TRABAJO-MULTIAGENTE.md","commit":"e3dd941e2aa48875654dc7fbed7074eb4abb8fe0"},
-    {"path":"➡️📂 sharck imput/➡️📂 readme indice de componentes sharck imput.md","commit":"c77cdbbe64b80ae4ff1ec040155bc023f7007189"},
-    {"path":"➡️📂 sharck imput/📁 readme arquitectura sharck imput.md","commit":"e8d160185e8088b59809d0f73e402d7df227b3a5"},
-    {"path":"➡️📂 sharck imput/➡️📂 handoff Readme shark imput.md","commit":"9c0cf7b1122165de4e7de35d9454db44aeb4140b"},
-    {"path":"➡️📂 sharck imput/PARCHE-RECUPERACION-SHARK-IMPUT.md","commit":"2fb21038b1a38fb0fea4a34e11c377d1039c2062"},
+    {"path":"➡️📂 sharck imput/README-METODO-TRABAJO-MULTIAGENTE.md","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/📁 readme arquitectura sharck imput.md","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/➡️📂 readme indice de componentes sharck imput.md","readback":"PASS","catalog_total":107},
+    {"path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/PLAN.json","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/STATE.json","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/➡️📂 handoff Readme shark imput.md","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/PARCHE-RECUPERACION-SHARK-IMPUT.md","readback":"PASS"},
+    {"path":"➡️📂 sharck imput/REVIEW-GATE-ASTRA-ENGINEERING.md","readback":"PASS"},
     {"path":".github/workflows/sharck-input-v2-components.yml","commit":"c276f51a56f5c0bc433d2991240c72f14142d464"}
   ],
   "acquisition": {
     "run_id":34514168678,
-    "last_observed_status":"QUEUED",
+    "last_observed_status":"IN_PROGRESS",
+    "gates":{"checkout_no_lfs":"PASS_3_OF_3","motor_blob_sha":"PASS_3_OF_3","motor_execution":"IN_PROGRESS_3_OF_3"},
     "verified_closed_new_components":0,
     "pending_new_components":30,
     "batches":["B01","B02","B03"]
   },
+  "watchdog":{"v2_enabled":true,"frequency":"HOURLY","resume_policy":"READ_STATE_AND_CHECKPOINT_FIRST"},
   "open_gaps": [
-    {"id":"G-V1-30","detail":"legacy V1 still has 30 acquisition gaps","policy":"preserve and handle separately"},
-    {"id":"G-V2-RUN","detail":"V2 run has not yet produced acquisition verdicts","policy":"watch run; no false PASS"},
-    {"id":"G-REVIEW","detail":"ASTRA/GROK/CLAUDE independent reviews not yet recorded","policy":"Step 3 blocked"},
-    {"id":"G-EXTERNAL","detail":"no evidence of external engineering review","policy":"do not claim external review/supervision"}
+    {"id":"G-V1-30","detail":"legacy V1 still has 30 acquisition gaps","policy":"preserve; do not misreport"},
+    {"id":"G-V2-RUN","detail":"V2 motor run not finished","policy":"monitor; ingest state/index after completion"},
+    {"id":"G-REVIEW","detail":"ASTRA/GROK/CLAUDE reviews not yet performed","policy":"Step 3 blocked"},
+    {"id":"G-EXTERNAL","detail":"no evidence of external engineering review","policy":"do not claim review/supervision"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","MONITOR":"SOL"},
-  "next_safe_actions": ["update hourly watchdog to V2","read back all control artifacts","monitor run 34514168678","record batch verdicts when available","collect independent reviews"]
+  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","MONITOR":"SOL"},
+  "next_safe_actions":["monitor run 34514168678","read batch state/index when persisted","record actual acquisition verdicts","perform M06/M07/M08 independent reviews","director review gate"]
 }
