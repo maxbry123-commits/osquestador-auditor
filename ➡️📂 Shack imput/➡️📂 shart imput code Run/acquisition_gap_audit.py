@@ -17,7 +17,7 @@ REPORT = WALL / "ACQUISITION-GAP-AUDIT.json"
 RECOVERY_QUEUE = CODE_ROOT / "queues" / "07-existing-destination-recovery.json"
 TOKEN = os.getenv("GITHUB_TOKEN", "")
 DEST_REPO = os.getenv("GITHUB_REPOSITORY", "maxbry123-commits/osquestador-auditor")
-DEST_REF = os.getenv("DEST_REF", "main")
+DEST_REF = os.getenv("DEST_REF") or os.getenv("GITHUB_SHA") or run(["git", "rev-parse", "HEAD"])
 LANES = ["search", "code", "rag", "skills", "media-input-router", "orchestration"]
 
 
@@ -201,7 +201,8 @@ def main() -> None:
             audit_rows.append(result)
 
     payload = {
-        "schema": "wanted-shark.acquisition-gap-audit.v2",
+        "schema": "wanted-shark.acquisition-gap-audit.v3",
+        "destination_ref": DEST_REF,
         "failed_total_seen": sum(class_counts.values()),
         "failure_classes": class_counts,
         "exact_existing_destinations": len(recovery),
@@ -212,6 +213,7 @@ def main() -> None:
     RECOVERY_QUEUE.write_text(json.dumps({"queue": recovery}, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
     print(json.dumps({
         "verdict": "AUDIT_COMPLETE",
+        "destination_ref": DEST_REF,
         "failed_total_seen": payload["failed_total_seen"],
         "failure_classes": class_counts,
         "exact_existing_destinations": len(recovery),
