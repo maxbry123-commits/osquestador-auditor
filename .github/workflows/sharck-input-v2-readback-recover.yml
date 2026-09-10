@@ -1,0 +1,140 @@
+name: Sharck Input V2 — readback recover existing destinations
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-v2-readback-recover.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-existing:
+    name: "${{ matrix.batch }} / ${{ matrix.slug }} — canonical readback"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: B01
+            slug: scira
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/scira"
+          - batch: B01
+            slug: nutch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/nutch"
+          - batch: B02
+            slug: pyserini
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/pyserini"
+          - batch: B02
+            slug: OpenSearch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch"
+          - batch: B02
+            slug: datasketch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/datasketch"
+          - batch: B03
+            slug: smolagents
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/smolagents"
+    steps:
+      - name: Partial sparse checkout — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<EOF
+          /➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py
+          /${{ matrix.target }}/
+          EOF
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+
+      - name: Verify canonical engine blob lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          ENGINE='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py'
+          ACTUAL="$(git hash-object "$ENGINE")"
+          EXPECTED='91e6e4486692eab314be5c7130d8310d3c855397'
+          test "$ACTUAL" = "$EXPECTED" || { echo "MOTOR_CODE_LOCK_GAP expected=$EXPECTED actual=$ACTUAL"; exit 31; }
+
+      - name: Read-back using canonical engine helpers
+        shell: bash
+        env:
+          TARGET: "${{ matrix.target }}"
+          SLUG_EXPECTED: "${{ matrix.slug }}"
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util, json, os, pathlib, sys
+
+          engine_path = pathlib.Path('➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py')
+          spec = importlib.util.spec_from_file_location('canonical_hf_engine', engine_path)
+          engine = importlib.util.module_from_spec(spec)
+          assert spec and spec.loader
+          spec.loader.exec_module(engine)
+
+          target = pathlib.Path(os.environ['TARGET'])
+          manifest_path = target / 'DOWNLOAD_EXTRACT_MANIFEST.json'
+          errors = []
+          if not target.is_dir():
+              errors.append('TARGET_MISSING')
+          if not manifest_path.is_file():
+              errors.append('MANIFEST_MISSING')
+
+          manifest = json.loads(manifest_path.read_text()) if not errors else {}
+          if manifest and manifest.get('slug') != os.environ['SLUG_EXPECTED']:
+              errors.append('SLUG_MISMATCH')
+          if manifest and not manifest.get('no_lfs', False):
+              errors.append('NO_LFS_FLAG_MISSING')
+          if manifest and not manifest.get('extraction_verified', False):
+              errors.append('EXTRACTION_VERIFIED_FLAG_MISSING')
+          if manifest and not manifest.get('reconstruction_verified', False):
+              errors.append('RECONSTRUCTION_VERIFIED_FLAG_MISSING')
+
+          if manifest:
+              for row in manifest.get('parts', []):
+                  part = target / '_archives' / row['name']
+                  if not part.is_file():
+                      errors.append('READBACK_ARCHIVE_MISSING:' + row['name'])
+                  elif engine.sha256(part) != row['sha256']:
+                      errors.append('READBACK_ARCHIVE_HASH_GAP:' + row['name'])
+
+              code = target / 'code'
+              if not code.is_dir():
+                  errors.append('CODE_TREE_MISSING')
+              else:
+                  actual = engine.tree_hash(code)
+                  expected = manifest.get('extracted_tree', {})
+                  if actual.get('sha256') != expected.get('sha256') or actual.get('files') != expected.get('files'):
+                      errors.append('READBACK_TREE_HASH_GAP')
+                  if actual.get('bytes') != expected.get('bytes'):
+                      errors.append('READBACK_TREE_BYTES_GAP')
+          else:
+              actual = None
+              expected = None
+
+          verdict = 'VERIFIED_CLOSED_RECOVERED_BY_READBACK' if not errors else 'GAPS_PENDING'
+          result = {
+              'schema': 'sharck-input.readback-recovery.v1',
+              'batch': os.environ.get('TARGET', '').split('/')[-2] if '/' in os.environ.get('TARGET','') else '',
+              'slug': os.environ['SLUG_EXPECTED'],
+              'target': os.environ['TARGET'],
+              'canonical_engine_blob': '91e6e4486692eab314be5c7130d8310d3c855397',
+              'source_repo': manifest.get('source_repo') if manifest else None,
+              'source_commit': manifest.get('source_commit') if manifest else None,
+              'actual_tree': actual,
+              'expected_tree': expected,
+              'errors': errors,
+              'verdict': verdict,
+          }
+          print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+          sys.exit(0 if not errors else 41)
+          PY
