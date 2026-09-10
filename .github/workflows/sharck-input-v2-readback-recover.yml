@@ -24,6 +24,12 @@ jobs:
           - batch: B01
             slug: nutch
             target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/nutch"
+          - batch: B01
+            slug: yacy_search_server
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/yacy_search_server"
+          - batch: B01
+            slug: heritrix3
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/heritrix3"
           - batch: B02
             slug: pyserini
             target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/pyserini"
@@ -36,6 +42,15 @@ jobs:
           - batch: B03
             slug: smolagents
             target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/smolagents"
+          - batch: B03
+            slug: kythe
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/kythe"
+          - batch: B03
+            slug: sqry
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/sqry"
+          - batch: B03
+            slug: continue
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/continue"
     steps:
       - name: Partial sparse checkout — NO LFS
         shell: bash
