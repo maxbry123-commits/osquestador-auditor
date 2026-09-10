@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 21382780,
+  "bundle_sha256": "03bb2ace02d3a465956ae61a483b73adc4021e99b8747e15e893efe070060ac6",
+  "extracted_tree": {
+    "bytes": 23838473,
+    "files": 40,
+    "sha256": "3c3cd2ee095dc1e750e67f0d8e9e3d5fc5c21fb93e5d9ad5170dff9835e784b7"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "faster-whisper.bundle.zip.part-0001",
+      "sha256": "6e75d92e96bd18fd3412528fd0732c63208d15103839f16bb35309923ac0d7b6"
+    },
+    {
+      "bytes": 8799868,
+      "name": "faster-whisper.bundle.zip.part-0002",
+      "sha256": "266c4def1c0d0fb68bc7f6998cc8582fea6c25ea3f2aedac7ae6190052783b32"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "faster-whisper",
+  "source_bytes": 23838473,
+  "source_commit": "ed9a06cd89a93e47838f564998a6c09b655d7f43",
+  "source_files": 40,
+  "source_ref": "HEAD",
+  "source_repo": "SYSTRAN/faster-whisper",
+  "source_tree": {
+    "bytes": 23838473,
+    "files": 40,
+    "sha256": "3c3cd2ee095dc1e750e67f0d8e9e3d5fc5c21fb93e5d9ad5170dff9835e784b7"
+  }
+}
