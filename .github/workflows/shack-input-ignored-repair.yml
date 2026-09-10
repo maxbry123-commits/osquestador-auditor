@@ -74,7 +74,18 @@ jobs:
             echo NO_ADDITIVE_REPAIR
             exit 0
           fi
-          git diff --cached --check
+          COMPONENT_ROOT='➡️📂 Shack imput/📂 Componentes para integración sharck imput/'
+          WALL_RESULT='➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/IGNORED-PUBLICATION-REPAIR.json'
+          if git diff --cached --diff-filter=D --name-only | grep -q .; then
+            echo NON_ADDITIVE_DELETE_GAP
+            exit 32
+          fi
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              "$COMPONENT_ROOT"*|"$WALL_RESULT") ;;
+              *) echo "UNAUTHORIZED_STAGED_PATH $path"; exit 33 ;;
+            esac
+          done < <(git diff --cached --name-only -z)
           git commit -m 'fix(shack-input): restore ignored tracked component files'
           for attempt in 1 2 3; do
             git fetch origin main
