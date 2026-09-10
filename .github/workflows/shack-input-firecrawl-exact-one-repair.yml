@@ -1,0 +1,106 @@
+name: Shack Firecrawl Exact One Repair
+run-name: Shack Firecrawl Exact One Repair • ${{ github.sha }}
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shack-input-firecrawl-exact-one-repair.yml'
+      - '➡️📂 Shack imput/➡️📂 shart imput code Run/repair_firecrawl_exact_one.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shack-input-firecrawl-exact-one-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Partial sparse checkout — no LFS
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /➡️📂 Shack imput/➡️📂 shart imput code Run/repair_ignored_publication.py
+          /➡️📂 Shack imput/➡️📂 shart imput code Run/repair_firecrawl_exact_one.py
+          /➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl/
+          /➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/
+          /➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/
+          EOF
+          AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+      - name: Verify canonical motors unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor'
+          check_blob(){ test "$(git hash-object "$1")" = "$2" || { echo "MOTOR_CODE_LOCK_GAP $1"; exit 31; }; }
+          check_blob "$ROOT/➡️📂 Motor de extracción zip/motor_1_extract_only.py" a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py" 84d566e2ee4e98e42eb3a864026d067d48caabd9
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py" 91e6e4486692eab314be5c7130d8310d3c855397
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_3_copy_batches.py" 3689924361ce4a1a9fde4ae2b6f6009c37a6042d
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_copy_root_to_repo.py" 8281211da76db3080fe1f1ea38b3eb0c45d655cb
+          check_blob "$ROOT/➡️📂motor de moves archivos/motor_4_move_batches.py" 9a21facfe11327cf60a2afca8f415ad52f0ecbe5
+      - name: Exact one-file replacement through canonical motors
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 '➡️📂 Shack imput/➡️📂 shart imput code Run/repair_firecrawl_exact_one.py'
+      - name: Publish explicit one-file replacement — no force
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          COMPONENT='➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl/code/examples/o1_web_crawler/o1_web_crawler.py'
+          REPORT='➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/FIRECRAWL-EXACT-ONE-REPAIR.json'
+          mapfile -d '' paths < <(git diff --cached --name-only -z)
+          test "${#paths[@]}" -eq 2 || { printf 'ALLOWLIST_COUNT_GAP %s\n' "${paths[*]}"; exit 41; }
+          printf '%s\n' "${paths[@]}" | grep -Fx "$COMPONENT" >/dev/null || exit 42
+          printf '%s\n' "${paths[@]}" | grep -Fx "$REPORT" >/dev/null || exit 43
+          test -z "$(git diff --cached --name-only --diff-filter=DRTUXB)" || { echo UNAUTHORIZED_CHANGE; exit 44; }
+          git config user.name 'wanted-shark-watchdog'
+          git config user.email 'wanted-shark-watchdog@users.noreply.github.com'
+          git commit -m 'fix(shack-input): restore exact firecrawl upstream blob'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+      - name: Remote exact read-back
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git reset --hard origin/main
+          python3 - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          target=pathlib.Path('➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl')
+          manifest=json.loads((target/'DOWNLOAD_EXTRACT_MANIFEST.json').read_text())
+          p=target/'code/examples/o1_web_crawler/o1_web_crawler.py'
+          blob=subprocess.run(['git','hash-object','--',str(p)],text=True,stdout=subprocess.PIPE,check=True).stdout.strip()
+          if blob!='ebe4bcbf7a5d8a2df5a6c1e8c9257de691152a4e': raise SystemExit('REMOTE_BLOB_GAP')
+          root=target/'code'; h=hashlib.sha256(); files=0; total=0
+          for q in sorted((x for x in root.rglob('*') if x.is_file()),key=lambda x:x.relative_to(root).as_posix()):
+              rel=q.relative_to(root).as_posix(); d=hashlib.sha256(q.read_bytes()).hexdigest(); h.update(rel.encode()+b'\0'); h.update(d.encode()+b'\n'); files+=1; total+=q.stat().st_size
+          actual={'files':files,'bytes':total,'sha256':h.hexdigest()}; expected=manifest['extracted_tree']
+          print(json.dumps({'actual':actual,'expected':expected},sort_keys=True))
+          if actual!=expected: raise SystemExit('REMOTE_READBACK_TREE_HASH_GAP')
+          print('PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED')
+          PY
