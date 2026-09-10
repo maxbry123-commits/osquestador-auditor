@@ -1,0 +1,162 @@
+{
+  "created_at": 1789064697,
+  "items": {
+    "B03-01": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.agents/skills/cocoindex,.agents/skills/cocoindex-diagrams,.agents/skills/target-connector,.agents/skills/upgrade-examples,.claude/skills/cocoindex-diagrams,.claude/skills/target-connector,.claude/skills/upgrade-examples\n",
+      "slug": "cocoindex",
+      "source_repo": "https://github.com/cocoindex-io/cocoindex",
+      "status": "FAILED"
+    },
+    "B03-02": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "kythe",
+      "source_repo": "https://github.com/kythe/kythe",
+      "status": "FAILED"
+    },
+    "B03-03": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "sqry",
+      "source_repo": "https://github.com/verivus-oss/sqry",
+      "status": "FAILED"
+    },
+    "B03-04": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 1149870,
+        "bundle_sha256": "8221d2d5786edede6d502ac605e26f20fd82d36865109fc7cb60ec21c90135d6",
+        "elapsed_seconds": 14.72,
+        "extracted_tree": {
+          "bytes": 4882084,
+          "files": 437,
+          "sha256": "061ebdcc3ae69ac7c3b8cd92b03bdf4342fabf51d06f7b3e1d97ee734ff44f35"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 1149870,
+            "name": "open-codebase-index.bundle.zip.part-0001",
+            "sha256": "8221d2d5786edede6d502ac605e26f20fd82d36865109fc7cb60ec21c90135d6"
+          }
+        ],
+        "publish": {
+          "commit": "1813725d001cb0b121a316a260feda51f80d60aa",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "open-codebase-index",
+        "source_bytes": 4882084,
+        "source_commit": "50142e2f81eacc74bfc4c2dcecd6f02ddeb77cf7",
+        "source_files": 437,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/Helweg/open-codebase-index",
+        "source_tree": {
+          "bytes": 4882084,
+          "files": 437,
+          "sha256": "061ebdcc3ae69ac7c3b8cd92b03bdf4342fabf51d06f7b3e1d97ee734ff44f35"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "open-codebase-index",
+      "source_repo": "https://github.com/Helweg/open-codebase-index",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B03-05": {
+      "attempts": 2,
+      "result": {
+        "bundle_bytes": 30467757,
+        "bundle_sha256": "8551a5cf31d457c93f3074d615ac6fc9003f61a7e1022140afbc0677ea71a45e",
+        "elapsed_seconds": 21.49,
+        "extracted_tree": {
+          "bytes": 42491652,
+          "files": 1681,
+          "sha256": "f653b891108fe9cf345a832af2ff5e22031b6b93cf07944697d719813cffab0f"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "sourcebot.bundle.zip.part-0001",
+            "sha256": "a30309988f99ab0607938501fa557e314d5b1b9a1458a89254bb46566e47b453"
+          },
+          {
+            "bytes": 12582912,
+            "name": "sourcebot.bundle.zip.part-0002",
+            "sha256": "9456718ecf0d9511c962b0f7e837f1eb9339faa3ee4bc2f8c26aba701d1bab80"
+          },
+          {
+            "bytes": 5301933,
+            "name": "sourcebot.bundle.zip.part-0003",
+            "sha256": "c3b9a7879564e5d2dba9177b6c92a3ba7ff999af9466c53143046069c1eabdf7"
+          }
+        ],
+        "publish": {
+          "commit": "34c34da570dc8a413cb3de61166db7f8f35d4b95",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "sourcebot",
+        "source_bytes": 42491652,
+        "source_commit": "5679c0f8f4091e8e5f9e8bc6e2f6aa2a78de216c",
+        "source_files": 1681,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/sourcebot-dev/sourcebot",
+        "source_tree": {
+          "bytes": 42491652,
+          "files": 1681,
+          "sha256": "f653b891108fe9cf345a832af2ff5e22031b6b93cf07944697d719813cffab0f"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "sourcebot",
+      "source_repo": "https://github.com/sourcebot-dev/sourcebot",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B03-06": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "continue",
+      "source_repo": "https://github.com/continuedev/continue",
+      "status": "FAILED"
+    },
+    "B03-07": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.claude/skills/complete-partial-pr,.claude/skills/i-have-adhd,.claude/skills/poweruser-feature-audit,.claude/skills/pushing-commits-to-the-repo,.github/workflows/CLAUDE.md,CLAUDE.md,CONTRIBUTING.md,docs/CLAUDE.md,docs/realtime/CLAUDE.md,pydantic_ai_slim/pydantic_ai/CLAUDE.md,pydantic_ai_slim/pydantic_ai/models/CLAUDE.md,pydantic_ai_slim/pydantic_ai/native_tools/CLAUDE.md,pydantic_ai_slim/pydantic_ai/realtime/CLAUDE.md,pydantic_ai_slim/pydantic_ai/ui/CLAUDE.md,tests/CLAUDE.md\n",
+      "slug": "pydantic-ai",
+      "source_repo": "https://github.com/pydantic/pydantic-ai",
+      "status": "FAILED"
+    },
+    "B03-08": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 sharck imput/\ud83d\udcc2 input sharck code principal/\ud83d\udcc2 componentes open source/B03-code-runtime/smolagents\n",
+      "slug": "smolagents",
+      "source_repo": "https://github.com/huggingface/smolagents",
+      "status": "FAILED"
+    },
+    "B03-09": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:litellm/proxy/enterprise\n",
+      "slug": "litellm",
+      "source_repo": "https://github.com/BerriAI/litellm",
+      "status": "FAILED"
+    },
+    "B03-10": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.github/copilot-instructions.md,AGENTS.md\n",
+      "slug": "fastmcp",
+      "source_repo": "https://github.com/PrefectHQ/fastmcp",
+      "status": "FAILED"
+    }
+  },
+  "schema": "yaiwes.frontend.download-extract-queue.v1"
+}
