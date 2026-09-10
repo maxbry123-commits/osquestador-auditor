@@ -1,15 +1,11 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 3,
+  "revision": 4,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
   "root": "➡️📂 Shack imput",
-  "workflow_contract": [
-    "1_ANOTAR_ARQUITECTURA",
-    "2_DESCARGAR_EXTRAER",
-    "3_CABLEAR_PODAR_MINIMO_CODE_TEST"
-  ],
+  "workflow_contract": ["1_ANOTAR_ARQUITECTURA","2_DESCARGAR_EXTRAER","3_CABLEAR_PODAR_MINIMO_CODE_TEST"],
   "agents": {
     "SOL_CHATGPT": {"status":"ACTIVE","node":"T04_ACQUISITION_MONITOR","log":"CHATGPT-LOG.md"},
     "ASTRA": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"ASTRA-LOG.md"},
@@ -19,19 +15,20 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"RUNNING","workflow_run_id":34470498878},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"RUNNING_WITH_OPTIMIZATION","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525},
     {"id":"T05","name":"wire/test integracion","status":"PENDING"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
   "acquisition": {
     "workflow":".github/workflows/shack-input-components.yml",
-    "run_id":34470498878,
-    "lanes":["search","code","rag","skills","media-input-router","orchestration"],
     "catalog_total":77,
+    "lanes":["search","code","rag","skills","media-input-router","orchestration"],
+    "initial_run":{"id":34470498878,"status":"IN_PROGRESS_HEAVY_CHECKOUT","checkout_mode":"full","repo_size_kb":9516442},
+    "optimized_run":{"id":34470821525,"status":"PENDING","checkout_mode":"partial_sparse_blob_none"},
     "verified_closed":0,
-    "status":"IN_PROGRESS_NO_PASS_YET"
+    "status":"NO_COMPONENT_PASS_YET"
   },
-  "locks": {"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
+  "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T06:19:06-05:00"
+  "updated_at":"2026-09-10T06:22:00-05:00"
 }
