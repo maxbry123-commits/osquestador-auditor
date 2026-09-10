@@ -1,0 +1,41 @@
+{
+  "schema": "sharck-input.plan.v2",
+  "project": "Wanted Shark Web / Sharck Input V2",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "root": "➡️📂 sharck imput",
+  "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
+  "contract": "tel.workflow/v3 + 3-step method",
+  "mode": "FAIL_CLOSED_LOOP",
+  "steps": [
+    {"id":1,"name":"ANOTAR_ARQUITECTURA_INVENTARIO","status":"VERIFIED_DOCUMENTED"},
+    {"id":2,"name":"ADQUIRIR_COMPONENTES_GRUPOS_10","status":"ACTIVE_PREP"},
+    {"id":3,"name":"WIRE_PRUNE_MIN_CODE_TEST","status":"BLOCKED_UNTIL_ACQUISITION_AND_REVIEW"}
+  ],
+  "tasks": [
+    {"id":"M01","owner":"SOL","name":"método multiagente + 5 refutaciones + 12 goals + Council12 + 6 simulaciones","status":"PUBLISHED"},
+    {"id":"M02","owner":"GROK","name":"investigación y catálogo 30 OSS adicionales","status":"RESEARCHED_BY_SOL_PENDING_GROK_INDEPENDENT_REVIEW"},
+    {"id":"M03","owner":"SOL","name":"montar 3 batches de 10 con motores canónicos","status":"IN_PROGRESS"},
+    {"id":"M04","owner":"SOL","name":"actualizar watchdog horario a V2 y batches","status":"PENDING"},
+    {"id":"M05","owner":"SOL","name":"read-back método/índice/plan/state/checkpoint/handoff/recovery","status":"PENDING"},
+    {"id":"M06","owner":"ASTRA","name":"auditoría independiente previa a integración","status":"READY_AFTER_M03"},
+    {"id":"M07","owner":"CLAUDE","name":"revisión code/ports/adapters y plan de tests","status":"READY_AFTER_M03"},
+    {"id":"M08","owner":"GROK","name":"refutar componentes/alternativas/licencias/mantenimiento","status":"READY_AFTER_M03"},
+    {"id":"M09","owner":"EXTERNAL_REVIEW","name":"revisión por equipo de ingeniería indicado por director","status":"NOT_PERFORMED_NO_EVIDENCE"},
+    {"id":"M10","owner":"SOL+CLAUDE","name":"integración 1x1 de componentes aprobados","status":"BLOCKED_BY_M06_M07_M08_AND_DIRECTOR_GATE"}
+  ],
+  "agent_contracts": {
+    "SOL":{"exclusive":["state_control","integration","consolidation","motor_watch"],"cannot":["llm_only_pass"]},
+    "CLAUDE":{"exclusive":["code_ports_adapters","typing","unit_integration_failure_tests"],"cannot":["overwrite_other_agent"]},
+    "GROK":{"exclusive":["oss_research","community","hf_labs","alternatives","contradiction"],"cannot":["auto_install_unverified"]},
+    "ASTRA":{"exclusive":["xray_architecture","prior_work_audit","versioned_improvement","component_gap_review","independent_verify"],"cannot":["duplicate_routine_implementation"]}
+  },
+  "new_component_batches": [
+    {"id":"B01","count":10,"lane":"web-research","status":"QUEUE_PENDING","repos":["zaidmukaddam/scira","yacy/yacy_search_server","apache/nutch","internetarchive/heritrix3","apache/stormcrawler","scrapy/scrapy","adbar/trafilatura","apache/tika","docling-project/docling","opendatalab/MinerU"]},
+    {"id":"B02","count":10,"lane":"ir-evidence","status":"QUEUE_PENDING","repos":["apache/lucene","castorini/pyserini","terrier-org/pyterrier","opensearch-project/OpenSearch","vespa-engine/vespa","quickwit-oss/tantivy","networkx/networkx","RDFLib/rdflib","rapidfuzz/RapidFuzz","ekzhu/datasketch"]},
+    {"id":"B03","count":10,"lane":"code-runtime","status":"QUEUE_PENDING","repos":["cocoindex-io/cocoindex","kythe/kythe","verivus-oss/sqry","Helweg/open-codebase-index","sourcebot-dev/sourcebot","continuedev/continue","pydantic/pydantic-ai","huggingface/smolagents","BerriAI/litellm","PrefectHQ/fastmcp"]}
+  ],
+  "legacy_v1": {"root":"➡️📂 Shack imput","catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE_DO_NOT_DESTROY"},
+  "gates": ["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
+  "next_action": "CREATE_B01_B02_B03_QUEUES_AND_ACQUISITION_WORKFLOW"
+}
