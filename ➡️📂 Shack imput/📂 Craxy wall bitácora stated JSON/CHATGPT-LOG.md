@@ -75,3 +75,19 @@
 - No LFS. No force push. No sobrescritura silenciosa. T05 continúa bloqueado por T04.
 
 `NEXT=RUN_34484946622_VERDICT → REMOTE_REAUDIT → ACTUALIZAR_BALANCE_SOLO_CON_EVIDENCIA → CLASIFICAR_RESTANTES`
+
+## 2026-09-10 — Watchdog T04 / gate de publicación preservando bytes upstream
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Run `34484946622` cerró `failure` exclusivamente en `Publish additive repair — no force`; checkout, lock de motores y restauración canónica fueron PASS.
+- Evidencia del helper: `candidates=19`, `ready_for_publish=19`, `failed_closed=0`. La restauración ya no falla por parsing NUL-safe.
+- El bloqueo fue `git diff --cached --check`, que rechazó trailing whitespace y blank-line-at-EOF que forman parte de los blobs originales upstream (ejemplos físicos: Pyright, whisper.cpp, Crawl4AI, GPT Researcher y ToolUniverse).
+- No se normalizó, formateó ni reescribió ningún archivo componente: hacerlo habría roto la identidad del blob fuente y COPY-FIRST.
+- Se modificó únicamente `.github/workflows/shack-input-ignored-repair.yml`: se retiró el gate de estilo whitespace y se sustituyó por dos gates de integridad material: `NO DELETE` y allowlist NUL-safe de rutas staged (`Componentes.../*` + `IGNORED-PUBLICATION-REPAIR.json`).
+- Commit del workflow: `6038a3e6e065c78efe354236a05b4a5aff0d9558`.
+- Nuevo run `34488269513`: checkout parcial NO LFS PASS, lock de los seis motores PASS y restauración en ejecución.
+- `STATE.json` revision 8 registra este StrategyDelta. Balance oficial continúa `28 VERIFIED_CLOSED / 49 FAILED` hasta read-back remoto.
+- ASTRA/GROK no fueron reclamados. Motores canónicos intactos. No force push. No sobrescritura silenciosa.
+
+`NEXT=RUN_34488269513_VERDICT → REMOTE_REAUDIT → ACTUALIZAR_BALANCE_SOLO_CON_BLOB_IDENTITY_VERIFIED → CLASIFICAR_RESTANTES`
