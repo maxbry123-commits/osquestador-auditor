@@ -1,0 +1,27 @@
+[package]
+name = "sqry-lang-go"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Go language plugin for sqry"
+
+[dependencies]
+sqry-core = { version = "31.0.0", path = "../sqry-core" }
+sqry-lang-support = { version = "31.0.0", path = "../sqry-lang-support" }
+anyhow.workspace = true
+log.workspace = true
+smallvec.workspace = true
+tree-sitter.workspace = true
+tree-sitter-go.workspace = true
+streaming-iterator.workspace = true
+
+[dev-dependencies]
+criterion = "0.8"
+sqry-core = { path = "../sqry-core", features = ["test-support"] }
+
+[features]
+default = ["has_relations"]
+has_relations = []

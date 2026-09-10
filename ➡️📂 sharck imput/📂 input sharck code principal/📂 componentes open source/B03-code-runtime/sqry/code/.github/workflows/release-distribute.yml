@@ -1,0 +1,2095 @@
+# Stage 6: Build binaries, attest, upload, publish extension
+# Spec: docs/superpowers/specs/2026-04-01-release-target-design.md §6 Stage 6
+# This file lives in verivus-oss/sqry (the public repo).
+#
+# Stage 6 is the public distribution boundary. It only runs from
+# staged-approved dispatch originating from verivusai-open/sqry (Stage 5).
+name: "Release: Distribute"
+
+on:
+  repository_dispatch:
+    types: [release-distribute]
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        type: string
+        description: "Release tag (e.g. v6.0.15) - all other values derived from ledger"
+
+permissions:
+  actions: read
+  contents: write
+  id-token: write
+  attestations: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: release-distribute-${{ github.event.client_payload.tag || github.event.inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  # Public CI and Stage 6 builds share the sole public workhorse2 runner.
+  # Poll on a hosted runner so the gate cannot deadlock the CI it checks.
+  check-public-ci:
+    name: Check Public CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      actions: read
+      contents: write
+    outputs:
+      tag: ${{ steps.context.outputs.tag }}
+      version: ${{ steps.context.outputs.version }}
+      expected_sha: ${{ steps.context.outputs.expected_sha }}
+      staged_origin: ${{ steps.context.outputs.staged_origin }}
+      staged_sha: ${{ steps.context.outputs.staged_sha }}
+      expected_digest: ${{ steps.context.outputs.expected_digest }}
+    env:
+      TAG: ${{ github.event.client_payload.tag || github.event.inputs.tag }}
+      VERSION: ${{ github.event.client_payload.version || '' }}
+      EXPECTED_SHA: ${{ github.event.client_payload.sha || '' }}
+      STAGED_ORIGIN: ${{ github.event.client_payload.staged_origin || '' }}
+      STAGED_SHA: ${{ github.event.client_payload.staged_sha || '' }}
+      EXPECTED_DIGEST: ${{ github.event.client_payload.sanitized_tree_sha256 || '' }}
+      STAGE6_RECOVERY: ${{ github.event.client_payload.stage6_recovery || '' }}
+    steps:
+      - name: Resolve inputs from ledger (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          [[ -n "$TAG" ]] || { echo "FATAL: tag input is required for workflow_dispatch" >&2; exit 1; }
+          ledger_dir="$RUNNER_TEMP/dispatch-ledger"
+          mkdir -p "$ledger_dir"
+          gh release download "$TAG" --repo verivus-oss/sqry --dir "$ledger_dir" --pattern 'release-ledger-*.json'
+          ledger_file=$(find "$ledger_dir" -name 'release-ledger-*.json' -type f | head -1)
+          [[ -n "$ledger_file" && -f "$ledger_file" ]] || { echo "FATAL: no release ledger found for tag $TAG" >&2; exit 1; }
+          dispatch=$(jq -r '.stages.stage_5_publish.dispatch_payload // empty' "$ledger_file")
+          [[ -n "$dispatch" && "$dispatch" != null ]] || { echo "FATAL: stage_5_publish.dispatch_payload missing from ledger for $TAG" >&2; exit 1; }
+          {
+            echo "VERSION=$(jq -r '.stages.stage_5_publish.dispatch_payload.version' "$ledger_file")"
+            echo "EXPECTED_SHA=$(jq -r '.stages.stage_5_publish.dispatch_payload.sha' "$ledger_file")"
+            echo "STAGED_ORIGIN=$(jq -r '.stages.stage_5_publish.dispatch_payload.staged_origin' "$ledger_file")"
+            echo "STAGED_SHA=$(jq -r '.stages.stage_5_publish.dispatch_payload.staged_sha' "$ledger_file")"
+            echo "EXPECTED_DIGEST=$(jq -r '.stages.stage_5_publish.dispatch_payload.sanitized_tree_sha256' "$ledger_file")"
+          } >> "$GITHUB_ENV"
+          rm -rf "$ledger_dir"
+
+      - name: Resolve and acknowledge public CI gate
+        id: context
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for field in VERSION TAG EXPECTED_SHA STAGED_ORIGIN STAGED_SHA EXPECTED_DIGEST; do
+            [[ -n "${!field}" ]] || { echo "FATAL: missing $field in Stage 6 context" >&2; exit 1; }
+          done
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "FATAL: expected public SHA is not a full lowercase Git SHA" >&2; exit 1; }
+          [[ "$STAGED_ORIGIN" == verivusai-open/sqry ]] || { echo "FATAL: invalid staged_origin" >&2; exit 1; }
+
+          ledger_dir="$RUNNER_TEMP/public-ci-gate-ledger"
+          mkdir -p "$ledger_dir"
+          gh release download "$TAG" --repo verivus-oss/sqry --dir "$ledger_dir" --pattern "release-ledger-v${VERSION}.json"
+          ledger_path="$ledger_dir/release-ledger-v${VERSION}.json"
+          [[ -f "$ledger_path" ]] || { echo "FATAL: release ledger asset missing for $TAG" >&2; exit 1; }
+          [[ "$(jq -r '.schema_version // 0' "$ledger_path")" -ge 3 ]] || { echo "FATAL: unsupported ledger schema" >&2; exit 1; }
+          [[ "$(jq -r '.version // empty' "$ledger_path")" == "$VERSION" ]] || { echo "FATAL: ledger version mismatch" >&2; exit 1; }
+          [[ "$(jq -r '.release_path // empty' "$ledger_path")" == staged ]] || { echo "FATAL: release ledger is not staged" >&2; exit 1; }
+          [[ "$(jq -r '.stages.stage_5_publish.status // empty' "$ledger_path")" == completed ]] || { echo "FATAL: Stage 5 is not completed" >&2; exit 1; }
+          [[ "$(jq -r '.stages.stage_5_publish.staged_origin // empty' "$ledger_path")" == verivusai-open/sqry ]] || { echo "FATAL: ledger staged origin mismatch" >&2; exit 1; }
+          [[ "$(jq -r '.stages.stage_5_publish.dispatch_payload.tag // empty' "$ledger_path")" == "$TAG" ]] || {
+            echo "FATAL: Stage 5 dispatch payload tag mismatch" >&2
+            exit 1
+          }
+          for field in version sha staged_origin staged_sha sanitized_tree_sha256; do
+            case "$field" in
+              version) expected="$VERSION" ;;
+              sha) expected="$EXPECTED_SHA" ;;
+              staged_origin) expected="$STAGED_ORIGIN" ;;
+              staged_sha) expected="$STAGED_SHA" ;;
+              sanitized_tree_sha256) expected="$EXPECTED_DIGEST" ;;
+            esac
+            actual=$(jq -r --arg field "$field" '.stages.stage_5_publish.dispatch_payload[$field] // empty' "$ledger_path")
+            [[ "$actual" == "$expected" ]] || { echo "FATAL: Stage 5 dispatch payload $field mismatch" >&2; exit 1; }
+          done
+          [[ "$(jq -r '.stages.stage_5_publish.public_commit_sha // empty' "$ledger_path")" == "$EXPECTED_SHA" ]] || {
+            echo "FATAL: ledger public_commit_sha mismatch" >&2
+            exit 1
+          }
+          stage6_status=$(jq -r '.stages.stage_6_distribute.status // empty' "$ledger_path")
+          case "$stage6_status" in
+            pending)
+              queued_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              deadline_at=$(date -u -d '+30 minutes' +"%Y-%m-%dT%H:%M:%SZ")
+              gate_receipt_run_id="$GITHUB_RUN_ID"
+              gate_run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              tmp=$(mktemp)
+              jq --arg tag "$TAG" --arg version "$VERSION" --arg expected_sha "$EXPECTED_SHA" \
+                --arg gate_run_id "$GITHUB_RUN_ID" --arg gate_run_attempt "$GITHUB_RUN_ATTEMPT" \
+                --arg gate_run_url "$gate_run_url" --arg queued_at "$queued_at" --arg deadline_at "$deadline_at" '
+                  .stages.stage_6_distribute.status = "waiting_public_ci" |
+                  .stages.stage_6_distribute.queued_at = $queued_at |
+                  .stages.stage_6_distribute.public_ci_gate = {
+                    status: "waiting", tag: $tag, version: $version, expected_sha: $expected_sha,
+                    workflow: "ci.yml", event: "push", branch: "main",
+                    stage6_run_id: $gate_run_id, stage6_run_attempt: $gate_run_attempt,
+                    stage6_run_url: $gate_run_url, queued_at: $queued_at, deadline_at: $deadline_at
+                  }
+                ' "$ledger_path" > "$tmp"
+              mv "$tmp" "$ledger_path"
+              gh release upload "$TAG" "$ledger_path" --repo verivus-oss/sqry --clobber
+              echo "Acknowledged new Stage 6 public CI gate for SHA $EXPECTED_SHA"
+              ;;
+            waiting_public_ci)
+              gate_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.status // empty' "$ledger_path")
+              gate_tag=$(jq -r '.stages.stage_6_distribute.public_ci_gate.tag // empty' "$ledger_path")
+              gate_version=$(jq -r '.stages.stage_6_distribute.public_ci_gate.version // empty' "$ledger_path")
+              gate_sha=$(jq -r '.stages.stage_6_distribute.public_ci_gate.expected_sha // empty' "$ledger_path")
+              gate_workflow=$(jq -r '.stages.stage_6_distribute.public_ci_gate.workflow // empty' "$ledger_path")
+              gate_event=$(jq -r '.stages.stage_6_distribute.public_ci_gate.event // empty' "$ledger_path")
+              gate_branch=$(jq -r '.stages.stage_6_distribute.public_ci_gate.branch // empty' "$ledger_path")
+              gate_receipt_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_id // empty' "$ledger_path")
+              gate_run_url=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_url // empty' "$ledger_path")
+              queued_at=$(jq -r '.stages.stage_6_distribute.public_ci_gate.queued_at // empty' "$ledger_path")
+              deadline_at=$(jq -r '.stages.stage_6_distribute.public_ci_gate.deadline_at // empty' "$ledger_path")
+              [[ "$gate_status" == waiting || "$gate_status" == passed ]] || {
+                echo "FATAL: existing public CI gate has invalid status '$gate_status'" >&2
+                exit 1
+              }
+              [[ "$gate_tag" == "$TAG" && "$gate_version" == "$VERSION" && "$gate_sha" == "$EXPECTED_SHA" \
+                && "$gate_workflow" == ci.yml && "$gate_event" == push && "$gate_branch" == main ]] || {
+                echo "FATAL: existing public CI gate does not match this immutable Stage 5 transaction" >&2
+                exit 1
+              }
+              [[ -n "$gate_receipt_run_id" && -n "$gate_run_url" && -n "$queued_at" && -n "$deadline_at" ]] || {
+                echo "FATAL: existing public CI gate receipt is incomplete" >&2
+                exit 1
+              }
+              if [[ "$gate_status" == passed ]]; then
+                gate_ci_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_id // empty' "$ledger_path")
+                gate_ci_run_url=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_url // empty' "$ledger_path")
+                gate_ci_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_status // empty' "$ledger_path")
+                gate_ci_conclusion=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_conclusion // empty' "$ledger_path")
+                [[ -n "$gate_ci_run_id" && -n "$gate_ci_run_url" && "$gate_ci_status" == completed && "$gate_ci_conclusion" == success ]] || {
+                  echo "FATAL: existing public CI gate is passed without a successful CI receipt" >&2
+                  exit 1
+                }
+              fi
+              date -u -d "$deadline_at" +%s >/dev/null || {
+                echo "FATAL: existing public CI gate deadline is invalid" >&2
+                exit 1
+              }
+              # Same-tag workflow runs are serialized by the workflow concurrency group.
+              # A matching receipt is therefore safe to observe without overwriting it.
+              echo "Reusing matching Stage 6 public CI gate receipt from run $gate_receipt_run_id"
+              ;;
+            failed)
+              # A failed Stage 6 must be re-entered through the bounded Stage 5
+              # manual re-dispatch path.  Ordinary Stage 5 dispatches never set
+              # this marker, so they cannot silently replay a failed transaction.
+              [[ "$STAGE6_RECOVERY" == true ]] || {
+                echo "FATAL: Stage 6 is failed; use the Stage 5 manual re-dispatch path after reviewing the failed public run" >&2
+                exit 1
+              }
+
+              gate_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.status // empty' "$ledger_path")
+              gate_tag=$(jq -r '.stages.stage_6_distribute.public_ci_gate.tag // empty' "$ledger_path")
+              gate_version=$(jq -r '.stages.stage_6_distribute.public_ci_gate.version // empty' "$ledger_path")
+              gate_sha=$(jq -r '.stages.stage_6_distribute.public_ci_gate.expected_sha // empty' "$ledger_path")
+              gate_workflow=$(jq -r '.stages.stage_6_distribute.public_ci_gate.workflow // empty' "$ledger_path")
+              gate_event=$(jq -r '.stages.stage_6_distribute.public_ci_gate.event // empty' "$ledger_path")
+              gate_branch=$(jq -r '.stages.stage_6_distribute.public_ci_gate.branch // empty' "$ledger_path")
+              previous_stage6_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_id // empty' "$ledger_path")
+              previous_stage6_run_url=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_url // empty' "$ledger_path")
+              gate_ci_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_id // empty' "$ledger_path")
+              gate_ci_run_url=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_url // empty' "$ledger_path")
+              gate_ci_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_status // empty' "$ledger_path")
+              gate_ci_conclusion=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_conclusion // empty' "$ledger_path")
+              [[ "$gate_status" == passed && "$gate_tag" == "$TAG" && "$gate_version" == "$VERSION" \
+                && "$gate_sha" == "$EXPECTED_SHA" && "$gate_workflow" == ci.yml \
+                && "$gate_event" == push && "$gate_branch" == main ]] || {
+                echo "FATAL: failed Stage 6 does not retain a matching successful public CI gate" >&2
+                exit 1
+              }
+              [[ -n "$previous_stage6_run_id" && -n "$previous_stage6_run_url" && -n "$gate_ci_run_id" \
+                && -n "$gate_ci_run_url" && "$gate_ci_status" == completed && "$gate_ci_conclusion" == success ]] || {
+                echo "FATAL: failed Stage 6 has an incomplete successful public CI receipt" >&2
+                exit 1
+              }
+              if ! jq -e '
+                (.finalized // false) == false
+                and (.stages.stage_6_distribute.completed_at // null) == null
+                and (.stages.stage_6_distribute.release_url // null) == null
+                and ((.stages.stage_6_distribute.assets // []) | length) == 0
+                and ((.stages.stage_6_distribute.artifacts // []) | length) == 0
+              ' "$ledger_path" >/dev/null; then
+                echo "FATAL: failed Stage 6 has completion or artifact evidence and cannot be replayed automatically" >&2
+                exit 1
+              fi
+
+              # Revalidate the stored receipt against the live public CI run;
+              # never trust a mutable release asset by itself for recovery.
+              ci_run=$(gh api -X GET "repos/verivus-oss/sqry/actions/runs/$gate_ci_run_id")
+              ci_run_sha=$(jq -r '.head_sha // empty' <<<"$ci_run")
+              ci_run_event=$(jq -r '.event // empty' <<<"$ci_run")
+              ci_run_branch=$(jq -r '.head_branch // empty' <<<"$ci_run")
+              ci_run_path=$(jq -r '.path // empty' <<<"$ci_run")
+              ci_run_status=$(jq -r '.status // empty' <<<"$ci_run")
+              ci_run_conclusion=$(jq -r '.conclusion // empty' <<<"$ci_run")
+              ci_run_url=$(jq -r '.html_url // empty' <<<"$ci_run")
+              [[ "$ci_run_sha" == "$EXPECTED_SHA" && "$ci_run_event" == push && "$ci_run_branch" == main \
+                && "$ci_run_path" == .github/workflows/ci.yml && "$ci_run_status" == completed \
+                && "$ci_run_conclusion" == success && "$ci_run_url" == "$gate_ci_run_url" ]] || {
+                echo "FATAL: live public CI run no longer matches the failed Stage 6 transaction" >&2
+                exit 1
+              }
+
+              # The recovery may proceed only while the public release remains
+              # an unpromoted draft containing no asset other than its ledger.
+              releases=$(gh api --paginate --slurp "repos/verivus-oss/sqry/releases?per_page=100")
+              release=$(jq -ce --arg tag "$TAG" '[.[][] | select(.tag_name == $tag)] | if length == 1 then .[0] else empty end' <<<"$releases") || {
+                echo "FATAL: expected exactly one public release draft for $TAG" >&2
+                exit 1
+              }
+              release_draft=$(jq -r '.draft // false' <<<"$release")
+              release_target=$(jq -r '.target_commitish // empty' <<<"$release")
+              release_asset_count=$(jq '[.assets[]?.name] | length' <<<"$release")
+              release_asset_name=$(jq -r '.assets[0].name // empty' <<<"$release")
+              [[ "$release_draft" == true && "$release_target" == "$EXPECTED_SHA" \
+                && "$release_asset_count" == 1 && "$release_asset_name" == "release-ledger-v${VERSION}.json" ]] || {
+                echo "FATAL: public release is no longer an empty matching draft; refusing Stage 6 recovery" >&2
+                exit 1
+              }
+
+              queued_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+              deadline_at=$(date -u -d '+30 minutes' +"%Y-%m-%dT%H:%M:%SZ")
+              gate_receipt_run_id="$GITHUB_RUN_ID"
+              gate_run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              previous_failed_at=$(jq -r '.stages.stage_6_distribute.failed_at // empty' "$ledger_path")
+              previous_error=$(jq -r '.stages.stage_6_distribute.error // empty' "$ledger_path")
+              previous_gate=$(jq -c '.stages.stage_6_distribute.public_ci_gate' "$ledger_path")
+              tmp=$(mktemp)
+              jq --arg tag "$TAG" --arg version "$VERSION" --arg expected_sha "$EXPECTED_SHA" \
+                --arg gate_run_id "$GITHUB_RUN_ID" --arg gate_run_attempt "$GITHUB_RUN_ATTEMPT" \
+                --arg gate_run_url "$gate_run_url" --arg queued_at "$queued_at" --arg deadline_at "$deadline_at" \
+                --arg ci_run_id "$gate_ci_run_id" --arg ci_run_url "$gate_ci_run_url" \
+                --arg previous_stage6_run_id "$previous_stage6_run_id" \
+                --arg previous_stage6_run_url "$previous_stage6_run_url" \
+                --arg previous_failed_at "$previous_failed_at" --arg previous_error "$previous_error" \
+                --argjson previous_gate "$previous_gate" '
+                  .stages.stage_6_distribute.status = "waiting_public_ci" |
+                  .stages.stage_6_distribute.queued_at = $queued_at |
+                  .stages.stage_6_distribute.recovered_at = $queued_at |
+                  .stages.stage_6_distribute.public_ci_gate = {
+                    status: "passed", tag: $tag, version: $version, expected_sha: $expected_sha,
+                    workflow: "ci.yml", event: "push", branch: "main",
+                    stage6_run_id: $gate_run_id, stage6_run_attempt: $gate_run_attempt,
+                    stage6_run_url: $gate_run_url, queued_at: $queued_at, deadline_at: $deadline_at,
+                    ci_run_id: $ci_run_id, ci_run_url: $ci_run_url,
+                    ci_status: "completed", ci_conclusion: "success",
+                    recovery_of_stage6_run_id: $previous_stage6_run_id,
+                    recovery_of_stage6_run_url: $previous_stage6_run_url,
+                    revalidated_at: $queued_at
+                  } |
+                  .stages.stage_6_distribute.recovery_history =
+                    ((.stages.stage_6_distribute.recovery_history // []) + [{
+                      recovered_at: $queued_at,
+                      trigger: "stage5_manual_redispatch",
+                      prior_status: "failed",
+                      prior_failed_at: $previous_failed_at,
+                      prior_error: $previous_error,
+                      prior_public_ci_gate: $previous_gate,
+                      revalidated_ci_run_id: $ci_run_id,
+                      revalidated_ci_run_url: $ci_run_url
+                    }])
+                ' "$ledger_path" > "$tmp"
+              mv "$tmp" "$ledger_path"
+              gh release upload "$TAG" "$ledger_path" --repo verivus-oss/sqry --clobber
+              echo "Recovered failed Stage 6 with a revalidated public CI receipt"
+              ;;
+            *)
+              echo "FATAL: Stage 6 is '$stage6_status', required pending, matching waiting_public_ci, or a guarded failed recovery" >&2
+              exit 1
+              ;;
+          esac
+          for field in tag version expected_sha staged_origin staged_sha expected_digest; do
+            case "$field" in
+              tag) value="$TAG" ;;
+              version) value="$VERSION" ;;
+              expected_sha) value="$EXPECTED_SHA" ;;
+              staged_origin) value="$STAGED_ORIGIN" ;;
+              staged_sha) value="$STAGED_SHA" ;;
+              expected_digest) value="$EXPECTED_DIGEST" ;;
+            esac
+            echo "$field=$value" >> "$GITHUB_OUTPUT"
+          done
+          echo "ledger_path=$ledger_path" >> "$GITHUB_OUTPUT"
+          echo "gate_receipt_run_id=$gate_receipt_run_id" >> "$GITHUB_OUTPUT"
+          echo "gate_deadline_at=$deadline_at" >> "$GITHUB_OUTPUT"
+
+      - name: Check public CI gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LEDGER_PATH: ${{ steps.context.outputs.ledger_path }}
+          GATE_RECEIPT_RUN_ID: ${{ steps.context.outputs.gate_receipt_run_id }}
+          GATE_DEADLINE_AT: ${{ steps.context.outputs.gate_deadline_at }}
+        run: |
+          set -euo pipefail
+          repo=verivus-oss/sqry
+          max_attempts=120
+          sleep_seconds=15
+          ci_run_id=""
+          ci_run_url=""
+          ci_status=""
+          ci_conclusion=""
+
+          gate_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.status // empty' "$LEDGER_PATH")
+          ledger_gate_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_id // empty' "$LEDGER_PATH")
+          [[ "$ledger_gate_run_id" == "$GATE_RECEIPT_RUN_ID" ]] || {
+            echo "FATAL: public CI gate receipt identity changed before the gate could be checked" >&2
+            exit 1
+          }
+          if [[ "$gate_status" == passed ]]; then
+            ci_run_id=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_id // empty' "$LEDGER_PATH")
+            ci_run_url=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_url // empty' "$LEDGER_PATH")
+            ci_status=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_status // empty' "$LEDGER_PATH")
+            ci_conclusion=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_conclusion // empty' "$LEDGER_PATH")
+            [[ -n "$ci_run_id" && "$ci_status" == completed && "$ci_conclusion" == success && -n "$ci_run_url" ]] || {
+              echo "FATAL: matching public CI gate is marked passed without a successful CI receipt" >&2
+              exit 1
+            }
+            echo "[OK] Reused successful public CI gate receipt: $ci_run_url"
+            exit 0
+          fi
+          [[ "$gate_status" == waiting ]] || {
+            echo "FATAL: public CI gate has invalid status '$gate_status'" >&2
+            exit 1
+          }
+          deadline_epoch=$(date -u -d "$GATE_DEADLINE_AT" +%s) || {
+            echo "FATAL: public CI gate deadline is invalid" >&2
+            exit 1
+          }
+
+          persist_gate_state() {
+            local state="$1" reason="$2" tmp
+            tmp=$(mktemp)
+            jq --arg gate_run_id "$GATE_RECEIPT_RUN_ID" --arg observer_run_id "$GITHUB_RUN_ID" \
+              --arg state "$state" --arg reason "$reason" \
+              --arg ci_run_id "$ci_run_id" --arg ci_run_url "$ci_run_url" \
+              --arg ci_status "$ci_status" --arg ci_conclusion "$ci_conclusion" '
+                if (.stages.stage_6_distribute.status == "waiting_public_ci"
+                    and .stages.stage_6_distribute.public_ci_gate.stage6_run_id == $gate_run_id)
+                then
+                  if $state == "failed" then
+                    .stages.stage_6_distribute.status = "failed" |
+                    .stages.stage_6_distribute.failed_at = (now | todateiso8601) |
+                    .stages.stage_6_distribute.error = $reason
+                  else . end |
+                  .stages.stage_6_distribute.public_ci_gate.status = $state |
+                  .stages.stage_6_distribute.public_ci_gate.error = $reason |
+                  .stages.stage_6_distribute.public_ci_gate.ci_run_id = $ci_run_id |
+                  .stages.stage_6_distribute.public_ci_gate.ci_run_url = $ci_run_url |
+                  .stages.stage_6_distribute.public_ci_gate.ci_status = $ci_status |
+                  .stages.stage_6_distribute.public_ci_gate.ci_conclusion = $ci_conclusion |
+                  .stages.stage_6_distribute.public_ci_gate.last_observed_by_run_id = $observer_run_id |
+                  .stages.stage_6_distribute.public_ci_gate.updated_at = (now | todateiso8601)
+                else error("public CI gate receipt no longer belongs to this Stage 6 run")
+                end
+              ' "$LEDGER_PATH" > "$tmp"
+            mv "$tmp" "$LEDGER_PATH"
+            gh release upload "$TAG" "$LEDGER_PATH" --repo "$repo" --clobber
+          }
+
+          for attempt in $(seq 1 "$max_attempts"); do
+            if (( $(date -u +%s) >= deadline_epoch )); then
+              persist_gate_state failed public_ci_gate_timeout
+              echo "FATAL: public CI gate deadline elapsed before a successful CI receipt for $EXPECTED_SHA" >&2
+              exit 1
+            fi
+            response=$(gh api -X GET "repos/$repo/actions/workflows/ci.yml/runs" \
+              -f "head_sha=$EXPECTED_SHA" -f "event=push" -f "per_page=30")
+            run_json=$(jq -c --arg sha "$EXPECTED_SHA" --arg branch main '
+              [.workflow_runs[] | select(.head_sha == $sha) | select(.event == "push")
+              | select((.head_branch // "") == $branch)] | sort_by(.created_at) | last // empty
+            ' <<<"$response")
+            if [[ -n "$run_json" && "$run_json" != null ]]; then
+              ci_run_id=$(jq -r '.database_id // .id // empty' <<<"$run_json")
+              ci_run_url=$(jq -r '.html_url // empty' <<<"$run_json")
+              ci_status=$(jq -r '.status // empty' <<<"$run_json")
+              ci_conclusion=$(jq -r '.conclusion // empty' <<<"$run_json")
+              echo "Public CI gate: SHA=$EXPECTED_SHA run=${ci_run_url:-$ci_run_id} status=${ci_status:-unknown} conclusion=${ci_conclusion:-none}"
+              if [[ "$ci_status" == completed ]]; then
+                if [[ "$ci_conclusion" == success ]]; then
+                  persist_gate_state passed ""
+                  echo "[OK] public CI succeeded for $EXPECTED_SHA: ${ci_run_url:-run $ci_run_id}"
+                  exit 0
+                fi
+                reason=public_ci_gate_unsuccessful
+                [[ "$ci_conclusion" == cancelled ]] && reason=public_ci_gate_cancelled
+                persist_gate_state failed "$reason"
+                echo "FATAL: public CI completed with conclusion=${ci_conclusion:-none} for $EXPECTED_SHA: ${ci_run_url:-run $ci_run_id}" >&2
+                exit 1
+              fi
+            else
+              echo "Public CI gate: no ci.yml push run on main for $EXPECTED_SHA (attempt $attempt/$max_attempts)"
+            fi
+            [[ "$attempt" -eq "$max_attempts" ]] || sleep "$sleep_seconds"
+          done
+          persist_gate_state failed public_ci_gate_timeout
+          echo "FATAL: timed out waiting for successful public CI for $EXPECTED_SHA; last run=${ci_run_url:-none} status=${ci_status:-none} conclusion=${ci_conclusion:-none}" >&2
+          exit 1
+
+      - name: Persist interrupted public CI gate state
+        if: ${{ failure() || cancelled() }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GATE_RECEIPT_RUN_ID: ${{ steps.context.outputs.gate_receipt_run_id }}
+        run: |
+          set -euo pipefail
+          [[ -n "$TAG" && -n "$VERSION" && -n "$EXPECTED_SHA" && -n "$GATE_RECEIPT_RUN_ID" ]] || exit 0
+          ledger_dir="$RUNNER_TEMP/interrupted-public-ci-gate-ledger"
+          mkdir -p "$ledger_dir"
+          gh release download "$TAG" --repo verivus-oss/sqry --dir "$ledger_dir" --pattern "release-ledger-v${VERSION}.json" || exit 0
+          ledger_path="$ledger_dir/release-ledger-v${VERSION}.json"
+          [[ -f "$ledger_path" ]] || exit 0
+          matching=$(jq -r --arg gate_run_id "$GATE_RECEIPT_RUN_ID" '
+            .stages.stage_6_distribute.status == "waiting_public_ci"
+            and .stages.stage_6_distribute.public_ci_gate.stage6_run_id == $gate_run_id
+          ' "$ledger_path")
+          [[ "$matching" == true ]] || exit 0
+          tmp=$(mktemp)
+          jq '
+            .stages.stage_6_distribute.status = "failed" |
+            .stages.stage_6_distribute.failed_at = (now | todateiso8601) |
+            .stages.stage_6_distribute.error = "public_ci_gate_interrupted" |
+            .stages.stage_6_distribute.public_ci_gate.status = "failed" |
+            .stages.stage_6_distribute.public_ci_gate.error = "public_ci_gate_interrupted" |
+            .stages.stage_6_distribute.public_ci_gate.interrupted_at = (now | todateiso8601)
+          ' "$ledger_path" > "$tmp"
+          mv "$tmp" "$ledger_path"
+          gh release upload "$TAG" "$ledger_path" --repo verivus-oss/sqry --clobber
+
+  build-release-artifacts:
+    name: Build Release Artifacts
+    needs: check-public-ci
+    runs-on: [self-hosted, linux, rust, x86_64, workhorse2]
+    timeout-minutes: 60
+    env:
+      TAG: ${{ needs.check-public-ci.outputs.tag }}
+      VERSION: ${{ needs.check-public-ci.outputs.version }}
+      EXPECTED_SHA: ${{ needs.check-public-ci.outputs.expected_sha }}
+      STAGED_ORIGIN: ${{ needs.check-public-ci.outputs.staged_origin }}
+      STAGED_SHA: ${{ needs.check-public-ci.outputs.staged_sha }}
+      EXPECTED_DIGEST: ${{ needs.check-public-ci.outputs.expected_digest }}
+    steps:
+      - name: Workspace wipe
+        run: |
+          # Docker may create root-owned files; use passwordless sudo only
+          # when the runner is configured for it.
+          if sudo -n true 2>/dev/null; then
+            sudo rm -rf "$GITHUB_WORKSPACE"
+          else
+            rm -rf "$GITHUB_WORKSPACE"
+          fi
+          mkdir -p "$GITHUB_WORKSPACE"
+
+      # Guard: validate the context emitted by the hosted public-CI preflight.
+      - name: Validate dispatch payload
+        run: |
+          FAIL=0
+          if [[ -z "$VERSION" ]]; then echo "ERROR: missing version"; FAIL=1; fi
+          if [[ -z "$TAG" ]]; then echo "ERROR: missing tag"; FAIL=1; fi
+          if [[ -z "$EXPECTED_SHA" ]]; then echo "ERROR: missing sha"; FAIL=1; fi
+          if [[ -z "$STAGED_ORIGIN" ]]; then echo "ERROR: missing staged_origin"; FAIL=1; fi
+          if [[ -z "$STAGED_SHA" ]]; then echo "ERROR: missing staged_sha"; FAIL=1; fi
+          if [[ -z "$EXPECTED_DIGEST" ]]; then echo "ERROR: missing sanitized_tree_sha256"; FAIL=1; fi
+          if [[ "$FAIL" -eq 1 ]]; then exit 1; fi
+          if [[ "$STAGED_ORIGIN" != "verivusai-open/sqry" ]]; then
+            echo "FATAL: staged_origin is '$STAGED_ORIGIN', required 'verivusai-open/sqry'" >&2
+            echo "Direct publication from verivusai-labs/sqry is forbidden." >&2
+            exit 1
+          fi
+          echo "Dispatch payload OK: version=$VERSION tag=$TAG sha=$EXPECTED_SHA staged_origin=$STAGED_ORIGIN"
+
+      # Checkout by immutable SHA, not mutable tag
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Verify checkout integrity: HEAD matches payload SHA and tag resolves to same commit
+      - name: Verify checkout integrity
+        run: |
+          ACTUAL_SHA=$(git rev-parse HEAD)
+          if [[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]]; then
+            echo "FATAL: HEAD ($ACTUAL_SHA) does not match expected SHA ($EXPECTED_SHA)" >&2
+            exit 1
+          fi
+          TAG_SHA=$(git rev-list -n1 "$TAG" 2>/dev/null || true)
+          if [[ -n "$TAG_SHA" && "$TAG_SHA" != "$EXPECTED_SHA" ]]; then
+            echo "FATAL: tag $TAG resolves to $TAG_SHA but expected $EXPECTED_SHA" >&2
+            exit 1
+          fi
+          echo "Checkout verified: HEAD=$ACTUAL_SHA tag=$TAG"
+
+      - name: Download release ledger
+        id: ledger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          LEDGER_DIR="$RUNNER_TEMP/release-ledger"
+          mkdir -p "$LEDGER_DIR"
+          gh release download "$TAG" --dir "$LEDGER_DIR" --pattern "release-ledger-v${VERSION}.json"
+          LEDGER_PATH="$LEDGER_DIR/release-ledger-v${VERSION}.json"
+          if [[ ! -f "$LEDGER_PATH" ]]; then
+            echo "FATAL: release ledger asset missing for $TAG" >&2
+            exit 1
+          fi
+          echo "path=$LEDGER_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Verify staged-origin proof in ledger
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+
+          # Verify schema version supports staged path
+          SCHEMA_VER=$(jq -r '.schema_version // 0' "$LEDGER_PATH")
+          if [[ "$SCHEMA_VER" -lt 3 ]]; then
+            echo "FATAL: ledger schema_version=$SCHEMA_VER, required >=3 for staged path" >&2
+            exit 1
+          fi
+
+          # Verify release path is staged
+          RELEASE_PATH=$(jq -r '.release_path // empty' "$LEDGER_PATH")
+          if [[ "$RELEASE_PATH" != "staged" ]]; then
+            echo "FATAL: ledger release_path='$RELEASE_PATH', required 'staged'" >&2
+            exit 1
+          fi
+
+          # Verify Stage 5 completed (published from staging)
+          STAGE5_STATUS=$(jq -r '.stages.stage_5_publish.status // empty' "$LEDGER_PATH")
+          if [[ "$STAGE5_STATUS" != "completed" ]]; then
+            echo "FATAL: stage_5_publish status is '$STAGE5_STATUS', required 'completed'" >&2
+            exit 1
+          fi
+
+          # Verify staged origin recorded in ledger
+          LEDGER_STAGED_ORIGIN=$(jq -r '.stages.stage_5_publish.staged_origin // empty' "$LEDGER_PATH")
+          if [[ "$LEDGER_STAGED_ORIGIN" != "verivusai-open/sqry" ]]; then
+            echo "FATAL: ledger staged_origin='$LEDGER_STAGED_ORIGIN', required 'verivusai-open/sqry'" >&2
+            exit 1
+          fi
+
+          # Verify public commit SHA matches
+          LEDGER_PUBLIC_SHA=$(jq -r '.stages.stage_5_publish.public_commit_sha // empty' "$LEDGER_PATH")
+          if [[ -n "$LEDGER_PUBLIC_SHA" && "$LEDGER_PUBLIC_SHA" != "$EXPECTED_SHA" ]]; then
+            echo "FATAL: ledger public_commit_sha ($LEDGER_PUBLIC_SHA) does not match expected ($EXPECTED_SHA)" >&2
+            exit 1
+          fi
+
+          # Verify Stage 6 is not already completed
+          if jq -e '.stages.stage_6_distribute.status == "completed"' "$LEDGER_PATH" >/dev/null; then
+            echo "FATAL: stage_6_distribute is already completed in the ledger" >&2
+            exit 1
+          fi
+
+          # Only the hosted preflight can acknowledge the pending transaction.
+          STAGE6_STATUS=$(jq -r '.stages.stage_6_distribute.status // empty' "$LEDGER_PATH")
+          if [[ "$STAGE6_STATUS" != "waiting_public_ci" ]]; then
+            echo "FATAL: stage_6_distribute status is '$STAGE6_STATUS', required 'waiting_public_ci' after the hosted public CI gate" >&2
+            exit 1
+          fi
+
+          echo "[OK] Staged-origin proof verified. Publication originated from verivusai-open/sqry."
+
+      - name: Verify public CI gate receipt
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          GATE_STATUS=$(jq -r '.stages.stage_6_distribute.public_ci_gate.status // empty' "$LEDGER_PATH")
+          GATE_TAG=$(jq -r '.stages.stage_6_distribute.public_ci_gate.tag // empty' "$LEDGER_PATH")
+          GATE_VERSION=$(jq -r '.stages.stage_6_distribute.public_ci_gate.version // empty' "$LEDGER_PATH")
+          GATE_SHA=$(jq -r '.stages.stage_6_distribute.public_ci_gate.expected_sha // empty' "$LEDGER_PATH")
+          GATE_WORKFLOW=$(jq -r '.stages.stage_6_distribute.public_ci_gate.workflow // empty' "$LEDGER_PATH")
+          GATE_EVENT=$(jq -r '.stages.stage_6_distribute.public_ci_gate.event // empty' "$LEDGER_PATH")
+          GATE_BRANCH=$(jq -r '.stages.stage_6_distribute.public_ci_gate.branch // empty' "$LEDGER_PATH")
+          GATE_RUN_ID=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_id // empty' "$LEDGER_PATH")
+          GATE_RUN_URL=$(jq -r '.stages.stage_6_distribute.public_ci_gate.stage6_run_url // empty' "$LEDGER_PATH")
+          CI_RUN_ID=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_id // empty' "$LEDGER_PATH")
+          CI_RUN_URL=$(jq -r '.stages.stage_6_distribute.public_ci_gate.ci_run_url // empty' "$LEDGER_PATH")
+          if [[ "$GATE_STATUS" != passed || "$GATE_TAG" != "$TAG" || "$GATE_VERSION" != "$VERSION" || "$GATE_SHA" != "$EXPECTED_SHA" \
+            || "$GATE_WORKFLOW" != ci.yml || "$GATE_EVENT" != push || "$GATE_BRANCH" != main \
+            || -z "$GATE_RUN_ID" || -z "$GATE_RUN_URL" || -z "$CI_RUN_ID" || -z "$CI_RUN_URL" ]]; then
+            echo "FATAL: public CI gate receipt is absent, incomplete, or does not match this release transaction" >&2
+            exit 1
+          fi
+          echo "[OK] Public CI gate receipt verified: $CI_RUN_URL"
+
+      - name: Mark Stage 6 as running in ledger
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          jq '
+            .stages.stage_6_distribute.status = "running" |
+            .stages.stage_6_distribute.started_at = (now | todateiso8601)
+          ' "$LEDGER_PATH" > "$tmp"
+          mv "$tmp" "$LEDGER_PATH"
+
+      - name: Upload early acknowledgment ledger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          source scripts/release/github-release-assets.sh
+          gh_release_upload_with_retry "$TAG" "$LEDGER_PATH"
+          echo "Uploaded running-state ledger for Stage 5 verification"
+
+      - name: Install Rust + targets
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: "1.94.1"
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,x86_64-unknown-linux-musl,aarch64-unknown-linux-musl,x86_64-apple-darwin,aarch64-apple-darwin,x86_64-pc-windows-gnu
+
+      - name: Verify Rust toolchain
+        run: rustc --version | grep -q '^rustc 1.94.1'
+
+      - name: Verify Rust target stdlibs
+        run: |
+          set -euo pipefail
+          rustup target add \
+            x86_64-unknown-linux-gnu \
+            aarch64-unknown-linux-gnu \
+            x86_64-unknown-linux-musl \
+            aarch64-unknown-linux-musl \
+            x86_64-apple-darwin \
+            aarch64-apple-darwin \
+            x86_64-pc-windows-gnu
+          rustup target list --installed | sort
+          for target in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-unknown-linux-musl aarch64-unknown-linux-musl x86_64-apple-darwin aarch64-apple-darwin x86_64-pc-windows-gnu; do
+            if ! rustup target list --installed | grep -Fx "$target" >/dev/null; then
+              echo "FATAL: Rust stdlib target missing after installation: $target" >&2
+              exit 1
+            fi
+          done
+
+      # Verify self-hosted runner toolchain (installed by setup-runner.sh)
+      - name: Verify cross-compilation toolchain
+        run: |
+          set -euo pipefail
+          echo "Verifying required tools are installed on self-hosted runner..."
+          readonly CARGO_BIN="$(command -v cargo || true)"
+          if [[ -z "$CARGO_BIN" || ! -x "$CARGO_BIN" ]]; then
+            echo "FATAL: cargo executable not found after rust-toolchain setup" >&2
+            exit 1
+          fi
+          readonly CARGO_BIN_DIR="$(dirname "$CARGO_BIN")"
+          echo "$CARGO_BIN_DIR" >> "$GITHUB_PATH"
+          export PATH="$CARGO_BIN_DIR:$PATH"
+          for tool_dir in /usr/local/bin /opt/nodejs/current/bin; do
+            if [[ -d "$tool_dir" ]]; then
+              echo "$tool_dir" >> "$GITHUB_PATH"
+              export PATH="$tool_dir:$PATH"
+            fi
+          done
+          if [[ -x /opt/zig/current/zig ]]; then
+            echo "/opt/zig/current" >> "$GITHUB_PATH"
+            export PATH="/opt/zig/current:$PATH"
+          fi
+          export XDG_CACHE_HOME="${RUNNER_TEMP}/xdg-cache"
+          rm -rf "${XDG_CACHE_HOME}/cargo-zigbuild" "${HOME}/.cache/cargo-zigbuild"
+          mkdir -p "${XDG_CACHE_HOME}"
+          CARGO_ZIGBUILD_ROOT="$(mktemp -d "${RUNNER_TEMP}/cargo-zigbuild-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}.XXXXXX")"
+          printf 'CARGO_ZIGBUILD_ROOT=%s\n' "$CARGO_ZIGBUILD_ROOT" >> "$GITHUB_ENV"
+          echo "$CARGO_ZIGBUILD_ROOT/bin" >> "$GITHUB_PATH"
+          export PATH="$CARGO_ZIGBUILD_ROOT/bin:$PATH"
+          zig version
+          zig_major="$(zig version | awk -F. '{print $1}')"
+          zig_minor="$(zig version | awk -F. '{print $2}')"
+          if (( zig_major == 0 && zig_minor < 15 )); then
+            echo "FATAL: Darwin cross-compilation requires Zig 0.15+ with SDKROOT support; found $(zig version)" >&2
+            exit 1
+          fi
+          "$CARGO_BIN" install cargo-zigbuild --version 0.23.0 --locked --root "$CARGO_ZIGBUILD_ROOT"
+          readonly CARGO_ZIGBUILD_BIN="$CARGO_ZIGBUILD_ROOT/bin/cargo-zigbuild"
+          if [[ ! -x "$CARGO_ZIGBUILD_BIN" ]]; then
+            echo "FATAL: cargo-zigbuild was not installed at the verified run-local path: $CARGO_ZIGBUILD_BIN" >&2
+            exit 1
+          fi
+          if [[ "$("$CARGO_ZIGBUILD_BIN" --version)" != "cargo-zigbuild 0.23.0" ]]; then
+            echo "FATAL: expected cargo-zigbuild 0.23.0 at $CARGO_ZIGBUILD_BIN" >&2
+            exit 1
+          fi
+          export SDKROOT="${SDKROOT:-/opt/macos-sdk/MacOSX14.0.sdk}"
+          export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-10.12}"
+          if [[ ! -d "$SDKROOT/System/Library/Frameworks/CoreFoundation.framework" ]]; then
+            echo "FATAL: macOS SDK missing CoreFoundation.framework at SDKROOT=$SDKROOT" >&2
+            exit 1
+          fi
+          if [[ ! -d "$SDKROOT/System/Library/Frameworks/CoreServices.framework" ]]; then
+            echo "FATAL: macOS SDK missing CoreServices.framework at SDKROOT=$SDKROOT" >&2
+            exit 1
+          fi
+          x86_64-w64-mingw32-gcc --version | head -1 || {
+            echo "Installing gcc-mingw-w64-x86-64..."
+            sudo apt-get update -qq && sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+          }
+          node --version
+          npx --yes @vscode/vsce@3.9.2 --version
+          gh --version
+          echo "All required tools present."
+
+      # Phase 6.1: Cross-compile binaries
+      - name: Build binaries
+        run: |
+          set -euo pipefail
+          mkdir -p dist/
+          PUBLIC_REPO_ROOT="/workspace/sqry"
+          export RUSTFLAGS="--remap-path-prefix=$(pwd)=${PUBLIC_REPO_ROOT} --remap-path-prefix=/io=${PUBLIC_REPO_ROOT}"
+          readonly CARGO_BIN="$(command -v cargo || true)"
+          if [[ -z "$CARGO_BIN" || ! -x "$CARGO_BIN" ]]; then
+            echo "FATAL: cargo executable not found after rust-toolchain setup" >&2
+            exit 1
+          fi
+          readonly CARGO_BIN_DIR="$(dirname "$CARGO_BIN")"
+          if [[ -z "${CARGO_ZIGBUILD_ROOT:-}" ]]; then
+            echo "FATAL: CARGO_ZIGBUILD_ROOT was not persisted by toolchain verification" >&2
+            exit 1
+          fi
+          CARGO_ZIGBUILD_PREFIX="${RUNNER_TEMP}/cargo-zigbuild-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}."
+          if [[ "$CARGO_ZIGBUILD_ROOT" != "$CARGO_ZIGBUILD_PREFIX"* ]]; then
+            echo "FATAL: cargo-zigbuild root is outside the current run/attempt/job namespace: $CARGO_ZIGBUILD_ROOT" >&2
+            exit 1
+          fi
+          readonly CARGO_ZIGBUILD_BIN="$CARGO_ZIGBUILD_ROOT/bin/cargo-zigbuild"
+          if [[ ! -x "$CARGO_ZIGBUILD_BIN" ]]; then
+            echo "FATAL: verified cargo-zigbuild is missing: $CARGO_ZIGBUILD_BIN" >&2
+            exit 1
+          fi
+          if [[ "$("$CARGO_ZIGBUILD_BIN" --version)" != "cargo-zigbuild 0.23.0" ]]; then
+            echo "FATAL: verified cargo-zigbuild version changed before the build" >&2
+            exit 1
+          fi
+          export PATH="$CARGO_ZIGBUILD_ROOT/bin:/opt/zig/current:${CARGO_BIN_DIR}:$PATH"
+          export SDKROOT="${SDKROOT:-/opt/macos-sdk/MacOSX14.0.sdk}"
+          export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-10.12}"
+          if [[ ! -d "$SDKROOT/System/Library/Frameworks/CoreFoundation.framework" ]]; then
+            echo "FATAL: macOS SDK missing CoreFoundation.framework at SDKROOT=$SDKROOT" >&2
+            exit 1
+          fi
+          export XDG_CACHE_HOME="${RUNNER_TEMP}/xdg-cache"
+          rm -rf "${XDG_CACHE_HOME}/cargo-zigbuild" "${HOME}/.cache/cargo-zigbuild"
+          mkdir -p "${XDG_CACHE_HOME}"
+          TARGETS=(
+            "x86_64-unknown-linux-gnu"
+            "aarch64-unknown-linux-gnu"
+            "x86_64-unknown-linux-musl"
+            "aarch64-unknown-linux-musl"
+            "x86_64-apple-darwin"
+            "aarch64-apple-darwin"
+            "x86_64-pc-windows-gnu"
+          )
+          BINS=("sqry-cli" "sqry-lsp" "sqry-mcp" "sqry-daemon")
+          BIN_NAMES=("sqry" "sqry-lsp" "sqry-mcp" "sqryd")
+          SQRY_CLI_RELEASE_FEATURES=(--features sqry-cli/jvm-classpath)
+
+          for target in "${TARGETS[@]}"; do
+            echo "=== Building for $target ==="
+            if [[ "$target" == "x86_64-unknown-linux-gnu" ]]; then
+              "$CARGO_BIN" build --release --target "$target" -p sqry-cli -p sqry-lsp -p sqry-mcp -p sqry-daemon "${SQRY_CLI_RELEASE_FEATURES[@]}"
+            elif [[ "$target" == "x86_64-pc-windows-gnu" ]]; then
+              wrapper_path="${RUNNER_TEMP}/mingw-linker-wrapper.sh"
+              printf '#!/bin/bash\nargs=()\nfor arg in "$@"; do\n  if [[ "$arg" =~ ^/STACK:([0-9]+)$ ]]; then\n    args+=("-Wl,--stack,${BASH_REMATCH[1]}")\n  else\n    args+=("$arg")\n  fi\ndone\nexec x86_64-w64-mingw32-gcc "${args[@]}"\n' > "$wrapper_path"
+              chmod +x "$wrapper_path"
+              CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$wrapper_path" \
+                "$CARGO_BIN" build --release --target "$target" -p sqry-cli -p sqry-lsp -p sqry-mcp -p sqry-daemon "${SQRY_CLI_RELEASE_FEATURES[@]}"
+            else
+              PATH="$CARGO_ZIGBUILD_ROOT/bin:/opt/zig/current:${CARGO_BIN_DIR}:$PATH" "$CARGO_ZIGBUILD_BIN" zigbuild --release --target "$target" -p sqry-cli -p sqry-lsp -p sqry-mcp -p sqry-daemon "${SQRY_CLI_RELEASE_FEATURES[@]}"
+            fi
+
+            EXT=""
+            [[ "$target" == *"windows"* ]] && EXT=".exe"
+
+            case "$target" in
+              x86_64-unknown-linux-gnu) SUFFIX="linux-x86_64" ;;
+              aarch64-unknown-linux-gnu) SUFFIX="linux-arm64" ;;
+              x86_64-unknown-linux-musl) SUFFIX="linux-x86_64-musl" ;;
+              aarch64-unknown-linux-musl) SUFFIX="linux-arm64-musl" ;;
+              x86_64-apple-darwin) SUFFIX="macos-x86_64" ;;
+              aarch64-apple-darwin) SUFFIX="macos-arm64" ;;
+              x86_64-pc-windows-gnu) SUFFIX="windows-x86_64" ;;
+            esac
+
+            for i in "${!BINS[@]}"; do
+              src="target/${target}/release/${BIN_NAMES[$i]}${EXT}"
+              dst="dist/${BIN_NAMES[$i]}-${SUFFIX}${EXT}"
+              cp "$src" "$dst"
+            done
+
+            if [[ "$target" == "x86_64-pc-windows-gnu" ]]; then
+              package_dir="dist/sqry-${VERSION}-windows-x86_64"
+              rm -rf "$package_dir"
+              mkdir -p "$package_dir"
+              cp "dist/sqry-${SUFFIX}.exe" "$package_dir/sqry.exe"
+              cp "dist/sqry-lsp-${SUFFIX}.exe" "$package_dir/sqry-lsp.exe"
+              cp "dist/sqry-mcp-${SUFFIX}.exe" "$package_dir/sqry-mcp.exe"
+              cp "dist/sqryd-${SUFFIX}.exe" "$package_dir/sqryd.exe"
+
+              objdump_bin="$(x86_64-w64-mingw32-gcc -print-prog-name=objdump)"
+              if [[ -z "$objdump_bin" || ! -x "$objdump_bin" ]]; then
+                echo "FATAL: could not resolve MinGW objdump via x86_64-w64-mingw32-gcc" >&2
+                exit 1
+              fi
+
+              imported_dlls_file="${RUNNER_TEMP}/sqry-windows-imported-dlls.txt"
+              "$objdump_bin" -p "$package_dir"/*.exe \
+                | awk '/DLL Name:/ { print $3 }' \
+                | sort -u > "$imported_dlls_file"
+              mapfile -t imported_dlls < "$imported_dlls_file"
+              for dll_name in "${imported_dlls[@]}"; do
+                dll_path="$(x86_64-w64-mingw32-gcc -print-file-name="${dll_name}")"
+                if [[ -n "$dll_path" && "$dll_path" != "$dll_name" && -f "$dll_path" ]]; then
+                  cp "$dll_path" "$package_dir/$(printf '%s' "$dll_name" | tr '[:upper:]' '[:lower:]')"
+                fi
+              done
+
+              required_runtime_dlls=(
+                "libstdc++-6.dll"
+                "libgcc_s_seh-1.dll"
+                "libwinpthread-1.dll"
+              )
+              for dll_name in "${required_runtime_dlls[@]}"; do
+                if [[ ! -f "$package_dir/$dll_name" ]]; then
+                  dll_path="$(x86_64-w64-mingw32-gcc -print-file-name="${dll_name}")"
+                  if [[ -n "$dll_path" && "$dll_path" != "$dll_name" && -f "$dll_path" ]]; then
+                    cp "$dll_path" "$package_dir/$dll_name"
+                  fi
+                fi
+                if [[ ! -f "$package_dir/$dll_name" ]]; then
+                  echo "FATAL: Windows package is missing required runtime DLL ${dll_name}" >&2
+                  exit 1
+                fi
+              done
+
+              python3 - <<'PY'
+          import os
+          import pathlib
+          import zipfile
+
+          version = os.environ["VERSION"]
+          package_dir = pathlib.Path(f"dist/sqry-{version}-windows-x86_64")
+          archive_path = pathlib.Path(f"dist/sqry-{version}-windows-x86_64.zip")
+          with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for path in sorted(package_dir.iterdir()):
+                  archive.write(path, arcname=path.name)
+          PY
+            fi
+          done
+
+      # Phase 6.1b: Developer ID sign the macOS binaries. The build runner is
+      # Linux, so we use rcodesign (apple-codesign), which produces a real
+      # Developer ID Application signature with hardened runtime without a Mac.
+      # Cert + key are pulled from Key Vault via the release SP (OIDC), so no
+      # Apple secret is stored in the public repo. Signing happens before the
+      # smoke tests, checksums, and attestation so all of them cover the signed
+      # bytes. Best-effort (continue-on-error): a Key Vault or signing hiccup
+      # degrades to unsigned binaries rather than blocking the release.
+      # Notarization runs later on the macos-native-smoke runner.
+      - name: Developer ID sign macOS binaries (rcodesign)
+        if: vars.VSCE_PUBLISHER_CLIENT_ID != ''
+        continue-on-error: true
+        env:
+          KV_NAME: verivus-dev-secrets-kv
+          RCODESIGN_VERSION: "0.29.0"
+          AZURE_CLIENT_ID: ${{ vars.VSCE_PUBLISHER_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          workdir="${RUNNER_TEMP}/macos-sign"
+          mkdir -p "$workdir"
+          trap 'rm -rf "$workdir"' EXIT
+
+          # Obtain a Key Vault token via GitHub OIDC federation WITHOUT the az CLI
+          # (the self-hosted Linux runner's az is unreliable). Exchange the GitHub
+          # OIDC JWT for an Entra token using the federated client-assertion flow.
+          gh_jwt="$(curl -sS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])')"
+          kv_token="$(curl -sS -X POST "https://login.microsoftonline.com/${AZURE_TENANT_ID}/oauth2/v2.0/token" \
+            -d "client_id=${AZURE_CLIENT_ID}" \
+            -d "scope=https://vault.azure.net/.default" \
+            -d "grant_type=client_credentials" \
+            -d "client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer" \
+            --data-urlencode "client_assertion=${gh_jwt}" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin).get("access_token",""))')"
+          if [ -z "$kv_token" ]; then
+            echo "WARNING: could not obtain a Key Vault token; skipping macOS signing (binaries ship unsigned)"
+            exit 0
+          fi
+
+          # Developer ID Application cert (DER) + private key (PEM) from Key Vault
+          kv="https://${KV_NAME}.vault.azure.net/secrets"
+          curl -sS -H "Authorization: Bearer $kv_token" "${kv}/apple-devid-application-cert?api-version=7.4" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])' \
+            | base64 -d | openssl x509 -inform DER -out "$workdir/cert.pem"
+          curl -sS -H "Authorization: Bearer $kv_token" "${kv}/apple-devid-application-key?api-version=7.4" \
+            | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])' > "$workdir/key.pem"
+          cat "$workdir/cert.pem" "$workdir/key.pem" > "$workdir/combined.pem"
+
+          # rcodesign (pinned), musl static
+          curl -fsSL -o "$workdir/rcs.tar.gz" \
+            "https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign/${RCODESIGN_VERSION}/apple-codesign-${RCODESIGN_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar xzf "$workdir/rcs.tar.gz" -C "$workdir"
+          rcs="$(find "$workdir" -name rcodesign -type f | head -1)"
+          chmod +x "$rcs"
+
+          signed=0
+          for bin in dist/*-macos-x86_64 dist/*-macos-arm64; do
+            [ -f "$bin" ] || continue
+            echo "Signing $bin"
+            "$rcs" sign --pem-source "$workdir/combined.pem" --code-signature-flags runtime "$bin" "$bin.signed"
+            mv "$bin.signed" "$bin"
+            "$rcs" print-signature-info "$bin" | grep -iE 'CodeSignatureFlags|team_name' | head -2 || true
+            signed=$((signed + 1))
+          done
+          echo "Developer ID signed $signed macOS binaries"
+          if [ "$signed" -eq 0 ]; then
+            echo "FATAL: no macOS binaries found to sign" >&2
+            exit 1
+          fi
+
+      # Phase 6.2: Smoke tests
+      - name: Smoke test Linux x86_64
+        run: |
+          chmod +x dist/sqry-linux-x86_64
+          ./dist/sqry-linux-x86_64 --version
+          ./dist/sqry-linux-x86_64 index --help >/dev/null
+          classpath_smoke_dir="$(mktemp -d)"
+          trap 'rm -rf "$classpath_smoke_dir"' EXIT
+          printf 'class Smoke {}\n' > "$classpath_smoke_dir/Smoke.java"
+          : > "$classpath_smoke_dir/classpath.txt"
+          classpath_output="$(
+            ./dist/sqry-linux-x86_64 index \
+              --force \
+              --classpath \
+              --classpath-file "$classpath_smoke_dir/classpath.txt" \
+              "$classpath_smoke_dir" 2>&1
+          )"
+          if grep -Fq "requires the 'jvm-classpath' feature" <<<"$classpath_output"; then
+            echo "FATAL: public sqry binary was built without the jvm-classpath feature" >&2
+            printf '%s\n' "$classpath_output" >&2
+            exit 1
+          fi
+
+      - name: Smoke test Linux arm64 (QEMU)
+        run: |
+          set -euo pipefail
+          chmod +x dist/sqry-linux-arm64
+          command -v qemu-aarch64-static >/dev/null
+          aarch64_loader="$(
+            find /opt/sqry-release-tools /usr \
+              -path '*aarch64*' \
+              -name ld-linux-aarch64.so.1 \
+              -print \
+              -quit 2>/dev/null || true
+          )"
+          if [[ -z "$aarch64_loader" ]]; then
+            echo "FATAL: aarch64 glibc loader not found; cannot smoke-test arm64 binary under qemu" >&2
+            exit 1
+          fi
+          aarch64_loader_prefix="$(dirname "$(dirname "$aarch64_loader")")"
+          QEMU_LD_PREFIX="$aarch64_loader_prefix" qemu-aarch64-static dist/sqry-linux-arm64 --version
+
+      # Static-link proof: the whole point of the musl assets (issue #395) is
+      # that they carry their own libc and run on any Linux regardless of the
+      # host glibc. Assert that property for EVERY musl binary we ship (sqry,
+      # sqry-lsp, sqry-mcp, sqryd), not just sqry, so a static-link regression
+      # in any of the four fails the release gate instead of shipping a binary
+      # that breaks on glibc-2.35.
+      - name: Smoke test Linux x86_64 musl (static)
+        run: |
+          set -euo pipefail
+          for name in sqry sqry-lsp sqry-mcp sqryd; do
+            bin="dist/${name}-linux-x86_64-musl"
+            chmod +x "$bin"
+            file_out="$(file "$bin")"
+            echo "$file_out"
+            if ! grep -q 'statically linked' <<<"$file_out"; then
+              echo "FATAL: ${bin} is not statically linked" >&2
+              exit 1
+            fi
+            ldd_out="$(ldd "$bin" 2>&1 || true)"
+            echo "$ldd_out"
+            if ! grep -q 'not a dynamic executable' <<<"$ldd_out"; then
+              echo "FATAL: ${bin} reports dynamic dependencies" >&2
+              exit 1
+            fi
+          done
+          ./dist/sqry-linux-x86_64-musl --version
+          ./dist/sqry-linux-x86_64-musl index --help >/dev/null
+
+      - name: Smoke test Linux arm64 musl (static, QEMU)
+        run: |
+          set -euo pipefail
+          command -v qemu-aarch64-static >/dev/null
+          # `file` is cross-arch, so it proves the static-link property for the
+          # arm64 binaries just as it does for x86_64.
+          for name in sqry sqry-lsp sqry-mcp sqryd; do
+            bin="dist/${name}-linux-arm64-musl"
+            chmod +x "$bin"
+            file_out="$(file "$bin")"
+            echo "$file_out"
+            if ! grep -q 'statically linked' <<<"$file_out"; then
+              echo "FATAL: ${bin} is not statically linked" >&2
+              exit 1
+            fi
+          done
+          # A static musl binary needs no glibc loader prefix under qemu.
+          for name in sqry sqry-lsp sqry-mcp sqryd; do
+            qemu-aarch64-static "dist/${name}-linux-arm64-musl" --version
+          done
+
+      # Phase 6.5: VS Code extension
+      - name: Verify VS Code extension assets
+        run: |
+          set -euo pipefail
+          missing_assets=()
+          for asset in \
+            sqry-vscode/media/sqry-icon-512.png \
+            sqry-vscode/media/sqry-icon-128.png \
+            sqry-vscode/media/sqry-icon.svg
+          do
+            if [[ ! -f "$asset" ]]; then
+              missing_assets+=("$asset")
+            fi
+          done
+
+          if [[ ${#missing_assets[@]} -gt 0 ]]; then
+            echo "FATAL: Required VS Code extension assets are missing from the sanitized tree:" >&2
+            printf '  - %s\n' "${missing_assets[@]}" >&2
+            echo "This indicates a Stage 3 sanitization failure. Verify release-manifest.toml includes the required sqry-vscode media assets." >&2
+            exit 1
+          fi
+
+          echo "All required VS Code extension assets are present."
+
+      - name: Build VS Code extension
+        run: |
+          cd sqry-vscode
+          npm ci
+          npx --yes @vscode/vsce@3.9.2 package -o "../dist/sqry-vscode-${VERSION}.vsix"
+
+      - name: Record build environment
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import subprocess
+
+          build_environment = {
+              "rust_version": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+              "zig_version": subprocess.check_output(["zig", "version"], text=True).strip(),
+              "runner_os": subprocess.check_output(["uname", "-srm"], text=True).strip(),
+          }
+          pathlib.Path("dist/build-environment.json").write_text(
+              json.dumps(build_environment, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Upload Stage 6 dist artifact for platform gates
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sqry-stage6-dist-${{ env.TAG }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Persist failed Stage 6 ledger state
+        if: failure()
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${LEDGER_PATH:-}" && -f "$LEDGER_PATH" ]]; then
+            source scripts/release/github-release-assets.sh
+            tmp=$(mktemp)
+            jq '
+              .stages.stage_6_distribute.status = "failed" |
+              .stages.stage_6_distribute.failed_at = (now | todateiso8601)
+            ' "$LEDGER_PATH" > "$tmp" && mv "$tmp" "$LEDGER_PATH"
+            GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh_release_upload_with_retry "$TAG" "$LEDGER_PATH" || true
+            echo "Uploaded failed-state ledger"
+          fi
+
+  windows-native-smoke:
+    name: Windows Native Smoke
+    needs: build-release-artifacts
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      TAG: ${{ github.event.client_payload.tag || github.event.inputs.tag }}
+      VERSION: ${{ github.event.client_payload.version || '' }}
+    steps:
+      - name: Resolve version from ledger (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:TAG)) {
+            throw "tag input is required for workflow_dispatch"
+          }
+          $ledgerDir = Join-Path $env:RUNNER_TEMP "dispatch-ledger"
+          New-Item -ItemType Directory -Force -Path $ledgerDir | Out-Null
+          gh release download $env:TAG --repo "verivus-oss/sqry" --dir $ledgerDir --pattern "release-ledger-*.json"
+          $ledgerFile = Get-ChildItem -Path $ledgerDir -Filter "release-ledger-*.json" | Select-Object -First 1
+          if ($null -eq $ledgerFile) {
+            throw "no release ledger found for tag $env:TAG"
+          }
+          $ledger = Get-Content -Raw -Path $ledgerFile.FullName | ConvertFrom-Json
+          "VERSION=$($ledger.stages.stage_5_publish.dispatch_payload.version)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Download Stage 6 dist artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sqry-stage6-dist-${{ env.TAG }}
+          path: dist
+
+      - name: Smoke test Windows package (native)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:VERSION)) {
+            throw "VERSION was not resolved"
+          }
+          $archivePath = Join-Path $PWD "dist/sqry-$env:VERSION-windows-x86_64.zip"
+          if (!(Test-Path $archivePath)) {
+            throw "Windows archive is missing: $archivePath"
+          }
+          $extractDir = Join-Path $env:RUNNER_TEMP "sqry-windows-package"
+          Remove-Item -Recurse -Force $extractDir -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
+          Expand-Archive -Path $archivePath -DestinationPath $extractDir -Force
+          foreach ($file in @("sqry.exe", "sqry-lsp.exe", "sqry-mcp.exe", "sqryd.exe", "libstdc++-6.dll", "libgcc_s_seh-1.dll", "libwinpthread-1.dll")) {
+            $path = Join-Path $extractDir $file
+            if (!(Test-Path $path)) {
+              throw "Windows package is missing $file"
+            }
+          }
+          & (Join-Path $extractDir "sqry.exe") --version
+          & (Join-Path $extractDir "sqry.exe") index --help | Out-Null
+
+  macos-native-smoke:
+    name: macOS Native Smoke (${{ matrix.suffix }})
+    needs: build-release-artifacts
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suffix: macos-x86_64
+            runner: macos-15-intel
+          - suffix: macos-arm64
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      TAG: ${{ github.event.client_payload.tag || github.event.inputs.tag }}
+      VERSION: ${{ github.event.client_payload.version || '' }}
+    steps:
+      - name: Resolve version from ledger (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$TAG" ]]; then
+            echo "FATAL: tag input is required for workflow_dispatch" >&2
+            exit 1
+          fi
+          ledger_dir="$RUNNER_TEMP/dispatch-ledger"
+          mkdir -p "$ledger_dir"
+          gh release download "$TAG" \
+            --repo "verivus-oss/sqry" \
+            --dir "$ledger_dir" \
+            --pattern "release-ledger-*.json"
+          ledger_file="$(find "$ledger_dir" -name 'release-ledger-*.json' -type f | head -1)"
+          [[ -n "$ledger_file" && -f "$ledger_file" ]] || {
+            echo "FATAL: no release ledger found for tag $TAG" >&2
+            exit 1
+          }
+          echo "VERSION=$(jq -r '.stages.stage_5_publish.dispatch_payload.version' "$ledger_file")" >> "$GITHUB_ENV"
+
+      - name: Download Stage 6 dist artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sqry-stage6-dist-${{ env.TAG }}
+          path: dist
+
+      - name: Smoke test macOS binary (native)
+        shell: bash
+        env:
+          SUFFIX: ${{ matrix.suffix }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$VERSION" ]]; then
+            echo "FATAL: VERSION was not resolved" >&2
+            exit 1
+          fi
+          binary="dist/sqry-${SUFFIX}"
+          [[ -f "$binary" ]] || {
+            echo "FATAL: macOS binary is missing: $binary" >&2
+            exit 1
+          }
+          chmod +x "$binary"
+          "$binary" --version
+          "$binary" index --help >/dev/null
+
+      # Notarize the (already Developer ID signed) macOS binaries with notarytool
+      # on the GitHub-hosted macOS runner. notarytool submits to Apple's cloud
+      # notary service, which is architecture independent, so this runs ONCE on
+      # the arm64 leg and notarizes BOTH the x86_64 and arm64 binaries. Standalone
+      # Mach-O binaries cannot be stapled, so notarization registers each binary's
+      # cdhash with Apple and Gatekeeper verifies online; the uploaded bytes are
+      # unchanged. The runner is ephemeral, so the Apple ID + app-specific
+      # password + team id are fetched fresh from Key Vault via the release SP
+      # (OIDC); no Apple credential is stored in the repo. Skips if unconfigured.
+      - name: Azure login for macOS notarization (release SP, OIDC)
+        id: notarize-login
+        if: vars.VSCE_PUBLISHER_CLIENT_ID != '' && matrix.suffix == 'macos-arm64'
+        continue-on-error: true
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.VSCE_PUBLISHER_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      # Best-effort: a notary outage or a pending Apple agreement must not block
+      # the whole release (which would skip publish-distribution). The binaries
+      # are still Developer ID signed either way.
+      - name: Notarize macOS binaries (notarytool)
+        if: steps.notarize-login.outcome == 'success' && matrix.suffix == 'macos-arm64'
+        continue-on-error: true
+        shell: bash
+        env:
+          KV_NAME: verivus-dev-secrets-kv
+        run: |
+          set -euo pipefail
+          apple_id="$(az keyvault secret show --vault-name "$KV_NAME" --name apple-developer-email --query value -o tsv)"
+          apple_team="$(az keyvault secret show --vault-name "$KV_NAME" --name apple-team-id --query value -o tsv)"
+          apple_pw="$(az keyvault secret show --vault-name "$KV_NAME" --name apple-notarize-password --query value -o tsv)"
+          bins=()
+          for bin in dist/*-macos-x86_64 dist/*-macos-arm64; do
+            [ -f "$bin" ] && bins+=("$bin")
+          done
+          if [ "${#bins[@]}" -eq 0 ]; then
+            echo "FATAL: no macOS binaries found to notarize" >&2
+            exit 1
+          fi
+          zip_path="${RUNNER_TEMP}/notarize-macos.zip"
+          /usr/bin/zip -j "$zip_path" "${bins[@]}"
+          echo "Submitting ${bins[*]} to Apple notary service..."
+          xcrun notarytool submit "$zip_path" \
+            --apple-id "$apple_id" --password "$apple_pw" --team-id "$apple_team" \
+            --wait --timeout 20m
+          echo "Notarized: ${bins[*]}"
+
+  publish-distribution:
+    name: Publish Distribution
+    needs: [build-release-artifacts, windows-native-smoke, macos-native-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.event.client_payload.tag || github.event.inputs.tag }}
+      VERSION: ${{ github.event.client_payload.version || '' }}
+      EXPECTED_SHA: ${{ github.event.client_payload.sha || '' }}
+      STAGED_ORIGIN: ${{ github.event.client_payload.staged_origin || '' }}
+      STAGED_SHA: ${{ github.event.client_payload.staged_sha || '' }}
+      EXPECTED_DIGEST: ${{ github.event.client_payload.sanitized_tree_sha256 || '' }}
+    steps:
+      - name: Enforce main-branch signing identity
+        run: |
+          # This job signs release attestations with actions/attest, which stamps
+          # the running workflow ref into the Sigstore certificate identity. The
+          # sqry VS Code extension trusts only the @refs/heads/main identity of
+          # this workflow, so a run on any other ref (for example a
+          # workflow_dispatch selected from a tag ref) would attest an identity
+          # that no client can verify. Fail closed here, before anything is
+          # signed. repository_dispatch always runs on the default branch, so the
+          # normal Stage 5 handoff passes; only an out-of-band ref is rejected.
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "FATAL: Stage 6 must run on refs/heads/main to produce a verifiable" >&2
+            echo "attestation identity, but this run is on '${GITHUB_REF:-<unset>}'." >&2
+            exit 1
+          fi
+
+      - name: Workspace wipe
+        run: |
+          if sudo -n true 2>/dev/null; then
+            sudo rm -rf "$GITHUB_WORKSPACE"
+          else
+            rm -rf "$GITHUB_WORKSPACE"
+          fi
+          mkdir -p "$GITHUB_WORKSPACE"
+
+      - name: Resolve inputs from ledger (manual trigger)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$TAG" ]]; then
+            echo "FATAL: tag input is required for workflow_dispatch" >&2
+            exit 1
+          fi
+
+          LEDGER_DIR="$RUNNER_TEMP/dispatch-ledger"
+          mkdir -p "$LEDGER_DIR"
+          gh release download "$TAG" \
+            --repo "verivus-oss/sqry" \
+            --dir "$LEDGER_DIR" \
+            --pattern "release-ledger-*.json"
+          LEDGER_FILE=$(find "$LEDGER_DIR" -name 'release-ledger-*.json' -type f | head -1)
+          if [[ -z "$LEDGER_FILE" || ! -f "$LEDGER_FILE" ]]; then
+            echo "FATAL: no release ledger found for tag $TAG" >&2
+            exit 1
+          fi
+
+          DISPATCH=$(jq -r '.stages.stage_5_publish.dispatch_payload // empty' "$LEDGER_FILE")
+          if [[ -z "$DISPATCH" || "$DISPATCH" == "null" ]]; then
+            echo "FATAL: stage_5_publish.dispatch_payload missing from ledger for $TAG" >&2
+            exit 1
+          fi
+
+          echo "VERSION=$(jq -r '.stages.stage_5_publish.dispatch_payload.version' "$LEDGER_FILE")" >> "$GITHUB_ENV"
+          echo "EXPECTED_SHA=$(jq -r '.stages.stage_5_publish.dispatch_payload.sha' "$LEDGER_FILE")" >> "$GITHUB_ENV"
+          echo "STAGED_ORIGIN=$(jq -r '.stages.stage_5_publish.dispatch_payload.staged_origin' "$LEDGER_FILE")" >> "$GITHUB_ENV"
+          echo "STAGED_SHA=$(jq -r '.stages.stage_5_publish.dispatch_payload.staged_sha' "$LEDGER_FILE")" >> "$GITHUB_ENV"
+          echo "EXPECTED_DIGEST=$(jq -r '.stages.stage_5_publish.dispatch_payload.sanitized_tree_sha256' "$LEDGER_FILE")" >> "$GITHUB_ENV"
+          rm -rf "$LEDGER_DIR"
+
+      - name: Validate dispatch payload
+        run: |
+          FAIL=0
+          if [[ -z "$VERSION" ]]; then echo "ERROR: missing version"; FAIL=1; fi
+          if [[ -z "$TAG" ]]; then echo "ERROR: missing tag"; FAIL=1; fi
+          if [[ -z "$EXPECTED_SHA" ]]; then echo "ERROR: missing sha"; FAIL=1; fi
+          if [[ -z "$STAGED_ORIGIN" ]]; then echo "ERROR: missing staged_origin"; FAIL=1; fi
+          if [[ -z "$STAGED_SHA" ]]; then echo "ERROR: missing staged_sha"; FAIL=1; fi
+          if [[ -z "$EXPECTED_DIGEST" ]]; then echo "ERROR: missing sanitized_tree_sha256"; FAIL=1; fi
+          if [[ "$FAIL" -eq 1 ]]; then exit 1; fi
+          if [[ "$STAGED_ORIGIN" != "verivusai-open/sqry" ]]; then
+            echo "FATAL: staged_origin is '$STAGED_ORIGIN', required 'verivusai-open/sqry'" >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download release ledger
+        id: ledger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          LEDGER_DIR="$RUNNER_TEMP/release-ledger"
+          mkdir -p "$LEDGER_DIR"
+          gh release download "$TAG" --dir "$LEDGER_DIR" --pattern "release-ledger-v${VERSION}.json"
+          LEDGER_PATH="$LEDGER_DIR/release-ledger-v${VERSION}.json"
+          if [[ ! -f "$LEDGER_PATH" ]]; then
+            echo "FATAL: release ledger asset missing for $TAG" >&2
+            exit 1
+          fi
+          echo "path=$LEDGER_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Verify publish ledger state
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          [[ "$(jq -r '.release_path // empty' "$LEDGER_PATH")" == "staged" ]] || {
+            echo "FATAL: release ledger is not a staged release ledger" >&2
+            exit 1
+          }
+          [[ "$(jq -r '.stages.stage_5_publish.status // empty' "$LEDGER_PATH")" == "completed" ]] || {
+            echo "FATAL: stage_5_publish is not completed" >&2
+            exit 1
+          }
+          [[ "$(jq -r '.stages.stage_5_publish.staged_origin // empty' "$LEDGER_PATH")" == "verivusai-open/sqry" ]] || {
+            echo "FATAL: ledger staged_origin is not verivusai-open/sqry" >&2
+            exit 1
+          }
+          ledger_public_sha="$(jq -r '.stages.stage_5_publish.public_commit_sha // empty' "$LEDGER_PATH")"
+          if [[ -n "$ledger_public_sha" && "$ledger_public_sha" != "$EXPECTED_SHA" ]]; then
+            echo "FATAL: ledger public_commit_sha ($ledger_public_sha) does not match expected ($EXPECTED_SHA)" >&2
+            exit 1
+          fi
+          stage6_status="$(jq -r '.stages.stage_6_distribute.status // empty' "$LEDGER_PATH")"
+          [[ "$stage6_status" == "running" ]] || {
+            echo "FATAL: stage_6_distribute status is '$stage6_status', required 'running' after build gate" >&2
+            exit 1
+          }
+
+      - name: Download Stage 6 dist artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: sqry-stage6-dist-${{ env.TAG }}
+          path: dist
+
+      - name: Verify Stage 6 dist artifact set
+        run: |
+          set -euo pipefail
+          required=(
+            "sqry-linux-x86_64"
+            "sqry-linux-arm64"
+            "sqry-linux-x86_64-musl"
+            "sqry-lsp-linux-x86_64-musl"
+            "sqry-mcp-linux-x86_64-musl"
+            "sqryd-linux-x86_64-musl"
+            "sqry-linux-arm64-musl"
+            "sqry-lsp-linux-arm64-musl"
+            "sqry-mcp-linux-arm64-musl"
+            "sqryd-linux-arm64-musl"
+            "sqry-macos-x86_64"
+            "sqry-macos-arm64"
+            "sqry-${VERSION}-windows-x86_64.zip"
+            "sqry-vscode-${VERSION}.vsix"
+          )
+          for artifact in "${required[@]}"; do
+            [[ -f "dist/$artifact" ]] || {
+              echo "FATAL: required Stage 6 artifact missing after platform gates: dist/$artifact" >&2
+              exit 1
+            }
+          done
+
+      - name: Generate checksums
+        run: |
+          set -euo pipefail
+          cd dist
+          find . -maxdepth 1 -type f \
+            ! -name 'build-environment.json' \
+            ! -name 'SHA256SUMS.txt' \
+            ! -name 'release-manifest.json' \
+            ! -name 'release-artifacts.attestation.json' \
+            -printf '%P\n' | sort | while IFS= read -r file; do
+              [[ -z "$file" ]] && continue
+              sha256sum "$file"
+            done > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Attest release artifacts
+        id: attest-release-assets
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4
+        with:
+          subject-checksums: 'dist/SHA256SUMS.txt'
+
+      - name: Copy attestation bundle
+        run: |
+          set -euo pipefail
+          cp "${{ steps['attest-release-assets'].outputs['bundle-path'] }}" dist/release-artifacts.attestation.json
+
+      # Authenticate to the Marketplace as the sqry-vscode-publisher service
+      # principal via GitHub OIDC (workload identity federation). No PAT: the SP
+      # is a Contributor member of the 'verivus' publisher, and vsce
+      # authenticates with --azure-credential. Marketplace publication is a
+      # required distribution artifact and must fail closed.
+      - name: Verify Marketplace publication configuration
+        env:
+          VSCE_PUBLISHER_CLIENT_ID: ${{ vars.VSCE_PUBLISHER_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$VSCE_PUBLISHER_CLIENT_ID" ]]; then
+            echo "FATAL: VSCE_PUBLISHER_CLIENT_ID is required for Marketplace publication" >&2
+            exit 1
+          fi
+          if [[ -z "$AZURE_TENANT_ID" ]]; then
+            echo "FATAL: AZURE_TENANT_ID is required for Marketplace publication" >&2
+            exit 1
+          fi
+
+      - name: Azure login for marketplace publish (service principal, OIDC)
+        id: vsce-azure-login
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2
+        with:
+          client-id: ${{ vars.VSCE_PUBLISHER_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Publish VS Code extension to marketplace
+        id: publish-vscode
+        run: |
+          set -euo pipefail
+          cd sqry-vscode
+          npm ci
+          npx --yes @vscode/vsce@3.9.2 verify-pat verivus --azure-credential
+          # vsce itself handles only a Gallery version conflict with this
+          # option. Every authentication, authorization, packaging, or other
+          # publish failure remains a non-zero exit under set -e.
+          OUTPUT=$(npx --yes @vscode/vsce@3.9.2 publish --skip-duplicate --azure-credential --packagePath "../dist/sqry-vscode-${VERSION}.vsix" 2>&1)
+          printf '%s\n' "$OUTPUT"
+          normalized_output=$(printf '%s\n' "$OUTPUT" | tr '\n' ' ')
+          if printf '%s\n' "$normalized_output" | grep -Fq "Version ${VERSION} is already published. Skipping publish."; then
+            echo "VS Code extension version already published — verified by vsce"
+            echo "status=already_published" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=published" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate release manifest and update ledger
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+          ATTESTATION_ID: ${{ steps['attest-release-assets'].outputs['attestation-id'] }}
+          ATTESTATION_URL: ${{ steps['attest-release-assets'].outputs['attestation-url'] }}
+          VSCE_STATUS: ${{ steps.publish-vscode.outputs.status }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+          import subprocess
+
+          def pick_fields(source, allowed_keys):
+              return {key: source[key] for key in allowed_keys if key in source}
+
+          dist_dir = pathlib.Path("dist")
+          ledger_path = pathlib.Path(os.environ["LEDGER_PATH"])
+          attestation_id = os.environ.get("ATTESTATION_ID", "")
+          attestation_url = os.environ.get("ATTESTATION_URL", "")
+          vsce_status = os.environ.get("VSCE_STATUS", "unknown")
+
+          checksums = {}
+          for line in (dist_dir / "SHA256SUMS.txt").read_text(encoding="utf-8").splitlines():
+              digest, filename = line.split(maxsplit=1)
+              checksums[filename.lstrip("*")] = digest
+
+          binaries = {}
+          vscode_extension = None
+          for path in sorted(dist_dir.iterdir()):
+              if not path.is_file():
+                  continue
+              if path.name in {"build-environment.json", "SHA256SUMS.txt", "release-manifest.json", "release-artifacts.attestation.json"}:
+                  continue
+              entry = {
+                  "sha256": checksums.get(path.name),
+                  "size": path.stat().st_size,
+                  "attestation_id": attestation_id or None,
+                  "attestation_url": attestation_url or None,
+              }
+              if path.suffix == ".vsix":
+                  entry["marketplace_status"] = vsce_status
+                  vscode_extension = entry
+              else:
+                  binaries[path.name] = entry
+
+          ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+          stage_5 = ledger.setdefault("stages", {}).setdefault("stage_5_publish", {})
+          stage_6 = ledger["stages"].setdefault("stage_6_distribute", {})
+          stage_6["status"] = "completed"
+          stage_6["binaries"] = binaries
+          stage_6["vscode_extension"] = vscode_extension or {}
+          stage_6["public_release_status"] = "draft"
+          stage_6["completed_at"] = subprocess.check_output(
+              ["date", "-u", "+%Y-%m-%dT%H:%M:%SZ"], text=True
+          ).strip()
+
+          build_environment = json.loads(
+              (dist_dir / "build-environment.json").read_text(encoding="utf-8")
+          )
+          ledger["build_environment"] = build_environment
+
+          manifest = {
+              "version": os.environ["VERSION"],
+              "tag": os.environ["TAG"],
+              "public_commit_sha": os.environ["EXPECTED_SHA"],
+              "public_origin": os.environ.get("GITHUB_REPOSITORY", "verivus-oss/sqry"),
+              "sanitized_tree_sha256": stage_5.get("sanitized_tree_sha256") or ledger.get("stages", {}).get("stage_3_sanitize_and_stage", {}).get("sanitized_tree_sha256"),
+              "binaries": binaries,
+              "crates": stage_5.get("crates", {}),
+              "vscode_extension": vscode_extension or {},
+              "build_environment": build_environment,
+              "attestation": {
+                  "id": attestation_id or None,
+                  "url": attestation_url or None,
+                  "bundle": "release-artifacts.attestation.json",
+              },
+          }
+
+          (dist_dir / "release-manifest.json").write_text(
+              json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          stages = ledger.get("stages", {})
+          public_ledger = {
+              "schema_version": ledger.get("schema_version"),
+              "version": ledger.get("version"),
+              "commit_sha": ledger.get("commit_sha"),
+              "initiated_at": ledger.get("initiated_at"),
+              "release_path": "public",
+              "stages": {
+                  "stage_1_pr": pick_fields(stages.get("stage_1_pr", {}), {"status"}),
+                  "stage_2_release": pick_fields(stages.get("stage_2_release", {}), {"status"}),
+                  "stage_3_sanitize_and_stage": pick_fields(
+                      stages.get("stage_3_sanitize_and_stage", {}),
+                      {
+                          "status",
+                          "sanitized_tree_sha256",
+                          "hermetic_validation",
+                          "hermetic_validated_at",
+                          "leak_review_gate",
+                          "leak_review_passed_at",
+                          "leak_reviewers",
+                          "completed_at",
+                      },
+                  ),
+                  "stage_4_staged_approval": pick_fields(
+                      stages.get("stage_4_staged_approval", {}),
+                      {
+                          "status",
+                          "approved_at",
+                          "promotion_authorized",
+                          "staged_sha_verified",
+                          "ledger_integrity_verified",
+                          "leak_gate_verified",
+                      },
+                  ),
+                  "stage_5_publish": pick_fields(
+                      stages.get("stage_5_publish", {}),
+                      {
+                          "status",
+                          "started_at",
+                          "failed_at",
+                          "crates",
+                          "public_commit_sha",
+                          "public_release_status",
+                          "published_at",
+                          "completed_at",
+                      },
+                  ),
+                  "stage_6_distribute": pick_fields(
+                      stages.get("stage_6_distribute", {}),
+                      {
+                          "status",
+                          "started_at",
+                          "failed_at",
+                          "binaries",
+                          "vscode_extension",
+                          "public_release_status",
+                          "completed_at",
+                      },
+                  ),
+              },
+              "build_environment": ledger.get("build_environment", {}),
+              "finalized": ledger.get("finalized", False),
+              "finalized_at": ledger.get("finalized_at"),
+          }
+          (dist_dir / f"release-ledger-v{os.environ['VERSION']}.json").write_text(
+              json.dumps(public_ledger, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          ledger_path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+      - name: Generate GitHub App token (public release)
+        id: public-release-app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.MIRROR_APP_ID }}
+          private-key: ${{ secrets.MIRROR_APP_PRIVATE_KEY }}
+          owner: verivus-oss
+          repositories: sqry
+          permission-contents: write
+          permission-workflows: write
+
+      - name: Select public release credential
+        id: public-release-auth
+        env:
+          APP_TOKEN: ${{ steps.public-release-app-token.outputs.token }}
+          PUBLIC_RELEASE_OPERATOR_TOKEN: ${{ secrets.PUBLIC_RELEASE_OPERATOR_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          validate_repo_push_access() {
+            local token="$1"
+            GH_TOKEN="$token" GITHUB_TOKEN='' gh api repos/verivus-oss/sqry --jq '.full_name' | grep -q '^verivus-oss/sqry$' || return 1
+            GH_TOKEN="$token" GITHUB_TOKEN='' gh api repos/verivus-oss/sqry --jq '.permissions.push' | grep -q '^true$' || return 1
+          }
+
+          validate_public_workflow_active() {
+            local token="$1"
+            GH_TOKEN="$token" GITHUB_TOKEN='' gh api repos/verivus-oss/sqry/actions/workflows/release-distribute.yml --jq '.state' | grep -q '^active$' || return 1
+          }
+
+          validate_mirror_app_token() {
+            local token="$1"
+            validate_repo_push_access "$token" || return 1
+            validate_public_workflow_active "$token" || return 1
+          }
+
+          select_fallback_token() {
+            local token login
+            token="${PUBLIC_RELEASE_OPERATOR_TOKEN:-}"
+            if [[ -z "$token" ]]; then
+              token="$(
+                env -u GH_TOKEN -u GITHUB_TOKEN \
+                  GH_CONFIG_DIR="${SQRY_RELEASE_GH_CONFIG_DIR_VERIVUSOSS_RELEASES:-$HOME/.config/gh-verivusOSS-releases}" \
+                  gh auth token -u verivusOSS-releases || true
+              )"
+            fi
+            if [[ -z "$token" ]]; then
+              echo "FATAL: no public release credential available for verivusOSS-releases; set PUBLIC_RELEASE_OPERATOR_TOKEN or configure gh auth for verivusOSS-releases" >&2
+              exit 1
+            fi
+            login="$(GH_TOKEN="$token" GITHUB_TOKEN='' gh api user --jq '.login')"
+            if [[ "$login" != "verivusOSS-releases" ]]; then
+              echo "FATAL: fallback token resolved to '$login', expected 'verivusOSS-releases'" >&2
+              exit 1
+            fi
+            validate_repo_push_access "$token" || {
+              echo "FATAL: fallback token for verivusOSS-releases does not have push access to verivus-oss/sqry" >&2
+              exit 1
+            }
+            validate_public_workflow_active "$token" || {
+              echo "FATAL: fallback token for verivusOSS-releases cannot access active release-distribute.yml" >&2
+              exit 1
+            }
+            echo "$token"
+          }
+
+          if [[ -n "${APP_TOKEN:-}" ]] && validate_mirror_app_token "$APP_TOKEN"; then
+            TOKEN="$APP_TOKEN"
+            SOURCE="mirror_app"
+          else
+            if [[ -n "${APP_TOKEN:-}" ]]; then
+              echo "::warning::MIRROR_APP token validation failed; falling back to host credential verivusOSS-releases"
+            else
+              echo "::warning::MIRROR_APP token unavailable; falling back to host credential verivusOSS-releases"
+            fi
+            TOKEN="$(select_fallback_token)"
+            SOURCE="host_public_operator"
+          fi
+
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          echo "source=$SOURCE" >> "$GITHUB_OUTPUT"
+          echo "Using public auth source: $SOURCE"
+
+      - name: Ensure public tag exists at expected SHA
+        env:
+          GH_TOKEN: ${{ steps.public-release-auth.outputs.token }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "FATAL: TAG '$TAG' does not match the expected release tag format" >&2
+            exit 1
+          fi
+
+          github_api_get() {
+            local endpoint="$1"
+            local output_file="$2"
+            curl -sS \
+              -o "$output_file" \
+              -w '%{http_code}' \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/${endpoint}"
+          }
+
+          github_api_post() {
+            local endpoint="$1"
+            local json_payload="$2"
+            local output_file="$3"
+            curl -sS \
+              -o "$output_file" \
+              -w '%{http_code}' \
+              -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              "https://api.github.com/${endpoint}" \
+              -d "$json_payload"
+          }
+
+          resolve_tag_commit_sha_from_file() {
+            local ref_file="$1"
+            local object_type object_sha tag_object_file http_code depth
+
+            object_type="$(jq -r '.object.type // empty' "$ref_file")"
+            object_sha="$(jq -r '.object.sha // empty' "$ref_file")"
+            if [[ -z "$object_type" || -z "$object_sha" || "$object_sha" == "null" ]]; then
+              echo "FATAL: malformed tag ref payload:" >&2
+              cat "$ref_file" >&2
+              exit 1
+            fi
+
+            depth=0
+            while [[ "$object_type" == "tag" ]]; do
+              depth=$((depth + 1))
+              if (( depth > 4 )); then
+                echo "FATAL: annotated tag dereference exceeded maximum depth for $TAG" >&2
+                exit 1
+              fi
+
+              tag_object_file="$(mktemp)"
+              http_code="$(github_api_get "repos/verivus-oss/sqry/git/tags/${object_sha}" "$tag_object_file")"
+              if [[ "$http_code" != "200" ]]; then
+                echo "FATAL: could not dereference annotated tag object for $TAG (HTTP $http_code)" >&2
+                cat "$tag_object_file" >&2
+                rm -f "$tag_object_file"
+                exit 1
+              fi
+
+              object_type="$(jq -r '.object.type // empty' "$tag_object_file")"
+              object_sha="$(jq -r '.object.sha // empty' "$tag_object_file")"
+              rm -f "$tag_object_file"
+
+              if [[ -z "$object_type" || -z "$object_sha" || "$object_sha" == "null" ]]; then
+                echo "FATAL: malformed annotated tag object for $TAG" >&2
+                exit 1
+              fi
+            done
+
+            if [[ "$object_type" != "commit" ]]; then
+              echo "FATAL: tag $TAG resolved to unexpected object type '$object_type'" >&2
+              exit 1
+            fi
+
+            echo "$object_sha"
+          }
+
+          fetch_tag_ref_file() {
+            local tag_ref_file http_code
+            tag_ref_file="$(mktemp)"
+            http_code="$(github_api_get "repos/verivus-oss/sqry/git/ref/tags/${TAG}" "$tag_ref_file")"
+            case "$http_code" in
+              200)
+                FETCHED_TAG_REF_FILE="$tag_ref_file"
+                return 0
+                ;;
+              404)
+                rm -f "$tag_ref_file"
+                return 4
+                ;;
+              *)
+                echo "FATAL: tag lookup for $TAG returned unexpected HTTP $http_code" >&2
+                cat "$tag_ref_file" >&2
+                rm -f "$tag_ref_file"
+                return 1
+                ;;
+            esac
+          }
+
+          create_tag_ref() {
+            local create_file http_code payload
+            create_file="$(mktemp)"
+            payload="$(jq -nc --arg ref "refs/tags/${TAG}" --arg sha "$EXPECTED_SHA" '{ref: $ref, sha: $sha}')"
+            http_code="$(github_api_post "repos/verivus-oss/sqry/git/refs" "$payload" "$create_file")"
+            case "$http_code" in
+              201)
+                rm -f "$create_file"
+                return 0
+                ;;
+              422)
+                if jq -e '.message | strings | test("Reference already exists")' "$create_file" >/dev/null 2>&1; then
+                  rm -f "$create_file"
+                  return 0
+                fi
+                echo "FATAL: tag create for $TAG returned HTTP 422 with unexpected body" >&2
+                cat "$create_file" >&2
+                rm -f "$create_file"
+                return 1
+                ;;
+              *)
+                echo "FATAL: tag create for $TAG returned unexpected HTTP $http_code" >&2
+                cat "$create_file" >&2
+                rm -f "$create_file"
+                return 1
+                ;;
+            esac
+          }
+
+          if fetch_tag_ref_file; then
+            current_tag_sha="$(resolve_tag_commit_sha_from_file "$FETCHED_TAG_REF_FILE")"
+            rm -f "$FETCHED_TAG_REF_FILE"
+          else
+            tag_lookup_status=$?
+            if [[ "$tag_lookup_status" -ne 4 ]]; then
+              exit "$tag_lookup_status"
+            fi
+            create_tag_ref
+            if ! fetch_tag_ref_file; then
+              echo "FATAL: public tag $TAG could not be re-read after creation" >&2
+              exit 1
+            fi
+            current_tag_sha="$(resolve_tag_commit_sha_from_file "$FETCHED_TAG_REF_FILE")"
+            rm -f "$FETCHED_TAG_REF_FILE"
+          fi
+
+          if [[ "$current_tag_sha" != "$EXPECTED_SHA" ]]; then
+            echo "FATAL: public tag $TAG points to $current_tag_sha, expected $EXPECTED_SHA" >&2
+            exit 1
+          fi
+
+      - name: Validate public release artifacts are sanitized
+        run: |
+          set -euo pipefail
+          patterns=(
+            "verivusai-open"
+            "/srv/repos/internal"
+            "/srv/repos/external"
+            "staged_origin"
+          )
+
+          scan_failure=false
+          for artifact in dist/*; do
+            [[ -f "$artifact" ]] || continue
+            for pattern in "${patterns[@]}"; do
+              if [[ "$artifact" == *.vsix ]]; then
+                matches=$(unzip -p "$artifact" | strings | grep -F "$pattern" | head -5 || true)
+              else
+                matches=$(strings -a "$artifact" 2>/dev/null | grep -F "$pattern" | head -5 || true)
+              fi
+              if [[ -n "$matches" ]]; then
+                echo "FATAL: artifact '$artifact' still contains forbidden content '$pattern':" >&2
+                printf '%s\n' "$matches" >&2
+                scan_failure=true
+              fi
+            done
+          done
+
+          if [[ "$scan_failure" == "true" ]]; then
+            exit 1
+          fi
+
+      - name: Upload release assets and ledger
+        env:
+          GH_TOKEN: ${{ steps.public-release-auth.outputs.token }}
+        run: |
+          set -euo pipefail
+          source scripts/release/github-release-assets.sh
+          mapfile -d '' release_assets < <(
+            find dist -maxdepth 1 -type f ! -name 'build-environment.json' -print0 | sort -z
+          )
+          if [[ ${#release_assets[@]} -eq 0 ]]; then
+            echo "FATAL: no release asset files found in dist/" >&2
+            exit 1
+          fi
+          for release_asset in "${release_assets[@]}"; do
+            gh_release_upload_with_retry "$TAG" "$release_asset"
+          done
+
+      - name: Promote public release from draft
+        env:
+          GH_TOKEN: ${{ steps.public-release-auth.outputs.token }}
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          tmp=$(mktemp)
+          jq '
+            .stages.stage_6_distribute.public_release_status = "published" |
+            .finalized = true |
+            .finalized_at = (now | todateiso8601)
+          ' "$LEDGER_PATH" > "$tmp"
+          mv "$tmp" "$LEDGER_PATH"
+          python3 - <<'PY'
+          import json
+          import os
+          import pathlib
+
+          def pick_fields(source, allowed_keys):
+              return {key: source[key] for key in allowed_keys if key in source}
+
+          ledger_path = pathlib.Path(os.environ["LEDGER_PATH"])
+          public_ledger_path = pathlib.Path("dist") / f"release-ledger-v{os.environ['VERSION']}.json"
+          ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+          stages = ledger.get("stages", {})
+          public_ledger = {
+              "schema_version": ledger.get("schema_version"),
+              "version": ledger.get("version"),
+              "commit_sha": ledger.get("commit_sha"),
+              "initiated_at": ledger.get("initiated_at"),
+              "release_path": "public",
+              "stages": {
+                  "stage_1_pr": pick_fields(stages.get("stage_1_pr", {}), {"status"}),
+                  "stage_2_release": pick_fields(stages.get("stage_2_release", {}), {"status"}),
+                  "stage_3_sanitize_and_stage": pick_fields(stages.get("stage_3_sanitize_and_stage", {}), {"status", "sanitized_tree_sha256", "hermetic_validation", "hermetic_validated_at", "leak_review_gate", "leak_review_passed_at", "leak_reviewers", "completed_at"}),
+                  "stage_4_staged_approval": pick_fields(stages.get("stage_4_staged_approval", {}), {"status", "approved_at", "promotion_authorized", "staged_sha_verified", "ledger_integrity_verified", "leak_gate_verified"}),
+                  "stage_5_publish": pick_fields(stages.get("stage_5_publish", {}), {"status", "started_at", "failed_at", "crates", "public_commit_sha", "public_release_status", "published_at", "completed_at"}),
+                  "stage_6_distribute": pick_fields(stages.get("stage_6_distribute", {}), {"status", "started_at", "failed_at", "binaries", "vscode_extension", "public_release_status", "completed_at"}),
+              },
+              "build_environment": ledger.get("build_environment", {}),
+              "finalized": ledger.get("finalized", False),
+              "finalized_at": ledger.get("finalized_at"),
+          }
+          public_ledger_path.write_text(json.dumps(public_ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+          if grep -n -E 'verivusai-open|/srv/repos/(internal|external)|staged_origin' "dist/release-ledger-v${VERSION}.json"; then
+            echo "FATAL: public release ledger still contains staging-only data" >&2
+            exit 1
+          fi
+          source scripts/release/github-release-assets.sh
+          gh_release_upload_with_retry "$TAG" "dist/release-ledger-v${VERSION}.json"
+          gh release edit "$TAG" --draft=false --latest
+
+      - name: Persist failed Stage 6 ledger state
+        if: failure()
+        env:
+          LEDGER_PATH: ${{ steps.ledger.outputs.path }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${LEDGER_PATH:-}" && -f "$LEDGER_PATH" ]]; then
+            source scripts/release/github-release-assets.sh
+            tmp=$(mktemp)
+            jq '
+              .stages.stage_6_distribute.status = "failed" |
+              .stages.stage_6_distribute.failed_at = (now | todateiso8601)
+            ' "$LEDGER_PATH" > "$tmp" && mv "$tmp" "$LEDGER_PATH"
+            GH_TOKEN="${{ secrets.GITHUB_TOKEN }}" gh_release_upload_with_retry "$TAG" "$LEDGER_PATH" || true
+            echo "Uploaded failed-state ledger"
+          fi
+
+  persist-platform-smoke-failure:
+    name: Persist Platform Smoke Failure
+    needs: [build-release-artifacts, windows-native-smoke, macos-native-smoke]
+    if: ${{ always() && (needs.windows-native-smoke.result == 'failure' || needs.macos-native-smoke.result == 'failure') }}
+    runs-on: [self-hosted, linux, rust, x86_64, workhorse2]
+    env:
+      TAG: ${{ github.event.client_payload.tag || github.event.inputs.tag }}
+    steps:
+      - name: Persist failed Stage 6 ledger state
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          ledger_dir="$RUNNER_TEMP/windows-smoke-failed-ledger"
+          rm -rf "$ledger_dir"
+          mkdir -p "$ledger_dir"
+          gh release download "$TAG" --repo "verivus-oss/sqry" --dir "$ledger_dir" --pattern "release-ledger-*.json"
+          ledger_path="$(find "$ledger_dir" -name 'release-ledger-*.json' -type f | head -1)"
+          [[ -n "$ledger_path" && -f "$ledger_path" ]] || exit 0
+          tmp="$(mktemp)"
+          jq '
+            .stages.stage_6_distribute.status = "failed" |
+            .stages.stage_6_distribute.failed_at = (now | todateiso8601)
+          ' "$ledger_path" > "$tmp"
+          mv "$tmp" "$ledger_path"
+          gh release upload "$TAG" "$ledger_path" --repo "verivus-oss/sqry" --clobber

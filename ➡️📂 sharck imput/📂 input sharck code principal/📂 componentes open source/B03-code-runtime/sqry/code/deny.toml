@@ -1,0 +1,67 @@
+# sqry security policy (see docs/development/security-audit-automation/01_SPEC.md)
+# RKG: implements REQ:SQRY-SECURITY-AUDIT-AUTOMATION
+
+[advisories]
+version = 2
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+# Note: All vulnerability advisories now emit errors by default (cargo-deny v0.14+)
+# To allow specific CVEs, add them to the ignore list below. Exceptions must
+# also be documented in `.cargo/audit.toml` with rationale and expiry.
+unmaintained = "workspace" # Intentionally fail unmaintained direct dependencies; async-std is absent and separately banned below.
+yanked = "warn"
+# This ignore list must exactly equal `.cargo/audit.toml`'s ignore list.
+# 2026-06-15 (sqry-nl removal): dropped 2024-0436 (paste) and 2025-0119
+# (number_prefix). The ONNX/embeddings/DataFusion stack that pulled them was
+# removed with sqry-nl, so neither advisory matches any crate in the tree.
+ignore = []
+
+[licenses]
+version = 2
+allow = [
+  "Apache-2.0",
+  "BSL-1.0",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "CDLA-Permissive-2.0",
+  "CC0-1.0",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "0BSD",
+  "Unicode-3.0",
+  "Zlib"
+]
+confidence-threshold = 0.9
+exceptions = []
+
+[bans]
+multiple-versions = "warn"
+# Wildcard version requirements (e.g. `foo = "*"`) defeat lockfile-based
+# reproducibility and supply-chain pinning. Tightened from "allow" on
+# 2026-05-27. Intra-workspace `path = "../crate"` deps without an
+# explicit version are cargo's way of saying "follow the workspace
+# member" and are exempted via allow-wildcard-paths; the supply-chain
+# signal we care about is external wildcards.
+wildcards = "deny"
+allow-wildcard-paths = true
+highlight = "simplest-path"
+deny = [
+  { crate = "async-std", reason = "Removed per RUSTSEC-2025-0052; sqry uses tokio-based async runtimes only." }
+]
+
+[sources]
+# Supply-chain hygiene: any crate must come from crates.io or from a
+# git source explicitly listed in `allow-git` below. Tightened from
+# "warn" on 2026-05-27. New git sources require code review + an
+# allow-git entry; new alternate registries require deny.toml
+# changes here.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = [
+  "https://github.com/elixir-lang/tree-sitter-elixir",
+  "https://github.com/fwcd/tree-sitter-kotlin",
+  "https://github.com/tree-sitter-perl/tree-sitter-perl",
+  # QA-2025-11-19: sqry-lang-sql depends on tree-sitter-sequel fork for PL/pgSQL support
+  "https://github.com/verivus-oss/tree-sitter-sql"
+]

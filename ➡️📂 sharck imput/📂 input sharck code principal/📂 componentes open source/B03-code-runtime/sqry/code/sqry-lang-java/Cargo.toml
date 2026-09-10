@@ -1,0 +1,37 @@
+[package]
+name = "sqry-lang-java"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Java language plugin for sqry"
+
+[dependencies]
+sqry-core = { version = "31.0.0", path = "../sqry-core" }
+sqry-classpath = { version = "31.0.0", path = "../sqry-classpath", optional = true }
+sqry-lang-support = { version = "31.0.0", path = "../sqry-lang-support" }
+anyhow.workspace = true
+tree-sitter.workspace = true
+tree-sitter-java = "0.23.5"
+streaming-iterator.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+log.workspace = true
+sqry-core = { path = "../sqry-core", features = ["test-support"] }
+sqry-classpath = { path = "../sqry-classpath" }
+tempfile = "3.27"
+walkdir.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+criterion = "0.8"
+
+[features]
+default = ["has_relations"]
+has_relations = []
+jvm-classpath = ["dep:sqry-classpath"]
+
+[lints]
+workspace = true

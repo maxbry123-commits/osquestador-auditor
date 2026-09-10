@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 14447599,
+  "bundle_sha256": "3e541b169975294fdfa1b48bc11f10ffdf8bf12d79aea8a9a4488b2b4b2b8fbb",
+  "extracted_tree": {
+    "bytes": 125961734,
+    "files": 2817,
+    "sha256": "7504385dca6be29ba2df765e259633a1b16af00a18e83e71f6c6fb95182c85c3"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "sqry.bundle.zip.part-0001",
+      "sha256": "1a6177be8813fac5ed418010076728b65ba44efb05d7c6e5ebec5607ba1727dc"
+    },
+    {
+      "bytes": 1864687,
+      "name": "sqry.bundle.zip.part-0002",
+      "sha256": "c56befefca875b78c2dad105dfdf6650ddb6e8feb9aa9d4fecf79488105843ae"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "sqry",
+  "source_bytes": 125961734,
+  "source_commit": "631710ce145b6ef6adb527dda13ac60e20be16cf",
+  "source_files": 2817,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/verivus-oss/sqry",
+  "source_tree": {
+    "bytes": 125961734,
+    "files": 2817,
+    "sha256": "7504385dca6be29ba2df765e259633a1b16af00a18e83e71f6c6fb95182c85c3"
+  }
+}

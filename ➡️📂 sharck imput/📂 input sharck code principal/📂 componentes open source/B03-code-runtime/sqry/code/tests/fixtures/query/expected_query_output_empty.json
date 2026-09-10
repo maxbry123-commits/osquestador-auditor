@@ -1,0 +1,11 @@
+{
+  "query": {
+    "pattern": "kind:function AND name:does_not_exist"
+  },
+  "results": [],
+  "stats": {
+    "returned": 0,
+    "total_matches": 0,
+    "truncated": false
+  }
+}

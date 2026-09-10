@@ -1,0 +1,27 @@
+{
+  "query": {
+    "pattern": "name:hello_rust"
+  },
+  "results": [
+    {
+      "end_column": 1,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/polyglot_micro/main.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/polyglot_micro/main.rs",
+        "__raw_language": "rust",
+        "visibility": "public"
+      },
+      "name": "hello_rust",
+      "qualified_name": "hello_rust",
+      "start_column": 0,
+      "start_line": 4
+    }
+  ],
+  "stats": {
+    "returned": 1,
+    "total_matches": 1,
+    "truncated": false
+  }
+}

@@ -1,0 +1,549 @@
+{
+  "name": "sqry-vscode",
+  "displayName": "sqry Semantic Search",
+  "description": "Semantic code search for 35 languages. Navigate call graphs, inheritance hierarchies, FFI boundaries, imports/exports - powered by unified graph architecture.",
+  "version": "31.0.0",
+  "binaryVersion": "31.0.0",
+  "publisher": "verivus",
+  "license": "MIT",
+  "icon": "media/sqry-icon-512.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/verivus-oss/sqry"
+  },
+  "bugs": {
+    "url": "https://github.com/verivus-oss/sqry/issues"
+  },
+  "homepage": "https://sqry.dev",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "code search",
+    "semantic search",
+    "ast",
+    "navigation",
+    "symbols",
+    "callers",
+    "references",
+    "lsp",
+    "language server",
+    "find references",
+    "call hierarchy",
+    "code analysis",
+    "code navigation",
+    "symbol search",
+    "fuzzy search",
+    "inheritance",
+    "ffi",
+    "cross-language",
+    "rust",
+    "go",
+    "java",
+    "python",
+    "javascript",
+    "typescript"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "sqry.query",
+        "title": "Sqry: Query…",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(search-fuzzy)"
+      },
+      {
+        "command": "sqry.index",
+        "title": "Sqry: Index Workspace",
+        "category": "Sqry",
+        "enablement": "sqry.ready"
+      },
+      {
+        "command": "sqry.searchWorkspace",
+        "title": "Sqry: Search Workspace…",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(search)"
+      },
+      {
+        "command": "sqry.findReferences",
+        "title": "Sqry: Find Semantic References",
+        "category": "Sqry",
+        "enablement": "sqry.ready"
+      },
+      {
+        "command": "sqry.refreshStats",
+        "title": "Sqry: Refresh Index Stats",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sqry.clearResults",
+        "title": "Sqry: Clear Results",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "sqry.restartLsp",
+        "title": "Sqry: Restart Language Server",
+        "category": "Sqry",
+        "enablement": "sqry.ready"
+      },
+      {
+        "command": "sqry.rebuildIndex",
+        "title": "Rebuild Index",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "sqry.searchHistory",
+        "title": "Sqry: Search History",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(history)"
+      },
+      {
+        "command": "sqry.scanWorkspace",
+        "title": "Sqry: Scan Workspace for Problems",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "sqry.showCallGraph",
+        "title": "Sqry: Show Call Graph",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "sqry.showDependencies",
+        "title": "Sqry: Show Dependencies",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(references)"
+      },
+      {
+        "command": "sqry.filterResults",
+        "title": "Sqry: Filter Results",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "sqry.sortResults",
+        "title": "Sqry: Sort Results",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(sort-precedence)"
+      },
+      {
+        "command": "sqry.exportResults",
+        "title": "Sqry: Export Results",
+        "category": "Sqry",
+        "enablement": "sqry.ready",
+        "icon": "$(export)"
+      },
+      {
+        "command": "sqry.editWorkspaceClassification",
+        "title": "Sqry: Edit Workspace Classification (.code-workspace)",
+        "category": "Sqry",
+        "enablement": "sqry.ready"
+      },
+      {
+        "command": "sqry.showOutput",
+        "title": "Sqry: Show Output",
+        "category": "Sqry",
+        "icon": "$(output)"
+      }
+    ],
+    "configuration": {
+      "title": "Sqry",
+      "properties": {
+        "sqry.path": {
+          "type": "string",
+          "default": "sqry",
+          "description": "Path to the sqry binary (used to launch `sqry lsp --stdio`).",
+          "scope": "machine-overridable"
+        },
+        "sqry.limit": {
+          "type": "number",
+          "default": 200,
+          "description": "Maximum number of results to request per query."
+        },
+        "sqry.timeoutMs": {
+          "type": "number",
+          "default": 15000,
+          "description": "Timeout (in milliseconds) for sqry language server requests (search, relations, etc.)."
+        },
+        "sqry.indexTimeoutMs": {
+          "type": "number",
+          "default": 300000,
+          "description": "Timeout (in milliseconds) for sqry index rebuild operations. Larger codebases may need more time. Default: 5 minutes."
+        },
+        "sqry.autoIndexOnOpen": {
+          "type": "string",
+          "enum": [
+            "always",
+            "prompt",
+            "never"
+          ],
+          "default": "prompt",
+          "description": "Whether the extension should trigger `sqry index` when a workspace opens."
+        },
+        "sqry.autoDownload": {
+          "type": "boolean",
+          "default": true,
+          "description": "When enabled, offers to download the sqry binary from GitHub when not found on PATH. When disabled, the extension shows an error with manual install instructions."
+        },
+        "sqry.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable sqry CodeLens annotations (caller counts)."
+        },
+        "sqry.codeLens.segments": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "callers",
+              "callees"
+            ]
+          },
+          "default": [
+            "callers",
+            "callees"
+          ],
+          "description": "Which count segments to show in CodeLens (callers, callees)."
+        },
+        "sqry.diagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable sqry diagnostics in the Problems panel (unused code, circular dependencies, duplicates)."
+        },
+        "sqry.diagnostics.unusedCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show unused code findings in the Problems panel with inline fading."
+        },
+        "sqry.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show sqry caller/callee counts in hover tooltips."
+        },
+        "sqry.autoIndexOnSave": {
+          "type": "string",
+          "enum": [
+            "never",
+            "debounced"
+          ],
+          "default": "never",
+          "description": "Auto-rebuild index after file saves. 'debounced' waits 30s after the last save before triggering a rebuild."
+        },
+        "sqry.indexRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Optional canonical workspace root. When set, sqry uses this absolute path as the logical workspace identity, regardless of which folder VS Code surfaces first. Empty string means auto-detect from the active `.code-workspace` (or the single open folder).",
+          "scope": "machine-overridable"
+        },
+        "sqry.projectRootMode": {
+          "type": "string",
+          "enum": [
+            "gitRoot",
+            "folder",
+            "explicit"
+          ],
+          "default": "gitRoot",
+          "description": "How sqry decides which directories inside a workspace folder count as project roots. `gitRoot` walks upward to the nearest `.git` checkout, `folder` treats every workspace folder as a single root, `explicit` uses only the entries listed under `sqry.workspaceClassification.sourceRoots`.",
+          "scope": "machine-overridable"
+        },
+        "sqry.workspaceFolderExcludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Glob patterns matched against `WorkspaceFolder.uri.fsPath`. Folders matching any pattern are excluded from every sqry enumeration loop (auto-index, status fan-out, manual rebuild). Use this to keep documentation-only folders inside the workspace without sqry trying to index them."
+        },
+        "sqry.workspaceClassification": {
+          "type": "object",
+          "default": null,
+          "description": "Inline classification block — parallel to the `sqry.workspace` entry inside a `.code-workspace` file. The settings.json copy is the fallback used when no `.code-workspace` is open; the `.code-workspace` block always wins when both are present.",
+          "properties": {
+            "sourceRoots": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Explicit list of source roots (absolute paths). Overrides auto-discovery."
+            },
+            "exclusions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Glob patterns for folders that must NOT be treated as source roots."
+            },
+            "memberFolders": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "description": "Folders that participate in the workspace but are not source roots. Status queries against these folders return the aggregate workspace status."
+            },
+            "projectRootMode": {
+              "type": "string",
+              "enum": [
+                "gitRoot",
+                "folder",
+                "explicit"
+              ],
+              "default": "gitRoot",
+              "description": "Project-root detection mode (overrides the top-level `sqry.projectRootMode` for this workspace)."
+            }
+          }
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sqry",
+          "title": "Sqry",
+          "icon": "media/sqry-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "sqry": [
+        {
+          "id": "sqry.searchResults",
+          "name": "Semantic Results",
+          "icon": "media/sqry-icon.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "sqry.searchResults",
+        "when": "sqry.ready",
+        "contents": "Semantic code search for your workspace.\n\n[Search Workspace](command:sqry.searchWorkspace) - Find symbols by name\n[Run Query](command:sqry.query) - Use structured queries\n[Index Workspace](command:sqry.index) - Build or rebuild index"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "sqry.searchWorkspace",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sqry.query",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "navigation@2"
+        },
+        {
+          "command": "sqry.refreshStats",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "2_actions@1"
+        },
+        {
+          "command": "sqry.clearResults",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "2_actions@2"
+        },
+        {
+          "command": "sqry.filterResults",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "2_actions@3"
+        },
+        {
+          "command": "sqry.sortResults",
+          "when": "view == sqry.searchResults && sqry.ready",
+          "group": "2_actions@4"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "sqry.findReferences",
+          "when": "sqry.ready",
+          "group": "navigation@11"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sqry.rebuildIndex",
+          "when": "viewItem == sqry.stats.indexed && sqry.ready",
+          "group": "inline"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sqry.findReferences",
+          "when": "editorHasSelection && sqry.ready"
+        },
+        {
+          "command": "sqry.rebuildIndex",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "sqry.searchWorkspace",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "!terminalFocus && sqry.ready"
+      },
+      {
+        "command": "sqry.query",
+        "key": "ctrl+alt+q",
+        "mac": "cmd+alt+q",
+        "when": "!terminalFocus && sqry.ready"
+      },
+      {
+        "command": "sqry.findReferences",
+        "key": "ctrl+alt+r",
+        "mac": "cmd+alt+r",
+        "when": "editorTextFocus && sqry.ready"
+      },
+      {
+        "command": "sqry.index",
+        "key": "ctrl+alt+i",
+        "mac": "cmd+alt+i",
+        "when": "!terminalFocus && sqry.ready"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "sqry.gettingStarted",
+        "title": "Getting Started with sqry",
+        "description": "Set up semantic code search for your workspace",
+        "steps": [
+          {
+            "id": "sqry.walkthrough.binary",
+            "title": "Install sqry binary",
+            "description": "sqry needs its binary to run. It can auto-download or you can install manually.\n\n[Configure Binary Path](command:workbench.action.openSettings?%5B%22sqry.path%22%5D)",
+            "completionEvents": [
+              "onCommand:sqry.index"
+            ],
+            "media": {
+              "markdown": "media/walkthrough-install.md"
+            }
+          },
+          {
+            "id": "sqry.walkthrough.index",
+            "title": "Index your workspace",
+            "description": "Build the semantic index to enable code search.\n\n[Index Workspace](command:sqry.index)",
+            "completionEvents": [
+              "onCommand:sqry.index"
+            ],
+            "media": {
+              "markdown": "media/walkthrough-index.md"
+            }
+          },
+          {
+            "id": "sqry.walkthrough.search",
+            "title": "Search for symbols",
+            "description": "Find functions, classes, and types by name.\n\n[Search Workspace](command:sqry.searchWorkspace)",
+            "completionEvents": [
+              "onCommand:sqry.searchWorkspace"
+            ],
+            "media": {
+              "markdown": "media/walkthrough-search.md"
+            }
+          },
+          {
+            "id": "sqry.walkthrough.query",
+            "title": "Run structured queries",
+            "description": "Use boolean filters to find symbols by kind, visibility, language, and relationships.\n\n[Run Query](command:sqry.query)",
+            "completionEvents": [
+              "onCommand:sqry.query"
+            ],
+            "media": {
+              "markdown": "media/walkthrough-query.md"
+            }
+          },
+          {
+            "id": "sqry.walkthrough.codelens",
+            "title": "Explore caller counts",
+            "description": "Open any source file — sqry shows caller counts above each function via CodeLens. Click to see who calls it.",
+            "completionEvents": [
+              "onCommand:sqry.runQueryInternal"
+            ],
+            "media": {
+              "markdown": "media/walkthrough-codelens.md"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p tsconfig.test.json",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --max-warnings 0",
+    "test": "npm run test:unit",
+    "test:unit": "node ./scripts/run-mocha.cjs -r ts-node/register 'tests/*.test.ts'",
+    "test:coverage": "c8 --reporter=lcov --reporter=text --report-dir coverage --all --include 'src/**/*.ts' node ./scripts/run-mocha.cjs -r ts-node/register 'tests/*.test.ts'",
+    "test:integration": "node ./out/tests/runTests.js"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.30",
+    "@types/proxyquire": "^1.3.30",
+    "@types/vscode": "^1.85.0",
+    "@types/which": "^3.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "@vscode/test-electron": "^2.5.2",
+    "baseline-browser-mapping": "^2.9.11",
+    "c8": "^10.1.3",
+    "chai": "^4.4.1",
+    "eslint": "^10.3.0",
+    "glob": "^11.0.3",
+    "mocha": "^10.4.0",
+    "proxyquire": "^2.1.3",
+    "ts-loader": "^9.5.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "elkjs": "^0.11.1",
+    "fflate": "^0.8.3",
+    "https-proxy-agent": "^7.0.6",
+    "sigstore": "^5.0.0",
+    "vscode-languageclient": "^9.0.1",
+    "which": "^4.0.0"
+  },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3"
+  }
+}

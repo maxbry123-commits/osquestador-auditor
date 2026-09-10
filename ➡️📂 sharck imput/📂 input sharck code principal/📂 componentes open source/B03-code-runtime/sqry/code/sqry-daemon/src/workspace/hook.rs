@@ -1,0 +1,865 @@
+//! `SqrydHook` — post-publish persistence hook.
+//!
+//! Phase 6c of the sqryd plan, hardened by PF03A (corrective program
+//! 2026-05-07). Every successful publish triggers a best-effort write
+//! of the derived-analysis cache (`.sqry/graph/derived.sqry`) via
+//! `sqry_db::persistence::save_derived`, on a background tokio task
+//! with a configurable timeout. Errors and timeouts are logged at
+//! WARN and absorbed — they never fail the query/publish path.
+//!
+//! This module defines the [`SqrydHook`] trait, the [`NoOpHook`] default
+//! used for tests and embedded callers, and the production
+//! [`QueryDbHook`] that the `sqryd` binary installs at startup
+//! (PF03B).
+//!
+//! ## PF03A architectural decisions
+//!
+//! ### Crate / feature boundary
+//!
+//! `sqry-daemon` depends on `sqry-db` unconditionally (added in PF03A).
+//! Earlier comments suggested gating the dependency behind a `sqry-db-hook`
+//! Cargo feature so embedders could opt out of the writer; PF03A discards
+//! that gating because the corrective program (see
+//! `docs/development/generational-analysis-platform/priority-followups/03_IMPLEMENTATION_PLAN.md`
+//! §A2) demands the production hook be present in every production
+//! sqryd build, not opt-in. Embedders that want the no-persistence
+//! behaviour pass [`noop_hook`] or any custom impl explicitly into
+//! [`super::WorkspaceManager::set_hook`].
+//!
+//! ### Snapshot SHA timing (PF03A decision A, corrected by RPI)
+//!
+//! [`QueryDbHook::on_publish`] never writes the canonical
+//! `<workspace_root>/.sqry/graph/snapshot.sqry` file. It computes the
+//! derived-cache identity (the SHA-256 of the on-disk snapshot, the same
+//! bytes the published graph was loaded from), and saves `derived.sqry`
+//! keyed on that snapshot SHA. If the manifest or snapshot is absent the
+//! hook skips persistence and logs a diagnostic. Canonical snapshot,
+//! manifest, and analysis artifacts are owned exclusively by the
+//! manifest-as-commit-point graph persistence transaction.
+//!
+//! The identity is the actual snapshot SHA, not the SHA recorded in
+//! `manifest.json` (Bug B, issue #359). The cold-load read path keys
+//! `derived.sqry` validity on `compute_file_sha256(snapshot.sqry)` and
+//! never reads the manifest, so a stale manifest (older-format snapshot
+//! from an earlier sqry version) must not block the save. Gating on
+//! `manifest.snapshot_sha256` previously left such workspaces with a
+//! permanently cold derived cache.
+//!
+//! ### Async lifetime / ownership (PF03A decision B)
+//!
+//! The hook is invoked with an owned `Arc<CodeGraph>` (cloned from the
+//! published workspace inside `WorkspaceManager`). The spawned task
+//! moves that `Arc` into its closure, takes a [`GraphSnapshot`] from it,
+//! and wraps the snapshot in its own `Arc` for the temporary
+//! [`sqry_db::QueryDb`]. The strong reference held by the spawned task
+//! keeps the underlying graph data alive until `save_derived` returns
+//! (or the timeout fires), independent of any concurrent workspace
+//! `unload`, eviction, or replacement publish. Once the task drops, the
+//! `Arc` is released; if the manager has already evicted the workspace
+//! the data is freed at that point. There is no path that can leave
+//! the spawned task reading freed memory.
+//!
+//! ### Failure isolation
+//!
+//! Async-only custom hook work may use [`spawn_hook`], which wraps the
+//! future in [`tokio::time::timeout`] and logs both error and timeout
+//! outcomes at WARN. The production [`QueryDbHook`] uses its own
+//! supervisor because `tokio::time::timeout` cannot stop a closure that
+//! is already running inside [`tokio::task::spawn_blocking`]. The
+//! publish/query path never observes the result — the caller does not
+//! await the spawned task.
+//!
+//! The hook runs on the current tokio runtime via `tokio::spawn`; the
+//! publish call site does not await it. The production timeout is taken
+//! from `DaemonConfig::derived_save_timeout_ms` (120 s by default), sized
+//! to serialize the derived cache for large graphs (the earlier
+//! `rebuild_drain_timeout_ms` borrow, 5 s, was far too small and dropped
+//! the cache on every publish of a big workspace), clampable by the call
+//! site if a tighter ceiling is desired.
+
+use std::{
+    path::Path,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::{Duration, Instant},
+};
+
+use sqry_core::graph::CodeGraph;
+use tracing::warn;
+
+const QUERY_DB_SAVE_DERIVED_TASK: &str = "query-db-save-derived";
+
+/// Signature for a post-publish persistence hook.
+///
+/// Called from [`super::WorkspaceManager::publish_and_retain`]
+/// *after* the admission commit has succeeded, with the published
+/// `Arc<CodeGraph>` and the workspace root path. The hook is
+/// expected to return immediately — any actual IO should be
+/// spawned on a tokio task via [`spawn_hook`] or equivalent —
+/// because `publish_and_retain` is a sync critical section.
+pub trait SqrydHook: Send + Sync + std::fmt::Debug {
+    /// Notify the hook that a fresh graph has been published for
+    /// `workspace_root`. Implementations should NOT block; they
+    /// should spawn a background task and return.
+    fn on_publish(&self, workspace_root: &Path, graph: Arc<CodeGraph>);
+}
+
+impl<T: SqrydHook + ?Sized> SqrydHook for Arc<T> {
+    fn on_publish(&self, workspace_root: &Path, graph: Arc<CodeGraph>) {
+        (**self).on_publish(workspace_root, graph);
+    }
+}
+
+/// Null implementation — used by unit tests + the Phase 6c
+/// default when no production hook is wired. Logs nothing, does
+/// nothing, adds no runtime overhead.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct NoOpHook;
+
+impl SqrydHook for NoOpHook {
+    fn on_publish(&self, _workspace_root: &Path, _graph: Arc<CodeGraph>) {
+        // deliberately empty
+    }
+}
+
+/// Shared handle to the active hook. The manager stores an
+/// `ArcSwap<Arc<dyn SqrydHook>>` so Task 9 can install the
+/// production hook after the daemon boots (once the sqry-db
+/// `QueryDb` is built), and unit tests can install a recording
+/// hook at construction time.
+pub type SharedHook = Arc<dyn SqrydHook>;
+
+/// Convenience constructor for [`NoOpHook`] as a [`SharedHook`].
+#[must_use]
+pub fn noop_hook() -> SharedHook {
+    Arc::new(NoOpHook)
+}
+
+/// Spawn an async persistence task with the configured timeout.
+///
+/// The task's result is never awaited by the caller. Errors and
+/// timeouts are logged at WARN; the query path is unaffected.
+///
+/// This helper is for async hook futures. It stops awaiting a future when
+/// the timeout expires, but it cannot preempt CPU-bound work or cancel a
+/// closure that is already running inside [`tokio::task::spawn_blocking`].
+/// Hooks that delegate to blocking work must provide their own cooperative
+/// cancellation checks.
+///
+/// This helper is public so the production
+/// [`super::manager::WorkspaceManager`] and custom `SqrydHook`
+/// impls can share the same timeout-and-absorb pattern.
+pub fn spawn_hook<F, Fut, E>(
+    timeout: Duration,
+    workspace_root: std::path::PathBuf,
+    task_label: &'static str,
+    fut_factory: F,
+) where
+    F: FnOnce() -> Fut + Send + 'static,
+    Fut: std::future::Future<Output = Result<(), E>> + Send + 'static,
+    E: std::fmt::Display + Send + 'static,
+{
+    tokio::spawn(async move {
+        let fut = fut_factory();
+        match tokio::time::timeout(timeout, fut).await {
+            Ok(Ok(())) => {}
+            Ok(Err(err)) => {
+                warn!(
+                    task = task_label,
+                    workspace = %workspace_root.display(),
+                    error = %err,
+                    "sqryd hook {task_label} failed (absorbed; query path continues)",
+                );
+            }
+            Err(_elapsed) => {
+                let timeout_ms = u64::try_from(timeout.as_millis()).unwrap_or(u64::MAX);
+                warn!(
+                    task = task_label,
+                    workspace = %workspace_root.display(),
+                    timeout_ms,
+                    "sqryd hook {task_label} timed out (absorbed; query path continues)",
+                );
+            }
+        }
+    });
+}
+
+// ---------------------------------------------------------------------------
+// QueryDbHook — production post-publish hook.
+//
+// PF03A introduces this type. PF03B (`sqryd` startup) calls
+// `WorkspaceManager::set_hook(QueryDbHook::new(timeout))` so every published
+// graph triggers a `sqry_db::persistence::save_derived` call against the
+// canonical `<workspace_root>/.sqry/graph/derived.sqry` path. Failures are
+// logged at WARN and absorbed; the publish path is never blocked.
+// ---------------------------------------------------------------------------
+
+/// Production [`SqrydHook`] backed by `sqry_db::persistence::save_derived`.
+///
+/// See the module-level docs for the snapshot-SHA-timing and lifetime
+/// decisions (PF03A A and B). The hook is parameterised by:
+///
+/// - `timeout`: wall-clock cap applied by the hook's save supervisor.
+///   Production sqryd passes
+///   `DaemonConfig::derived_save_timeout_ms` (120 s); [`Self::new`] stores
+///   whatever [`Duration`] it is handed.
+/// - `query_db_config`: passed straight to [`sqry_db::QueryDb::new`] and
+///   used by [`sqry_db::derived_path`] to compute the target file. The
+///   default value points at `derived.sqry` and uses the standard
+///   per-entry size cap; production sqryd should generally accept the
+///   default.
+#[derive(Debug, Clone)]
+pub struct QueryDbHook {
+    timeout: Duration,
+    query_db_config: sqry_db::QueryDbConfig,
+}
+
+impl QueryDbHook {
+    /// Construct a hook with the supplied timeout and the default
+    /// [`sqry_db::QueryDbConfig`].
+    ///
+    /// PF03B's startup path uses this constructor with
+    /// `DaemonConfig::derived_save_timeout_ms`.
+    #[must_use]
+    pub fn new(timeout: Duration) -> Arc<Self> {
+        Arc::new(Self {
+            timeout,
+            query_db_config: sqry_db::QueryDbConfig::default(),
+        })
+    }
+
+    /// Construct a hook with a caller-provided [`sqry_db::QueryDbConfig`].
+    ///
+    /// Reserved for callers that need to override the default
+    /// `derived_persistence_filename` or per-entry size cap. Production
+    /// sqryd should normally use [`Self::new`].
+    #[must_use]
+    pub fn with_query_db_config(
+        timeout: Duration,
+        query_db_config: sqry_db::QueryDbConfig,
+    ) -> Arc<Self> {
+        Arc::new(Self {
+            timeout,
+            query_db_config,
+        })
+    }
+
+    /// Returns the configured wall-clock timeout. Exposed for tests and
+    /// observability surfaces.
+    #[must_use]
+    pub fn timeout(&self) -> Duration {
+        self.timeout
+    }
+}
+
+impl SqrydHook for QueryDbHook {
+    fn on_publish(&self, workspace_root: &Path, graph: Arc<CodeGraph>) {
+        let timeout = self.timeout;
+        let query_db_config = self.query_db_config.clone();
+        let workspace_root_owned = workspace_root.to_path_buf();
+
+        spawn_query_db_save_derived(timeout, workspace_root_owned, graph, query_db_config);
+    }
+}
+
+fn spawn_query_db_save_derived(
+    timeout: Duration,
+    workspace_root: std::path::PathBuf,
+    graph: Arc<CodeGraph>,
+    query_db_config: sqry_db::QueryDbConfig,
+) {
+    tokio::spawn(async move {
+        match run_save_derived(timeout, workspace_root.clone(), graph, query_db_config).await {
+            Ok(()) => {}
+            Err(err) => {
+                let timeout_ms = u64::try_from(timeout.as_millis()).unwrap_or(u64::MAX);
+                if err.downcast_ref::<DerivedSaveTimedOut>().is_some() {
+                    warn!(
+                        task = QUERY_DB_SAVE_DERIVED_TASK,
+                        workspace = %workspace_root.display(),
+                        timeout_ms,
+                        "sqryd hook {QUERY_DB_SAVE_DERIVED_TASK} timed out (absorbed; query path continues)",
+                    );
+                } else {
+                    warn!(
+                        task = QUERY_DB_SAVE_DERIVED_TASK,
+                        workspace = %workspace_root.display(),
+                        error = %err,
+                        "sqryd hook {QUERY_DB_SAVE_DERIVED_TASK} failed (absorbed; query path continues)",
+                    );
+                }
+            }
+        }
+    });
+}
+
+/// Body of the production hook: verify the existing persisted
+/// manifest/snapshot identity and persist only the derived cache via
+/// `save_derived`.
+///
+/// All filesystem-touching operations run under [`tokio::task::spawn_blocking`]
+/// so the runtime never blocks on synchronous IO.
+async fn run_save_derived(
+    timeout: Duration,
+    workspace_root: std::path::PathBuf,
+    graph: Arc<CodeGraph>,
+    query_db_config: sqry_db::QueryDbConfig,
+) -> anyhow::Result<()> {
+    let budget = DerivedSaveBudget::new(timeout);
+    let blocking_budget = budget.clone();
+    let handle = tokio::task::spawn_blocking(move || {
+        run_save_derived_blocking(&workspace_root, &graph, query_db_config, &blocking_budget)
+    });
+
+    match tokio::time::timeout(timeout, handle).await {
+        Ok(join_result) => join_result.map_err(|join_err| {
+            anyhow::anyhow!("spawn_blocking({QUERY_DB_SAVE_DERIVED_TASK}) join: {join_err}")
+        })?,
+        Err(_elapsed) => {
+            budget.cancel();
+            Err(DerivedSaveTimedOut {
+                timeout_ms: u64::try_from(timeout.as_millis()).unwrap_or(u64::MAX),
+            }
+            .into())
+        }
+    }
+}
+
+fn run_save_derived_blocking(
+    workspace_root: &Path,
+    graph: &CodeGraph,
+    query_db_config: sqry_db::QueryDbConfig,
+    budget: &DerivedSaveBudget,
+) -> anyhow::Result<()> {
+    budget.check("snapshot identity hash")?;
+    let Some(sha) = persisted_snapshot_identity_sha(workspace_root)? else {
+        return Ok(());
+    };
+
+    budget.check("graph snapshot")?;
+    let snapshot_arc = Arc::new(graph.snapshot());
+    budget.check("query db construction")?;
+    let db = sqry_db::QueryDb::new(snapshot_arc, query_db_config);
+    tracing::debug!(
+        workspace = %workspace_root.display(),
+        "QueryDbHook: saving derived-cache container without publish-time relation warmup"
+    );
+
+    budget.check("derived-cache path")?;
+    let derived_path = sqry_db::derived_path(workspace_root, db.config());
+    budget.check("derived-cache write")?;
+    // `save_derived` is synchronous and not internally cancellable. Issue
+    // #436 removes the CPU-heavy relation warmup before this call; after this
+    // point the remaining work is SHA-keyed cache serialization and atomic IO.
+    sqry_db::persistence::save_derived(&db, sha, &derived_path, workspace_root)?;
+    budget.check("derived-cache write completion")?;
+
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct DerivedSaveBudget {
+    deadline: Instant,
+    is_cancelled: Arc<AtomicBool>,
+}
+
+impl DerivedSaveBudget {
+    fn new(timeout: Duration) -> Self {
+        let now = Instant::now();
+        let deadline = now.checked_add(timeout).unwrap_or(now);
+        Self {
+            deadline,
+            is_cancelled: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    fn cancel(&self) {
+        self.is_cancelled.store(true, Ordering::Release);
+    }
+
+    fn check(&self, stage: &'static str) -> anyhow::Result<()> {
+        if self.is_cancelled.load(Ordering::Acquire) {
+            anyhow::bail!("{QUERY_DB_SAVE_DERIVED_TASK} cancelled before {stage}");
+        }
+        if Instant::now() >= self.deadline {
+            self.cancel();
+            return Err(DerivedSaveTimedOut { timeout_ms: 0 }.into());
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("query-db-save-derived timed out after {timeout_ms} ms")]
+struct DerivedSaveTimedOut {
+    timeout_ms: u64,
+}
+
+/// Compute the derived-cache identity for `workspace_root`: the SHA-256
+/// of the on-disk `snapshot.sqry`, i.e. exactly the bytes the published
+/// in-memory graph was loaded from (or just written from on a rebuild).
+///
+/// This MUST be the same identity the read path keys on. The cold-load
+/// reader (`sqry_db::queries::dispatch::load_derived_opportunistic`)
+/// validates `derived.sqry` by recomputing `compute_file_sha256` over
+/// the same `snapshot.sqry` and comparing it to the derived header's
+/// `snapshot_sha256`, never consulting `manifest.json`. Keying the save
+/// on the actual snapshot SHA (rather than the manifest's recorded SHA)
+/// keeps write and read identity in lock-step.
+///
+/// Bug B (issue #359): the prior implementation gated the save on
+/// `manifest.snapshot_sha256 == compute_file_sha256(snapshot.sqry)` and
+/// skipped on any disagreement. Workspaces carrying a manifest that is
+/// stale relative to its snapshot (older-format snapshots written by an
+/// earlier sqry version, whose manifest records the original SHA) then
+/// failed that gate on every publish, so `derived.sqry` was never
+/// persisted, even though a save keyed on the actual snapshot SHA would
+/// validate cleanly on the read path. The manifest is not part of the
+/// derived-cache identity contract, so it is no longer consulted here.
+///
+/// Returns `Ok(None)` (a soft skip) when no persisted graph is present
+/// yet: no manifest (workspace not indexed) or no snapshot (publish has
+/// not flushed to disk). Returns `Err` only when the snapshot exists but
+/// cannot be hashed.
+fn persisted_snapshot_identity_sha(workspace_root: &Path) -> anyhow::Result<Option<[u8; 32]>> {
+    let storage = sqry_core::graph::unified::persistence::GraphStorage::new(workspace_root);
+    if !storage.manifest_path().exists() {
+        tracing::debug!(
+            workspace = %workspace_root.display(),
+            manifest = %storage.manifest_path().display(),
+            "QueryDbHook: skipping derived-cache save because graph manifest is absent"
+        );
+        return Ok(None);
+    }
+    if !storage.snapshot_path().exists() {
+        tracing::warn!(
+            workspace = %workspace_root.display(),
+            snapshot = %storage.snapshot_path().display(),
+            "QueryDbHook: skipping derived-cache save because graph snapshot is absent"
+        );
+        return Ok(None);
+    }
+
+    let actual_sha =
+        sqry_db::persistence::compute_file_sha256(storage.snapshot_path()).map_err(|err| {
+            anyhow::anyhow!(
+                "compute_file_sha256({}): {err}",
+                storage.snapshot_path().display()
+            )
+        })?;
+
+    Ok(Some(actual_sha))
+}
+
+/// Recording hook used by unit tests to observe hook invocations
+/// without exercising the real persistence path.
+#[doc(hidden)]
+#[derive(Debug, Default)]
+pub struct RecordingHook {
+    pub invocations: parking_lot::Mutex<Vec<std::path::PathBuf>>,
+}
+
+impl RecordingHook {
+    #[must_use]
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self::default())
+    }
+
+    #[must_use]
+    pub fn invocation_count(&self) -> usize {
+        self.invocations.lock().len()
+    }
+
+    #[must_use]
+    pub fn invocation_roots(&self) -> Vec<std::path::PathBuf> {
+        self.invocations.lock().clone()
+    }
+}
+
+impl SqrydHook for RecordingHook {
+    fn on_publish(&self, workspace_root: &Path, _graph: Arc<CodeGraph>) {
+        self.invocations.lock().push(workspace_root.to_path_buf());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn noop_hook_compiles_through_shared_dispatch() {
+        let hook: SharedHook = noop_hook();
+        let graph = Arc::new(CodeGraph::new());
+        hook.on_publish(Path::new("/repos/example"), graph);
+    }
+
+    #[test]
+    fn recording_hook_captures_invocations_in_order() {
+        let hook = RecordingHook::new();
+        let graph = Arc::new(CodeGraph::new());
+        hook.on_publish(Path::new("/repos/a"), Arc::clone(&graph));
+        hook.on_publish(Path::new("/repos/b"), Arc::clone(&graph));
+        assert_eq!(hook.invocation_count(), 2);
+        let roots = hook.invocation_roots();
+        assert_eq!(roots[0], Path::new("/repos/a"));
+        assert_eq!(roots[1], Path::new("/repos/b"));
+    }
+
+    #[tokio::test]
+    async fn spawn_hook_absorbs_error() {
+        // Hook returns Err; timeout wrapper logs at WARN and
+        // absorbs. Success criterion: the spawned task completes
+        // without panic.
+        spawn_hook::<_, _, &'static str>(
+            Duration::from_millis(100),
+            std::path::PathBuf::from("/repos/example"),
+            "test-hook",
+            || async { Err("simulated failure") },
+        );
+        // Give the spawned task time to run.
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+
+    #[tokio::test]
+    async fn spawn_hook_absorbs_timeout() {
+        spawn_hook::<_, _, &'static str>(
+            Duration::from_millis(10),
+            std::path::PathBuf::from("/repos/example"),
+            "test-hook",
+            || async {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                Ok(())
+            },
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+
+    // ---------------------------------------------------------------------
+    // PF03A regression coverage for the production QueryDbHook.
+    // ---------------------------------------------------------------------
+
+    /// Construction smoke test: the production hook builds with the default
+    /// config and reports the requested timeout.
+    #[test]
+    fn pf03a_query_db_hook_constructs_with_requested_timeout() {
+        let hook = QueryDbHook::new(Duration::from_millis(1234));
+        assert_eq!(hook.timeout(), Duration::from_millis(1234));
+    }
+
+    /// `with_query_db_config` accepts a custom [`sqry_db::QueryDbConfig`]
+    /// and threads it through unchanged.
+    #[test]
+    fn pf03a_query_db_hook_accepts_custom_config() {
+        let cfg = sqry_db::QueryDbConfig::default();
+        let hook = QueryDbHook::with_query_db_config(Duration::from_millis(50), cfg);
+        // The hook holds an owned clone; the timeout accessor proves the
+        // construction path completed.
+        assert_eq!(hook.timeout(), Duration::from_millis(50));
+    }
+
+    /// RPI correction: when the canonical snapshot file is absent, the
+    /// hook skips derived-cache persistence. It must not create
+    /// `snapshot.sqry` as a side effect of publish/load.
+    #[tokio::test]
+    async fn rpi_query_db_hook_no_snapshot_file_skips_derived_without_snapshot_write() {
+        let workspace = tempfile::tempdir().expect("tempdir");
+        let hook = QueryDbHook::new(Duration::from_secs(2));
+        let graph = Arc::new(CodeGraph::new());
+
+        // Create the .sqry/graph/ directory but no snapshot.sqry file —
+        // mirrors a publish that hasn't yet flushed to disk.
+        std::fs::create_dir_all(workspace.path().join(".sqry").join("graph")).unwrap();
+
+        hook.on_publish(workspace.path(), graph);
+
+        // Give the spawned task a generous window to complete.
+        tokio::time::sleep(Duration::from_millis(500)).await;
+
+        let snapshot = workspace
+            .path()
+            .join(".sqry")
+            .join("graph")
+            .join("snapshot.sqry");
+        let derived = workspace
+            .path()
+            .join(".sqry")
+            .join("graph")
+            .join("derived.sqry");
+        assert!(
+            !snapshot.exists(),
+            "RPI: hook must not write canonical snapshot.sqry when it is absent (got {})",
+            snapshot.display()
+        );
+        assert!(
+            !derived.exists(),
+            "RPI: hook must skip derived.sqry when no coherent persisted graph exists (got {})",
+            derived.display()
+        );
+    }
+
+    /// PF03A failure isolation: when the snapshot file is malformed (cannot
+    /// be hashed because the parent directory was deleted mid-flight, or
+    /// the path has been replaced by a directory), the hook absorbs the
+    /// error and never panics. The publish path must keep running.
+    #[tokio::test]
+    async fn pf03a_query_db_hook_absorbs_save_failure() {
+        let workspace = tempfile::tempdir().expect("tempdir");
+        let hook = QueryDbHook::new(Duration::from_secs(1));
+        let graph = Arc::new(CodeGraph::new());
+
+        // Create a `snapshot.sqry` directory entry that's actually a
+        // directory; `compute_file_sha256` will fail with a non-NotFound
+        // error and `save_derived` is never called. Either way, the hook
+        // returns without panicking.
+        let snap_dir = workspace.path().join(".sqry").join("graph");
+        std::fs::create_dir_all(&snap_dir).unwrap();
+        std::fs::create_dir_all(snap_dir.join("snapshot.sqry")).unwrap();
+
+        hook.on_publish(workspace.path(), graph);
+        tokio::time::sleep(Duration::from_millis(100)).await;
+
+        // No panic = success. derived.sqry must not exist (the hook never
+        // got far enough to write it).
+        let derived = snap_dir.join("derived.sqry");
+        assert!(
+            !derived.exists(),
+            "PF03A: a hashing failure must not leave a partially-written derived.sqry"
+        );
+    }
+
+    /// Issue #436: the blocking body must honor an expired/cancelled budget
+    /// before it writes `derived.sqry`. This exercises the synchronous body
+    /// directly so the assertion is deterministic instead of scheduler-racy.
+    #[test]
+    fn issue436_query_db_hook_blocking_body_honors_expired_budget_before_write() {
+        let workspace = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(workspace.path().join("src")).unwrap();
+        std::fs::write(
+            workspace.path().join("src").join("lib.rs"),
+            "pub fn helper() -> u32 { 42 }\n",
+        )
+        .unwrap();
+
+        let plugins = sqry_plugin_registry::create_plugin_manager();
+        let cfg = sqry_core::graph::unified::build::BuildConfig::default();
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        sqry_core::graph::unified::build::persist_and_analyze_graph(
+            graph_owned,
+            workspace.path(),
+            &plugins,
+            &cfg,
+            "test:issue436-expired-budget",
+            None,
+            sqry_core::progress::no_op_reporter(),
+            1,
+        )
+        .unwrap();
+
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        let budget = DerivedSaveBudget::new(Duration::ZERO);
+        let result = run_save_derived_blocking(
+            workspace.path(),
+            &graph_owned,
+            sqry_db::QueryDbConfig::default(),
+            &budget,
+        );
+        assert!(
+            result.is_err(),
+            "expired budget must reject the blocking save body"
+        );
+
+        let derived = workspace
+            .path()
+            .join(".sqry")
+            .join("graph")
+            .join("derived.sqry");
+        assert!(
+            !derived.exists(),
+            "Issue #436: expired hook budget must not write {}",
+            derived.display()
+        );
+    }
+
+    /// RPI end-to-end happy path: with a coherent persisted graph, the hook
+    /// writes only derived.sqry before its timeout fires and leaves canonical
+    /// snapshot bytes untouched.
+    #[tokio::test]
+    async fn rpi_query_db_hook_writes_derived_sqry_when_manifest_snapshot_coherent() {
+        let workspace = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(workspace.path().join("src")).unwrap();
+        std::fs::write(
+            workspace.path().join("src").join("lib.rs"),
+            "pub fn helper() -> u32 { 42 }\n",
+        )
+        .unwrap();
+
+        let plugins = sqry_plugin_registry::create_plugin_manager();
+        let cfg = sqry_core::graph::unified::build::BuildConfig::default();
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        sqry_core::graph::unified::build::persist_and_analyze_graph(
+            graph_owned,
+            workspace.path(),
+            &plugins,
+            &cfg,
+            "test:query-db-hook",
+            None,
+            sqry_core::progress::no_op_reporter(),
+            1,
+        )
+        .unwrap();
+
+        let storage = sqry_core::graph::unified::persistence::GraphStorage::new(workspace.path());
+        let before_snapshot = std::fs::read(storage.snapshot_path()).unwrap();
+
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        let hook = QueryDbHook::new(Duration::from_secs(5));
+        let graph = Arc::new(graph_owned);
+        hook.on_publish(workspace.path(), graph);
+
+        // Poll for the derived file with a generous deadline so slow CI
+        // runners don't false-negative.
+        let derived = storage.graph_dir().join("derived.sqry");
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        while std::time::Instant::now() < deadline {
+            if derived.exists() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert!(
+            derived.exists(),
+            "RPI: hook must write derived.sqry to {} within 5s",
+            derived.display()
+        );
+        let after_snapshot = std::fs::read(storage.snapshot_path()).unwrap();
+        assert_eq!(
+            after_snapshot, before_snapshot,
+            "RPI: hook must not mutate canonical snapshot.sqry while saving derived.sqry"
+        );
+
+        // Sanity-check the file is non-empty and starts with the derived
+        // magic bytes — proves it actually went through `save_derived`.
+        let bytes = std::fs::read(&derived).unwrap();
+        assert!(bytes.len() >= sqry_db::DERIVED_MAGIC.len());
+        assert_eq!(
+            &bytes[..sqry_db::DERIVED_MAGIC.len()],
+            sqry_db::DERIVED_MAGIC,
+            "derived.sqry must start with SQRY_DERIVED_V02 magic"
+        );
+        let (header, _tail) =
+            sqry_db::persistence::deserialize_derived_header(&bytes).expect("derived header");
+        assert_eq!(
+            header.entry_count, 0,
+            "Issue #436: daemon hook must not synthesize callers/callees warmup entries"
+        );
+    }
+
+    /// Bug B regression (issue #359): a manifest whose recorded
+    /// `snapshot_sha256` is stale relative to the on-disk snapshot must
+    /// NOT block the derived-cache save.
+    ///
+    /// Field condition: workspaces carrying an older-format snapshot (and
+    /// its companion manifest) written by an earlier sqry version. The
+    /// manifest's recorded SHA no longer matches the snapshot bytes the
+    /// current daemon serves. Before the fix, `on_publish` gated on
+    /// `manifest.snapshot_sha256 == compute_file_sha256(snapshot)` and
+    /// skipped on mismatch, so `derived.sqry` was never persisted (the
+    /// `manifest/snapshot SHA-256 mismatch` warning). After the fix the
+    /// identity is the actual snapshot SHA, so the save proceeds and the
+    /// persisted header carries exactly the SHA the cold-load read path
+    /// (`load_derived_opportunistic`) recomputes from the same file.
+    ///
+    /// Neutralize-the-fix check: restoring the old `manifest != actual`
+    /// gate in `persisted_snapshot_identity_sha` makes this test fail
+    /// (derived.sqry absent), which is the proof the fix is load-bearing.
+    #[tokio::test]
+    async fn bugb_query_db_hook_writes_derived_when_manifest_sha_is_stale() {
+        let workspace = tempfile::tempdir().expect("tempdir");
+        std::fs::create_dir_all(workspace.path().join("src")).unwrap();
+        std::fs::write(
+            workspace.path().join("src").join("lib.rs"),
+            "pub fn helper() -> u32 { 42 }\n",
+        )
+        .unwrap();
+
+        let plugins = sqry_plugin_registry::create_plugin_manager();
+        let cfg = sqry_core::graph::unified::build::BuildConfig::default();
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        sqry_core::graph::unified::build::persist_and_analyze_graph(
+            graph_owned,
+            workspace.path(),
+            &plugins,
+            &cfg,
+            "test:bugb-stale-manifest",
+            None,
+            sqry_core::progress::no_op_reporter(),
+            1,
+        )
+        .unwrap();
+
+        let storage = sqry_core::graph::unified::persistence::GraphStorage::new(workspace.path());
+
+        // Rewrite ONLY the manifest's recorded SHA, leaving the snapshot
+        // bytes untouched, so the served graph still corresponds to the
+        // snapshot on disk while the manifest disagrees with it.
+        let mut manifest =
+            sqry_core::graph::unified::persistence::Manifest::load(storage.manifest_path())
+                .expect("load manifest");
+        let real_sha = manifest.snapshot_sha256.clone();
+        manifest.snapshot_sha256 =
+            "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef".to_string();
+        assert_ne!(
+            manifest.snapshot_sha256, real_sha,
+            "test setup must actually mutate the manifest SHA"
+        );
+        manifest
+            .save(storage.manifest_path())
+            .expect("save stale manifest");
+
+        let graph_owned =
+            sqry_core::graph::unified::build::build_unified_graph(workspace.path(), &plugins, &cfg)
+                .unwrap();
+        let hook = QueryDbHook::new(Duration::from_secs(5));
+        hook.on_publish(workspace.path(), Arc::new(graph_owned));
+
+        let derived = storage.graph_dir().join("derived.sqry");
+        let deadline = std::time::Instant::now() + Duration::from_secs(5);
+        while std::time::Instant::now() < deadline {
+            if derived.exists() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert!(
+            derived.exists(),
+            "Bug B: hook must persist derived.sqry even when the manifest SHA is stale (expected {})",
+            derived.display()
+        );
+
+        // The persisted derived header must carry the ACTUAL snapshot SHA,
+        // which is exactly what the cold-load read path recomputes. This
+        // proves write/read identity alignment (and that the stale manifest
+        // SHA never entered the derived header).
+        let actual_sha =
+            sqry_db::persistence::compute_file_sha256(storage.snapshot_path()).unwrap();
+        let derived_bytes = std::fs::read(&derived).unwrap();
+        let (header, _tail) = sqry_db::persistence::deserialize_derived_header(&derived_bytes)
+            .expect("derived header");
+        assert_eq!(
+            header.snapshot_sha256, actual_sha,
+            "Bug B: derived header must key on the actual snapshot SHA (read-path identity)"
+        );
+    }
+}

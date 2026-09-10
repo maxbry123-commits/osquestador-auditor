@@ -1,0 +1,121 @@
+# sqry CLI
+
+**Version**: 31.0.0
+**Rust**: 1.94+ (Edition 2024; repository toolchain 1.94.1)
+
+`sqry` is the command-line interface for local semantic code search.
+
+> **Removed in 21.0.0:** the natural-language `sqry ask` command was removed. Use `sqry query`, `sqry graph direct-callers`, and `sqry graph trace-path` instead; see [Removed features](../docs/TROUBLESHOOTING.md#removed-features) for migration.
+
+## Install
+
+Recommended binary installers:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/verivus-oss/sqry/main/scripts/install.sh | bash -s -- --component all
+```
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/verivus-oss/sqry/main/scripts/install.ps1 -OutFile install.ps1
+.\install.ps1 -Component all
+```
+
+Source install:
+
+```bash
+cargo install --path sqry-cli
+cargo install --path sqry-mcp
+cargo install --path sqry-lsp
+cargo install --path sqry-daemon
+```
+
+The public release assets include `sqry`, `sqry-mcp`, `sqry-lsp`, and `sqryd`. Homebrew is the current package-manager surface backed by the public release manifest.
+The installer scripts verify SHA256 checksums by default; optional signature verification checks the current `release-artifacts.attestation.json` GitHub artifact attestation from `release-distribute.yml`, with legacy per-asset Cosign bundle fallback for older releases.
+
+## Core Workflow
+
+```bash
+sqry index .
+sqry search "parse_.*"
+sqry query "kind:function AND visibility:public"
+sqry graph direct-callers authenticate
+sqry graph trace-path main handle_request
+```
+
+## Command Families
+
+| Family | Commands |
+| --- | --- |
+| Search | `search`, top-level pattern shorthand, `hier`, `similar`, `explain` |
+| Structural query | `query`, `plan-query` |
+| Graph analysis | `graph`, `cycles`, `unused`, `duplicates`, `impact`, `diff`, `subgraph`, `visualize`, `export`, `overview`, `shape-match` |
+| Rules and language analysis | `rules`, `context-propagation` |
+| Index lifecycle | `index`, `update`, `watch`, `analyze`, `repair`, `cache` |
+| Workspace | `workspace init`, `workspace scan`, `workspace add`, `workspace remove`, `workspace query`, `workspace stats`, `workspace status`, `workspace clean` |
+| Daemon | `daemon start`, `daemon stop`, `daemon status`, `daemon logs`, `daemon load`, `daemon load-revision`, `daemon list-revisions`, `daemon revision-status`, `daemon unload-revision`, `daemon prune-revisions`, `daemon rebuild`, `daemon reset` |
+| Integrations | `lsp`, `mcp setup`, `completions`, `shell`, `batch` |
+| Local state | `config`, `alias`, `history`, `insights`, `troubleshoot`, `doctor` |
+
+Use `sqry <command> --help` for the authoritative CLI syntax in your installed binary.
+
+## Indexing
+
+```bash
+sqry index .
+sqry index --status --json .
+sqry index --force .
+```
+
+Plugin selection:
+
+```bash
+sqry index --include-high-cost .
+sqry index --exclude-high-cost .
+sqry index --enable-plugin json .
+sqry index --disable-plugin json .
+```
+
+The default fast path excludes compiled non-default plugins. `json` is high-wall-clock; optional specialty plugins include `apex`, `abap`, `servicenow-xanadu-js`, `servicenow-xml`, `terraform`, `puppet`, and `pulumi` when compiled in.
+
+See [Indexing](../docs/user-guide/indexing.md).
+
+## Workspaces And Daemon
+
+Workspace commands:
+
+```bash
+sqry workspace init .
+sqry workspace scan .
+sqry workspace status . --json
+sqry workspace clean .
+sqry workspace clean . --apply
+```
+
+Daemon commands:
+
+```bash
+sqry daemon start
+sqry daemon load .
+sqry daemon status --json
+sqry daemon rebuild . --force
+sqry daemon logs --follow
+```
+
+See [Workspaces](../docs/user-guide/workspace.md) and [Daemon Mode](../docs/user-guide/daemon.md).
+
+## MCP Setup
+
+```bash
+sqry mcp setup --tool claude
+sqry mcp setup --tool codex
+sqry mcp setup --tool gemini
+sqry-mcp --list-tools
+```
+
+See [MCP Guide](../docs/user-guide/mcp.md) and [sqry-mcp/README.md](../sqry-mcp/README.md).
+
+## Related Guides
+
+- [Quick Start](../QUICKSTART.md)
+- [User Guide](../docs/user-guide/README.md)
+- [Advanced Analysis](../docs/user-guide/advanced-analysis.md)

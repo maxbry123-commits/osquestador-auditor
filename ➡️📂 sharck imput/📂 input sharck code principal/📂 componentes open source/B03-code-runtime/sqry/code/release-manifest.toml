@@ -1,0 +1,422 @@
+# release-manifest.toml — Single source of truth for OSS release sanitization
+#
+# Design: default-deny. Anything not explicitly listed as public is excluded.
+# sanitize-for-oss.sh and verify-sanitized-tree.sh read this file.
+
+[manifest]
+version = 6
+default = "deny"
+
+[selection.crates]
+public = [
+    "sqry-classpath/",
+    "sqry-cli/",
+    "sqry-core/",
+    "sqry-daemon/",
+    "sqry-daemon-client/",
+    "sqry-daemon-protocol/",
+    "sqry-db/",
+    "sqry-lsp/",
+    "sqry-mcp/",
+    "sqry-mcp-redaction/",
+    "sqry-lang-support/",
+    "sqry-plugin-registry/",
+    "sqry-rules/",
+    "sqry-tree-sitter-support/",
+    "sqry-lang-c/",
+    "sqry-lang-cpp/",
+    "sqry-lang-csharp/",
+    "sqry-lang-css/",
+    "sqry-lang-dart/",
+    "sqry-lang-elixir/",
+    "sqry-lang-go/",
+    "sqry-lang-groovy/",
+    "sqry-lang-haskell/",
+    "sqry-lang-html/",
+    "sqry-lang-java/",
+    "sqry-lang-javascript/",
+    "sqry-lang-json/",
+    "sqry-lang-kotlin/",
+    "sqry-lang-lua/",
+    "sqry-lang-oracle-plsql/",
+    "sqry-lang-perl/",
+    "sqry-lang-php/",
+    "sqry-lang-pulumi/",
+    "sqry-lang-puppet/",
+    "sqry-lang-python/",
+    "sqry-lang-r/",
+    "sqry-lang-ruby/",
+    "sqry-lang-rust/",
+    "sqry-lang-salesforce-apex/",
+    "sqry-lang-sap-abap/",
+    "sqry-lang-scala/",
+    "sqry-lang-servicenow-xanadu/",
+    "sqry-lang-servicenow-xml/",
+    "sqry-lang-shell/",
+    "sqry-lang-sql/",
+    "sqry-lang-svelte/",
+    "sqry-lang-swift/",
+    "sqry-lang-terraform/",
+    "sqry-lang-typescript/",
+    "sqry-lang-vue/",
+    "sqry-lang-zig/",
+    "crates/tree-sitter-abap-sqry/",
+    "crates/tree-sitter-elixir-sqry/",
+    "crates/tree-sitter-groovy-sqry/",
+    "crates/tree-sitter-kotlin-sqry/",
+    "crates/tree-sitter-perl-sqry/",
+    "crates/tree-sitter-plsql-sqry/",
+    "crates/tree-sitter-svelte-sqry/",
+    "crates/tree-sitter-vue-sqry/",
+]
+excluded = [
+    "tools/",
+    "benchmarks/",
+    "sqry-test-support/",
+    "sqry-test-fixtures/",
+    "sqry-tree-sitter-fuzz-support/",
+]
+
+[selection.root_files]
+public = [
+    ".gitattributes",
+    ".gitignore",
+    "Cargo.lock",
+    "Cargo.toml",
+    "CHANGELOG.md",
+    "clippy.toml",
+    "CONTRIBUTING.md",
+    "deny.toml",
+    "ERRATA.md",
+    # Glama MCP-directory maintainer file. Ships to the public mirror so Glama
+    # can verify org ownership and build the packaging/docker/Dockerfile.
+    "glama.json",
+    "LICENSE",
+    "QUICKSTART.md",
+    "README.md",
+    "release-manifest.toml",
+    "rust-toolchain.toml",
+    "rustfmt.toml",
+    "THIRD-PARTY-LICENSES",
+    "TRADEMARK.md",
+]
+excluded = [
+    "CLAUDE.md",
+    "AGENTS.md",
+    "CODEX.md",
+    "action.yml",
+    ".codexignore",
+    ".dockerignore",
+    ".env.test",
+]
+
+[selection.cargo]
+public = [".cargo/config.toml", ".cargo/audit.toml", ".cargo/mutants.toml"]
+
+[selection.workflows]
+# GitHub Actions workflows tracked as part of the OSS surface contract.
+# Workflows in `public` ship to the OSS mirror; release/distribution
+# workflows are managed separately via scripts/release/managed-paths/.
+public = [
+    # STEP_11 (workspace-aware-cross-repo) — six-gate CI workflow.
+    # Referenced by branch-protection on master.
+    ".github/workflows/ci.yml",
+    # Homebrew formula publisher. Runs in verivus-oss/sqry and pushes the
+    # rendered formula to verivus-oss/homebrew-sqry on every release.
+    ".github/workflows/publish-homebrew-tap.yml",
+    # P0 #1 of docs/reviews/test-strategy-audit-2026-04-30/CATALOGUE.md.
+    # cargo-mutants gate (PR changed-lines + master baseline rotation).
+    # Strategy ref: docs/reviews/test-strategy-audit-2026-04-30/CATALOGUE.md §2.4, §7.1 #7.
+    ".github/workflows/mutation-gate.yml",
+    # U_WS1_13_FUZZ: nightly cargo-fuzz target on sqry-db planner::parse.
+    # Nightly-only (schedule + workflow_dispatch); not triggered on PRs.
+    ".github/workflows/fuzz-parse.yml",
+]
+
+[selection.docs]
+files_public = [
+    "docs/claim-traceability.toml",
+    "docs/FEATURE_LIST.md",
+    "docs/SCHEMA.md",
+    "docs/SEMANTIC_VERSIONING.md",
+    "docs/release/homebrew-tap.md",
+    "docs/superpowers/plans/2026-03-19-sqryd-daemon.md",
+]
+dirs_public = ["docs/user-guide/"]
+
+[selection.scripts]
+# Private release-control validators are intentionally absent from this public
+# allowlist under the manifest's default-deny model:
+# - scripts/release/check-sanitization-review-contract.sh
+# - scripts/release/test-sanitization-review-contract-modes.sh
+# - scripts/release/check-workflow-run-interpolation.sh
+# - scripts/release/test-check-workflow-run-interpolation.sh
+# - scripts/release/test-daemon-env-native-ci.sh
+public = [
+    "scripts/install.sh",
+    "scripts/install.ps1",
+    "scripts/release/render-homebrew-formula.sh",
+    "scripts/sync-versions.sh",
+    # MCP-registry publisher. Runs in verivus-oss/sqry (publish-container.yml,
+    # on release: published) to register io.github.verivus-oss/sqry via OIDC.
+    "scripts/release/register-mcp-registry.sh",
+    # STEP_11 (workspace-aware-cross-repo) CI gate scripts. These run in
+    # .github/workflows/ci.yml and are referenced by branch-protection.
+    "scripts/ci/check_claim_traceability.sh",
+    "scripts/ci/check_routing_gates.sh",
+    "scripts/ci/check_vscode_settings_parity.sh",
+    # STEP_8 reproduction harness for the operational-folder regression
+    # (zero member/excluded `No index found` lines).
+    "scripts/repro/operational_folder.sh",
+    # mutation-gate.yml summary renderer. Reads cargo-mutants outcomes.json
+    # and emits Markdown into GITHUB_STEP_SUMMARY.
+    "scripts/ci/mutants_summary.py",
+    # Phase A C indirect-call precision: build-time perf gate enforcing
+    # SPEC §5.2's +15% SAME-COMMIT MARGINAL budget on the linux-driver-subset
+    # fixture (2026-07-06 remethodology, verivus-oss/sqry#280; drives the
+    # paired-alternating `sqry-lang-c/examples/phase_a_marginal` binary rather
+    # than a frozen absolute baseline), and a fan-out histogram tool consuming
+    # `cargo run --example measure_indirect_fanout` output for cap calibration.
+    "scripts/measure/VERSION",
+    "scripts/measure/check_phase_a_perf_gate.sh",
+    "scripts/measure/icall_fanout_histogram.py",
+]
+
+[selection.packaging]
+# Homebrew formula template — consumed by scripts/release/render-homebrew-formula.sh
+# during the publish-homebrew-tap workflow. Must ship to the OSS repo so the
+# workflow can render against it.
+public = [
+    "packaging/homebrew/sqry.rb",
+    # sqry-mcp container image (alpine + git, static musl binary). Ships public
+    # so the Glama build check and the release pipeline can build it from the
+    # mirror.
+    "packaging/docker/Dockerfile",
+    "packaging/podman/Containerfile",
+]
+
+[selection.dirs]
+public = [
+    "crates/",
+    "third-party/",
+    "test-fixtures/",
+    "tests/",
+    "vendor/",
+    "assets/",
+    "supply-chain/",
+    ".openvex/",
+    "sqry-vscode/",
+]
+
+[selection.fixtures]
+required_public = [
+    # Vendored Archify JSON schemas (issue #480). Consumed by sqry-core's
+    # hermetic schema-conformance test; pinned to tt-a1i/archify
+    # fa7fbce7fba812fbb8ac813408602412806fe40f (see the sibling SOURCE.md).
+    "test-fixtures/archify-schema/architecture.schema.json",
+    "test-fixtures/archify-schema/common.schema.json",
+    "test-fixtures/archify-schema/SOURCE.md",
+    "test-fixtures/cross-language-typeparams/csharp/Generics.cs",
+    "test-fixtures/cross-language-typeparams/go/generics.go",
+    "test-fixtures/cross-language-typeparams/java/Generics.java",
+    "test-fixtures/cross-language-typeparams/kotlin/Generics.kt",
+    "test-fixtures/cross-language-typeparams/rust/generics.rs",
+    "test-fixtures/cross-language-typeparams/typescript/generics.ts",
+    "test-fixtures/cross-language/abap/fields.abap",
+    "test-fixtures/cross-language/abap/realistic.abap",
+    "test-fixtures/cross-language/apex/Fields.cls",
+    "test-fixtures/cross-language/apex/realistic.cls",
+    "test-fixtures/cross-language/cpp/fields.cpp",
+    "test-fixtures/cross-language/cpp/realistic.cpp",
+    "test-fixtures/cross-language/csharp/Fields.cs",
+    "test-fixtures/cross-language/csharp/realistic.cs",
+    "test-fixtures/cross-language/ffi/bindings.rs",
+    "test-fixtures/cross-language/ffi/cgo_bindings.go",
+    "test-fixtures/cross-language/ffi/math.c",
+    "test-fixtures/cross-language/http/client.js",
+    "test-fixtures/cross-language/http/server.py",
+    "test-fixtures/cross-language/http/server_go.go",
+    "test-fixtures/cross-language/http/server_java.java",
+    "test-fixtures/cross-language/http/server_ts.ts",
+    "test-fixtures/cross-language/java/fields.java",
+    "test-fixtures/cross-language/java/realistic.java",
+    "test-fixtures/cross-language/javascript/fields.js",
+    "test-fixtures/cross-language/javascript/realistic.js",
+    "test-fixtures/cross-language/php/Fields.php",
+    "test-fixtures/cross-language/php/realistic.php",
+    "test-fixtures/cross-language/ruby/fields.rb",
+    "test-fixtures/cross-language/ruby/realistic.rb",
+    "test-fixtures/cross-language/rust/fields.rs",
+    "test-fixtures/cross-language/rust/realistic.rs",
+    "test-fixtures/cross-language/scala/Fields.scala",
+    "test-fixtures/cross-language/scala/realistic.scala",
+    "test-fixtures/cross-language/swift/Fields.swift",
+    "test-fixtures/cross-language/swift/realistic.swift",
+    "test-fixtures/cross-language/typescript/fields.ts",
+    "test-fixtures/cross-language/typescript/realistic.ts",
+    "test-fixtures/cross-language/zig/fields.zig",
+    "test-fixtures/cross-language/zig/realistic.zig",
+    "test-fixtures/shape/cross-language/equiv.cpp",
+    "test-fixtures/shape/cross-language/equiv.py",
+    "test-fixtures/shape/data/sample.css",
+    "test-fixtures/shape/data/sample.html",
+    "test-fixtures/shape/data/sample.json",
+    "test-fixtures/shape/data/sample.pkb",
+    "test-fixtures/shape/data/sample.sql",
+    "test-fixtures/shape/data/sample.svelte",
+    "test-fixtures/shape/data/sample.vue",
+    "test-fixtures/shape/dynamic/lua.lua",
+    "test-fixtures/shape/dynamic/perl.pl",
+    "test-fixtures/shape/dynamic/php.php",
+    "test-fixtures/shape/dynamic/ruby.rb",
+    "test-fixtures/shape/dynamic/sample.R",
+    "test-fixtures/shape/dynamic/sample.ex",
+    "test-fixtures/shape/dynamic/sample.hs",
+    "test-fixtures/shape/dynamic/script.sh",
+    "test-fixtures/shape/iac/Pulumi.yaml",
+    "test-fixtures/shape/iac/apex.cls",
+    "test-fixtures/shape/iac/business_rule.js",
+    "test-fixtures/shape/iac/demo.abap",
+    "test-fixtures/shape/iac/main.tf",
+    "test-fixtures/shape/iac/manifest.pp",
+    "test-fixtures/shape/iac/update_set.xml",
+    "test-fixtures/shape/reference/Sample.java",
+    "test-fixtures/shape/reference/sample.cpp",
+    "test-fixtures/shape/reference/sample.go",
+    "test-fixtures/shape/reference/sample.js",
+    "test-fixtures/shape/reference/sample.py",
+    "test-fixtures/shape/reference/sample.ts",
+    "test-fixtures/shape/rename-invariance/original.py",
+    "test-fixtures/shape/rename-invariance/original.rs",
+    "test-fixtures/shape/rename-invariance/reformatted.py",
+    "test-fixtures/shape/rename-invariance/reformatted.rs",
+    "test-fixtures/shape/rename-invariance/renamed.py",
+    "test-fixtures/shape/rename-invariance/renamed.rs",
+    "test-fixtures/shape/systems/sample.c",
+    "test-fixtures/shape/systems/sample.cs",
+    "test-fixtures/shape/systems/sample.dart",
+    "test-fixtures/shape/systems/sample.groovy",
+    "test-fixtures/shape/systems/sample.kt",
+    "test-fixtures/shape/systems/sample.scala",
+    "test-fixtures/shape/systems/sample.swift",
+    "test-fixtures/shape/systems/sample.zig",
+]
+
+[sanitization.forbidden_patterns]
+strings = []
+path_patterns = [
+    ".claude/",
+    ".codex",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODEX.md",
+    "docs/development/",
+    "docs/reviews/",
+    "docs/agent-process/",
+]
+
+[packaging]
+allowed_extensions = [
+    ".rs", ".toml", ".lock", ".md", ".txt", ".yml", ".yaml",
+    ".json", ".js", ".cjs", ".ts", ".py", ".dart", ".go", ".java", ".swift", ".sql",
+    ".css", ".html", ".sh", ".ps1", ".c", ".h", ".cc", ".hh", ".cpp", ".cs",
+    ".kt", ".php", ".rb", ".scala", ".zig", ".abap", ".cls", ".scm",
+    ".R", ".ex", ".groovy", ".hs", ".lua", ".pkb", ".pl", ".pp", ".svelte", ".tf",
+    ".vue", ".xml",
+]
+allowed_dotfiles = [".gitignore", ".gitattributes", ".cargo", ".editorconfig", ".vscodeignore"]
+	allowed_basenames = [
+    "Dockerfile",
+    "Containerfile",
+    "LICENSE",
+    "LICENSE-*",
+    "COPYING",
+    "COPYING.*",
+    "NOTICE",
+    "NOTICE.*",
+    "AUTHORS",
+    "AUTHORS.*",
+	    "VERSION",
+	    "BUILD",
+	    "WORKSPACE",
+	    "build.gradle",
+	    "settings.gradle",
+	    "build.gradle.kts",
+	    "build.sbt",
+	    "pom.xml",
+	]
+binary_assets = [
+    "assets/*.png",
+    "assets/*.svg",
+    "sqry-vscode/media/*.png",
+    "sqry-vscode/media/*.svg",
+    "sqry-vscode/resources/*.png",
+]
+
+[release.crates]
+publish_order = [
+    # Phase 1: Foundations
+    "sqry-core",
+    "sqry-classpath",
+    "sqry-db",
+    "sqry-daemon-protocol",
+    "sqry-daemon-client",
+    "sqry-mcp-redaction",
+    # Phase 2: Support libraries
+    "sqry-lang-support",
+    "sqry-tree-sitter-support",
+    # Phase 3: Vendored grammars
+    "tree-sitter-vue-sqry",
+    "tree-sitter-svelte-sqry",
+    "tree-sitter-groovy-sqry",
+    "tree-sitter-abap-sqry",
+    "tree-sitter-plsql-sqry",
+    "tree-sitter-kotlin-sqry",
+    "tree-sitter-elixir-sqry",
+    "tree-sitter-perl-sqry",
+    # Phase 4: Language plugins
+    "sqry-lang-c",
+    "sqry-lang-cpp",
+    "sqry-lang-csharp",
+    "sqry-lang-css",
+    "sqry-lang-dart",
+    "sqry-lang-elixir",
+    "sqry-lang-go",
+    "sqry-lang-groovy",
+    "sqry-lang-haskell",
+    "sqry-lang-html",
+    "sqry-lang-java",
+    "sqry-lang-javascript",
+    "sqry-lang-json",
+    "sqry-lang-kotlin",
+    "sqry-lang-lua",
+    "sqry-lang-oracle-plsql",
+    "sqry-lang-perl",
+    "sqry-lang-php",
+    "sqry-lang-pulumi",
+    "sqry-lang-puppet",
+    "sqry-lang-python",
+    "sqry-lang-r",
+    "sqry-lang-ruby",
+    "sqry-lang-rust",
+    "sqry-lang-salesforce-apex",
+    "sqry-lang-sap-abap",
+    "sqry-lang-scala",
+    "sqry-lang-servicenow-xanadu",
+    "sqry-lang-servicenow-xml",
+    "sqry-lang-shell",
+    "sqry-lang-sql",
+    "sqry-lang-swift",
+    "sqry-lang-terraform",
+    "sqry-lang-typescript",
+    "sqry-lang-svelte",
+    "sqry-lang-vue",
+    "sqry-lang-zig",
+    # Phase 5: Registry & servers
+    "sqry-rules",
+    "sqry-plugin-registry",
+    "sqry-lsp",
+    "sqry-mcp",
+    "sqry-daemon",
+    "sqry-cli",
+]

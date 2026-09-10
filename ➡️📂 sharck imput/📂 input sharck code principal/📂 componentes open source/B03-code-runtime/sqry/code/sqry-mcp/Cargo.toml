@@ -1,0 +1,130 @@
+[package]
+name = "sqry-mcp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "MCP server for sqry semantic code search"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(disabled)', 'cfg(fuzzing)'] }
+
+[lib]
+name = "sqry_mcp"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sqry-mcp"
+path = "src/main.rs"
+
+[features]
+default = []
+# Forwarding feature for integration tests that need the long-tail
+# enterprise/IaC plugins (apex, abap, servicenow-*, terraform, puppet,
+# pulumi, plsql) gated behind `sqry-plugin-registry/specialty-plugins`
+# after `refactor!: make non-core surfaces opt-in` (commit ecd215385).
+# Off by default. Run gated tests with:
+#   cargo test -p sqry-mcp --features specialty-plugins
+specialty-plugins = ["sqry-plugin-registry/specialty-plugins"]
+# Iter2-B C029c — exposes `SqryServer::new_for_tests` and
+# `SqryServer::build_success_result_for_tests` so integration tests can
+# drive the actual `success_result` boundary that
+# `SQRY_MCP_MAX_OUTPUT_BYTES` enforces. Activated through the
+# `[dev-dependencies] sqry-mcp = { path = ".", features = ["test-helpers"] }`
+# self-dep below — required because integration-test binaries see the crate
+# root compiled WITHOUT `cfg(test)`, so a bare `cfg(test)` gate is not
+# sufficient to expose a test-only public surface.
+test-helpers = []
+
+[dependencies]
+tokio = { version = "1.52", features = ["full"] }
+anyhow = "1.0"
+thiserror.workspace = true
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+regex.workspace = true
+tracing = "0.1"
+tracing-subscriber = "0.3"
+sqry-core = { version = "31.0.0", path = "../sqry-core" }
+sqry-db = { version = "31.0.0", path = "../sqry-db" }
+sqry-rules = { version = "31.0.0", path = "../sqry-rules" }
+sqry-plugin-registry = { version = "31.0.0", path = "../sqry-plugin-registry" }
+sqry-mcp-redaction = { version = "31.0.0", path = "../sqry-mcp-redaction" }
+
+# MCP SDK for protocol compliance.
+# Pinned to ~1.7 (<1.8): rmcp 1.8.0 changed `Peer::peer_info()` from returning
+# `Option<&InitializeRequestParams>` to `Option<Arc<...>>`, which breaks
+# `on_initialized`/`record_client_info`. The sanitized release build re-resolves
+# without --locked and would otherwise pull 1.8.0. Lift the pin when sqry-mcp is
+# ported to the 1.8 API.
+rmcp = { version = "~1.7", features = ["server", "transport-io"] }
+# Pin rmcp-macros on the same minor line as rmcp. rmcp 1.7's transitive
+# constraint allows Cargo's fresh resolver to select rmcp-macros 1.8, whose
+# generated code expects rmcp 1.8 internals and breaks sanitized release builds.
+rmcp-macros = "~1.7"
+
+# JSON schema derivation for parameter types (must match rmcp's version)
+schemars = "1"
+parking_lot.workspace = true
+once_cell = "1.21"
+hdrhistogram = { version = "7.5", default-features = false, features = ["sync"] }
+url = "2.5"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+sha2.workspace = true
+hex.workspace = true
+base64 = "0.22"
+tempfile = "3.27"
+indexmap = "2"
+rayon.workspace = true
+lru = "0.18.2"
+
+# Phase 8c U12 — shim-mode client for `--daemon` / `--daemon-socket`.
+# sqry-daemon-client is a leaf on the dep graph (no sqry-daemon server
+# dep); no cycle is introduced. Verify with `cargo tree -p sqry-mcp`.
+sqry-daemon-client = { version = "31.0.0", path = "../sqry-daemon-client" }
+
+# Task 12 U1 — `which` resolves the sqryd binary via PATH lookup (tier 3
+# of the resolution order: SQRYD_PATH env > sibling > which). Pinned to
+# the same major version as sqry-lsp (8) for consistency.
+which = "8"
+
+[target.'cfg(target_env = "musl")'.dependencies]
+tikv-jemallocator = "0.6"
+tikv-jemalloc-sys = { version = "0.6", features = ["unprefixed_malloc_on_supported_platforms"] }
+
+# Phase 8c U12 — `libc::getuid()` backs the UID-scoped
+# `/tmp/sqry-<uid>/sqryd.sock` fallback in `resolve_daemon_socket`,
+# matching `sqry-daemon/src/config.rs::user_scoped_dir_name` exactly
+# so a default-configured daemon + default-configured client meet
+# without user configuration. unix-only; windows uses the named-pipe
+# path which needs no UID scoping (the pipe namespace is per-session).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(unix)'.dev-dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3.27"
+log.workspace = true
+serial_test = "3.4"
+criterion = { version = "0.8", features = ["html_reports"] }
+approx = "0.5"
+walkdir = "2"
+sqry-lang-rust = { path = "../sqry-lang-rust" }
+# Iter2-B C029c — self-dep with `test-helpers` feature so the
+# integration test `tests/output_caps_truncation_via_dispatch.rs` can
+# import `SqryServer::new_for_tests` + `build_success_result_for_tests`.
+# Integration-test binaries see the crate root WITHOUT `cfg(test)`,
+# so a `cfg(test)` gate alone is not enough — the feature gate on the
+# function definition + the `pub use` re-export in `lib.rs` must both
+# be active for that compilation unit.
+sqry-mcp = { path = ".", features = ["test-helpers"] }
+# STEP_7 MAJOR 2 fix coverage: integration test
+# `tests/workspace_status_multi_root.rs` asserts that
+# `mcp__sqry__workspace_status` mirrors the LSP `sqry/workspaceStatus`
+# wire shape field-for-field by comparing against
+# `sqry_lsp::session::build_workspace_status_info` for the same workspace.
+sqry-lsp = { path = "../sqry-lsp" }

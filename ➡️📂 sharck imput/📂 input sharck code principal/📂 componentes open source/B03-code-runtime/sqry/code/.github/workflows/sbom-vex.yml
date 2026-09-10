@@ -1,0 +1,227 @@
+name: Generate SBOM + VEX
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sbom:
+    name: Generate SBOM + VEX
+    runs-on: [self-hosted, linux, rust, x86_64, workhorse2]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git credentials for internal repos (job-scoped)
+        # Self-hosted runner shares the service user's HOME: write the token
+        # rewrite to a job-local file (RUNNER_TEMP is wiped between jobs), never
+        # the real ~/.gitconfig, where expired rewrites accumulate and break the
+        # user's git auth. GITHUB_ENV exports it to all subsequent steps.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "GIT_CONFIG_GLOBAL=${RUNNER_TEMP}/gitconfig" >> "$GITHUB_ENV"
+          GIT_CONFIG_GLOBAL="${RUNNER_TEMP}/gitconfig" git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: "1.90"
+
+      - name: Install cargo-cyclonedx
+        run: cargo install --locked --force cargo-cyclonedx
+
+      - name: Prepare local tool bin
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Install Cosign (for tool verification)
+        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+
+      - name: Install Grype (verified)
+        shell: bash
+        run: |
+          set -euo pipefail
+          download() {
+            local url="$1"
+            local output="$2"
+            curl --fail --show-error --silent --location \
+              --retry 8 --retry-all-errors --retry-delay 2 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 300 \
+              "${url}" -o "${output}"
+          }
+
+          GRYPE_VERSION="v0.87.0"
+          GRYPE_VERSION_NUM="${GRYPE_VERSION#v}"
+          GRYPE_BASE_URL="https://github.com/anchore/grype/releases/download/${GRYPE_VERSION}"
+          GRYPE_CHECKSUMS="grype_${GRYPE_VERSION_NUM}_checksums.txt"
+          GRYPE_TARBALL="grype_${GRYPE_VERSION_NUM}_linux_amd64.tar.gz"
+          GRYPE_WORKDIR="$(mktemp -d "${RUNNER_TEMP}/grype-install.XXXXXX")"
+
+          download "${GRYPE_BASE_URL}/${GRYPE_CHECKSUMS}" "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}"
+          download "${GRYPE_BASE_URL}/${GRYPE_CHECKSUMS}.pem" "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.pem.b64"
+          download "${GRYPE_BASE_URL}/${GRYPE_CHECKSUMS}.sig" "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.sig.b64"
+          base64 -d "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.pem.b64" > "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.pem"
+          base64 -d "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.sig.b64" > "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.sig"
+
+          cosign verify-blob \
+            --certificate "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.pem" \
+            --signature "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}.sig" \
+            --certificate-identity "https://github.com/anchore/grype/.github/workflows/release.yaml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}"
+
+          download "${GRYPE_BASE_URL}/${GRYPE_TARBALL}" "${GRYPE_WORKDIR}/${GRYPE_TARBALL}"
+          grep -F " ${GRYPE_TARBALL}" "${GRYPE_WORKDIR}/${GRYPE_CHECKSUMS}" > "${GRYPE_WORKDIR}/grype.sha256"
+          (cd "${GRYPE_WORKDIR}" && sha256sum -c grype.sha256)
+
+          tar -xzf "${GRYPE_WORKDIR}/${GRYPE_TARBALL}" -C "${GRYPE_WORKDIR}"
+          install -m 0755 "${GRYPE_WORKDIR}/grype" "$HOME/.local/bin/grype"
+
+      - name: Install vexctl (verified)
+        shell: bash
+        run: |
+          set -euo pipefail
+          download() {
+            local url="$1"
+            local output="$2"
+            curl --fail --show-error --silent --location \
+              --retry 8 --retry-all-errors --retry-delay 2 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 300 \
+              "${url}" -o "${output}"
+          }
+
+          VEXCTL_VERSION="v0.4.1"
+          VEXCTL_BASE_URL="https://github.com/openvex/vexctl/releases/download/${VEXCTL_VERSION}"
+          VEXCTL_CHECKSUMS="vexctl_checksums.txt"
+          VEXCTL_ASSET="vexctl-linux-amd64"
+          VEXCTL_WORKDIR="$(mktemp -d "${RUNNER_TEMP}/vexctl-install.XXXXXX")"
+
+          download "${VEXCTL_BASE_URL}/${VEXCTL_CHECKSUMS}" "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}"
+          download "${VEXCTL_BASE_URL}/${VEXCTL_CHECKSUMS}.pem" "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.pem.b64"
+          download "${VEXCTL_BASE_URL}/${VEXCTL_CHECKSUMS}.sig" "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.sig.b64"
+          base64 -d "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.pem.b64" > "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.pem"
+          base64 -d "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.sig.b64" > "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.sig"
+
+          cosign verify-blob \
+            --certificate "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.pem" \
+            --signature "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}.sig" \
+            --certificate-identity "https://github.com/openvex/vexctl/.github/workflows/release.yaml@refs/tags/v0.4.1" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}"
+
+          download "${VEXCTL_BASE_URL}/${VEXCTL_ASSET}" "${VEXCTL_WORKDIR}/${VEXCTL_ASSET}"
+          grep -F " ${VEXCTL_ASSET}" "${VEXCTL_WORKDIR}/${VEXCTL_CHECKSUMS}" > "${VEXCTL_WORKDIR}/vexctl.sha256"
+          (cd "${VEXCTL_WORKDIR}" && sha256sum -c vexctl.sha256)
+
+          install -m 0755 "${VEXCTL_WORKDIR}/${VEXCTL_ASSET}" "$HOME/.local/bin/vexctl"
+
+      - name: Install Syft (verified; used for SBOM format conversion)
+        shell: bash
+        run: |
+          set -euo pipefail
+          download() {
+            local url="$1"
+            local output="$2"
+            curl --fail --show-error --silent --location \
+              --retry 8 --retry-all-errors --retry-delay 2 --retry-max-time 240 \
+              --connect-timeout 20 --max-time 300 \
+              "${url}" -o "${output}"
+          }
+
+          SYFT_VERSION="v1.38.2"
+          SYFT_VERSION_NUM="${SYFT_VERSION#v}"
+          SYFT_BASE_URL="https://github.com/anchore/syft/releases/download/${SYFT_VERSION}"
+          SYFT_CHECKSUMS="syft_${SYFT_VERSION_NUM}_checksums.txt"
+          SYFT_TARBALL="syft_${SYFT_VERSION_NUM}_linux_amd64.tar.gz"
+          SYFT_WORKDIR="$(mktemp -d "${RUNNER_TEMP}/syft-install.XXXXXX")"
+
+          download "${SYFT_BASE_URL}/${SYFT_CHECKSUMS}" "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}"
+          download "${SYFT_BASE_URL}/${SYFT_CHECKSUMS}.pem" "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.pem.b64"
+          download "${SYFT_BASE_URL}/${SYFT_CHECKSUMS}.sig" "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.sig.b64"
+          base64 -d "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.pem.b64" > "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.pem"
+          base64 -d "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.sig.b64" > "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.sig"
+
+          cosign verify-blob \
+            --certificate "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.pem" \
+            --signature "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}.sig" \
+            --certificate-identity "https://github.com/anchore/syft/.github/workflows/release.yaml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}"
+
+          download "${SYFT_BASE_URL}/${SYFT_TARBALL}" "${SYFT_WORKDIR}/${SYFT_TARBALL}"
+          grep -F " ${SYFT_TARBALL}" "${SYFT_WORKDIR}/${SYFT_CHECKSUMS}" > "${SYFT_WORKDIR}/syft.sha256"
+          (cd "${SYFT_WORKDIR}" && sha256sum -c syft.sha256)
+
+          tar -xzf "${SYFT_WORKDIR}/${SYFT_TARBALL}" -C "${SYFT_WORKDIR}"
+          install -m 0755 "${SYFT_WORKDIR}/syft" "$HOME/.local/bin/syft"
+
+      - name: Generate SBOMs (CycloneDX)
+        run: |
+          mkdir -p artifacts
+          components=(sqry sqry-mcp sqry-lsp)
+          manifests=(sqry-cli/Cargo.toml sqry-mcp/Cargo.toml sqry-lsp/Cargo.toml)
+
+          for i in "${!components[@]}"; do
+            component="${components[$i]}"
+            manifest="${manifests[$i]}"
+            manifest_dir=$(dirname "${manifest}")
+            echo "Generating CycloneDX SBOM for ${component} (${manifest})..."
+            cargo cyclonedx \
+              --manifest-path "${manifest}" \
+              --all-features \
+              --format json \
+              --override-filename sbom
+            mv "${manifest_dir}/sbom.json" "artifacts/sbom-${component}-cyclonedx.json"
+          done
+
+      - name: Convert SBOMs to SPDX
+        run: |
+          for cyclonedx_file in artifacts/sbom-*-cyclonedx.json; do
+            component="${cyclonedx_file#artifacts/sbom-}"
+            component="${component%-cyclonedx.json}"
+            syft convert "${cyclonedx_file}" \
+              -o "spdx-json=artifacts/sbom-${component}-spdx.json"
+          done
+
+      - name: Scan vulnerabilities + generate VEX
+        run: |
+          VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name=="sqry-cli") | .version')
+
+          for cyclonedx_file in artifacts/sbom-*-cyclonedx.json; do
+            component="${cyclonedx_file#artifacts/sbom-}"
+            component="${component%-cyclonedx.json}"
+            # Map component name to Cargo package name for purl
+            package_name="${component}"
+            if [ "${component}" = "sqry" ]; then
+              package_name="sqry-cli"
+            fi
+
+            grype "sbom:${cyclonedx_file}" -o json > "artifacts/vulnerabilities-${component}.json"
+            grype "sbom:${cyclonedx_file}" -o table > "artifacts/vulnerabilities-${component}.txt"
+
+            vexctl generate \
+              --templates .openvex/templates \
+              --product "pkg:cargo/${package_name}@${VERSION}" \
+              --author "sqry security" \
+              --author-role "Maintainer" \
+              --file "artifacts/sbom-${component}-openvex.json"
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom-vex
+          path: |
+            artifacts/sbom-*.json
+            artifacts/vulnerabilities-*.json
+            artifacts/vulnerabilities-*.txt

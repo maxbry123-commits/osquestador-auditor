@@ -1,0 +1,18 @@
+# RustSec Audit Configuration
+# RR-12: Dependency Hygiene - CVE exception tracking
+# See: docs/development/p2-37-unwrap-audit/RR12_DEPENDENCY_HYGIENE_ANALYSIS.md
+
+# 2026-08-18: removed the expired RUSTSEC-2023-0071 exception after the
+# Lance/OpenDAL/RSA dependency chain left the workspace. This list must remain
+# exactly equal to deny.toml's advisory ignore list.
+
+# ============================================================================
+# 2026-06-15 (sqry-nl removal): the number_prefix (RUSTSEC-2025-0119) and paste
+# (RUSTSEC-2024-0436) exceptions were dropped. Both crates reached the tree only
+# through the ONNX / embeddings / DataFusion stack (hf-hub/indicatif, tokenizers,
+# datafusion/lance/gemm), which was removed with the sqry-nl crate. `cargo tree
+# -i paste` / `-i number_prefix` (default and --all-features) now report neither
+# crate, so the advisories no longer match anything in the dependency graph.
+
+[advisories]
+ignore = []

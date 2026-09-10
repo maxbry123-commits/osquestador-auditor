@@ -1,0 +1,396 @@
+
+# cargo-vet audits file
+
+[[audits.clap_complete]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "4.6.5 -> 4.6.6"
+notes = "Reviewed 4.6.5 to 4.6.6 patch diff: bash positional placeholder handling and fish generated-helper formatting fixes plus version/link metadata updates; no build scripts, new dependencies, network/file-system side effects, or unsafe code introduced."
+
+[[audits.indicatif]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "0.18.4 -> 0.18.5"
+notes = "Reviewed 0.18.4 to 0.18.5 patch diff: terminal rendering/wrapping fixes including CJK width handling, MSRV metadata bump, example cleanup, and dev-dependency updates; no build scripts, new runtime dependencies, network/file-system side effects, or unsafe code introduced."
+
+[[audits.time]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "0.3.51 -> 0.3.52"
+notes = "Reviewed 0.3.51 to 0.3.52 patch diff: parsing APIs with default parsed components, nested format-description bracket depth fix, time-macros 0.2.31 dependency update, tests, and docs; no build scripts, new non-time-macros runtime dependencies, network/file-system side effects, or unsafe code introduced."
+
+[[audits.time]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "0.3.52 -> 0.3.53"
+notes = "Reviewed 0.3.52 to 0.3.53 patch diff: formatting/parsing traits are further sealed with crate-private tokens, private-interface lint expectations are added, and public Date/Time/OffsetDateTime parsing/formatting call sites are updated accordingly; no build scripts, new dependencies, network/file-system side effects, or unsafe blocks introduced beyond existing formatting buffer handling."
+
+[[audits.time-macros]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "0.2.30 -> 0.2.31"
+notes = "Reviewed 0.2.30 to 0.2.31 patch diff: ISO week/year overflow validation and subsecond literal parsing without floating-point conversion loss; no build scripts, new dependencies, network/file-system side effects, or unsafe code introduced."
+
+[[audits.tree-sitter-kotlin]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+version = "0.3.9"
+
+[[audits.tree-sitter-sequel]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+version = "0.3.11"
+
+[[audits.zlib-rs]]
+who = "Werner Kasselman <werner@sqry.dev>"
+criteria = "safe-to-deploy"
+delta = "0.6.3 -> 0.6.5"
+notes = "Reviewed 0.6.3 to 0.6.5 patch diff: SIMD Adler/CRC/deflate fixes, LoongArch LSX optional feature support, inflate window-bits validation, uninitialized output buffer APIs, test hardening, and documented Raptor Lake store-corruption workaround; no build scripts, new runtime dependencies, network/file-system side effects, or default-feature expansion introduced."
+
+[[trusted.anstream]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-03-16"
+end = "2027-02-20"
+
+[[trusted.anstyle]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-05-18"
+end = "2027-02-20"
+
+[[trusted.anstyle-parse]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-03-08"
+end = "2027-02-20"
+
+[[trusted.anstyle-query]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-04-13"
+end = "2027-02-20"
+
+[[trusted.anstyle-wincon]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-03-08"
+end = "2027-02-20"
+
+[[trusted.anyhow]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-05"
+end = "2027-02-20"
+
+[[trusted.assert_cmd]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2019-03-23"
+end = "2027-02-20"
+
+[[trusted.async-trait]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-07-23"
+end = "2027-02-20"
+
+[[trusted.automod]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-02-28"
+end = "2027-02-20"
+
+[[trusted.bstr]]
+criteria = "safe-to-deploy"
+user-id = 189 # Andrew Gallant (BurntSushi)
+start = "2019-04-02"
+end = "2027-02-20"
+
+[[trusted.chacha20]]
+criteria = "safe-to-deploy"
+trusted-publisher = "github:RustCrypto/stream-ciphers"
+start = "2026-02-06"
+end = "2027-02-20"
+
+[[trusted.clap_builder]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-03-28"
+end = "2027-02-20"
+
+[[trusted.clap_complete]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2021-12-31"
+end = "2027-02-20"
+
+[[trusted.clap_lex]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-04-15"
+end = "2027-02-20"
+
+[[trusted.colorchoice]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-04-13"
+end = "2027-02-20"
+
+[[trusted.dyn-clone]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-12-23"
+end = "2027-02-20"
+
+[[trusted.env_filter]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2024-01-19"
+end = "2027-02-20"
+
+[[trusted.env_logger]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-11-24"
+end = "2027-02-20"
+
+[[trusted.is_terminal_polyfill]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2024-05-02"
+end = "2027-02-20"
+
+[[trusted.itoa]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-02"
+end = "2027-02-20"
+
+[[trusted.monostate]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2022-01-25"
+end = "2027-02-20"
+
+[[trusted.monostate-impl]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2022-01-25"
+end = "2027-02-20"
+
+[[trusted.once_cell_polyfill]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2025-05-22"
+end = "2027-02-20"
+
+[[trusted.paste]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-03-19"
+end = "2027-02-20"
+
+[[trusted.predicates]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2019-04-22"
+end = "2027-02-20"
+
+[[trusted.predicates-core]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2020-12-29"
+end = "2027-02-20"
+
+[[trusted.predicates-tree]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2020-12-29"
+end = "2027-02-20"
+
+[[trusted.prettyplease]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2022-01-04"
+end = "2027-02-20"
+
+[[trusted.proc-macro2]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-23"
+end = "2027-02-20"
+
+[[trusted.quote]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-09"
+end = "2027-02-20"
+
+[[trusted.ref-cast]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-05"
+end = "2027-02-20"
+
+[[trusted.ref-cast-impl]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-05"
+end = "2027-02-20"
+
+[[trusted.rustversion]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-07-08"
+end = "2027-02-20"
+
+[[trusted.ryu]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-05-02"
+end = "2027-02-20"
+
+[[trusted.serde_bytes]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-02-25"
+end = "2027-02-20"
+
+[[trusted.serde_derive_internals]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-09-08"
+end = "2027-02-20"
+
+[[trusted.serde_json]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-02-28"
+end = "2027-02-20"
+
+[[trusted.serde_repr]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-04-26"
+end = "2027-02-20"
+
+[[trusted.serde_spanned]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-01-20"
+end = "2027-02-20"
+
+[[trusted.snapbox]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-03-07"
+end = "2027-02-20"
+
+[[trusted.snapbox-macros]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-03-07"
+end = "2027-02-20"
+
+[[trusted.sqry-daemon]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.sqry-daemon-client]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.sqry-daemon-protocol]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.sqry-db]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.sqry-lang-json]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.sqry-lang-servicenow-xml]]
+criteria = "safe-to-deploy"
+user-id = 364573 # Verivus OSS Releases (verivusOSS-releases)
+start = "2026-04-30"
+end = "2027-05-01"
+
+[[trusted.syn]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-03-01"
+end = "2027-02-20"
+
+[[trusted.termtree]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2021-10-07"
+end = "2027-02-20"
+
+[[trusted.thiserror]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-09"
+end = "2027-02-20"
+
+[[trusted.thiserror-impl]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2019-10-09"
+end = "2027-02-20"
+
+[[trusted.toml_datetime]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2022-10-21"
+end = "2027-02-20"
+
+[[trusted.toml_parser]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2025-07-08"
+end = "2027-02-20"
+
+[[trusted.toml_write]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2025-04-25"
+end = "2027-02-20"
+
+[[trusted.trycmd]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2021-11-05"
+end = "2027-02-20"
+
+[[trusted.unicode-ident]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2021-10-02"
+end = "2027-02-20"
+
+[[trusted.winnow]]
+criteria = "safe-to-deploy"
+user-id = 6743 # Ed Page (epage)
+start = "2023-02-22"
+end = "2027-02-20"
+
+[[trusted.zmij]]
+criteria = "safe-to-deploy"
+user-id = 3618 # David Tolnay (dtolnay)
+start = "2025-12-18"
+end = "2027-02-20"

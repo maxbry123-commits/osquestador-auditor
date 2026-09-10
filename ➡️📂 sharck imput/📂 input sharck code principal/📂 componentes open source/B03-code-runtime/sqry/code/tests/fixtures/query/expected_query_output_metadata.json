@@ -1,0 +1,408 @@
+{
+  "query": {
+    "pattern": "kind:function"
+  },
+  "results": [
+    {
+      "end_column": 43,
+      "end_line": 4,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+        "__raw_language": "dart"
+      },
+      "name": "Duration",
+      "qualified_name": "Duration",
+      "start_column": 23,
+      "start_line": 4
+    },
+    {
+      "end_column": 6,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js"
+      },
+      "name": "Promise",
+      "qualified_name": "Promise",
+      "start_column": 11,
+      "start_line": 4
+    },
+    {
+      "end_column": 6,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+        "__raw_language": "ts"
+      },
+      "name": "Promise",
+      "qualified_name": "Promise",
+      "start_column": 11,
+      "start_line": 4
+    },
+    {
+      "end_column": 5,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js",
+        "visibility": "public"
+      },
+      "name": "anon:arrow:0bac925c",
+      "qualified_name": "anon:arrow:0bac925c",
+      "start_column": 23,
+      "start_line": 4
+    },
+    {
+      "end_column": 40,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js",
+        "visibility": "public"
+      },
+      "name": "anon:arrow:60e38c78",
+      "qualified_name": "anon:arrow:60e38c78",
+      "start_column": 19,
+      "start_line": 5
+    },
+    {
+      "end_column": 44,
+      "end_line": 4,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+        "__raw_language": "dart"
+      },
+      "name": "delayed",
+      "qualified_name": "delayed",
+      "start_column": 8,
+      "start_line": 4
+    },
+    {
+      "end_column": 1,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+        "__raw_language": "dart",
+        "async": "true",
+        "visibility": "public"
+      },
+      "name": "fetchData",
+      "qualified_name": "fetchData",
+      "start_column": 0,
+      "start_line": 3
+    },
+    {
+      "end_column": 1,
+      "end_line": 7,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js",
+        "async": "true",
+        "visibility": "public"
+      },
+      "name": "fetchData",
+      "qualified_name": "fetchData",
+      "start_column": 0,
+      "start_line": 3
+    },
+    {
+      "end_column": 1,
+      "end_line": 7,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/swift_async.swift",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/swift_async.swift",
+        "__raw_language": "swift",
+        "async": "true",
+        "visibility": "public"
+      },
+      "name": "fetchData",
+      "qualified_name": "fetchData",
+      "start_column": 0,
+      "start_line": 4
+    },
+    {
+      "end_column": 1,
+      "end_line": 7,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+        "__raw_language": "ts",
+        "async": "true"
+      },
+      "name": "fetchData",
+      "qualified_name": "fetchData",
+      "start_column": 0,
+      "start_line": 3
+    },
+    {
+      "end_column": 17,
+      "end_line": 7,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+        "__raw_language": "py",
+        "async": "true",
+        "visibility": "public"
+      },
+      "name": "fetch_data",
+      "qualified_name": "fetch_data",
+      "start_column": 0,
+      "start_line": 4
+    },
+    {
+      "end_column": 1,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+        "__raw_language": "rust",
+        "async": "true",
+        "visibility": "private"
+      },
+      "name": "fetch_data",
+      "qualified_name": "fetch_data",
+      "start_column": 0,
+      "start_line": 3
+    },
+    {
+      "end_column": 24,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+        "__raw_language": "rust"
+      },
+      "name": "from",
+      "qualified_name": "String::from",
+      "start_column": 4,
+      "start_line": 5
+    },
+    {
+      "end_column": 56,
+      "end_line": 4,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+        "__raw_language": "rust"
+      },
+      "name": "from_secs",
+      "qualified_name": "std::time::Duration::from_secs",
+      "start_column": 23,
+      "start_line": 4
+    },
+    {
+      "end_column": 23,
+      "end_line": 10,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js"
+      },
+      "name": "log",
+      "qualified_name": "console.log",
+      "start_column": 4,
+      "start_line": 10
+    },
+    {
+      "end_column": 40,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js"
+      },
+      "name": "resolve",
+      "qualified_name": "resolve",
+      "start_column": 25,
+      "start_line": 5
+    },
+    {
+      "end_column": 40,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+        "__raw_language": "ts"
+      },
+      "name": "resolve",
+      "qualified_name": "resolve",
+      "start_column": 25,
+      "start_line": 5
+    },
+    {
+      "end_column": 47,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js"
+      },
+      "name": "setTimeout",
+      "qualified_name": "setTimeout",
+      "start_column": 8,
+      "start_line": 5
+    },
+    {
+      "end_column": 47,
+      "end_line": 5,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+        "__raw_language": "ts"
+      },
+      "name": "setTimeout",
+      "qualified_name": "setTimeout",
+      "start_column": 8,
+      "start_line": 5
+    },
+    {
+      "end_column": 26,
+      "end_line": 6,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+        "__raw_language": "py"
+      },
+      "name": "sleep",
+      "qualified_name": "sleep",
+      "start_column": 10,
+      "start_line": 6
+    },
+    {
+      "end_column": 57,
+      "end_line": 4,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+        "__raw_language": "rust"
+      },
+      "name": "sleep",
+      "qualified_name": "tokio::time::sleep",
+      "start_column": 4,
+      "start_line": 4
+    },
+    {
+      "end_column": 1,
+      "end_line": 10,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/dart_async.dart",
+        "__raw_language": "dart",
+        "visibility": "public"
+      },
+      "name": "syncFunction",
+      "qualified_name": "syncFunction",
+      "start_column": 0,
+      "start_line": 8
+    },
+    {
+      "end_column": 1,
+      "end_line": 11,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/javascript_async.js",
+        "__raw_language": "js",
+        "visibility": "public"
+      },
+      "name": "syncFunction",
+      "qualified_name": "syncFunction",
+      "start_column": 0,
+      "start_line": 9
+    },
+    {
+      "end_column": 1,
+      "end_line": 11,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/swift_async.swift",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/swift_async.swift",
+        "__raw_language": "swift",
+        "visibility": "public"
+      },
+      "name": "syncFunction",
+      "qualified_name": "syncFunction",
+      "start_column": 0,
+      "start_line": 9
+    },
+    {
+      "end_column": 1,
+      "end_line": 11,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/typescript_async.ts",
+        "__raw_language": "ts"
+      },
+      "name": "syncFunction",
+      "qualified_name": "syncFunction",
+      "start_column": 0,
+      "start_line": 9
+    },
+    {
+      "end_column": 17,
+      "end_line": 11,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/python_async.py",
+        "__raw_language": "py",
+        "visibility": "public"
+      },
+      "name": "sync_function",
+      "qualified_name": "sync_function",
+      "start_column": 0,
+      "start_line": 9
+    },
+    {
+      "end_column": 1,
+      "end_line": 10,
+      "file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+      "kind": "function",
+      "metadata": {
+        "__raw_file_path": "<WORKSPACE_ROOT>/tests/fixtures/metadata_consistency/async_functions/rust_async.rs",
+        "__raw_language": "rust",
+        "visibility": "private"
+      },
+      "name": "sync_function",
+      "qualified_name": "sync_function",
+      "start_column": 0,
+      "start_line": 8
+    }
+  ],
+  "stats": {
+    "returned": 27,
+    "total_matches": 27,
+    "truncated": false
+  }
+}
