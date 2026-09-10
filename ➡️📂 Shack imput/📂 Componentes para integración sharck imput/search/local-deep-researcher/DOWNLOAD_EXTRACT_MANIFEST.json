@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 191489,
+  "bundle_sha256": "6c7f081fd96a8869e021c06471240858dbe4fac458081d6ec5a9bbddf5c3017d",
+  "extracted_tree": {
+    "bytes": 606447,
+    "files": 18,
+    "sha256": "7979111802ab75a816e92ba4f729ec5a547f0722a6b4264131d4b21a0cd74231"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 191489,
+      "name": "local-deep-researcher.bundle.zip.part-0001",
+      "sha256": "6c7f081fd96a8869e021c06471240858dbe4fac458081d6ec5a9bbddf5c3017d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "local-deep-researcher",
+  "source_bytes": 606447,
+  "source_commit": "a53b13c7022bb1352dc1ca994d07ade3cd3bd62e",
+  "source_files": 18,
+  "source_ref": "HEAD",
+  "source_repo": "langchain-ai/local-deep-researcher",
+  "source_tree": {
+    "bytes": 606447,
+    "files": 18,
+    "sha256": "7979111802ab75a816e92ba4f729ec5a547f0722a6b4264131d4b21a0cd74231"
+  }
+}
