@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 5,
+  "revision": 6,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
   "status": "ACTIVE_LOOP_REVIEW_GATE",
   "current_step": 2,
-  "current_node": "MONITOR_B03_AND_REVIEW_GAPS",
+  "current_node": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY",
   "catalog": {"legacy":77,"new":30,"total":107},
   "legacy_v1": {"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "agents": {
-    "SOL":{"status":"ACTIVE","node":"MONITOR_B03_AND_REVIEW_GAPS","log":"SOL-LOG.md"},
+    "SOL":{"status":"MONITORING","node":"GAP_WATCHDOG","log":"SOL-LOG.md"},
     "ASTRA":{"status":"READY_TO_JOIN","node":"M06_INDEPENDENT_AUDIT","log":"ASTRA-LOG.md","dedicated_scope":["XRAY_ARQUITECTURA","EVALUACION_PREVIA","MEJORA_VERSIONADA","COMPONENT_GAP_RESEARCH","INDEPENDENT_VERIFY"]},
     "GROK":{"status":"READY_TO_JOIN","node":"M08_OSS_REFUTATION","log":"GROK-LOG.md"},
     "CLAUDE":{"status":"READY_TO_JOIN","node":"M07_CODE_PORTS_TEST_REVIEW","log":"CLAUDE-LOG.md"}
@@ -18,7 +18,7 @@
   "tasks": {
     "M01":{"status":"VERIFIED_PUBLISHED"},
     "M02":{"status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW"},
-    "M03":{"status":"MOTORS_RUNNING_WITH_PARTIAL_VERDICTS","run_id":34514168678},
+    "M03":{"status":"MOTORS_COMPLETED_WITH_GAPS","initial_run_id":34514168678,"initial_run_ui_conclusion":"success","semantic_verdict":"GAPS_PENDING"},
     "M04":{"status":"VERIFIED_ENABLED"},
     "M05":{"status":"VERIFIED_CLOSED"},
     "M06":{"status":"READY_FOR_ASTRA_REVIEW"},
@@ -29,24 +29,27 @@
   },
   "acquisition_v2": {
     "workflow":".github/workflows/sharck-input-v2-components.yml",
-    "run_id":34514168678,
-    "run_status":"IN_PROGRESS",
-    "run_conclusion":null,
+    "initial_workflow_commit":"c276f51a56f5c0bc433d2991240c72f14142d464",
+    "fail_closed_wrapper_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43",
+    "initial_run_id":34514168678,
+    "initial_run_status":"COMPLETED",
+    "initial_run_ui_conclusion":"SUCCESS_BUT_NOT_SEMANTIC_PASS",
     "shared_gates":{"partial_sparse_checkout":"PASS_3_OF_3","canonical_motor_blob_sha":"PASS_3_OF_3","no_lfs_checkout":"PASS_3_OF_3"},
     "batches": {
-      "B01":{"count":10,"status":"MOTOR_COMPLETED_WITH_GAPS","verified_closed":3,"failed":7,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B01-INDEX.md"},
-      "B02":{"count":10,"status":"MOTOR_COMPLETED_WITH_GAPS","verified_closed":5,"failed":5,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B02-INDEX.md"},
-      "B03":{"count":10,"status":"MOTOR_EXECUTION_IN_PROGRESS","verified_closed":0,"failed":0,"pending":10}
+      "B01":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":3,"failed":7,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B01-INDEX.md"},
+      "B02":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":5,"failed":5,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B02-INDEX.md"},
+      "B03":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":2,"failed":8,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B03-INDEX.md"}
     },
-    "verified_closed":8,
-    "failed":12,
-    "pending":10
+    "verified_closed":10,
+    "failed":20,
+    "pending":0,
+    "semantic_verdict":"GAPS_PENDING"
   },
-  "gap_classes":["DESTINATION_EXISTS","READBACK_TREE_HASH_GAP","SOURCE_SPECIAL_FILE_GAP"],
+  "gap_classes":["DESTINATION_EXISTS","READBACK_TREE_HASH_GAP","SOURCE_SPECIAL_FILE_GAP","WORKFLOW_FALSE_GREEN_FIXED"],
   "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
-  "review": {"review_packet":"REVIEW-GATE-ASTRA-ENGINEERING.md","astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
-  "watchdog":{"title":"Sharck Input V2 Watchdog","enabled":true,"frequency":"HOURLY","timezone":"America/Bogota"},
+  "review":{"review_packet":"REVIEW-GATE-ASTRA-ENGINEERING.md","astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
+  "watchdog":{"title":"Sharck Input V2 Watchdog","enabled":true,"frequency":"HOURLY","timezone":"America/Bogota","duty":"monitor gaps/reviews and resume from checkpoint"},
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS"},
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T13:38:00-05:00"
+  "updated_at":"2026-09-10T13:42:00-05:00"
 }
