@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 6209777,
+  "bundle_sha256": "1ca8a0f1fec6164ea1c435e5e5eef46d6f677bf0c8bb4c399169427388b37b8f",
+  "extracted_tree": {
+    "bytes": 14203196,
+    "files": 2407,
+    "sha256": "abe1d9d3a90abeebcb43e7f183e32d7255e332f6b498f6059ca6aadce8ea75fb"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 6209777,
+      "name": "kythe.bundle.zip.part-0001",
+      "sha256": "1ca8a0f1fec6164ea1c435e5e5eef46d6f677bf0c8bb4c399169427388b37b8f"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "kythe",
+  "source_bytes": 14203196,
+  "source_commit": "26056edfc953b5d4ea0ed8e94db072caa7f7d4c7",
+  "source_files": 2407,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/kythe/kythe",
+  "source_tree": {
+    "bytes": 14203196,
+    "files": 2407,
+    "sha256": "abe1d9d3a90abeebcb43e7f183e32d7255e332f6b498f6059ca6aadce8ea75fb"
+  }
+}
