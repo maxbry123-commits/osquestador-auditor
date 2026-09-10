@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 7638423,
+  "bundle_sha256": "68a62c57658dc459e13f48129dd463c8bfb3b60f6543a9ee1a2392aa2f55a39b",
+  "extracted_tree": {
+    "bytes": 46108267,
+    "files": 9040,
+    "sha256": "925760a4fd7f549bb8d579e322deb4bdeb8b61169994b601656815ef13a4b9bd"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 7638423,
+      "name": "rdflib.bundle.zip.part-0001",
+      "sha256": "68a62c57658dc459e13f48129dd463c8bfb3b60f6543a9ee1a2392aa2f55a39b"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "rdflib",
+  "source_bytes": 46108267,
+  "source_commit": "a090f3f98f7c7c1ba21ec84a9acb001e88313caa",
+  "source_files": 9040,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/RDFLib/rdflib",
+  "source_tree": {
+    "bytes": 46108267,
+    "files": 9040,
+    "sha256": "925760a4fd7f549bb8d579e322deb4bdeb8b61169994b601656815ef13a4b9bd"
+  }
+}
