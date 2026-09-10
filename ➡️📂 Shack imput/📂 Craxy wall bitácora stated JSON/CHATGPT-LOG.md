@@ -60,3 +60,18 @@
 - ASTRA y GROK no fueron reclamados ni modificados. SOL mantiene ownership exclusivo de `T04_ACQUISITION_GAP_RECOVERY`.
 
 `NEXT=ESPERAR_VEREDICTO_RUN_34483843389 → READBACK_REAUDIT → ACTUALIZAR_BALANCE_SI_Y_SOLO_SI_VERIFICADO → DESPUES_TRATAR_CHANGED_COUNT_Y_SOURCE_SPECIAL_FILE_GAP`
+
+## 2026-09-10 — Watchdog T04 / corrección NUL-safe del helper
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Releídos handoff, parche y `STATE.json` antes de actuar; ASTRA y GROK continúan sin nodos reclamados.
+- Run `34483843389` terminó `completed/success`, pero su evidencia física fue `candidates=19`, `ready_for_publish=0`, `failed_closed=19`; por tanto NO reparó componentes y NO se contabilizó mejora.
+- Causa verificada en `IGNORED-PUBLICATION-REPAIR.json`: el helper interpretaba rutas emitidas por `git diff --name-status` como strings citados/escapados (`\342...`) y las entregaba literalmente a `git hash-object`, produciendo `No such file or directory`.
+- Reparación aplicada exclusivamente a `repair_ignored_publication.py`: parser de rutas staged cambiado a `git diff --cached --name-only -z` con separación NUL y chequeo separado de cambios no aditivos. Se añadió `git hash-object -- <path>` para proteger rutas que empiezan con guion. Ningún motor canónico fue editado.
+- Commit del helper: `3f03ec86e231673f7ceae293217a9e5850c12bc1`.
+- El push disparó run `34484946622`; ya pasó `Partial sparse checkout — no LFS` y `Verify canonical motors unchanged`; actualmente ejecuta `Restore only missing tracked files through canonical motors`.
+- `STATE.json` actualizado a revision 7. Balance oficial permanece `28 VERIFIED_CLOSED / 49 FAILED / 0 PENDING` hasta read-back posterior.
+- No LFS. No force push. No sobrescritura silenciosa. T05 continúa bloqueado por T04.
+
+`NEXT=RUN_34484946622_VERDICT → REMOTE_REAUDIT → ACTUALIZAR_BALANCE_SOLO_CON_EVIDENCIA → CLASIFICAR_RESTANTES`
