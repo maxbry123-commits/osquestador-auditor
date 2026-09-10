@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 502898,
+  "bundle_sha256": "6175122b9b28ffa171f2da019e670ffe61621059810f727df02920163dfde4e8",
+  "extracted_tree": {
+    "bytes": 2259954,
+    "files": 40,
+    "sha256": "00c70516d7516596d90bd0432a945c5c3a66a71c81ec4f4f36a37a8c2717bde7"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 502898,
+      "name": "youtube-transcript-api.bundle.zip.part-0001",
+      "sha256": "6175122b9b28ffa171f2da019e670ffe61621059810f727df02920163dfde4e8"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "youtube-transcript-api",
+  "source_bytes": 2259954,
+  "source_commit": "8f150ba8836da30a36bcd40e8fca226ed179ba72",
+  "source_files": 40,
+  "source_ref": "HEAD",
+  "source_repo": "jdepoix/youtube-transcript-api",
+  "source_tree": {
+    "bytes": 2259954,
+    "files": 40,
+    "sha256": "00c70516d7516596d90bd0432a945c5c3a66a71c81ec4f4f36a37a8c2717bde7"
+  }
+}
