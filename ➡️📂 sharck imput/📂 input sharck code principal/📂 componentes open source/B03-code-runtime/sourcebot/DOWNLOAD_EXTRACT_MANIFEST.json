@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 30467757,
+  "bundle_sha256": "8551a5cf31d457c93f3074d615ac6fc9003f61a7e1022140afbc0677ea71a45e",
+  "extracted_tree": {
+    "bytes": 42491652,
+    "files": 1681,
+    "sha256": "f653b891108fe9cf345a832af2ff5e22031b6b93cf07944697d719813cffab0f"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "sourcebot.bundle.zip.part-0001",
+      "sha256": "a30309988f99ab0607938501fa557e314d5b1b9a1458a89254bb46566e47b453"
+    },
+    {
+      "bytes": 12582912,
+      "name": "sourcebot.bundle.zip.part-0002",
+      "sha256": "9456718ecf0d9511c962b0f7e837f1eb9339faa3ee4bc2f8c26aba701d1bab80"
+    },
+    {
+      "bytes": 5301933,
+      "name": "sourcebot.bundle.zip.part-0003",
+      "sha256": "c3b9a7879564e5d2dba9177b6c92a3ba7ff999af9466c53143046069c1eabdf7"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "sourcebot",
+  "source_bytes": 42491652,
+  "source_commit": "5679c0f8f4091e8e5f9e8bc6e2f6aa2a78de216c",
+  "source_files": 1681,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/sourcebot-dev/sourcebot",
+  "source_tree": {
+    "bytes": 42491652,
+    "files": 1681,
+    "sha256": "f653b891108fe9cf345a832af2ff5e22031b6b93cf07944697d719813cffab0f"
+  }
+}

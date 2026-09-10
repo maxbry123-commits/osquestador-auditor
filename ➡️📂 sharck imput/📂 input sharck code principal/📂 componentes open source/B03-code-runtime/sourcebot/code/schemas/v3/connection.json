@@ -1,0 +1,27 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ConnectionConfig",
+    "oneOf": [
+        {
+            "$ref": "./github.json"
+        },
+        {
+            "$ref": "./gitlab.json"
+        },
+        {
+            "$ref": "./gitea.json"
+        },
+        {
+            "$ref": "./gerrit.json"
+        },
+        {
+            "$ref": "./bitbucket.json"
+        },
+        {
+            "$ref": "./azuredevops.json"
+        },
+        {
+            "$ref": "./genericGitHost.json"
+        }
+    ]
+}
