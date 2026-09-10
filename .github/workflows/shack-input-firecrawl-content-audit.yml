@@ -1,0 +1,118 @@
+name: Shack Firecrawl Content Audit
+run-name: Shack Firecrawl Content Audit • ${{ github.sha }}
+
+on:
+  push:
+    paths:
+      - '.github/workflows/shack-input-firecrawl-content-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shack-input-firecrawl-content-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Partial sparse checkout — no LFS
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl/
+          /➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/
+          /➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/
+          EOF
+          AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+
+      - name: Verify canonical motors unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor'
+          check_blob(){ test "$(git hash-object "$1")" = "$2" || { echo "MOTOR_CODE_LOCK_GAP $1"; exit 31; }; }
+          check_blob "$ROOT/➡️📂 Motor de extracción zip/motor_1_extract_only.py" a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py" 84d566e2ee4e98e42eb3a864026d067d48caabd9
+          check_blob "$ROOT/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py" 91e6e4486692eab314be5c7130d8310d3c855397
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_3_copy_batches.py" 3689924361ce4a1a9fde4ae2b6f6009c37a6042d
+          check_blob "$ROOT/➡️📂motor de copiar archivos/motor_copy_root_to_repo.py" 8281211da76db3080fe1f1ea38b3eb0c45d655cb
+          check_blob "$ROOT/➡️📂motor de moves archivos/motor_4_move_batches.py" 9a21facfe11327cf60a2afca8f415ad52f0ecbe5
+
+      - name: Compare every firecrawl file to fixed upstream commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, subprocess, tempfile
+          target=pathlib.Path('➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl')
+          report=pathlib.Path('➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/FIRECRAWL-CONTENT-AUDIT.json')
+          manifest=json.loads((target/'DOWNLOAD_EXTRACT_MANIFEST.json').read_text())
+          source_repo=str(manifest['source_repo']).removeprefix('https://github.com/').removesuffix('.git')
+          source_commit=str(manifest['source_commit'])
+          def run(args,cwd=None):
+              return subprocess.run(args,cwd=cwd,text=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True).stdout
+          with tempfile.TemporaryDirectory(prefix='firecrawl-audit-') as td:
+              d=pathlib.Path(td)
+              subprocess.run(['git','init','-q'],cwd=d,check=True)
+              subprocess.run(['git','remote','add','upstream',f'https://github.com/{source_repo}.git'],cwd=d,check=True)
+              subprocess.run(['git','-c','filter.lfs.smudge=cat','-c','filter.lfs.clean=cat','fetch','--depth=1','--filter=blob:none','upstream',source_commit],cwd=d,check=True)
+              raw=run(['git','ls-tree','-r','-z',source_commit],cwd=d)
+              expected={}
+              for entry in raw.split(b'\0'):
+                  if not entry: continue
+                  meta,path=entry.split(b'\t',1)
+                  mode,typ,sha=meta.decode().split()
+                  if typ=='blob': expected[path.decode('utf-8','surrogateescape')]={'sha':sha,'mode':mode}
+              actual={}
+              root=target/'code'
+              for p in sorted(x for x in root.rglob('*') if x.is_file()):
+                  rel=p.relative_to(root).as_posix()
+                  sha=subprocess.run(['git','hash-object','--',str(p)],text=True,stdout=subprocess.PIPE,check=True).stdout.strip()
+                  actual[rel]={'sha':sha,'bytes':p.stat().st_size}
+              missing=sorted(set(expected)-set(actual)); extra=sorted(set(actual)-set(expected))
+              mismatched=[]
+              for rel in sorted(set(expected)&set(actual)):
+                  if expected[rel]['sha']!=actual[rel]['sha']:
+                      source_bytes=run(['git','cat-file','-s',expected[rel]['sha']],cwd=d).decode().strip()
+                      mismatched.append({'path':rel,'expected_blob':expected[rel]['sha'],'actual_blob':actual[rel]['sha'],'expected_bytes':int(source_bytes),'actual_bytes':actual[rel]['bytes'],'byte_delta':actual[rel]['bytes']-int(source_bytes)})
+          payload={'schema':'wanted-shark.firecrawl-content-audit.v1','source_repo':source_repo,'source_commit':source_commit,'expected_files':len(expected),'actual_files':len(actual),'missing':missing,'extra':extra,'mismatched':mismatched,'mismatch_count':len(mismatched),'verdict':'EXACT_MATCH' if not missing and not extra and not mismatched else 'CONTENT_GAPS_CONFIRMED'}
+          report.write_text(json.dumps(payload,indent=2,ensure_ascii=False,sort_keys=True)+'\n')
+          print(json.dumps(payload,ensure_ascii=False,sort_keys=True))
+          PY
+
+      - name: Publish audit evidence — no force
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPORT='➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/FIRECRAWL-CONTENT-AUDIT.json'
+          git add -- "$REPORT"
+          git diff --cached --name-only | grep -Fx "$REPORT" >/dev/null || { echo AUDIT_ALLOWLIST_GAP; exit 41; }
+          test "$(git diff --cached --name-only | wc -l)" -eq 1 || { echo AUDIT_ALLOWLIST_GAP; exit 42; }
+          git config user.name 'wanted-shark-watchdog'
+          git config user.email 'wanted-shark-watchdog@users.noreply.github.com'
+          git commit -m 'audit(shack-input): classify firecrawl content mismatches'
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" || { echo READBACK_HEAD_GAP; exit 51; }
