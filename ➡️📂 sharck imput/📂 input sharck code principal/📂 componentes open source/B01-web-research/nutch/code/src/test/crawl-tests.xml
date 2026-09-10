@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<!-- Configuration overrides used during unit tests. -->
+
+<configuration>
+
+<property>
+  <name>plugin.includes</name>
+  <value>parse-tika|protocol-http|urlfilter-suffix|scoring-opic</value>
+  <description>Enable required plugins.</description>
+</property>
+
+<property>
+  <name>content.server.port</name>
+  <value>55000</value>
+  <description>Port of http server serving content.</description>
+</property>
+
+<property>
+  <name>fetcher.server.delay</name>
+  <value>0.2</value>
+  <description>The number of seconds the fetcher will delay between 
+   successive requests to the same server.</description>
+</property>
+
+<property>
+  <name>http.agent.name</name>
+  <value>test-nutch</value>
+</property>
+
+<property>
+  <name>http.robots.agents</name>
+  <value>test-nutch,*</value>
+</property>
+
+<property>
+  <name>http.agent.name.check</name>
+  <value>true</value>
+</property>
+
+<property>                                                                                                                                                   
+  <name>http.robots.agents</name>                                                                                                                            
+  <value>test-nutch,*</value>                                                                                                                                
+  <description>The agent strings we'll look for in robots.txt files,                                                                                         
+  comma-separated, in decreasing order of precedence. You should                                                                                             
+  put the value of http.agent.name as the first agent name, and keep the                                                                                     
+  default * at the end of the list. E.g.: BlurflDev,Blurfl,*                                                                                                 
+  </description>                                                                                                                                             
+</property>
+
+<property>
+  <name>io.serializations</name>
+  <value>org.apache.hadoop.io.serializer.WritableSerialization,org.apache.hadoop.io.serializer.JavaSerialization</value>
+  <!-- org.apache.hadoop.io.serializer.avro.AvroSpecificSerialization,
+  org.apache.hadoop.io.serializer.avro.AvroReflectSerialization,
+  org.apache.hadoop.io.serializer.avro.AvroGenericSerialization, -->
+  <description>A list of serialization classes that can be used for
+  obtaining serializers and deserializers.</description>
+</property>
+
+</configuration>
+

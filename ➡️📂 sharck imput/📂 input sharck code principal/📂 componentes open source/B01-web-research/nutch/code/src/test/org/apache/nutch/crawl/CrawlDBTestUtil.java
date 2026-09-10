@@ -1,0 +1,537 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.nutch.crawl;
+
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configuration.IntegerRanges;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.MapFile.Writer.Option;
+import org.apache.hadoop.io.RawComparator;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.Counters;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.OutputFormat;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Reducer.Context;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.security.Credentials;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.jspecify.annotations.NonNull;
+import org.mockserver.configuration.ConfigurationProperties;
+import org.mockserver.integration.ClientAndServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.mockserver.model.HttpRequest.request;
+import static org.mockserver.model.HttpResponse.response;
+
+/**
+ * Test utility for creating and manipulating CrawlDb instances.
+ * Uses JSpecify annotations for null safety.
+ */
+public class CrawlDBTestUtil {
+
+  private static final Logger LOG = LoggerFactory
+      .getLogger(MethodHandles.lookup().lookupClass());
+
+  private static CrawlDbReducer reducer = new CrawlDbReducer();
+  /**
+   * Creates synthetic crawldb
+   *
+   * @param conf
+   *          configuration to use
+   * @param fs
+   *          filesystem where db will be created
+   * @param crawldb
+   *          path were db will be created
+   * @param init
+   *          urls to be inserted, objects are of type URLCrawlDatum
+   * @throws Exception
+   */
+  public static void createCrawlDb(@NonNull Configuration conf, @NonNull FileSystem fs,
+      @NonNull Path crawldb, @NonNull List<URLCrawlDatum> init) throws Exception {
+    LOG.trace("* creating crawldb: {}", crawldb);
+    Path dir = new Path(crawldb, CrawlDb.CURRENT_NAME);
+    Option wKeyOpt = MapFile.Writer.keyClass(Text.class);
+    org.apache.hadoop.io.SequenceFile.Writer.Option wValueOpt = SequenceFile.Writer.valueClass(CrawlDatum.class);
+    MapFile.Writer writer = new MapFile.Writer(conf, new Path(dir,
+        "part-r-00000"), wKeyOpt, wValueOpt);
+    Iterator<URLCrawlDatum> it = init.iterator();
+    while (it.hasNext()) {
+      URLCrawlDatum row = it.next();
+      LOG.info("adding:{}", row.url.toString());
+      writer.append(new Text(row.url), row.datum);
+    }
+    writer.close();
+  }
+
+  /** {@link Context} to collect all values in a {@link List} */
+  private static class DummyContext extends Reducer<Text, CrawlDatum, Text, CrawlDatum>.Context {
+
+    private Configuration conf;
+
+    private DummyContext() {
+      reducer.super();
+      conf = new Configuration();
+    }
+
+    private List<CrawlDatum> values = new ArrayList<CrawlDatum>();
+
+    @Override
+    public void write(Text key, CrawlDatum value) throws IOException, InterruptedException {
+      values.add(value);
+    }
+
+    /** collected values as List */
+    @Override
+    public List<CrawlDatum> getValues() {
+      return values;
+    }
+
+    /** Obtain current collected value from List */
+    @Override
+    public CrawlDatum getCurrentValue() throws UnsupportedOperationException {
+      throw new UnsupportedOperationException("Dummy context");
+    }
+
+    /** Obtain current collected key from List */
+    @Override
+    public Text getCurrentKey() throws UnsupportedOperationException {
+      throw new UnsupportedOperationException("Dummy context with no keys");
+    }
+
+    private Counters dummyCounters = new Counters();
+
+    @Override
+    public void progress() {
+    }
+
+    @Override
+    public Counter getCounter(Enum<?> arg0) {
+      return dummyCounters.findCounter(arg0);
+    }
+
+    @Override
+    public Counter getCounter(String arg0, String arg1) {
+      return dummyCounters.findCounter(arg0, arg1);
+    }
+
+    @Override
+    public void setStatus(String arg0) throws UnsupportedOperationException {
+      throw new UnsupportedOperationException("Dummy context with no status");
+    }
+
+    @Override
+    public String getStatus() throws UnsupportedOperationException {
+      throw new UnsupportedOperationException("Dummy context with no status");
+    }
+
+    @Override
+    public float getProgress() {
+      return 1f;
+    }
+
+    @Override
+    public OutputCommitter getOutputCommitter() {
+      throw new UnsupportedOperationException("Dummy context without committer");
+    }
+
+    @Override
+    public boolean nextKey(){
+      return false;
+    }
+
+    @Override
+    public boolean nextKeyValue(){
+      return false;
+    }
+
+    @Override
+    public TaskAttemptID getTaskAttemptID() throws UnsupportedOperationException {
+      throw new UnsupportedOperationException("Dummy context without TaskAttemptID");
+    }
+
+    @Override
+    public Path[] getArchiveClassPaths() {
+      return null;
+    }
+
+    @Override
+    public String[] getArchiveTimestamps() {
+      return null;
+    }
+
+    @Override
+    public URI[] getCacheArchives() throws IOException {
+      return null;
+    }
+
+    @Override
+    public URI[] getCacheFiles() throws IOException {
+      return null;
+    }
+
+    @Override
+    public Class<? extends Reducer<?, ?, ?, ?>> getCombinerClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public RawComparator<?> getCombinerKeyGroupingComparator() {
+      return null;
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+      return conf;
+    }
+
+    @Override
+    public Credentials getCredentials() {
+      return null;
+    }
+
+    @Override
+    public Path[] getFileClassPaths() {
+      return null;
+    }
+
+    @Override
+    public String[] getFileTimestamps() {
+      return null;
+    }
+
+    @Override
+    public RawComparator<?> getGroupingComparator() {
+      return null;
+    }
+
+    @Override
+    public Class<? extends InputFormat<?, ?>> getInputFormatClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public String getJar() {
+      return null;
+    }
+
+    @Override
+    public JobID getJobID() {
+      return null;
+    }
+
+    @Override
+    public String getJobName() {
+      return null;
+    }
+
+    @Override
+    public boolean getJobSetupCleanupNeeded() {
+      return false;
+    }
+
+    @Override
+    @Deprecated
+    public Path[] getLocalCacheArchives() throws IOException {
+      return null;
+    }
+
+    @Override
+    @Deprecated
+    public Path[] getLocalCacheFiles() throws IOException {
+      return null;
+    }
+
+    @Override
+    public Class<?> getMapOutputKeyClass() {
+      return null;
+    }
+
+    @Override
+    public Class<?> getMapOutputValueClass() {
+      return null;
+    }
+
+    @Override
+    public Class<? extends Mapper<?, ?, ?, ?>> getMapperClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public int getMaxMapAttempts() {
+      return 0;
+    }
+
+    @Override
+    public int getMaxReduceAttempts() {
+      return 0;
+    }
+
+    @Override
+    public int getNumReduceTasks() {
+      return 0;
+    }
+
+    @Override
+    public Class<? extends OutputFormat<?, ?>> getOutputFormatClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public Class<?> getOutputKeyClass() {
+      return null;
+    }
+
+    @Override
+    public Class<?> getOutputValueClass() {
+      return null;
+    }
+
+    @Override
+    public Class<? extends Partitioner<?, ?>> getPartitionerClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public boolean getProfileEnabled() {
+      return false;
+    }
+
+    @Override
+    public String getProfileParams() {
+      return null;
+    }
+
+    @Override
+    public IntegerRanges getProfileTaskRange(boolean arg0) {
+      return null;
+    }
+
+    @Override
+    public Class<? extends Reducer<?, ?, ?, ?>> getReducerClass() throws ClassNotFoundException {
+      return null;
+    }
+
+    @Override
+    public RawComparator<?> getSortComparator() {
+      return null;
+    }
+
+    @Override
+    @Deprecated
+    public boolean getSymlink() {
+      return false;
+    }
+
+    @Override
+    public boolean getTaskCleanupNeeded() {
+      return false;
+    }
+
+   @Override
+    public String getUser() {
+      return null;
+    }
+
+    @Override
+    public Path getWorkingDirectory() throws IOException {
+      return null;
+    }
+  }
+  /**
+   * For now we need to manually construct our Configuration, because we need to
+   * override the default one and it is currently not possible to use
+   * dynamically set values.
+   *
+   * @return a new Reducer Context with test configuration
+   */
+  @NonNull
+  public static Reducer<Text, CrawlDatum, Text, CrawlDatum>.Context createContext() {
+    DummyContext context = new DummyContext();
+    Configuration conf = context.getConfiguration();
+    conf.addResource("nutch-default.xml");
+    conf.addResource("crawl-tests.xml");
+    return context;
+  }
+
+  /** Container for URL and CrawlDatum pairs used in test data. */
+  public static class URLCrawlDatum {
+
+    @NonNull
+    public Text url;
+
+    @NonNull
+    public CrawlDatum datum;
+
+    public URLCrawlDatum(@NonNull Text url, @NonNull CrawlDatum datum) {
+      this.url = url;
+      this.datum = datum;
+    }
+  }
+
+  /**
+   * Generate seedlist
+   *
+   * @param fs filesystem to use
+   * @param urlPath path where seed file will be created
+   * @param urls list of URLs to write
+   * @throws IOException
+   */
+  public static void generateSeedList(@NonNull FileSystem fs, @NonNull Path urlPath,
+      @NonNull List<String> urls) throws IOException {
+    generateSeedList(fs, urlPath, urls, new ArrayList<String>());
+  }
+
+  /**
+   * Generate seedlist with optional metadata
+   *
+   * @param fs filesystem to use
+   * @param urlPath path where seed file will be created
+   * @param urls list of URLs to write
+   * @param metadata optional metadata for each URL
+   * @throws IOException
+   */
+  public static void generateSeedList(@NonNull FileSystem fs, @NonNull Path urlPath,
+      @NonNull List<String> urls, @NonNull List<String> metadata) throws IOException {
+    FSDataOutputStream out;
+    Path file = new Path(urlPath, "urls.txt");
+    fs.mkdirs(urlPath);
+    out = fs.create(file);
+
+    Iterator<String> urls_i = urls.iterator();
+    Iterator<String> metadata_i = metadata.iterator();
+
+    String url;
+    String md;
+    while (urls_i.hasNext()) {
+      url = urls_i.next();
+
+      out.write(url.getBytes(UTF_8));
+
+      if (metadata_i.hasNext()) {
+        md = metadata_i.next();
+        out.write(md.getBytes(UTF_8));
+      }
+
+      out.write('\n');
+    }
+
+    out.flush();
+    out.close();
+  }
+
+  /**
+   * Starts a <a href="https://www.mock-server.com/">MockServer</a> instance that
+   * serves files from {@code staticContent} for GET requests (one expectation per
+   * file).
+   *
+   * @param port
+   *          port to listen on
+   * @param staticContent
+   *          directory of static files
+   * @return running mock server (already started); call {@link ClientAndServer#stop()} when done
+   */
+  @NonNull
+  public static ClientAndServer startMockServerForStaticContent(int port,
+      @NonNull String staticContent) throws IOException {
+    ConfigurationProperties.disableLogging(true);
+    java.nio.file.Path root = java.nio.file.Path.of(staticContent)
+        .toAbsolutePath().normalize();
+    ClientAndServer mockServer = ClientAndServer.startClientAndServer(port);
+    java.nio.file.Path indexPath = root.resolve("index.html");
+    if (Files.isRegularFile(indexPath)) {
+      byte[] data = Files.readAllBytes(indexPath);
+      mockServer.when(request().withMethod("GET").withPath("/"))
+          .respond(response().withStatusCode(200)
+              .withHeader("Content-Type", probeContentType(indexPath))
+              .withBody(data));
+    }
+    try (Stream<java.nio.file.Path> walk = Files.walk(root)) {
+      for (java.nio.file.Path file : walk.filter(Files::isRegularFile)
+          .collect(Collectors.toList())) {
+        String rel = root.relativize(file).toString().replace('\\', '/');
+        String mockPath = "/" + rel;
+        byte[] data = Files.readAllBytes(file);
+        mockServer.when(request().withMethod("GET").withPath(mockPath))
+            .respond(response().withStatusCode(200)
+                .withHeader("Content-Type", probeContentType(file))
+                .withBody(data));
+      }
+    }
+    return mockServer;
+  }
+
+  private static String probeContentType(java.nio.file.Path file)
+      throws IOException {
+    String ct = Files.probeContentType(file);
+    return ct != null ? ct : "application/octet-stream";
+  }
+
+  /**
+   * Creates a new JettyServer with one static root context and the provided resource handler.
+   *
+   * @param port
+   *          port to listen to
+   * @param staticContent
+   *          folder where static content lives
+   * @param resourceHandler
+   *          resource handler to override the default behavior if needed.
+   * @return configured Jetty server instance
+   * @throws UnknownHostException
+   */
+  @NonNull
+  public static Server getServer(int port, @NonNull String staticContent, ResourceHandler resourceHandler)
+      throws UnknownHostException {
+    Server webServer = new Server();
+
+    ServerConnector listener = new ServerConnector(webServer);
+    listener.setPort(port);
+    listener.setHost("127.0.0.1");
+    webServer.addConnector(listener);
+    ContextHandler staticContext = new ContextHandler();
+    staticContext.setContextPath("/");
+    staticContext.setResourceBase(staticContent);
+    staticContext.insertHandler(resourceHandler);
+    webServer.insertHandler(staticContext);
+    return webServer;
+  }
+}

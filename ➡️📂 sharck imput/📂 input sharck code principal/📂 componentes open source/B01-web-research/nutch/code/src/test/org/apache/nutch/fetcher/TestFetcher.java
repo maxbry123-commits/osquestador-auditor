@@ -1,0 +1,248 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.nutch.fetcher;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.nutch.crawl.CrawlDBTestUtil;
+import org.apache.nutch.crawl.Generator;
+import org.apache.nutch.crawl.Injector;
+import org.apache.nutch.metadata.Metadata;
+import org.apache.nutch.metadata.Nutch;
+import org.apache.nutch.parse.ParseData;
+import org.apache.nutch.protocol.Content;
+import org.apache.nutch.util.CancellationAwareTestUtils;
+import org.apache.nutch.util.CancellationAwareTestUtils.CancellationToken;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.mockserver.integration.ClientAndServer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Basic fetcher test 1. generate seedlist 2. inject 3. generate 3. fetch 4.
+ * Verify contents
+ *
+ * <p>This test is cancellation-aware and will exit gracefully if the test
+ * suite is stopped early (e.g., due to fail-fast mode).</p>
+ */
+public class TestFetcher {
+
+  final static Path testdir = new Path("build/test/fetch-test");
+  Configuration conf;
+  FileSystem fs;
+  Path crawldbPath;
+  Path segmentsPath;
+  Path urlPath;
+  ClientAndServer mockServer;
+
+  @BeforeEach
+  public void setUp() throws Exception {
+    conf = CrawlDBTestUtil.createContext().getConfiguration();
+    fs = FileSystem.get(conf);
+    fs.delete(testdir, true);
+    urlPath = new Path(testdir, "urls");
+    crawldbPath = new Path(testdir, "crawldb");
+    segmentsPath = new Path(testdir, "segments");
+    mockServer = CrawlDBTestUtil.startMockServerForStaticContent(
+        conf.getInt("content.server.port", 50000),
+        "build/test/data/fetch-test-site");
+  }
+
+  @AfterEach
+  public void tearDown() throws Exception {
+    if (mockServer != null) {
+      mockServer.stop();
+    }
+    fs.delete(testdir, true);
+  }
+
+  @Test
+  @Timeout(value = 5, unit = TimeUnit.MINUTES)
+  public void testFetch() throws IOException, ClassNotFoundException, InterruptedException {
+    // Create cancellation token for graceful shutdown support
+    CancellationToken cancellationToken = CancellationAwareTestUtils.createToken();
+
+    // generate seedlist
+    ArrayList<String> urls = new ArrayList<String>();
+
+    addUrl(urls, "index.html");
+    addUrl(urls, "pagea.html");
+    addUrl(urls, "pageb.html");
+    addUrl(urls, "dup_of_pagea.html");
+    addUrl(urls, "nested_spider_trap.html");
+    addUrl(urls, "exception.html");
+
+    CrawlDBTestUtil.generateSeedList(fs, urlPath, urls);
+
+    // Check for cancellation before long-running operations
+    cancellationToken.throwIfCancelled();
+
+    // inject
+    Injector injector = new Injector(conf);
+    injector.inject(crawldbPath, urlPath);
+
+    cancellationToken.throwIfCancelled();
+
+    // generate
+    Generator g = new Generator(conf);
+    Path[] generatedSegment = g.generate(crawldbPath, segmentsPath, 1,
+        Long.MAX_VALUE, Long.MAX_VALUE, false, false, false, 1, null);
+
+    cancellationToken.throwIfCancelled();
+
+    long time = System.currentTimeMillis();
+    // fetch
+    Fetcher fetcher = new Fetcher(conf);
+
+    // Set fetcher.parse to true
+    conf.setBoolean("fetcher.parse", true);
+
+    fetcher.fetch(generatedSegment[0], 1);
+
+    time = System.currentTimeMillis() - time;
+
+    // Skip verification if cancelled
+    if (cancellationToken.isCancelled()) {
+      return;
+    }
+
+    // verify politeness, time taken should be more than (num_of_pages +1)*delay
+    int minimumTime = (int) ((urls.size() + 1) * 1000 * conf.getFloat(
+        "fetcher.server.delay", 5));
+    assertTrue(time > minimumTime);
+
+    // verify content
+    Path content = new Path(new Path(generatedSegment[0], Content.DIR_NAME),
+        "part-r-00000/data");
+    SequenceFile.Reader reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(content));
+
+    ArrayList<String> handledurls = new ArrayList<String>();
+
+    try {
+      READ_CONTENT: do {
+        // Check for cancellation periodically during I/O operations
+        if (cancellationToken.isCancelled()) break READ_CONTENT;
+
+        Text key = new Text();
+        Content value = new Content();
+        if (!reader.next(key, value))
+          break READ_CONTENT;
+        String contentString = new String(value.getContent(),
+            StandardCharsets.UTF_8);
+        if (contentString.indexOf("Nutch fetcher test page") != -1) {
+          handledurls.add(key.toString());
+        }
+      } while (true);
+    } finally {
+      reader.close();
+    }
+
+    // Skip remaining verification if cancelled
+    if (cancellationToken.isCancelled()) {
+      return;
+    }
+
+    Collections.sort(urls);
+    Collections.sort(handledurls);
+
+    // verify that enough pages were handled
+    assertEquals(urls.size(), handledurls.size());
+
+    // verify that correct pages were handled
+    assertTrue(handledurls.containsAll(urls));
+    assertTrue(urls.containsAll(handledurls));
+
+    handledurls.clear();
+
+    // verify parse data
+    Path parseData = new Path(
+        new Path(generatedSegment[0], ParseData.DIR_NAME), "part-r-00000/data");
+    reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(parseData));
+
+    try {
+      READ_PARSE_DATA: do {
+        // Check for cancellation periodically
+        if (cancellationToken.isCancelled()) break READ_PARSE_DATA;
+
+        Text key = new Text();
+        ParseData value = new ParseData();
+        if (!reader.next(key, value))
+          break READ_PARSE_DATA;
+        // make sure they all contain "nutch.segment.name" and
+        // "nutch.content.digest"
+        // keys in parse metadata
+        Metadata contentMeta = value.getContentMeta();
+        if (contentMeta.get(Nutch.SEGMENT_NAME_KEY) != null
+            && contentMeta.get(Nutch.SIGNATURE_KEY) != null) {
+          handledurls.add(key.toString());
+        }
+      } while (true);
+    } finally {
+      reader.close();
+    }
+
+    // Skip final assertions if cancelled
+    if (cancellationToken.isCancelled()) {
+      return;
+    }
+
+    Collections.sort(handledurls);
+
+    assertEquals(urls.size(), handledurls.size());
+
+    assertTrue(handledurls.containsAll(urls));
+    assertTrue(urls.containsAll(handledurls));
+  }
+
+  private void addUrl(ArrayList<String> urls, String page) {
+    urls.add("http://127.0.0.1:" + mockServer.getLocalPort() + "/" + page);
+  }
+
+  @Test
+  public void testAgentNameCheck() {
+
+    boolean failedNoAgentName = false;
+    conf.set("http.agent.name", "");
+
+    try {
+      conf.setBoolean("fetcher.parse", false);
+      Fetcher fetcher = new Fetcher(conf);
+      fetcher.fetch(null, 1);
+    } catch (IllegalArgumentException iae) {
+      String message = iae.getMessage();
+      failedNoAgentName = message.equals("Fetcher: No agents listed in "
+          + "'http.agent.name' property.");
+    } catch (Exception e) {
+    }
+
+    assertTrue(failedNoAgentName);
+  }
+
+}

@@ -1,0 +1,40 @@
+github:
+  description: "Apache Nutch is an extensible and scalable web crawler"
+  homepage: https://nutch.apache.org/
+  labels:
+    - web-crawler
+    - crawling
+    - java
+    - nutch
+    - hadoop
+    - apache
+
+  rulesets:
+    - name: "Default Branch Protection"
+      type: branch
+      branches:
+        includes:
+          - "~DEFAULT_BRANCH"
+          - "release/*"
+          - "rel/*"
+          - "branch-*.*"
+          - "branch-*.*.*"
+        excludes: []
+      bypass_teams:
+        - root
+      restrict_deletion: true
+      restrict_force_push: true
+    - name: "Protect release tags"
+      type: tag
+      branches:
+        includes:
+          - "release-*.*"
+          - "release-*.*.*"
+        excludes: []
+      restrict_deletion: true
+      restrict_force_push: true
+notifications:
+  commits: commits@nutch.apache.org
+  issues: dev@nutch.apache.org
+  pullrequests: dev@nutch.apache.org
+  jira_options: link label comment

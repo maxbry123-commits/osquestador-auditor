@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2845683,
+  "bundle_sha256": "2c000bc66d9dad6cd35db1a30f26c49a18635846f2f77cd131ddc6b53d576489",
+  "extracted_tree": {
+    "bytes": 6723302,
+    "files": 1126,
+    "sha256": "741b461f3d56fe6477ac8b067317464352138139838b346a07ee61cfe3c7be0d"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2845683,
+      "name": "nutch.bundle.zip.part-0001",
+      "sha256": "2c000bc66d9dad6cd35db1a30f26c49a18635846f2f77cd131ddc6b53d576489"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "nutch",
+  "source_bytes": 6723302,
+  "source_commit": "8006e1094e7442517a01a00a9035efe74379e7fd",
+  "source_files": 1126,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/apache/nutch",
+  "source_tree": {
+    "bytes": 6723302,
+    "files": 1126,
+    "sha256": "741b461f3d56fe6477ac8b067317464352138139838b346a07ee61cfe3c7be0d"
+  }
+}
