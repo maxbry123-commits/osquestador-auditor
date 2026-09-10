@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "codebase-design",
+  "title": "Codebase Design",
+  "description": "Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary.",
+  "version": "0.1.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/mattpocock/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/codebase-design:0.3.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/mattpocock/skills",
+      "ref": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "subfolder": "skills/engineering/codebase-design"
+    }
+  ]
+}

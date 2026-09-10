@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "agent-observability-session-classify",
+  "title": "Agent Observability Session Classify",
+  "description": "Classify LLM evaluation sessions in Datadog LLM Observability — group sessions by outcome, taxonomy, or failure mode for regression detection and reporting",
+  "version": "0.3.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/datadog-labs/agent-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/agent-observability-session-classify:0.3.3"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/datadog-labs/agent-skills",
+      "ref": "bcbdc2ba1157ce67a420ade1321cea12c7c2cc01",
+      "subfolder": "agent-observability/agent-observability-session-classify"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "huggingface-llm-trainer",
+  "title": "Hugging Face LLM Trainer Skill",
+  "description": "Train or fine-tune language and vision models with TRL (SFT, DPO, GRPO, reward modeling) or Unsloth on Hugging Face Jobs cloud GPUs — dataset validation, hardware selection, cost estimation, Trackio monitoring, Hub persistence, GGUF conversion. Packaged from the upstream huggingface/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/huggingface/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/huggingface-llm-trainer:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/huggingface/skills",
+      "ref": "ec0108293521ef698e451ec044e8b4feba6b732b",
+      "subfolder": "skills/huggingface-llm-trainer"
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stackloklabs/plotting-mcp:v0.0.2": {
+          "metadata": {
+            "last_updated": "2026-05-06T03:05:22Z",
+            "stars": 9
+          },
+          "overview": "## Plotting MCP Server\n\nThe Plotting MCP server provides AI assistants with data visualization capabilities, enabling the generation of charts and plots from structured data. It supports multiple plotting libraries including matplotlib, seaborn, and cartopy, and can produce line plots, bar charts, scatter plots, and geographic maps. The server uses a streamable HTTP transport and is cryptographically signed for supply chain security, making it suitable for data analysis workflows that require visual output alongside textual reasoning.",
+          "permissions": {
+            "network": {
+              "outbound": {}
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/StacklokLabs/plotting-mcp",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/release.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "plotting",
+            "visualization",
+            "data",
+            "charts",
+            "graphs",
+            "matplotlib",
+            "seaborn",
+            "cartopy",
+            "maps"
+          ],
+          "tier": "Community",
+          "tool_definitions": [
+            {
+              "annotations": {},
+              "description": "\nGenerate a plot from CSV data.\n\nArgs:\n    csv_data (str): CSV data as a string\n    plot_type (str): Type of plot to generate (line, bar, pie, worldmap).\n     If not specified, defaults to \"line\".\n    json_kwargs (str, optional): JSON string with additional parameters for the plot.\n        If not specified, the plot will be generated with default parameters.\n        Additional plotting parameters in JSON format. For line/bar plots, Seaborn is used,\n        so any parameters supported by Seaborn's plotting functions can be passed.\n        For bar/line plots, you can specify:\n            - `x` (str): Column name for x-axis\n            - `y` (str): Column name for y-axis\n            - `hue` (str): Column name for color encoding\n        For worldmap plots, coordinate data is expected with latitude/longitude columns:\n            - Latitude columns: lat, latitude, y\n            - Longitude columns: lon, lng, long, longitude, x\n            - `s` (int): marker size (default: 50)\n            - `c` (str): marker color (default: 'red')\n            - `alpha` (float): transparency (default: 0.7). Between 0 and 1.\n            - `marker` (str): marker style (default: 'o')\n\nReturns:\n    tuple[TextContent, ImageContent]: A tuple containing a success message and the\n    generated plot as an image.\n",
+              "inputSchema": {
+                "properties": {
+                  "csv_data": {
+                    "title": "Csv Data",
+                    "type": "string"
+                  },
+                  "json_kwargs": {
+                    "default": "None",
+                    "title": "Json Kwargs",
+                    "type": "string"
+                  },
+                  "plot_type": {
+                    "default": "line",
+                    "title": "Plot Type",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "csv_data"
+                ],
+                "type": "object"
+              },
+              "name": "generate_plot"
+            }
+          ],
+          "tools": [
+            "generate_plot"
+          ]
+        }
+      }
+    }
+  },
+  "description": "Provides plotting capabilities for visualizing data in various formats.",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/plotting/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/plotting",
+  "packages": [
+    {
+      "identifier": "ghcr.io/stackloklabs/plotting-mcp:v0.0.2",
+      "registryType": "oci",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://localhost:9090"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/StacklokLabs/plotting-mcp"
+  },
+  "title": "Plotting",
+  "version": "1.0.0"
+}

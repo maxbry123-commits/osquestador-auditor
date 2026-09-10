@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "sandbox-sdk",
+  "title": "Cloudflare Sandbox SDK Skill",
+  "description": "Build sandboxed apps for secure code execution — AI code interpreters, CI sandboxes, interactive dev environments; Sandbox SDK lifecycle, exec/runCode, file ops, preview URLs, OpenAI Agents SDK integration. Packaged from the upstream cloudflare/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/cloudflare/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/sandbox-sdk:0.2.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/cloudflare/skills",
+      "ref": "30553f89ae1ef1e3c2917cd09d72dac992bb4e9a",
+      "subfolder": "skills/sandbox-sdk"
+    }
+  ]
+}

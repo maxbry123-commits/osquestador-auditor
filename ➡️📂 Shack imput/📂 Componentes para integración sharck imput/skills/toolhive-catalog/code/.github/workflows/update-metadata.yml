@@ -1,0 +1,151 @@
+name: Update Server Metadata
+
+on:
+  schedule:
+    # Run weekly on Fridays at 2:00 AM UTC
+    - cron: '0 2 * * 5'
+  workflow_dispatch:
+    inputs:
+      count:
+        description: 'Number of oldest entries to update'
+        required: false
+        default: '5'
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update-metadata:
+    name: Update Server Metadata
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Get app user ID
+        id: app-user
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          USER_ID=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          echo "id=$USER_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          # This job pushes to the metadata branch below using the
+          # checked-out credential, so it must persist.
+          persist-credentials: true
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build catalog
+        run: go build -o /tmp/catalog ./cmd/catalog
+
+      - name: Determine count
+        id: count
+        run: echo "value=$INPUT_COUNT" >> $GITHUB_OUTPUT
+        env:
+          INPUT_COUNT: ${{ github.event.inputs.count || '5' }}
+
+      - name: Switch to metadata branch
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          APP_USER_ID: ${{ steps.app-user.outputs.id }}
+        run: |
+          BRANCH="catalog-update-metadata"
+
+          git config --local user.name "${APP_SLUG}[bot]"
+          git config --local user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+          # Fetch remote branch if it exists so we can build on it
+          git fetch origin "$BRANCH" 2>/dev/null || true
+
+          # If the branch already exists remotely, check it out to
+          # build on top of accumulated changes from prior runs.
+          if git rev-parse "origin/$BRANCH" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -B "$BRANCH"
+          fi
+
+      - name: Update oldest entries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPDATE_COUNT: ${{ steps.count.outputs.value }}
+        run: |
+          echo "Updating $UPDATE_COUNT oldest entries..."
+          /tmp/catalog update-metadata \
+            --oldest "$UPDATE_COUNT" \
+            --github-token "$GITHUB_TOKEN" \
+            -v
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes detected"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            git diff --stat
+          fi
+
+      - name: Commit and open or update PR
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          BRANCH="catalog-update-metadata"
+
+          git add -u registries/
+          git commit -m "chore: update registry metadata (stars and pulls)"
+          git push -f origin "$BRANCH"
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists, updated branch"
+          else
+            gh pr create \
+              --title "chore: update registry metadata (stars and pulls)" \
+              --body "$(cat <<'BODY'
+          ## Registry Metadata Update
+
+          This PR updates the GitHub stars and pull counts for registry entries
+          (server.json format).
+
+          Each daily run updates the oldest entries by `last_updated` timestamp
+          and aggregates the changes into this PR.
+
+          ---
+          *This is an automated PR created by the daily metadata update workflow.*
+          BODY
+          )" \
+              --head "$BRANCH"
+
+            # Enable auto-merge
+            gh pr merge "$BRANCH" --auto --squash || true
+          fi
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          UPDATE_COUNT: ${{ steps.count.outputs.value }}

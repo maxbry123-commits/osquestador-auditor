@@ -1,0 +1,84 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stackloklabs/mkp/server:0.4.3": {
+          "metadata": {
+            "last_updated": "2026-04-25T03:03:03Z",
+            "stars": 57
+          },
+          "overview": "## Kubernetes MCP Server\n\nThe k8s MCP server is a Model Context Protocol (MCP) server that enables AI assistants and agents to interact directly with Kubernetes clusters through a structured, AI-friendly interface. It allows AI-driven workflows to inspect cluster state, explore resources, and reason about workloads without switching tools or manually using kubectl or the Kubernetes dashboard. This server is ideal for platform engineering, operations, troubleshooting, and infrastructure-aware AI workflows built on Kubernetes.",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "allow_port": [
+                  443
+                ],
+                "insecure_allow_all": true
+              }
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/StacklokLabs/mkp",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/release.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "kubernetes",
+            "k8s",
+            "api",
+            "resources",
+            "cluster",
+            "namespaced",
+            "apply",
+            "get",
+            "list"
+          ],
+          "tier": "Community",
+          "tools": [
+            "list_resources",
+            "get_resource",
+            "apply_resource"
+          ]
+        }
+      }
+    }
+  },
+  "description": "Allows LLM-powered applications to interact with Kubernetes clusters.",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/k8s/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/k8s",
+  "packages": [
+    {
+      "environmentVariables": [
+        {
+          "description": "Path to the kubeconfig file for Kubernetes API authentication (mounted into the container with --volume)",
+          "name": "KUBECONFIG"
+        }
+      ],
+      "identifier": "ghcr.io/stackloklabs/mkp/server:0.4.3",
+      "registryType": "oci",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://localhost:8080"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/StacklokLabs/mkp"
+  },
+  "title": "Kubernetes",
+  "version": "1.0.0"
+}

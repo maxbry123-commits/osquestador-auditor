@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "huggingface-trackio",
+  "title": "Hugging Face Trackio Skill",
+  "description": "Track and visualize ML training experiments with Trackio — log metrics via Python API, fire alerts for diagnostics (loss spikes, NaN gradients), retrieve metrics and alerts via CLI, sync to HF Spaces dashboards for autonomous experiment iteration. Packaged from the upstream huggingface/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/huggingface/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/huggingface-trackio:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/huggingface/skills",
+      "ref": "ec0108293521ef698e451ec044e8b4feba6b732b",
+      "subfolder": "skills/huggingface-trackio"
+    }
+  ]
+}

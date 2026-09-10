@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "huggingface-papers",
+  "title": "Hugging Face Papers Skill",
+  "description": "Look up and read Hugging Face paper pages in markdown and use the papers API — parse arXiv IDs from various URL forms, fetch structured metadata (authors, linked models/datasets/spaces, GitHub repo, project page), claim authorship, index papers. Packaged from the upstream huggingface/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/huggingface/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/huggingface-papers:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/huggingface/skills",
+      "ref": "ec0108293521ef698e451ec044e8b4feba6b732b",
+      "subfolder": "skills/huggingface-papers"
+    }
+  ]
+}

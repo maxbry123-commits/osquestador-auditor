@@ -1,0 +1,151 @@
+name: Sync Dockyard Skills
+
+on:
+  schedule:
+    # Run weekly on Fridays at 3:00 AM UTC, an hour after update-metadata.yml.
+    - cron: '0 3 * * 5'
+  workflow_dispatch:
+    inputs:
+      dockyard-ref:
+        description: 'Branch or commit ref of stacklok/dockyard to read from'
+        required: false
+        default: 'main'
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  sync-skills:
+    name: Sync Dockyard Skills
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Get app user ID
+        id: app-user
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          USER_ID=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          echo "id=$USER_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          # This job pushes to the sync branch below using the checked-out
+          # credential, so it must persist.
+          persist-credentials: true
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build catalog
+        run: go build -o /tmp/catalog ./cmd/catalog
+
+      - name: Switch to sync branch
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          APP_USER_ID: ${{ steps.app-user.outputs.id }}
+        run: |
+          BRANCH="catalog-sync-skills"
+
+          git config --local user.name "${APP_SLUG}[bot]"
+          git config --local user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+
+          # Build on top of any accumulated changes from previous runs.
+          git fetch origin "$BRANCH" 2>/dev/null || true
+          if git rev-parse "origin/$BRANCH" >/dev/null 2>&1; then
+            git checkout -B "$BRANCH" "origin/$BRANCH"
+          else
+            git checkout -B "$BRANCH"
+          fi
+
+      - name: Sync dockyard-sourced skills
+        env:
+          DOCKYARD_REF: ${{ github.event.inputs.dockyard-ref || 'main' }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          /tmp/catalog sync-skills --all --add-missing --dockyard-ref "$DOCKYARD_REF" -v
+
+      - name: Validate after sync
+        run: /tmp/catalog validate -v
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          # Stage before diffing so newly created skill entries (untracked
+          # files) count as changes too.
+          git add registries/
+          if git diff --cached --quiet; then
+            echo "No changes detected"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            git diff --cached --stat
+          fi
+
+      - name: Commit and open or update PR
+        if: steps.check-changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="catalog-sync-skills"
+
+          git commit -m "chore: sync skills with dockyard"
+          git push -f origin "$BRANCH"
+
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists, updated branch"
+          else
+            gh pr create \
+              --title "chore: sync skills with dockyard" \
+              --body "$(cat <<'BODY'
+          ## Dockyard Skill Sync
+
+          This PR aligns the OCI tag and git ref of every dockyard-sourced
+          `skill.json` with the corresponding `skills/<name>/spec.yaml` in
+          [stacklok/dockyard](https://github.com/stacklok/dockyard).
+
+          Each scheduled run reads dockyard's `spec.yaml` for every skill whose
+          first OCI package targets `ghcr.io/stacklok/dockyard/skills/*` and
+          rewrites both the OCI tag (`packages[].identifier`) and the upstream
+          git ref (`packages[].ref`) so the two stay in lockstep with whatever
+          dockyard last published.
+
+          It also creates catalog entries for dockyard skills that have none
+          yet. Auto-created entries have a title derived from the skill name
+          and may use a generic placeholder `icon.svg` (flagged in the sync
+          output) — reviewers should polish titles and swap placeholder icons
+          before merging. Skills that must not be onboarded can be listed in
+          `registries/<registry>/skills/.sync-skills-ignore`.
+
+          ---
+          *This is an automated PR created by the daily skill sync workflow.*
+          BODY
+          )" \
+              --head "$BRANCH"
+
+            gh pr merge "$BRANCH" --auto --squash || true
+          fi

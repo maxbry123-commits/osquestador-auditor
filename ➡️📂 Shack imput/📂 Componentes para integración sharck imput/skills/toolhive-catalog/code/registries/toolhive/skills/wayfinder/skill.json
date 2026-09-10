@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "wayfinder",
+  "title": "Wayfinder",
+  "description": "Plan a huge chunk of work — more than one agent session can hold — as a shared map of investigation tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.",
+  "version": "0.1.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/mattpocock/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/wayfinder:0.3.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/mattpocock/skills",
+      "ref": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "subfolder": "skills/engineering/wayfinder"
+    }
+  ]
+}

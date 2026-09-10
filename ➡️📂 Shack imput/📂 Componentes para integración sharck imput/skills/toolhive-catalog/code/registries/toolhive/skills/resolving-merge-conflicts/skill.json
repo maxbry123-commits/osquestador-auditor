@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "resolving-merge-conflicts",
+  "title": "Resolving Merge Conflicts",
+  "description": "Use when you need to resolve an in-progress git merge/rebase conflict.",
+  "version": "0.1.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/mattpocock/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/resolving-merge-conflicts:0.3.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/mattpocock/skills",
+      "ref": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "subfolder": "skills/engineering/resolving-merge-conflicts"
+    }
+  ]
+}

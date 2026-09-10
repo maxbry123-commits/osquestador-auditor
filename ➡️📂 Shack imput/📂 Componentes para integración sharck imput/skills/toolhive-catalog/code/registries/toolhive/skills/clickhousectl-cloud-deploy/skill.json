@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "clickhousectl-cloud-deploy",
+  "title": "clickhousectl Cloud Deploy Skill",
+  "description": "Deploy and manage ClickHouse Cloud with the clickhousectl CLI — authenticate, create services, manage credentials, connection strings, and common administrative workflows. Packaged from the upstream ClickHouse/agent-skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/ClickHouse/agent-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/clickhousectl-cloud-deploy:0.2.6"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/ClickHouse/agent-skills",
+      "ref": "65ce71fce803014afb69279535c82c72dc55d9ba",
+      "subfolder": "skills/clickhousectl-cloud-deploy"
+    }
+  ]
+}

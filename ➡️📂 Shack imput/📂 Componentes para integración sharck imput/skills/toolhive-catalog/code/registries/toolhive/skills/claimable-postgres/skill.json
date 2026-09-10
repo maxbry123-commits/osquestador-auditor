@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "claimable-postgres",
+  "title": "Claimable Postgres Skill",
+  "description": "Provision instant temporary Postgres databases via Claimable Postgres by Neon (neon.new) — no signup, REST API/CLI/SDK, ideal for prototyping and tests with a 72-hour claim window. Packaged from the upstream neondatabase/agent-skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/neondatabase/agent-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/claimable-postgres:0.1.8"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/neondatabase/agent-skills",
+      "ref": "e20e68996aa1dbd5cf4d2c981e5357cdefd8f5bd",
+      "subfolder": "skills/claimable-postgres"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "huggingface-paper-publisher",
+  "title": "Hugging Face Paper Publisher Skill",
+  "description": "Publish and manage research papers on Hugging Face Hub — create paper pages, link papers to models/datasets/spaces, claim authorship, generate markdown research articles, manage citations and visibility. Packaged from the upstream huggingface/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/huggingface/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/huggingface-paper-publisher:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/huggingface/skills",
+      "ref": "ec0108293521ef698e451ec044e8b4feba6b732b",
+      "subfolder": "skills/huggingface-paper-publisher"
+    }
+  ]
+}

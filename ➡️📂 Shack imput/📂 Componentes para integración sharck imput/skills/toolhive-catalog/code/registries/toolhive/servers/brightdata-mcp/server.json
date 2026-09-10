@@ -1,0 +1,333 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stacklok/dockyard/npx/brightdata-mcp:2.11.1": {
+          "metadata": {
+            "last_updated": "2026-08-07T00:30:48Z",
+            "stars": 2551
+          },
+          "overview": "## Bright Data MCP Server\n\nThe brightdata-mcp server is a Model Context Protocol (MCP) server that enables AI assistants and agents to access real-time web data through Bright Data's global proxy and scraping infrastructure. It allows AI workflows to fetch live web content, extract structured data, and perform large-scale web data collection without building or maintaining custom scraping systems. This makes it ideal for research, market analysis, competitive intelligence, and any AI-driven workflow that depends on fresh, publicly available web data.",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "allow_host": [
+                  "api.brightdata.com",
+                  "brightdata.com",
+                  "brd.superproxy.io"
+                ],
+                "allow_port": [
+                  443,
+                  80,
+                  9222
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/stacklok/dockyard",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/build-containers.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "web-scraping",
+            "data-extraction",
+            "api",
+            "automation",
+            "browser"
+          ],
+          "tier": "Official",
+          "tool_definitions": [
+            {
+              "annotations": {
+                "openWorldHint": true,
+                "readOnlyHint": true,
+                "title": "Discover"
+              },
+              "description": "Search the web and rank results by AI-driven relevance. Returns scored results with title, description, and URL. Supports intent-based ranking, geo-targeting, date filtering, and keyword filtering.",
+              "inputSchema": {
+                "properties": {
+                  "city": {
+                    "description": "City for localized results (e.g., \"New York\", \"Berlin\")",
+                    "type": "string"
+                  },
+                  "country": {
+                    "description": "2-letter ISO country code for localized results (e.g., \"US\", \"GB\", \"DE\")",
+                    "maxLength": 2,
+                    "minLength": 2,
+                    "type": "string"
+                  },
+                  "end_date": {
+                    "description": "Only content updated until this date (YYYY-MM-DD)",
+                    "type": "string"
+                  },
+                  "filter_keywords": {
+                    "description": "Keywords that must appear in search results",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "intent": {
+                    "description": "Describes the specific goal of the search to help the AI evaluate and rank result relevance.If not provided, the query string is used as the intent",
+                    "type": "string"
+                  },
+                  "language": {
+                    "description": "Language code (e.g., \"en\", \"es\", \"fr\")",
+                    "type": "string"
+                  },
+                  "num_results": {
+                    "description": "Exact number of search results to return",
+                    "type": "integer"
+                  },
+                  "query": {
+                    "description": "The search query",
+                    "type": "string"
+                  },
+                  "remove_duplicates": {
+                    "description": "Remove duplicate results (default: true)",
+                    "type": "boolean"
+                  },
+                  "start_date": {
+                    "description": "Only content updated from this date (YYYY-MM-DD)",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "name": "discover"
+            },
+            {
+              "annotations": {
+                "openWorldHint": true,
+                "readOnlyHint": true,
+                "title": "Scrape as Markdown"
+              },
+              "description": "Scrape a single webpage URL with advanced options for content extraction and get back the results in MarkDown language. This tool can unlock any webpage even if it uses bot detection or CAPTCHA.",
+              "inputSchema": {
+                "properties": {
+                  "url": {
+                    "format": "uri",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "type": "object"
+              },
+              "name": "scrape_as_markdown"
+            },
+            {
+              "annotations": {
+                "openWorldHint": true,
+                "readOnlyHint": true,
+                "title": "Scrape Batch"
+              },
+              "description": "Scrape multiple webpages URLs with advanced options for content extraction and get back the results in MarkDown language. This tool can unlock any webpage even if it uses bot detection or CAPTCHA.",
+              "inputSchema": {
+                "properties": {
+                  "urls": {
+                    "description": "Array of URLs to scrape (max 5)",
+                    "items": {
+                      "format": "uri",
+                      "type": "string"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "urls"
+                ],
+                "type": "object"
+              },
+              "name": "scrape_batch"
+            },
+            {
+              "annotations": {
+                "openWorldHint": true,
+                "readOnlyHint": true,
+                "title": "Search Engine"
+              },
+              "description": "Scrape search results from Google, Bing or Yandex. Returns SERP results in JSON or Markdown (URL, title, description),Ideal forgathering current information, news, and detailed search results.",
+              "inputSchema": {
+                "properties": {
+                  "cursor": {
+                    "description": "Pagination cursor for next page",
+                    "type": "string"
+                  },
+                  "engine": {
+                    "default": "google",
+                    "enum": [
+                      "google",
+                      "bing",
+                      "yandex"
+                    ],
+                    "type": "string"
+                  },
+                  "geo_location": {
+                    "description": "2-letter country code for geo-targeted results (e.g., \"us\", \"uk\")",
+                    "maxLength": 2,
+                    "minLength": 2,
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "name": "search_engine"
+            },
+            {
+              "annotations": {
+                "openWorldHint": true,
+                "readOnlyHint": true,
+                "title": "Search Engine Batch"
+              },
+              "description": "Run multiple search queries simultaneously. Returns JSON for Google, Markdown for Bing/Yandex.",
+              "inputSchema": {
+                "properties": {
+                  "queries": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "cursor": {
+                          "type": "string"
+                        },
+                        "engine": {
+                          "default": "google",
+                          "enum": [
+                            "google",
+                            "bing",
+                            "yandex"
+                          ],
+                          "type": "string"
+                        },
+                        "geo_location": {
+                          "description": "2-letter country code for geo-targeted results (e.g., \"us\", \"uk\")",
+                          "maxLength": 2,
+                          "minLength": 2,
+                          "type": "string"
+                        },
+                        "query": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "query"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "queries"
+                ],
+                "type": "object"
+              },
+              "name": "search_engine_batch"
+            }
+          ],
+          "tools": [
+            "discover",
+            "scrape_as_markdown",
+            "scrape_batch",
+            "search_engine",
+            "search_engine_batch"
+          ]
+        }
+      }
+    }
+  },
+  "description": "An MCP interface into the Bright Data toolset for web scraping and data extraction",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/brightdata-mcp/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/brightdata-mcp",
+  "packages": [
+    {
+      "environmentVariables": [
+        {
+          "description": "Bright Data API token for authentication",
+          "isRequired": true,
+          "isSecret": true,
+          "name": "API_TOKEN"
+        },
+        {
+          "description": "Rate limiting configuration (format: limit/time+unit, e.g., 100/1h, 50/30m, 10/5s)",
+          "name": "RATE_LIMIT"
+        },
+        {
+          "default": "mcp_unlocker",
+          "description": "Custom Web Unlocker zone name",
+          "name": "WEB_UNLOCKER_ZONE"
+        },
+        {
+          "default": "mcp_browser",
+          "description": "Custom Browser API zone name",
+          "name": "BROWSER_ZONE"
+        },
+        {
+          "default": "false",
+          "description": "Enable pro mode to access all tools including browser automation and web data extraction",
+          "name": "PRO_MODE"
+        },
+        {
+          "default": "600",
+          "description": "Timeout in seconds for web_data_* tools polling",
+          "name": "POLLING_TIMEOUT"
+        },
+        {
+          "description": "Request timeout in seconds for base tools (search & scrape). No limit by default",
+          "name": "BASE_TIMEOUT"
+        },
+        {
+          "default": "0",
+          "description": "Max retries for base tools on transient errors (0-3)",
+          "name": "BASE_MAX_RETRIES"
+        },
+        {
+          "description": "Comma-separated tool group IDs to enable (e.g., 'ecommerce,browser')",
+          "name": "GROUPS"
+        },
+        {
+          "description": "Comma-separated individual tool names to enable (e.g., 'extract,scrape_as_html')",
+          "name": "TOOLS"
+        }
+      ],
+      "identifier": "ghcr.io/stacklok/dockyard/npx/brightdata-mcp:2.11.1",
+      "registryType": "oci",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/brightdata/brightdata-mcp"
+  },
+  "title": "Bright Data",
+  "version": "1.0.0"
+}

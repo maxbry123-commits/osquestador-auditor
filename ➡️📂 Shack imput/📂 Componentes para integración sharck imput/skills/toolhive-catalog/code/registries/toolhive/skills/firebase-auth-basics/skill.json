@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "firebase-auth-basics",
+  "title": "Firebase Authentication Basics",
+  "description": "Add authentication with Firebase Authentication — sign-in methods (email/password, phone, OAuth providers, anonymous), session management, custom claims, and integration patterns across platforms. Packaged from the upstream firebase/agent-skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/firebase/agent-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/firebase-auth-basics:0.2.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/firebase/agent-skills",
+      "ref": "073edf7bb747c27b9c911a9126adaa5bc4648fdc",
+      "subfolder": "skills/firebase-auth-basics"
+    }
+  ]
+}

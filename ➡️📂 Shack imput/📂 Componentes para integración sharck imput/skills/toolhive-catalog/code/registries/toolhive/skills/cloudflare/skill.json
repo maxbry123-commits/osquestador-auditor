@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "cloudflare",
+  "title": "Cloudflare Platform Skill",
+  "description": "Comprehensive Cloudflare platform skill — Workers, Pages, storage (KV/D1/R2/Artifacts/Queues), AI (Workers AI, Vectorize, Agents SDK, AI Gateway), networking (Tunnel, Spectrum), security (WAF, DDoS, Turnstile), and IaC (Terraform, Pulumi); decision trees for product selection. Packaged from the upstream cloudflare/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/cloudflare/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/cloudflare:0.2.2"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/cloudflare/skills",
+      "ref": "f96bff754e428838818017f75817f0f9428acd48",
+      "subfolder": "skills/cloudflare"
+    }
+  ]
+}

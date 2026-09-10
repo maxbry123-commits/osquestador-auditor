@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "firebase-basics",
+  "title": "Firebase Basics",
+  "description": "Firebase fundamentals — project setup, SDK install across platforms, Firebase CLI, local emulators, environment config, and common product selection guidance. Packaged from the upstream firebase/agent-skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/firebase/agent-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/firebase-basics:0.2.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/firebase/agent-skills",
+      "ref": "073edf7bb747c27b9c911a9126adaa5bc4648fdc",
+      "subfolder": "skills/firebase-basics"
+    }
+  ]
+}

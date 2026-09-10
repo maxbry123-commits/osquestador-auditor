@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "ask-matt",
+  "title": "Ask Matt",
+  "description": "Ask which skill or flow fits your situation. A router over the skills in this repo.",
+  "version": "0.1.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/mattpocock/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/ask-matt:0.3.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/mattpocock/skills",
+      "ref": "84fdeffd12f2ee307994d1eb6feb48173b6e0502",
+      "subfolder": "skills/engineering/ask-matt"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "forge-app-builder",
+  "title": "Atlassian Forge App Builder Skill",
+  "description": "Build Atlassian Forge apps end-to-end — app scaffolding via Forge CLI, manifest config, UI components (UI Kit, Custom UI, Forge React), backend resolvers and functions, triggers, scheduled triggers, permissions, and deployment. Packaged from the upstream atlassian/forge-skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/atlassian/forge-skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/forge-app-builder:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/atlassian/forge-skills",
+      "ref": "a8eb109708de685dbad5b92eb25890d0a20addff",
+      "subfolder": "skills/forge-app-builder"
+    }
+  ]
+}

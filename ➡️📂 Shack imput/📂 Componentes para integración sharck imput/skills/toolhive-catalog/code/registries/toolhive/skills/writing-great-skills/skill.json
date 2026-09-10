@@ -1,0 +1,30 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "writing-great-skills",
+  "title": "Writing Great Skills",
+  "description": "Reference for writing and editing skills well — the vocabulary and principles that make a skill predictable.",
+  "version": "0.1.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/mattpocock/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/writing-great-skills:0.1.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/mattpocock/skills",
+      "ref": "d574778f94cf620fcc8ce741584093bc650a61d3",
+      "subfolder": "skills/productivity/writing-great-skills"
+    }
+  ]
+}

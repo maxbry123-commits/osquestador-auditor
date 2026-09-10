@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "huggingface-datasets",
+  "title": "Hugging Face Datasets Skill",
+  "description": "Hugging Face Dataset Viewer API workflows — fetch subset/split metadata, paginate rows, search text, apply filters, download parquet URLs, read size and statistics; SQL queries via parquetlens. Packaged from the upstream huggingface/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "Apache-2.0",
+  "repository": {
+    "url": "https://github.com/huggingface/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/huggingface-datasets:0.3.0"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/huggingface/skills",
+      "ref": "ec0108293521ef698e451ec044e8b4feba6b732b",
+      "subfolder": "skills/huggingface-datasets"
+    }
+  ]
+}

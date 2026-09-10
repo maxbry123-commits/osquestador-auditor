@@ -1,0 +1,188 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stackloklabs/osv-mcp/server:0.1.3": {
+          "metadata": {
+            "last_updated": "2026-05-04T03:43:28Z",
+            "stars": 33
+          },
+          "overview": "## OSV MCP Server\n\nThe osv MCP server provides access to the OSV (Open Source Vulnerabilities) database for querying package and commit vulnerabilities. The server offers MCP-based access to the OSV vulnerability database through direct API queries to OSV.dev for vulnerability lookups by package name, version, or commit hash. It supports batch vulnerability queries for multiple packages simultaneously and delivers detailed vulnerability information including CVE IDs, severity scores, and affected versions across multiple programming languages and package managers.",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "allow_host": [
+                  "api.osv.dev"
+                ],
+                "allow_port": [
+                  443
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/StacklokLabs/osv-mcp",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/release.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "vulnerability",
+            "security",
+            "osv",
+            "open-source",
+            "cve",
+            "packages",
+            "dependencies",
+            "scanning",
+            "security-scanning",
+            "vulnerability-detection"
+          ],
+          "tier": "Community",
+          "tool_definitions": [
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": true,
+                "readOnlyHint": true
+              },
+              "description": "Get details for a specific vulnerability by ID",
+              "inputSchema": {
+                "properties": {
+                  "id": {
+                    "description": "The OSV vulnerability ID",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id"
+                ],
+                "type": "object"
+              },
+              "name": "get_vulnerability"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": true,
+                "readOnlyHint": true
+              },
+              "description": "Query for vulnerabilities affecting multiple packages or commits at once",
+              "inputSchema": {
+                "properties": {
+                  "queries": {
+                    "description": "Array of query objects",
+                    "items": {
+                      "properties": {
+                        "commit": {
+                          "description": "The commit hash to query for. If specified, version should not be set.",
+                          "type": "string"
+                        },
+                        "ecosystem": {
+                          "description": "The ecosystem for this package (e.g., PyPI, npm, Go).",
+                          "type": "string"
+                        },
+                        "package_name": {
+                          "description": "The name of the package.",
+                          "type": "string"
+                        },
+                        "purl": {
+                          "description": "The package URL for this package. If purl is used, package_name and ecosystem should not be set.",
+                          "type": "string"
+                        },
+                        "version": {
+                          "description": "The version string to query for. If specified, commit should not be set.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "queries"
+                ],
+                "type": "object"
+              },
+              "name": "query_vulnerabilities_batch"
+            },
+            {
+              "annotations": {
+                "destructiveHint": false,
+                "idempotentHint": true,
+                "openWorldHint": true,
+                "readOnlyHint": true
+              },
+              "description": "Query for vulnerabilities affecting a specific package version or commit",
+              "inputSchema": {
+                "properties": {
+                  "commit": {
+                    "description": "The commit hash to query for. If specified, version should not be set.",
+                    "type": "string"
+                  },
+                  "ecosystem": {
+                    "description": "The ecosystem for this package (e.g., PyPI, npm, Go).",
+                    "type": "string"
+                  },
+                  "package_name": {
+                    "description": "The name of the package.",
+                    "type": "string"
+                  },
+                  "purl": {
+                    "description": "The package URL for this package. If purl is used, package_name and ecosystem should not be set.",
+                    "type": "string"
+                  },
+                  "version": {
+                    "description": "The version string to query for. If specified, commit should not be set.",
+                    "type": "string"
+                  }
+                },
+                "required": [],
+                "type": "object"
+              },
+              "name": "query_vulnerability"
+            }
+          ],
+          "tools": [
+            "get_vulnerability",
+            "query_vulnerabilities_batch",
+            "query_vulnerability"
+          ]
+        }
+      }
+    }
+  },
+  "description": "OSV (Open Source Vulnerabilities) database access for querying package and commit vulnerabilities",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/osv/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/osv",
+  "packages": [
+    {
+      "identifier": "ghcr.io/stackloklabs/osv-mcp/server:0.1.3",
+      "registryType": "oci",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://localhost:8080"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/StacklokLabs/osv-mcp"
+  },
+  "title": "OSV",
+  "version": "1.0.0"
+}

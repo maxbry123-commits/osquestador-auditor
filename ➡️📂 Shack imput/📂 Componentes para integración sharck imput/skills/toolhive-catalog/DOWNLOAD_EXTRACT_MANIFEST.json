@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2268051,
+  "bundle_sha256": "2fa1837b61e764cb9e13fb5e513710425337d8816bbc97e1bdb3c8b161514281",
+  "extracted_tree": {
+    "bytes": 13036847,
+    "files": 925,
+    "sha256": "76f8d82f7e8e39d44d53d7e2f26e38b28ea1de5a590596fec3958036e61bab7c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2268051,
+      "name": "toolhive-catalog.bundle.zip.part-0001",
+      "sha256": "2fa1837b61e764cb9e13fb5e513710425337d8816bbc97e1bdb3c8b161514281"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "toolhive-catalog",
+  "source_bytes": 13036847,
+  "source_commit": "c3805418495146577e192aecb6f1de1c924cc9e6",
+  "source_files": 925,
+  "source_ref": "HEAD",
+  "source_repo": "stacklok/toolhive-catalog",
+  "source_tree": {
+    "bytes": 13036847,
+    "files": 925,
+    "sha256": "76f8d82f7e8e39d44d53d7e2f26e38b28ea1de5a590596fec3958036e61bab7c"
+  }
+}

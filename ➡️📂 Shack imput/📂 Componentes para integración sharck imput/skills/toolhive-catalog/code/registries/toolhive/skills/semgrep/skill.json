@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "semgrep",
+  "title": "Semgrep",
+  "description": "Run Semgrep static analysis with parallel subagents — full ruleset or high-confidence security findings only; auto-detects Semgrep Pro for cross-file taint analysis across multi-language codebases. Packaged from the upstream trailofbits/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "CC-BY-SA-4.0",
+  "repository": {
+    "url": "https://github.com/trailofbits/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/semgrep:0.2.1"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/trailofbits/skills",
+      "ref": "7b9bd5f950f89a9ba71b249b9801c1a95be3928e",
+      "subfolder": "plugins/static-analysis/skills/semgrep"
+    }
+  ]
+}

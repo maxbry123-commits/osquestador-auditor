@@ -1,0 +1,93 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "schedule": [
+    "before 3am on friday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "postUpdateOptions": [
+    "gomodTidy"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update OCI image versions in server.json files (identifier and _meta key)",
+      "managerFilePatterns": [
+        "/^registries/.*/servers/.*/server\\.json$/"
+      ],
+      "matchStringsStrategy": "any",
+      "matchStrings": [
+        "\"identifier\":\\s*\"(?<depName>[^:\"]+):(?<currentValue>[^\"]+)\"",
+        "\"(?<depName>[^:\"]*\\/[^:\"]+):(?<currentValue>[^\"]+)\":\\s*\\{"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Automerge patch updates for registry images",
+      "matchFileNames": [
+        "registries/**"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Use regex versioning for date-suffixed image tags (semver+YYYYMMDD)",
+      "matchPackageNames": [
+        "ghcr.io/stackloklabs/toolhive-doc-mcp"
+      ],
+      "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)$"
+    },
+    {
+      "description": "MCP Registry dependency updates",
+      "matchPackageNames": [
+        "github.com/modelcontextprotocol/registry"
+      ],
+      "commitMessageTopic": "MCP registry dependency",
+      "semanticCommitType": "chore",
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Group non-major Go module updates (excluding functionally significant deps handled individually)",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "matchPackageNames": [
+        "!github.com/modelcontextprotocol/registry",
+        "!github.com/stacklok/toolhive*"
+      ],
+      "groupName": "go modules"
+    },
+    {
+      "description": "Group non-major GitHub Actions updates",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin"
+      ],
+      "groupName": "github-actions"
+    }
+  ],
+  "prConcurrentLimit": 20,
+  "prHourlyLimit": 0,
+  "prCreation": "immediate",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps"
+}

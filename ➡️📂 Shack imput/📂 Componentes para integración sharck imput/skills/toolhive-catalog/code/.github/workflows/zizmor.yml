@@ -1,0 +1,35 @@
+name: 'GitHub Actions Security (zizmor)'
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+permissions: {}
+
+jobs:
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
+        with:
+          inputs: ./.github/workflows/
+          advanced-security: 'false'
+          annotations: 'true'
+          # Low/informational findings (e.g. style nits, unexploitable
+          # low-confidence flags) still show as annotations but don't fail
+          # the check; only real security-relevant findings gate the PR.
+          min-severity: medium

@@ -1,0 +1,31 @@
+{
+  "namespace": "io.github.stacklok",
+  "name": "agentic-actions-auditor",
+  "title": "Agentic Actions Auditor",
+  "description": "Audit GitHub Actions workflows for security vulnerabilities in AI agent integrations (Claude Code Action, Gemini CLI, Codex) — detects prompt injection, env-var intermediary patterns, and wildcard user allowlists. Packaged from the upstream trailofbits/skills repository.",
+  "version": "0.1.0",
+  "status": "active",
+  "license": "CC-BY-SA-4.0",
+  "repository": {
+    "url": "https://github.com/trailofbits/skills",
+    "type": "git"
+  },
+  "icons": [
+    {
+      "src": "icon.svg",
+      "type": "image/svg+xml"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/stacklok/dockyard/skills/agentic-actions-auditor:0.2.2"
+    },
+    {
+      "registryType": "git",
+      "url": "https://github.com/trailofbits/skills",
+      "ref": "7b9bd5f950f89a9ba71b249b9801c1a95be3928e",
+      "subfolder": "plugins/agentic-actions-auditor/skills/agentic-actions-auditor"
+    }
+  ]
+}

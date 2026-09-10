@@ -1,0 +1,164 @@
+version: '3'
+
+vars:
+  BUILD_DIR: build
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
+  COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  DATE:
+    sh: date -u +"%Y-%m-%dT%H:%M:%SZ"
+  LDFLAGS: -ldflags "-X main.version={{.VERSION}} -X main.commit={{.COMMIT}} -X main.date={{.DATE}}"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  deps:
+    desc: Download and install dependencies
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  build:
+    desc: Build the catalog binary
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - go build {{.LDFLAGS}} -o {{.BUILD_DIR}}/catalog ./cmd/catalog
+    sources:
+      - cmd/catalog/**/*.go
+      - internal/**/*.go
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BUILD_DIR}}/catalog"
+
+  catalog:build:
+    desc: Build registry files from server.json
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog build -v
+    sources:
+      - registries/**/server.json
+    generates:
+      - "{{.BUILD_DIR}}/*/registry-upstream.json"
+
+  catalog:validate:
+    desc: Validate all server.json entries
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog validate -v
+
+  catalog:update-metadata:
+    desc: Update metadata for a specific server.json file
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog update-metadata {{.SERVER}} {{.CLI_ARGS}}
+    vars:
+      SERVER: '{{.SERVER | default ""}}'
+    preconditions:
+      - sh: test -n "{{.SERVER}}"
+        msg: "Please specify a server.json file with SERVER=path/to/server.json"
+
+  catalog:update-metadata:oldest:
+    desc: Update metadata for the N oldest entries
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog update-metadata --oldest {{.COUNT}} -v {{.CLI_ARGS}}
+    vars:
+      COUNT: '{{.COUNT | default "5"}}'
+
+  catalog:update-metadata:oldest:dry-run:
+    desc: Preview metadata updates for the N oldest entries
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog update-metadata --oldest {{.COUNT}} --dry-run -v
+    vars:
+      COUNT: '{{.COUNT | default "5"}}'
+
+  catalog:update-tools:
+    desc: Update tool lists for a specific server.json file
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog update-tools {{.SERVER}} {{.CLI_ARGS}}
+    vars:
+      SERVER: '{{.SERVER | default ""}}'
+    preconditions:
+      - sh: test -n "{{.SERVER}}"
+        msg: "Please specify a server.json file with SERVER=path/to/server.json"
+
+  catalog:update-tools:dry-run:
+    desc: Preview tool list updates for a specific server.json file
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog update-tools {{.SERVER}} --dry-run -v
+    vars:
+      SERVER: '{{.SERVER | default ""}}'
+    preconditions:
+      - sh: test -n "{{.SERVER}}"
+        msg: "Please specify a server.json file with SERVER=path/to/server.json"
+
+  catalog:sync-skills:
+    desc: Sync a single dockyard-sourced skill.json with stacklok/dockyard
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog sync-skills {{.SKILL}} {{.CLI_ARGS}}
+    vars:
+      SKILL: '{{.SKILL | default ""}}'
+    preconditions:
+      - sh: test -n "{{.SKILL}}"
+        msg: "Please specify a skill.json file with SKILL=path/to/skill.json"
+
+  catalog:sync-skills:all:
+    desc: Sync every dockyard-sourced skill with stacklok/dockyard
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog sync-skills --all -v {{.CLI_ARGS}}
+
+  catalog:sync-skills:all:dry-run:
+    desc: Preview every dockyard-sourced skill bump without writing
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog sync-skills --all --dry-run -v
+
+  version:
+    desc: Show version information
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/catalog version
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v -race -coverprofile=coverage.out ./...
+
+  test:coverage:
+    desc: Run tests with coverage report
+    deps: [test]
+    cmds:
+      - go tool cover -html=coverage.out -o coverage.html
+      - 'echo "Coverage report generated: coverage.html"'
+
+  lint:
+    desc: Run linter (requires golangci-lint)
+    cmds:
+      - golangci-lint run --allow-parallel-runners ./...
+
+  lint:fix:
+    desc: Run linter with auto-fix
+    cmds:
+      - golangci-lint run --allow-parallel-runners --fix ./...
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.BUILD_DIR}}
+      - rm -f coverage.out coverage.html
+      - go clean
+
+  watch:
+    desc: Watch for changes and rebuild (requires entr)
+    cmds:
+      - find cmd internal -name '*.go' | entr -c task build

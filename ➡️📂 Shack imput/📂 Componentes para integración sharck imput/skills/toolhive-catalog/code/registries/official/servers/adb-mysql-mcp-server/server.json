@@ -1,0 +1,279 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stacklok/dockyard/uvx/adb-mysql-mcp-server:2.0.0": {
+          "metadata": {
+            "last_updated": "2026-07-24T02:54:50Z",
+            "stars": 31
+          },
+          "overview": "## AnalyticDB for MySQL MCP Server\n\nThe adb-mysql-mcp-server provides a standardized interface that lets AI assistants interact directly with Alibaba Cloud AnalyticDB for MySQL databases through the Model Context Protocol (MCP). It enables seamless access to database metadata and SQL operations so AI workflows can query, analyze, and manage data without needing to embed database-specific logic directly in the assistant.",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "insecure_allow_all": true
+              }
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/stacklok/dockyard",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/build-containers.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "database",
+            "mysql",
+            "analytics",
+            "sql",
+            "alibaba-cloud",
+            "data-warehouse"
+          ],
+          "tier": "Official",
+          "tool_definitions": [
+            {
+              "annotations": {},
+              "description": "Execute a SQL query on an ADB MySQL cluster.\n\nConnection modes:\n  - Direct mode (ADB_MYSQL_USER/PASSWORD configured): region_id/db_cluster_id optional.\n  - Temporary account mode (AK/SK only): region_id/db_cluster_id required.\n\nArgs:\n    query: The SQL statement to execute.\n    region_id: Alibaba Cloud region ID, optional in direct mode.\n    db_cluster_id: Cluster ID, optional in direct mode.\n    database: Target database name (optional).\n",
+              "inputSchema": {
+                "properties": {
+                  "database": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Database"
+                  },
+                  "db_cluster_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Db Cluster Id"
+                  },
+                  "query": {
+                    "title": "Query",
+                    "type": "string"
+                  },
+                  "region_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Region Id"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "name": "execute_sql"
+            },
+            {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "description": "Get the EXPLAIN ANALYZE actual execution plan with runtime statistics.\n\nConnection modes are the same as execute_sql.\n\nArgs:\n    query: The SQL statement to analyze.\n    region_id: Alibaba Cloud region ID, optional in direct mode.\n    db_cluster_id: Cluster ID, optional in direct mode.\n    database: Target database name (optional).\n",
+              "inputSchema": {
+                "properties": {
+                  "database": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Database"
+                  },
+                  "db_cluster_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Db Cluster Id"
+                  },
+                  "query": {
+                    "title": "Query",
+                    "type": "string"
+                  },
+                  "region_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Region Id"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "name": "get_execution_plan"
+            },
+            {
+              "annotations": {
+                "readOnlyHint": true
+              },
+              "description": "Get the EXPLAIN logical execution plan of a SQL query.\n\nConnection modes are the same as execute_sql.\n\nArgs:\n    query: The SQL statement to analyze.\n    region_id: Alibaba Cloud region ID, optional in direct mode.\n    db_cluster_id: Cluster ID, optional in direct mode.\n    database: Target database name (optional).\n",
+              "inputSchema": {
+                "properties": {
+                  "database": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Database"
+                  },
+                  "db_cluster_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Db Cluster Id"
+                  },
+                  "query": {
+                    "title": "Query",
+                    "type": "string"
+                  },
+                  "region_id": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "title": "Region Id"
+                  }
+                },
+                "required": [
+                  "query"
+                ],
+                "type": "object"
+              },
+              "name": "get_query_plan"
+            }
+          ],
+          "tools": [
+            "execute_sql",
+            "get_execution_plan",
+            "get_query_plan"
+          ]
+        }
+      }
+    }
+  },
+  "description": "Official MCP server for AnalyticDB for MySQL of Alibaba Cloud",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/adb-mysql-mcp-server/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/adb-mysql-mcp-server",
+  "packages": [
+    {
+      "environmentVariables": [
+        {
+          "description": "AnalyticDB for MySQL host address (direct-connection mode). Not required when using temporary-account mode (Alibaba Cloud AK/SK only, with region_id/db_cluster_id passed per tool call).",
+          "name": "ADB_MYSQL_HOST"
+        },
+        {
+          "description": "AnalyticDB for MySQL port number (direct-connection mode). Not required when using temporary-account mode (Alibaba Cloud AK/SK only, with region_id/db_cluster_id passed per tool call).",
+          "name": "ADB_MYSQL_PORT"
+        },
+        {
+          "description": "Database user for authentication (direct-connection mode). Not required when using temporary-account mode (Alibaba Cloud AK/SK only, with region_id/db_cluster_id passed per tool call).",
+          "name": "ADB_MYSQL_USER"
+        },
+        {
+          "description": "Database password for authentication (direct-connection mode). Not required when using temporary-account mode (Alibaba Cloud AK/SK only, with region_id/db_cluster_id passed per tool call).",
+          "isSecret": true,
+          "name": "ADB_MYSQL_PASSWORD"
+        },
+        {
+          "description": "Database name to connect to (optional; can be passed per-call via the database tool argument instead)",
+          "name": "ADB_MYSQL_DATABASE"
+        },
+        {
+          "description": "Alibaba Cloud access key ID; required to enable the OpenAPI tool group (cluster management, diagnostics, monitoring) and/or temporary-account database mode. MCP_TOOLSETS must also include \"openapi\" to expose the OpenAPI tools even when this is set.",
+          "isSecret": true,
+          "name": "ALIBABA_CLOUD_ACCESS_KEY_ID"
+        },
+        {
+          "description": "Alibaba Cloud access key secret; required to enable the OpenAPI tool group (cluster management, diagnostics, monitoring) and/or temporary-account database mode. MCP_TOOLSETS must also include \"openapi\" to expose the OpenAPI tools even when this is set.",
+          "isSecret": true,
+          "name": "ALIBABA_CLOUD_ACCESS_KEY_SECRET"
+        },
+        {
+          "default": "sql",
+          "description": "Comma-separated tool groups to enable: \"sql\", \"openapi\", or the shortcut \"all\" (openapi,sql). Only controls tool-group exposure; the openapi group is also auto-disabled if Alibaba Cloud AK/SK are not configured. Default is \"sql\" only.",
+          "name": "MCP_TOOLSETS"
+        },
+        {
+          "default": "false",
+          "description": "Set to \"true\" to let execute_sql run unrestricted SQL (DDL/DML/DCL/TCL, no statement-type validation). Default is read-only mode (SELECT/SHOW/DESCRIBE/EXPLAIN only). Enable only for trusted clients with a least-privilege database account.",
+          "name": "ENABLE_SQL_WRITE_TOOLS"
+        }
+      ],
+      "identifier": "ghcr.io/stacklok/dockyard/uvx/adb-mysql-mcp-server:2.0.0",
+      "registryType": "oci",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/aliyun/alibabacloud-adb-mysql-mcp-server"
+  },
+  "title": "AnalyticDB for MySQL",
+  "version": "1.0.0"
+}

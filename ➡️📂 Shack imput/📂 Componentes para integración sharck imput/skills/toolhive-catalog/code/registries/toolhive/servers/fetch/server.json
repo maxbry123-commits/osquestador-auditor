@@ -1,0 +1,110 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.github.stacklok": {
+        "ghcr.io/stackloklabs/gofetch/server:1.0.5": {
+          "metadata": {
+            "last_updated": "2026-08-07T03:07:39Z",
+            "stars": 25
+          },
+          "overview": "## Fetch MCP Server\n\nThe fetch-mcp-server is a lightweight Model Context Protocol (MCP) server that gives AI assistants direct access to external HTTP and HTTPS resources. It allows AI-driven workflows to retrieve web content, APIs, and remote resources on demand, making it easy to incorporate live data, documentation, or machine-readable endpoints into an assistant's reasoning loop. This server is commonly used as a foundational building block for research, data ingestion, and integration workflows where simple, reliable network access is required.",
+          "permissions": {
+            "network": {
+              "outbound": {
+                "allow_port": [
+                  443
+                ],
+                "insecure_allow_all": true
+              }
+            }
+          },
+          "provenance": {
+            "cert_issuer": "https://token.actions.githubusercontent.com",
+            "repository_uri": "https://github.com/StacklokLabs/gofetch",
+            "runner_environment": "github-hosted",
+            "signer_identity": "/.github/workflows/release.yml",
+            "sigstore_url": "tuf-repo-cdn.sigstore.dev"
+          },
+          "status": "Active",
+          "tags": [
+            "content",
+            "html",
+            "markdown",
+            "fetch",
+            "fetching",
+            "get",
+            "wget",
+            "json",
+            "curl",
+            "modelcontextprotocol"
+          ],
+          "tier": "Community",
+          "tool_definitions": [
+            {
+              "annotations": {},
+              "description": "Fetches a URL from the internet and optionally extracts its contents as markdown.",
+              "inputSchema": {
+                "properties": {
+                  "max_length": {
+                    "type": [
+                      "null",
+                      "integer"
+                    ]
+                  },
+                  "raw": {
+                    "type": "boolean"
+                  },
+                  "start_index": {
+                    "type": [
+                      "null",
+                      "integer"
+                    ]
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "url"
+                ],
+                "type": "object"
+              },
+              "name": "fetch"
+            }
+          ],
+          "tools": [
+            "fetch"
+          ]
+        }
+      }
+    }
+  },
+  "description": "Allows you to fetch content from the web",
+  "icons": [
+    {
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ],
+      "src": "https://raw.githubusercontent.com/stacklok/toolhive-registry/main/registries/toolhive/servers/fetch/icon.svg"
+    }
+  ],
+  "name": "io.github.stacklok/fetch",
+  "packages": [
+    {
+      "identifier": "ghcr.io/stackloklabs/gofetch/server:1.0.5",
+      "registryType": "oci",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://localhost:8080"
+      }
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/stackloklabs/gofetch"
+  },
+  "title": "Fetch",
+  "version": "1.0.0"
+}
