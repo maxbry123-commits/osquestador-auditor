@@ -94,11 +94,13 @@ jobs:
           git config user.email 'wanted-shark-watchdog@users.noreply.github.com'
           git fetch origin main
           git rebase origin/main || { git rebase --abort || true; git reset --hard origin/main; }
-          git add -- \
+          for path in \
             '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/ACQUISITION-GAP-AUDIT.json' \
             '➡️📂 Shack imput/➡️📂 shart imput code Run/queues/07-existing-destination-recovery.json' \
             '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/recovery-existing-destination-state.json' \
-            '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/RECOVERY-EXISTING-DESTINATION-INDEX.md' 2>/dev/null || true
+            '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/RECOVERY-EXISTING-DESTINATION-INDEX.md'; do
+            if [ -e "$path" ]; then git add -- "$path"; fi
+          done
           if git diff --cached --quiet; then
             echo 'No recovery evidence changes.'
             exit 0
