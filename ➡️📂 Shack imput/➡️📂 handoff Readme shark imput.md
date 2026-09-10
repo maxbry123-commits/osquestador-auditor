@@ -10,9 +10,10 @@ Raíz: `➡️📂 Shack imput/`
 2. `➡️📂 readme indice componentes.md`
 3. `📂 Craxy wall bitácora stated JSON/STATE.json`
 4. log propio del agente dentro de Craxy Wall
-5. `PARCHE-RECUPERACION-SHARK-IMPUT.md`
-6. `➡️📂 shart imput code Run/README.md`
-7. `➡️📂 shart imput code Run/memoria búsqueda.md`
+5. `📂 Craxy wall bitácora stated JSON/SALIDAS-CHATGPT.md`
+6. `PARCHE-RECUPERACION-SHARK-IMPUT.md`
+7. `➡️📂 shart imput code Run/README.md`
+8. `➡️📂 shart imput code Run/memoria búsqueda.md`
 
 ## Contrato único de trabajo — 3 pasos
 **1. ANOTAR + ARQUITECTURA** → registrar antes de tocar; INPUT literal inmutable.
@@ -43,12 +44,19 @@ Blobs esperados:
 - motor_4_move_batches.py `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`
 
 ## Descarga de componentes
-Colas:
-- `queues/01-search.json`
-- `queues/02-code.json`
-- `queues/03-rag.json`
-- `queues/04-skills.json`
-- `queues/05-media-input-router.json`
+Catálogo: **77 componentes** distribuidos en 6 lanes:
+- `queues/01-search.json` — 13
+- `queues/02-code.json` — 12
+- `queues/03-rag.json` — 13
+- `queues/04-skills.json` — 15
+- `queues/05-media-input-router.json` — 18
+- `queues/06-orchestration.json` — 6
+
+Workflow:
+`.github/workflows/shack-input-components.yml`
+
+Run inicial:
+`34470498878` — no declarar PASS mientras continúe `in_progress` o exista cualquier lane fallida.
 
 Destino físico:
 `➡️📂 Shack imput/📂 Componentes para integración sharck imput/<lane>/<slug>/`
