@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 18356048,
+  "bundle_sha256": "492bdaf3c6483acd94492546d7c40837fc3cd0cdb77f940e6911d3003881f714",
+  "extracted_tree": {
+    "bytes": 28322197,
+    "files": 802,
+    "sha256": "1ab8a31fa19114efd0a75185fe6cb37f21941dfe42070ffc89537aff0160ae6d"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "sentence-transformers.bundle.zip.part-0001",
+      "sha256": "cbfb1f9fa8b1298333eef1cd4f494d82f8440780c4462b1d6acc5454454fe338"
+    },
+    {
+      "bytes": 5773136,
+      "name": "sentence-transformers.bundle.zip.part-0002",
+      "sha256": "399601c77099640939029ef587198497ea9070026abce4c7a67245bb8648a2dc"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "sentence-transformers",
+  "source_bytes": 28322197,
+  "source_commit": "4b8f388ef26ea098e1aba949d064292f7df80451",
+  "source_files": 802,
+  "source_ref": "HEAD",
+  "source_repo": "UKPLab/sentence-transformers",
+  "source_tree": {
+    "bytes": 28322197,
+    "files": 802,
+    "sha256": "1ab8a31fa19114efd0a75185fe6cb37f21941dfe42070ffc89537aff0160ae6d"
+  }
+}
