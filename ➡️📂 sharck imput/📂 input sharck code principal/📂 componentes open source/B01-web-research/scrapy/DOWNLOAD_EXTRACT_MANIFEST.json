@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1795406,
+  "bundle_sha256": "fcb257d64f09e3df97bd7d2996fd41787cc192cbe970dfbd04f1791161638e57",
+  "extracted_tree": {
+    "bytes": 5379866,
+    "files": 685,
+    "sha256": "0c3eda029aed0b575c359abad999e52652a487acef15308fe5a8171b5e3b791c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1795406,
+      "name": "scrapy.bundle.zip.part-0001",
+      "sha256": "fcb257d64f09e3df97bd7d2996fd41787cc192cbe970dfbd04f1791161638e57"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "scrapy",
+  "source_bytes": 5379866,
+  "source_commit": "a527168ad0888a54b665a6d00a45c720a956e1c0",
+  "source_files": 685,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/scrapy/scrapy",
+  "source_tree": {
+    "bytes": 5379866,
+    "files": 685,
+    "sha256": "0c3eda029aed0b575c359abad999e52652a487acef15308fe5a8171b5e3b791c"
+  }
+}
