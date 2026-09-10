@@ -1,0 +1,20 @@
+{
+  "lane": "search",
+  "missing_before": [
+    "apps/api/.env.example",
+    "apps/api/.env.local"
+  ],
+  "motor_1": "VERIFIED_CLOSED",
+  "motor_3": "VERIFIED_CLOSED",
+  "policy": "ADDITIVE_ONLY + SOURCE_BLOB_MATCH + COLLISION_FAIL + NO_FORCE",
+  "restored_files": 2,
+  "restored_paths": [
+    "apps/api/.env.example",
+    "apps/api/.env.local"
+  ],
+  "schema": "wanted-shark.firecrawl-additive-repair.v2",
+  "slug": "firecrawl",
+  "source_commit": "4d9847872f3c8e89ff7080e48778c778c04b3fb3",
+  "source_repo": "firecrawl/firecrawl",
+  "verdict": "READY_FOR_PUBLISH"
+}
