@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 18896,
+  "bundle_sha256": "c5ba578758a6d00b1dc9fb7b533600b129e2572eed2a34aa4c9934b4eee92e80",
+  "extracted_tree": {
+    "bytes": 49172,
+    "files": 7,
+    "sha256": "f4a12ce91b6f690af0e2e798186873c0cd322b89a1ea148bdbe86f8f40802bac"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 18896,
+      "name": "yt-transcript.bundle.zip.part-0001",
+      "sha256": "c5ba578758a6d00b1dc9fb7b533600b129e2572eed2a34aa4c9934b4eee92e80"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "yt-transcript",
+  "source_bytes": 49172,
+  "source_commit": "8b00f602a3e9fb7151f55e789f59c7852609f9b9",
+  "source_files": 7,
+  "source_ref": "HEAD",
+  "source_repo": "plc/yt-transcript",
+  "source_tree": {
+    "bytes": 49172,
+    "files": 7,
+    "sha256": "f4a12ce91b6f690af0e2e798186873c0cd322b89a1ea148bdbe86f8f40802bac"
+  }
+}
