@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 11,
+  "revision": 12,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -36,14 +36,14 @@
     "firecrawl_additive_repair":{"run_id":34501597027,"status":"COMPLETED_FAILURE_MOTOR3_COLLISION","finding":"HELPER_PASSED_FULL_EXTRACTED_TREE_INSTEAD_OF_MISSING_ONLY","expected_missing_files":2,"motor_integrity":"PASS"},
     "firecrawl_missing_only_repair":{"run_id":34507876211,"status":"PUBLISHED_BUT_REMOTE_TREE_MISMATCH","restored_files":2,"restored_paths":["apps/api/.env.example","apps/api/.env.local"],"motor_1":"VERIFIED_CLOSED","motor_3":"VERIFIED_CLOSED","publication":"SUCCESS_NO_FORCE","actual_tree":{"files":1872,"bytes":52345072,"sha256":"f48a656c16232a3c06e5cb40513c3bae4311f57d94b8974014e3bbfa8ae05399"},"expected_tree":{"files":1872,"bytes":52345224,"sha256":"6b0862a94ee6d28bb57f03654d489ee9366046ee62cd129f8fbad10f33a6ec50"},"finding":"ALL_FILES_PRESENT_BUT_CONTENT_MISMATCH_MINUS_152_BYTES"},
     "firecrawl_content_audit":{"run_id":34508058192,"status":"AUDIT_COMPUTE_PASS_EVIDENCE_PUBLISH_GATE_FAILED","motor_blob_gate":"PASS","expected_files":1872,"actual_files":1872,"missing":0,"extra":0,"mismatch_count":1,"mismatch":{"path":"examples/o1_web_crawler/o1_web_crawler.py","actual_blob":"45bbd1eeae6e9be5684e7efdd86b637517759023","expected_blob":"ebe4bcbf7a5d8a2df5a6c1e8c9257de691152a4e","actual_bytes":6557,"expected_bytes":6709,"byte_delta":-152},"finding":"ONE_EXACT_PREEXISTING_CONTENT_MISMATCH"},
-    "firecrawl_exact_one_repair":{"run_id":34508225891,"status":"QUEUED_OR_RUNNING","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_EXPLICIT_REPLACE_ONE_PATH + CURRENT_BLOB_PRECONDITION + SOURCE_BLOB_PRECONDITION + NO_FORCE + FULL_REMOTE_TREE_READBACK"},
+    "firecrawl_exact_one_repair":{"run_id":34508225891,"status":"REPAIR_FAILED_CLOSED_BEFORE_WRITE","motor_blob_gate":"PASS","publication":"SKIPPED","remote_readback":"SKIPPED","error":"EXTRACTED_SOURCE_BLOB_MISMATCH","finding":"VERIFIED_ARCHIVE_EXTRACTION_DOES_NOT_MATCH_FIXED_UPSTREAM_GIT_BLOB; DO_NOT_OVERWRITE","policy":"NO_WRITE_ON_ARCHIVE_UPSTREAM_INCONSISTENCY"},
     "verified_closed":47,
     "failed":30,
     "pending":0,
-    "remaining_failure_classification":"SOURCE_SPECIAL_FILE_GAP=19; OTHER=8; READBACK_TREE_HASH_GAP=1; DESTINATION_EXISTS firecrawl exact-one repair active + tree-sitter content mismatch",
+    "remaining_failure_classification":"SOURCE_SPECIAL_FILE_GAP=19; OTHER=8; READBACK_TREE_HASH_GAP=1; DESTINATION_EXISTS firecrawl archive-upstream inconsistency + tree-sitter content mismatch",
     "status":"GAPS_PENDING_TARGETED_REPAIR_ACTIVE"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T12:27:00-05:00"
+  "updated_at":"2026-09-10T12:29:00-05:00"
 }
