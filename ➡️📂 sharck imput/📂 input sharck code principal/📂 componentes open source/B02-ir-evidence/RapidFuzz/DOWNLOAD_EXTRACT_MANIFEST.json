@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 401893,
+  "bundle_sha256": "19aae83b13764fa6519dcf1bee682e86e0600864c2b007c6fbe896428901d35a",
+  "extracted_tree": {
+    "bytes": 1911474,
+    "files": 193,
+    "sha256": "3a8c16d4771edd996593de8c16f89a3aaedfac9725d8659b0dedb13e3674a0bd"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 401893,
+      "name": "RapidFuzz.bundle.zip.part-0001",
+      "sha256": "19aae83b13764fa6519dcf1bee682e86e0600864c2b007c6fbe896428901d35a"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "RapidFuzz",
+  "source_bytes": 1911474,
+  "source_commit": "377d0c0ace35bbb4683180ebf110414dfff11abb",
+  "source_files": 193,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/rapidfuzz/RapidFuzz",
+  "source_tree": {
+    "bytes": 1911474,
+    "files": 193,
+    "sha256": "3a8c16d4771edd996593de8c16f89a3aaedfac9725d8659b0dedb13e3674a0bd"
+  }
+}
