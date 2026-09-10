@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 10920084,
+  "bundle_sha256": "564dd96c7262762def40a08ee40ee7ee78137e0fa53de1be3d807dc08851b166",
+  "extracted_tree": {
+    "bytes": 15836455,
+    "files": 175,
+    "sha256": "250ebd3b9c8f374c0e3400d5624afb08ea2fb60075671b0c72e40424e07c533e"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 10920084,
+      "name": "ToolBench.bundle.zip.part-0001",
+      "sha256": "564dd96c7262762def40a08ee40ee7ee78137e0fa53de1be3d807dc08851b166"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ToolBench",
+  "source_bytes": 15836455,
+  "source_commit": "d56fdd89faf8c91fa135090b212bb9057ee5cfc2",
+  "source_files": 175,
+  "source_ref": "HEAD",
+  "source_repo": "OpenBMB/ToolBench",
+  "source_tree": {
+    "bytes": 15836455,
+    "files": 175,
+    "sha256": "250ebd3b9c8f374c0e3400d5624afb08ea2fb60075671b0c72e40424e07c533e"
+  }
+}
