@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 5267224,
+  "bundle_sha256": "174305e79c39edbeb1362f1dc552f8fdf3bcb86158be4603cef38cbadc6c2079",
+  "extracted_tree": {
+    "bytes": 12305423,
+    "files": 2296,
+    "sha256": "f7a3580fee2235883455ec6f0f9d26fffa88b78218fa4490a98e1e26d9abb66b"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 5267224,
+      "name": "antlr4.bundle.zip.part-0001",
+      "sha256": "174305e79c39edbeb1362f1dc552f8fdf3bcb86158be4603cef38cbadc6c2079"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "antlr4",
+  "source_bytes": 12305423,
+  "source_commit": "7d5770395bb7b02eb56e7c62662cb1d7c08f42a3",
+  "source_files": 2296,
+  "source_ref": "HEAD",
+  "source_repo": "antlr/antlr4",
+  "source_tree": {
+    "bytes": 12305423,
+    "files": 2296,
+    "sha256": "f7a3580fee2235883455ec6f0f9d26fffa88b78218fa4490a98e1e26d9abb66b"
+  }
+}
