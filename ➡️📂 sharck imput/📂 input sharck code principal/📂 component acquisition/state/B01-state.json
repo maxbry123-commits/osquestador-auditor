@@ -1,0 +1,205 @@
+{
+  "created_at": 1789064698,
+  "items": {
+    "B01-01": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 sharck imput/\ud83d\udcc2 input sharck code principal/\ud83d\udcc2 componentes open source/B01-web-research/scira\n",
+      "slug": "scira",
+      "source_repo": "https://github.com/zaidmukaddam/scira",
+      "status": "FAILED"
+    },
+    "B01-02": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "yacy_search_server",
+      "source_repo": "https://github.com/yacy/yacy_search_server",
+      "status": "FAILED"
+    },
+    "B01-03": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 sharck imput/\ud83d\udcc2 input sharck code principal/\ud83d\udcc2 componentes open source/B01-web-research/nutch\n",
+      "slug": "nutch",
+      "source_repo": "https://github.com/apache/nutch",
+      "status": "FAILED"
+    },
+    "B01-04": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "heritrix3",
+      "source_repo": "https://github.com/internetarchive/heritrix3",
+      "status": "FAILED"
+    },
+    "B01-05": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:external/opensearch/dashboards,external/solr/archetype/src/main/resources/archetype-resources/configsets\n",
+      "slug": "stormcrawler",
+      "source_repo": "https://github.com/apache/stormcrawler",
+      "status": "FAILED"
+    },
+    "B01-06": {
+      "attempts": 3,
+      "result": {
+        "bundle_bytes": 1795406,
+        "bundle_sha256": "fcb257d64f09e3df97bd7d2996fd41787cc192cbe970dfbd04f1791161638e57",
+        "elapsed_seconds": 17.38,
+        "extracted_tree": {
+          "bytes": 5379866,
+          "files": 685,
+          "sha256": "0c3eda029aed0b575c359abad999e52652a487acef15308fe5a8171b5e3b791c"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 1795406,
+            "name": "scrapy.bundle.zip.part-0001",
+            "sha256": "fcb257d64f09e3df97bd7d2996fd41787cc192cbe970dfbd04f1791161638e57"
+          }
+        ],
+        "publish": {
+          "commit": "09d697f0e7ad417756910f994f2b0563a09ae439",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "scrapy",
+        "source_bytes": 5379866,
+        "source_commit": "a527168ad0888a54b665a6d00a45c720a956e1c0",
+        "source_files": 685,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/scrapy/scrapy",
+        "source_tree": {
+          "bytes": 5379866,
+          "files": 685,
+          "sha256": "0c3eda029aed0b575c359abad999e52652a487acef15308fe5a8171b5e3b791c"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "scrapy",
+      "source_repo": "https://github.com/scrapy/scrapy",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B01-07": {
+      "attempts": 3,
+      "result": {
+        "bundle_bytes": 31606804,
+        "bundle_sha256": "a49749263e26e19a80d5d3647a36ac41f04134632fa2100eb18913986b4bd1a6",
+        "elapsed_seconds": 32.04,
+        "extracted_tree": {
+          "bytes": 153214859,
+          "files": 1169,
+          "sha256": "9c240f2ae4a51c959b010710802f6fe5561df5cb16d4f407deff8fe1625eb832"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "trafilatura.bundle.zip.part-0001",
+            "sha256": "abb7957211b32382bb2c24905672c89a1692067ce463d17f2a35578401a5921c"
+          },
+          {
+            "bytes": 12582912,
+            "name": "trafilatura.bundle.zip.part-0002",
+            "sha256": "922034c8504410f7e7bd175e56dd605bbc4842890187fff6f328b28a5f467c04"
+          },
+          {
+            "bytes": 6440980,
+            "name": "trafilatura.bundle.zip.part-0003",
+            "sha256": "d6431dc1db9eefbc5177ed52509eb55c13ac421619ccebde2a037fab90a48135"
+          }
+        ],
+        "publish": {
+          "commit": "ed8f6013bbba3238250b16d7e95b23a053d34831",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "trafilatura",
+        "source_bytes": 153214859,
+        "source_commit": "2e1d38b2dff26f1598500c7a7702755cd01e7a6e",
+        "source_files": 1169,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/adbar/trafilatura",
+        "source_tree": {
+          "bytes": 153214859,
+          "files": 1169,
+          "sha256": "9c240f2ae4a51c959b010710802f6fe5561df5cb16d4f407deff8fe1625eb832"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "trafilatura",
+      "source_repo": "https://github.com/adbar/trafilatura",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B01-08": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:docs/modules/ROOT/examples/claude-vlm-basic.json,docs/modules/ROOT/examples/claude-vlm-full.json,docs/modules/ROOT/examples/detector-pkcs7.json,docs/modules/ROOT/examples/external-parser-exiftool.json,docs/modules/ROOT/examples/external-parser-ffmpeg.json,docs/modules/ROOT/examples/external-parser-multi.json,docs/modules/ROOT/examples/external-parser-sox.json,docs/modules/ROOT/examples/gemini-vlm-basic.json,docs/modules/ROOT/examples/gemini-vlm-full.json,docs/modules/ROOT/examples/migration-full-example.json,docs/modules/ROOT/examples/openai-vlm-basic.json,docs/modules/ROOT/examples/openai-vlm-full.json,docs/modules/ROOT/examples/pdf-parser-basic.json,docs/modules/ROOT/examples/pdf-parser-full.json,docs/modules/ROOT/examples/pipes-atlassian-jwt-fetcher.json,docs/modules/ROOT/examples/pipes-azblob-emitter.json,docs/modules/ROOT/examples/pipes-azblob-fetcher.json,docs/modules/ROOT/examples/pipes-azblob-iterator.json,docs/modules/ROOT/examples/pipes-azblob-pipeline.json,docs/modules/ROOT/examples/pipes-config-template.json,docs/modules/ROOT/examples/pipes-csv-iterator.json,docs/modules/ROOT/examples/pipes-elasticsearch-emitter.json,docs/modules/ROOT/examples/pipes-elasticsearch-pipeline.json,docs/modules/ROOT/examples/pipes-elasticsearch-reporter.json,docs/modules/ROOT/examples/pipes-emit-all.json,docs/modules/ROOT/examples/pipes-fs-jsonl-reporter.json,docs/modules/ROOT/examples/pipes-fs-pipeline.json,docs/modules/ROOT/examples/pipes-gcs-emitter.json,docs/modules/ROOT/examples/pipes-gcs-fetcher.json,docs/modules/ROOT/examples/pipes-gcs-iterator.json\n",
+      "slug": "tika",
+      "source_repo": "https://github.com/apache/tika",
+      "status": "FAILED"
+    },
+    "B01-09": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.claude/skills/building-pydantic-ai-agents,.claude/skills/dignified-python,.codex/skills/building-pydantic-ai-agents,.codex/skills/dignified-python,.opencode/skills/building-pydantic-ai-agents,.opencode/skills/dignified-python\n",
+      "slug": "docling",
+      "source_repo": "https://github.com/docling-project/docling",
+      "status": "FAILED"
+    },
+    "B01-10": {
+      "attempts": 2,
+      "result": {
+        "bundle_bytes": 17239844,
+        "bundle_sha256": "fefc8f968cc412bc2a4fd76558e3a5f9ba3ef75d87cdd656296481954ad13c6d",
+        "elapsed_seconds": 21.76,
+        "extracted_tree": {
+          "bytes": 21668814,
+          "files": 427,
+          "sha256": "d589a5b706094075b4a7cda4a585c86b871b3464e090a11c208714137eb1e49b"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "MinerU.bundle.zip.part-0001",
+            "sha256": "9eec0c9039f8df5d2ffd9e9673805dc54ff6e54520a60a74b9f1799d50b48475"
+          },
+          {
+            "bytes": 4656932,
+            "name": "MinerU.bundle.zip.part-0002",
+            "sha256": "327e383dd22fa7d595af812b879ea0c07b422b2ae654ec5753c1f9a43cb654a5"
+          }
+        ],
+        "publish": {
+          "commit": "ce71c25af164152289b328b1919fa230c05ed60a",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "MinerU",
+        "source_bytes": 21668814,
+        "source_commit": "4fe4bde114a23ee5dd637eae99b767f4669bf58c",
+        "source_files": 427,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/opendatalab/MinerU",
+        "source_tree": {
+          "bytes": 21668814,
+          "files": 427,
+          "sha256": "d589a5b706094075b4a7cda4a585c86b871b3464e090a11c208714137eb1e49b"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "MinerU",
+      "source_repo": "https://github.com/opendatalab/MinerU",
+      "status": "VERIFIED_CLOSED"
+    }
+  },
+  "schema": "yaiwes.frontend.download-extract-queue.v1"
+}
