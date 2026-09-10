@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 17239844,
+  "bundle_sha256": "fefc8f968cc412bc2a4fd76558e3a5f9ba3ef75d87cdd656296481954ad13c6d",
+  "extracted_tree": {
+    "bytes": 21668814,
+    "files": 427,
+    "sha256": "d589a5b706094075b4a7cda4a585c86b871b3464e090a11c208714137eb1e49b"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "MinerU.bundle.zip.part-0001",
+      "sha256": "9eec0c9039f8df5d2ffd9e9673805dc54ff6e54520a60a74b9f1799d50b48475"
+    },
+    {
+      "bytes": 4656932,
+      "name": "MinerU.bundle.zip.part-0002",
+      "sha256": "327e383dd22fa7d595af812b879ea0c07b422b2ae654ec5753c1f9a43cb654a5"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "MinerU",
+  "source_bytes": 21668814,
+  "source_commit": "4fe4bde114a23ee5dd637eae99b767f4669bf58c",
+  "source_files": 427,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/opendatalab/MinerU",
+  "source_tree": {
+    "bytes": 21668814,
+    "files": 427,
+    "sha256": "d589a5b706094075b4a7cda4a585c86b871b3464e090a11c208714137eb1e49b"
+  }
+}
