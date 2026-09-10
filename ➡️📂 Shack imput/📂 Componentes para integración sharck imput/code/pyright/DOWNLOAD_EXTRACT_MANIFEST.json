@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 8221959,
+  "bundle_sha256": "301b1f3e56417301a973d273b20a357298c1381ebf16fc7831e9c6423482f875",
+  "extracted_tree": {
+    "bytes": 30178041,
+    "files": 7584,
+    "sha256": "1430c82c7ad03257f1f62dd21ac0bb7b68a6d461740a9721306c0816ecca8481"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 8221959,
+      "name": "pyright.bundle.zip.part-0001",
+      "sha256": "301b1f3e56417301a973d273b20a357298c1381ebf16fc7831e9c6423482f875"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "pyright",
+  "source_bytes": 30178041,
+  "source_commit": "0653de232eef08dd1ee79373e26f59cfcc0c015f",
+  "source_files": 7584,
+  "source_ref": "HEAD",
+  "source_repo": "microsoft/pyright",
+  "source_tree": {
+    "bytes": 30178041,
+    "files": 7584,
+    "sha256": "1430c82c7ad03257f1f62dd21ac0bb7b68a6d461740a9721306c0816ecca8481"
+  }
+}
