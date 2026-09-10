@@ -1,4 +1,5 @@
 {
+  "destination_ref": "212cabae180d9f94e718877a23482dcc0aaa2d28",
   "exact_existing_destinations": 0,
   "failed_total_seen": 49,
   "failure_classes": {
@@ -19,14 +20,28 @@
       "source_repo": "searxng/searxng"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 235,
+      "destination_special": [],
       "error_class": "READBACK_TREE_HASH_GAP",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-02",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 3,
+      "missing_sample": [
+        "searxng/limiter.toml",
+        "searxng/settings.yml",
+        "searxng/uwsgi.ini"
+      ],
       "slug": "Vane",
-      "source_repo": "ItzCrazyKns/Vane"
+      "source_commit": "348feca3e378fb4157b217724ed508dc707f853f",
+      "source_files_git": 238,
+      "source_repo": "ItzCrazyKns/Vane",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -38,34 +53,73 @@
       "source_repo": "miurla/morphic"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 818,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-04",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        ".cursorrules",
+        "CURSOR_RULES.md"
+      ],
       "slug": "gpt-researcher",
-      "source_repo": "assafelovic/gpt-researcher"
+      "source_commit": "6f998577d547b1e54ec662dac63583aa11e3b84b",
+      "source_files_git": 820,
+      "source_repo": "assafelovic/gpt-researcher",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 116,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-07",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 1,
+      "missing_sample": [
+        ".DS_Store"
+      ],
       "slug": "MindSearch",
-      "source_repo": "InternLM/MindSearch"
+      "source_commit": "7952c5f8a956fe6a44228a6a7d528a35340e7c87",
+      "source_files_git": 117,
+      "source_repo": "InternLM/MindSearch",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 2650,
+      "destination_special": [],
       "error_class": "READBACK_TREE_HASH_GAP",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-08",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 3,
+      "missing_sample": [
+        "backend/.vscode/extensions.json",
+        "backend/.vscode/settings.json",
+        "frontend/.vscode/settings.json"
+      ],
       "slug": "deer-flow",
-      "source_repo": "bytedance/deer-flow"
+      "source_commit": "48a8978b7b6e1ce84454103f1831bf0c5cc3b1eb",
+      "source_files_git": 2653,
+      "source_repo": "bytedance/deer-flow",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -77,34 +131,89 @@
       "source_repo": "khoj-ai/khoj"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 1,
+      "changed_sample": [
+        "examples/o1_web_crawler/o1_web_crawler.py"
+      ],
+      "destination_files_git": 1870,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-10",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "apps/api/.env.example",
+        "apps/api/.env.local"
+      ],
       "slug": "firecrawl",
-      "source_repo": "firecrawl/firecrawl"
+      "source_commit": "4d9847872f3c8e89ff7080e48778c778c04b3fb3",
+      "source_files_git": 1872,
+      "source_repo": "firecrawl/firecrawl",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 912,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-11",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 16,
+      "missing_sample": [
+        ".claude/commands/c4ai-check.md",
+        ".claude/settings.local.json",
+        ".context/PR-TODOLIST.md",
+        "docs/examples/c4a_script/tutorial/scripts/01-basic-interaction.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/02-login-flow.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/03-infinite-scroll.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/04-multi-step-form.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/05-complex-workflow.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/01-basic-interaction.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/02-login-flow.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/03-infinite-scroll.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/04-multi-step-form.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/05-complex-workflow.c4a",
+        "scripts/gen-sbom.sh",
+        "scripts/update_stats.py",
+        "tests/test_webhook_feature.sh"
+      ],
       "slug": "crawl4ai",
-      "source_repo": "unclecode/crawl4ai"
+      "source_commit": "862f6bccb9c063f49b9d42701baa0eea17a4993f",
+      "source_files_git": 928,
+      "source_repo": "unclecode/crawl4ai",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 516,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "search-12",
       "lane": "search",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "browser_use/mcp/manifest.json",
+        "tests/mind2web_data/processed.json"
+      ],
       "slug": "browser-use",
-      "source_repo": "browser-use/browser-use"
+      "source_commit": "50f205533fe10ba35b553d2a3689c77b87bd5d0a",
+      "source_files_git": 518,
+      "source_repo": "browser-use/browser-use",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -116,14 +225,26 @@
       "source_repo": "Aider-AI/aider"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 1,
+      "changed_sample": [
+        "test/fixtures/test_grammars/anonymous_tokens_with_escaped_chars/corpus.txt"
+      ],
+      "destination_files_git": 616,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "code-02",
       "lane": "code",
       "manifest_exists": true,
+      "missing_count": 0,
+      "missing_sample": [],
       "slug": "tree-sitter",
-      "source_repo": "tree-sitter/tree-sitter"
+      "source_commit": "de98c6c970f4c5d3a725ee48199c478090d614af",
+      "source_files_git": 616,
+      "source_repo": "tree-sitter/tree-sitter",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -135,24 +256,49 @@
       "source_repo": "scip-code/scip"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 1814,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "code-05",
       "lane": "code",
       "manifest_exists": true,
+      "missing_count": 1,
+      "missing_sample": [
+        "opengrok-indexer/index/dirty"
+      ],
       "slug": "opengrok",
-      "source_repo": "oracle/opengrok"
+      "source_commit": "74f9e21e2e1dc6dbfe7d3e0f0e2cd53642b9a3dd",
+      "source_files_git": 1815,
+      "source_repo": "oracle/opengrok",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 318,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "code-06",
       "lane": "code",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "fixtures/json-linux.so",
+        "fixtures/json-mac.so"
+      ],
       "slug": "ast-grep",
-      "source_repo": "ast-grep/ast-grep"
+      "source_commit": "fc2b1530db74de49131b725221de98036a552a9f",
+      "source_files_git": 320,
+      "source_repo": "ast-grep/ast-grep",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -164,14 +310,48 @@
       "source_repo": "semgrep/semgrep"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 7561,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "code-08",
       "lane": "code",
       "manifest_exists": true,
+      "missing_count": 23,
+      "missing_sample": [
+        "build/azuredevops/azure-pipelines-release.yml",
+        "build/azuredevops/azure-pipelines.yml",
+        "build/benchmark/README.md",
+        "build/benchmark/UPSTREAM_LICENSE.txt",
+        "build/benchmark/baselines/benchmark_2026-08-20_linux-x64.json",
+        "build/benchmark/baselines/latest-linux-x64.json",
+        "build/benchmark/compare_benchmarks.py",
+        "build/benchmark/install_envs.json",
+        "build/benchmark/render_benchmark_html.py",
+        "build/benchmark/test_compare_benchmarks.py",
+        "build/benchmark/test_render_benchmark_html.py",
+        "build/benchmark/test_typecheck_benchmark.py",
+        "build/benchmark/typecheck_benchmark.py",
+        "build/generateUnicodeTables.py",
+        "build/installPinnedPackageManager.js",
+        "build/lib/updateDeps.js",
+        "build/lib/webpack.js",
+        "build/perfCompare.py",
+        "build/templates/npmAuthenticate.yml",
+        "build/updateDeps.js",
+        "build/updateTypeshed.py",
+        "packages/vscode-pyright/build/checkPackage.js",
+        "packages/vscode-pyright/build/renamePackage.js"
+      ],
       "slug": "pyright",
-      "source_repo": "microsoft/pyright"
+      "source_commit": "0653de232eef08dd1ee79373e26f59cfcc0c015f",
+      "source_files_git": 7584,
+      "source_repo": "microsoft/pyright",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -201,14 +381,32 @@
       "source_repo": "BurntSushi/ripgrep"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 9841,
+      "destination_special": [],
       "error_class": "READBACK_TREE_HASH_GAP",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "rag-01",
       "lane": "rag",
       "manifest_exists": true,
+      "missing_count": 7,
+      "missing_sample": [
+        "docs/examples/index_structs/knowledge_graph/storage/graph_store.json",
+        "llama-index-core/llama_index/core/_static/.gitignore",
+        "llama-index-core/llama_index/core/_static/nltk_cache/.gitignore",
+        "llama-index-core/llama_index/core/_static/tiktoken_cache/.gitignore",
+        "llama-index-integrations/vector_stores/llama-index-vector-stores-objectbox/llama_index/vector_stores/objectbox/__init__.py",
+        "llama-index-integrations/vector_stores/llama-index-vector-stores-objectbox/llama_index/vector_stores/objectbox/base.py",
+        "uv.lock"
+      ],
       "slug": "llama_index",
-      "source_repo": "run-llama/llama_index"
+      "source_commit": "5be447943168d8ac800901a623ca50bdbdee1c8e",
+      "source_files_git": 9848,
+      "source_repo": "run-llama/llama_index",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -238,14 +436,28 @@
       "source_repo": "lancedb/lancedb"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 181,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "rag-12",
       "lane": "rag",
       "manifest_exists": true,
+      "missing_count": 3,
+      "missing_sample": [
+        ".env",
+        "data/5k-eval.qrels.tsv",
+        "data/5k-eval.queries.tsv"
+      ],
       "slug": "ColBERT",
-      "source_repo": "stanford-futuredata/ColBERT"
+      "source_commit": "cc4f3dc91c0b45d2d08c251d9d95178285c65f1c",
+      "source_files_git": 184,
+      "source_repo": "stanford-futuredata/ColBERT",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -275,14 +487,28 @@
       "source_repo": "stacklok/toolhive"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 252,
+      "destination_special": [],
       "error_class": "READBACK_TREE_HASH_GAP",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "skills-08",
       "lane": "skills",
       "manifest_exists": true,
+      "missing_count": 3,
+      "missing_sample": [
+        "cmd/registry/main.go",
+        "tools/validate-examples/main.go",
+        "tools/validate-schemas/main.go"
+      ],
       "slug": "mcp-registry",
-      "source_repo": "modelcontextprotocol/registry"
+      "source_commit": "739b70e8bc1bea203c5a35ab699f1df51d091568",
+      "source_files_git": 255,
+      "source_repo": "modelcontextprotocol/registry",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -294,14 +520,27 @@
       "source_repo": "nikships/skills-registry"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 640,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "skills-10",
       "lane": "skills",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "internal/cli/mcp/build/build.go",
+        "internal/registry/api/ui/dist/.gitignore"
+      ],
       "slug": "skill-hub",
-      "source_repo": "yaogdu/skill-hub"
+      "source_commit": "a4aa9b21a05c180246e86ad484cbabee421bad85",
+      "source_files_git": 642,
+      "source_repo": "yaogdu/skill-hub",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -322,24 +561,62 @@
       "source_repo": "agent-skills-hub/agent-skills-hub"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 165,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "skills-14",
       "lane": "skills",
       "manifest_exists": true,
+      "missing_count": 10,
+      "missing_sample": [
+        "assets/.DS_Store",
+        "data_example/answer/.DS_Store",
+        "data_example/toolenv/.DS_Store",
+        "data_example/toolenv/response_examples/.DS_Store",
+        "data_example/toolenv/tools/.DS_Store",
+        "data_example/toolenv/tools/Advertising/.DS_Store",
+        "data_example/toolenv/tools/Artificial_Intelligence_Machine_Learning/.DS_Store",
+        "data_example/toolenv/tools/Business/.DS_Store",
+        "data_example/toolenv/tools/Commerce/.DS_Store",
+        "data_example/toolenv/tools/Music/.DS_Store"
+      ],
       "slug": "ToolBench",
-      "source_repo": "OpenBMB/ToolBench"
+      "source_commit": "d56fdd89faf8c91fa135090b212bb9057ee5cfc2",
+      "source_files_git": 175,
+      "source_repo": "OpenBMB/ToolBench",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 8490,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "skills-15",
       "lane": "skills",
       "manifest_exists": true,
+      "missing_count": 6,
+      "missing_sample": [
+        "docs/translation_tools/AGENTIC_TRANSLATION_TOOL_SUMMARY.md",
+        "scripts/gen_api_key_catalog.py",
+        "skills/setup-tooluniverse/SKILL_SUMMARY.md",
+        "src/tooluniverse/tools/ReactomeAnalysis_token_result.py",
+        "tests/api/test_api_key_validation.py",
+        "tests/unit/test_api_key_catalog.py"
+      ],
       "slug": "ToolUniverse",
-      "source_repo": "mims-harvard/ToolUniverse"
+      "source_commit": "7a0ceb2f3a2ae28594e55ec27344e839df8bc9f7",
+      "source_files_git": 8496,
+      "source_repo": "mims-harvard/ToolUniverse",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -369,34 +646,97 @@
       "source_repo": "pyparsing/pyparsing"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 321,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "input-08",
       "lane": "media-input-router",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "client/graphpaper-inline/dist/.gitignore",
+        "notebooks/unstable/State Debugging.ipynb"
+      ],
       "slug": "guidance",
-      "source_repo": "guidance-ai/guidance"
+      "source_commit": "21b1d90dfbebff4b141df70c714c8af15aa5f4af",
+      "source_files_git": 323,
+      "source_repo": "guidance-ai/guidance",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 2294,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "input-09",
       "lane": "media-input-router",
       "manifest_exists": true,
+      "missing_count": 2,
+      "missing_sample": [
+        "runtime/Java/lib/org.abego.treelayout.core.jar",
+        "runtime/JavaScript/.project"
+      ],
       "slug": "antlr4",
-      "source_repo": "antlr/antlr4"
+      "source_commit": "7d5770395bb7b02eb56e7c62662cb1d7c08f42a3",
+      "source_files_git": 2296,
+      "source_repo": "antlr/antlr4",
+      "source_special": []
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 1934,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "media-04",
       "lane": "media-input-router",
       "manifest_exists": true,
+      "missing_count": 26,
+      "missing_sample": [
+        "bindings/java/.idea/uiDesigner.xml",
+        "examples/whisper.android/.idea/.gitignore",
+        "examples/whisper.android/.idea/.name",
+        "examples/whisper.android/.idea/compiler.xml",
+        "examples/whisper.android/.idea/gradle.xml",
+        "examples/whisper.android/.idea/misc.xml",
+        "examples/whisper.android/.idea/vcs.xml",
+        "examples/whisper.swiftui/whisper.swiftui.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+        "examples/whisper.swiftui/whisper.swiftui.xcodeproj/xcshareddata/xcschemes/WhisperCppDemo.xcscheme",
+        "models/for-tests-ggml-base.bin",
+        "models/for-tests-ggml-base.en.bin",
+        "models/for-tests-ggml-large.bin",
+        "models/for-tests-ggml-medium.bin",
+        "models/for-tests-ggml-medium.en.bin",
+        "models/for-tests-ggml-parakeet-tdt-bad-nfft0.bin",
+        "models/for-tests-ggml-parakeet-tdt.bin",
+        "models/for-tests-ggml-small.bin",
+        "models/for-tests-ggml-small.en.bin",
+        "models/for-tests-ggml-tiny.bin",
+        "models/for-tests-ggml-tiny.en.bin",
+        "models/for-tests-silero-v6.2.0-ggml.bin",
+        "samples/.gitignore",
+        "samples/README.md",
+        "samples/jfk.wav",
+        "tests/earnings21/requirements.txt",
+        "tests/librispeech/requirements.txt"
+      ],
       "slug": "whisper.cpp",
-      "source_repo": "ggml-org/whisper.cpp"
+      "source_commit": "a2b36eb677918d4f9ab1db7b8a7ff968563ed163",
+      "source_files_git": 1960,
+      "source_repo": "ggml-org/whisper.cpp",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -417,14 +757,31 @@
       "source_repo": "vllm-project/semantic-router"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 0,
+      "changed_sample": [],
+      "destination_files_git": 667,
+      "destination_special": [],
       "error_class": "DESTINATION_EXISTS",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "orch-01",
       "lane": "orchestration",
       "manifest_exists": true,
+      "missing_count": 6,
+      "missing_sample": [
+        "libs/cli/examples/.env.example",
+        "libs/cli/js-examples/.editorconfig",
+        "libs/cli/js-examples/.env.example",
+        "libs/cli/python-monorepo-example/apps/agent/.env.example",
+        "libs/cli/uv-examples/monorepo/apps/agent/.env.example",
+        "libs/cli/uv-examples/simple/.env.example"
+      ],
       "slug": "langgraph",
-      "source_repo": "langchain-ai/langgraph"
+      "source_commit": "e539ac122f4126f6dd850581c1494948cf620e31",
+      "source_files_git": 673,
+      "source_repo": "langchain-ai/langgraph",
+      "source_special": []
     },
     {
       "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
@@ -463,15 +820,47 @@
       "source_repo": "crewAIInc/crewAI"
     },
     {
-      "audit_error": "HTTP Error 404: Not Found",
-      "audit_verdict": "AUDIT_ERROR",
+      "audit_verdict": "SOURCE_DEST_MISMATCH",
+      "changed_count": 1,
+      "changed_sample": [
+        "dotnet/src/Connectors/Connectors.HuggingFace.UnitTests/TestData/embeddings_test_response_feature_extraction.json"
+      ],
+      "destination_files_git": 4826,
+      "destination_special": [],
       "error_class": "READBACK_TREE_HASH_GAP",
+      "extra_count": 0,
+      "extra_sample": [],
       "item_id": "orch-06",
       "lane": "orchestration",
       "manifest_exists": true,
+      "missing_count": 19,
+      "missing_sample": [
+        ".vscode/extensions.json",
+        ".vscode/launch.json",
+        ".vscode/settings.json",
+        ".vscode/tasks.json",
+        "dotnet/samples/Demos/HomeAutomation/.vscode/launch.json",
+        "dotnet/samples/Demos/HomeAutomation/.vscode/tasks.json",
+        "dotnet/samples/Demos/ModelContextProtocolClientServer/MCPServer/Properties/launchSettings.json",
+        "dotnet/samples/Demos/ProcessFrameworkWithSignalR/src/ProcessFramework.Aspire.SignalR.ReactFrontend/.vscode/extensions.json",
+        "dotnet/samples/Demos/ProcessFrameworkWithSignalR/src/ProcessFramework.Aspire.SignalR.ReactFrontend/.vscode/launch.json",
+        "dotnet/samples/Demos/ProcessFrameworkWithSignalR/src/ProcessFramework.Aspire.SignalR.ReactFrontend/.vscode/settings.json",
+        "dotnet/samples/Demos/ProcessFrameworkWithSignalR/src/ProcessFramework.Aspire.SignalR.ReactFrontend/.vscode/tasks.json",
+        "dotnet/samples/Demos/ProcessWithCloudEvents/ProcessWithCloudEvents.Client/.vscode/extensions.json",
+        "dotnet/samples/Demos/ProcessWithCloudEvents/ProcessWithCloudEvents.Client/.vscode/launch.json",
+        "dotnet/samples/Demos/ProcessWithCloudEvents/ProcessWithCloudEvents.Client/.vscode/settings.json",
+        "dotnet/samples/Demos/ProcessWithCloudEvents/ProcessWithCloudEvents.Client/.vscode/tasks.json",
+        "python/.vscode/extensions.json",
+        "python/.vscode/launch.json",
+        "python/.vscode/settings.json",
+        "python/.vscode/tasks.json"
+      ],
       "slug": "semantic-kernel",
-      "source_repo": "microsoft/semantic-kernel"
+      "source_commit": "35511712230dc6ccf16cea08de0a7dc85e563640",
+      "source_files_git": 4845,
+      "source_repo": "microsoft/semantic-kernel",
+      "source_special": []
     }
   ],
-  "schema": "wanted-shark.acquisition-gap-audit.v2"
+  "schema": "wanted-shark.acquisition-gap-audit.v3"
 }
