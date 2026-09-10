@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import functools
 import json
 import os
 import pathlib
 import subprocess
+import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path("➡️📂 Shack imput")
@@ -14,6 +16,8 @@ DEST_ROOT = ROOT / "📂 Componentes para integración sharck imput"
 REPORT = WALL / "ACQUISITION-GAP-AUDIT.json"
 RECOVERY_QUEUE = CODE_ROOT / "queues" / "07-existing-destination-recovery.json"
 TOKEN = os.getenv("GITHUB_TOKEN", "")
+DEST_REPO = os.getenv("GITHUB_REPOSITORY", "maxbry123-commits/osquestador-auditor")
+DEST_REF = os.getenv("DEST_REF", "main")
 LANES = ["search", "code", "rag", "skills", "media-input-router", "orchestration"]
 
 
@@ -45,10 +49,51 @@ def api_json(url: str) -> dict:
         return json.load(r)
 
 
+@functools.lru_cache(maxsize=1024)
+def api_tree(repo: str, tree_sha: str, recursive: bool = False) -> dict:
+    suffix = "?recursive=1" if recursive else ""
+    return api_json(f"https://api.github.com/repos/{repo}/git/trees/{tree_sha}{suffix}")
+
+
+def commit_tree_sha(repo: str, ref: str) -> str:
+    obj = api_json(f"https://api.github.com/repos/{repo}/git/commits/{urllib.parse.quote(ref, safe='')}")
+    return obj["tree"]["sha"]
+
+
+def subtree_sha(repo: str, ref: str, path: pathlib.PurePosixPath) -> str | None:
+    current = commit_tree_sha(repo, ref)
+    for part in path.parts:
+        tree = api_tree(repo, current, False)
+        match = next((x for x in tree.get("tree", []) if x.get("path") == part and x.get("type") == "tree"), None)
+        if not match:
+            return None
+        current = match["sha"]
+    return current
+
+
+def repo_subtree(repo: str, ref: str, path: pathlib.PurePosixPath) -> tuple[dict[str, str], list[str]]:
+    sha = subtree_sha(repo, ref, path)
+    if not sha:
+        return {}, []
+    tree = api_tree(repo, sha, True)
+    if tree.get("truncated"):
+        raise RuntimeError("DESTINATION_TREE_TRUNCATED")
+    blobs: dict[str, str] = {}
+    special: list[str] = []
+    for row in tree.get("tree", []):
+        kind = row.get("type")
+        mode = row.get("mode")
+        rel = row.get("path", "")
+        if kind == "blob" and mode in {"100644", "100755"}:
+            blobs[rel] = row["sha"]
+        elif kind == "blob":
+            special.append(rel)
+    return blobs, special
+
+
 def source_tree(repo: str, commit: str) -> tuple[dict[str, str], list[str]]:
-    commit_obj = api_json(f"https://api.github.com/repos/{repo}/git/commits/{commit}")
-    tree_sha = commit_obj["tree"]["sha"]
-    tree = api_json(f"https://api.github.com/repos/{repo}/git/trees/{tree_sha}?recursive=1")
+    root_sha = commit_tree_sha(repo, commit)
+    tree = api_tree(repo, root_sha, True)
     if tree.get("truncated"):
         raise RuntimeError("SOURCE_TREE_TRUNCATED")
     blobs: dict[str, str] = {}
@@ -62,20 +107,6 @@ def source_tree(repo: str, commit: str) -> tuple[dict[str, str], list[str]]:
         elif kind == "blob":
             special.append(path)
     return blobs, special
-
-
-def destination_tree(prefix: pathlib.Path) -> dict[str, str]:
-    prefix_s = prefix.as_posix().rstrip("/") + "/"
-    text = run(["git", "ls-tree", "-r", "HEAD", "--", prefix.as_posix()])
-    out: dict[str, str] = {}
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        meta, fullpath = line.split("\t", 1)
-        _mode, kind, sha = meta.split()
-        if kind == "blob" and fullpath.startswith(prefix_s):
-            out[fullpath[len(prefix_s):]] = sha
-    return out
 
 
 def classify_error(error: str) -> str:
@@ -106,14 +137,12 @@ def main() -> None:
             dest = DEST_ROOT / lane / slug
             manifest_path = dest / "DOWNLOAD_EXTRACT_MANIFEST.json"
             manifest_exists = git_object_exists(manifest_path)
-            destination_exists = bool(destination_tree(dest))
             result = {
                 "lane": lane,
                 "item_id": item_id,
                 "slug": slug,
                 "source_repo": row.get("source_repo"),
                 "error_class": error_class,
-                "destination_exists": destination_exists,
                 "manifest_exists": manifest_exists,
                 "audit_verdict": "NOT_AUDITED_FOR_EXISTING_DESTINATION",
             }
@@ -127,7 +156,7 @@ def main() -> None:
                 continue
 
             manifest = git_read_json(manifest_path)
-            source_repo = manifest.get("source_repo") or row.get("source_repo")
+            source_repo = (manifest.get("source_repo") or row.get("source_repo") or "").removeprefix("https://github.com/")
             source_commit = manifest.get("source_commit")
             if not source_repo or not source_commit:
                 result["audit_verdict"] = "SOURCE_TRACEABILITY_MISSING"
@@ -135,8 +164,8 @@ def main() -> None:
                 continue
 
             try:
-                src, special = source_tree(source_repo.removeprefix("https://github.com/"), source_commit)
-                dst = destination_tree(dest / "code")
+                src, source_special = source_tree(source_repo, source_commit)
+                dst, dest_special = repo_subtree(DEST_REPO, DEST_REF, pathlib.PurePosixPath((dest / "code").as_posix()))
                 missing = sorted(set(src) - set(dst))
                 extra = sorted(set(dst) - set(src))
                 changed = sorted(p for p in set(src) & set(dst) if src[p] != dst[p])
@@ -144,7 +173,8 @@ def main() -> None:
                     "source_commit": source_commit,
                     "source_files_git": len(src),
                     "destination_files_git": len(dst),
-                    "source_special": special[:30],
+                    "source_special": source_special[:30],
+                    "destination_special": dest_special[:30],
                     "missing_count": len(missing),
                     "extra_count": len(extra),
                     "changed_count": len(changed),
@@ -152,7 +182,7 @@ def main() -> None:
                     "extra_sample": extra[:30],
                     "changed_sample": changed[:30],
                 })
-                if not special and not missing and not extra and not changed:
+                if not source_special and not dest_special and not missing and not extra and not changed:
                     result["audit_verdict"] = "SOURCE_DEST_GIT_BLOBS_IDENTICAL"
                     recovery.append({
                         "id": f"recover-{lane}-{item_id}",
@@ -171,7 +201,7 @@ def main() -> None:
             audit_rows.append(result)
 
     payload = {
-        "schema": "wanted-shark.acquisition-gap-audit.v1",
+        "schema": "wanted-shark.acquisition-gap-audit.v2",
         "failed_total_seen": sum(class_counts.values()),
         "failure_classes": class_counts,
         "exact_existing_destinations": len(recovery),
