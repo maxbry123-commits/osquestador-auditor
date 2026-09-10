@@ -1,0 +1,29 @@
+{
+  "schema": "wanted-shark.craxy-wall.state.v1",
+  "revision": 2,
+  "project": "Wanted Shark Web / Shack imput",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "root": "➡️📂 Shack imput",
+  "workflow_contract": [
+    "1_ANOTAR_ARQUITECTURA",
+    "2_DESCARGAR_EXTRAER",
+    "3_CABLEAR_PODAR_MINIMO_CODE_TEST"
+  ],
+  "agents": {
+    "SOL_CHATGPT": {"status":"ACTIVE","node":"GITHUB_PUBLISH","log":"CHATGPT-LOG.md"},
+    "ASTRA": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"ASTRA-LOG.md"},
+    "GROK": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"GROK-LOG.md"}
+  },
+  "tasks": [
+    {"id":"T01","name":"arquitectura+input literal","status":"LOCAL_VERIFY_PASS"},
+    {"id":"T02","name":"indice 77 componentes","status":"LOCAL_VERIFY_PASS"},
+    {"id":"T03","name":"publicar root main","status":"READY_FOR_PUBLISH"},
+    {"id":"T04","name":"descarga/extraccion lanes","status":"PENDING"},
+    {"id":"T05","name":"wire/test integracion","status":"PENDING"},
+    {"id":"T06","name":"watchdog horario ChatGPT","status":"PENDING"}
+  ],
+  "locks": {"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
+  "last_writer":"SOL_CHATGPT",
+  "updated_at":"2026-09-10T05:58:00-05:00"
+}
