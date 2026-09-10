@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 631983,
+  "bundle_sha256": "e25ddbd50825118089c38ee33fb3d5e5d2a3d857eb71bd69222d20c4c4681798",
+  "extracted_tree": {
+    "bytes": 2356378,
+    "files": 184,
+    "sha256": "cf434e04984bb2e3c8ad2357a7bfb1490c4ba27cc0934e2d1e4feb98f08876a1"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 631983,
+      "name": "ColBERT.bundle.zip.part-0001",
+      "sha256": "e25ddbd50825118089c38ee33fb3d5e5d2a3d857eb71bd69222d20c4c4681798"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ColBERT",
+  "source_bytes": 2356378,
+  "source_commit": "cc4f3dc91c0b45d2d08c251d9d95178285c65f1c",
+  "source_files": 184,
+  "source_ref": "HEAD",
+  "source_repo": "stanford-futuredata/ColBERT",
+  "source_tree": {
+    "bytes": 2356378,
+    "files": 184,
+    "sha256": "cf434e04984bb2e3c8ad2357a7bfb1490c4ba27cc0934e2d1e4feb98f08876a1"
+  }
+}
