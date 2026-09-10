@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 3538110,
+  "bundle_sha256": "fa6ea513d511d85e049b703dfbba2111c19938e720afc8f504a46ede2c96f85d",
+  "extracted_tree": {
+    "bytes": 11233869,
+    "files": 1815,
+    "sha256": "9dcc176fc903cc6ffd302f02c0e62c84eb5e5a39b685530fa3d40dc944d8679c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 3538110,
+      "name": "opengrok.bundle.zip.part-0001",
+      "sha256": "fa6ea513d511d85e049b703dfbba2111c19938e720afc8f504a46ede2c96f85d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "opengrok",
+  "source_bytes": 11233869,
+  "source_commit": "74f9e21e2e1dc6dbfe7d3e0f0e2cd53642b9a3dd",
+  "source_files": 1815,
+  "source_ref": "HEAD",
+  "source_repo": "oracle/opengrok",
+  "source_tree": {
+    "bytes": 11233869,
+    "files": 1815,
+    "sha256": "9dcc176fc903cc6ffd302f02c0e62c84eb5e5a39b685530fa3d40dc944d8679c"
+  }
+}

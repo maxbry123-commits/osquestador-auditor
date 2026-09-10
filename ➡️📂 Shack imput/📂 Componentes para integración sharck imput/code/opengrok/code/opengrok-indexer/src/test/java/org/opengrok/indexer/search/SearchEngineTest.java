@@ -1,0 +1,529 @@
+/*
+ * CDDL HEADER START
+ *
+ * The contents of this file are subject to the terms of the
+ * Common Development and Distribution License (the "License").
+ * You may not use this file except in compliance with the License.
+ *
+ * See LICENSE.txt included in this distribution for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing Covered Code, include this CDDL HEADER in each
+ * file and include the License file at LICENSE.txt.
+ * If applicable, add the following below this CDDL HEADER, with the
+ * fields enclosed by brackets "[]" replaced with your own identifying
+ * information: Portions Copyright [yyyy] [name of copyright owner]
+ *
+ * CDDL HEADER END
+ */
+
+/*
+ * Copyright (c) 2008, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Portions Copyright (c) 2018, 2019, Chris Fraire <cfraire@me.com>.
+ */
+package org.opengrok.indexer.search;
+
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.opengrok.indexer.configuration.RuntimeEnvironment;
+import org.opengrok.indexer.history.HistoryGuru;
+import org.opengrok.indexer.index.Indexer;
+import org.opengrok.indexer.util.TestRepository;
+
+import org.opengrok.indexer.history.RepositoryFactory;
+import org.opengrok.indexer.web.SortOrder;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Do basic testing of the SearchEngine.
+ *
+ * @author Trond Norbye
+ */
+class SearchEngineTest {
+
+    static TestRepository repository;
+    static File configFile;
+
+    @BeforeAll
+    static void setUpClass() throws Exception {
+        repository = new TestRepository();
+        URL url = HistoryGuru.class.getResource("/repositories");
+        repository.createEmpty();
+        Assertions.assertNotNull(url);
+        repository.copyDirectoryWithUniqueModifiedTime(Path.of(url.toURI()), Path.of(repository.getSourceRoot()));
+
+        RuntimeEnvironment env = RuntimeEnvironment.getInstance();
+        env.setSourceRoot(repository.getSourceRoot());
+        env.setDataRoot(repository.getDataRoot());
+        RepositoryFactory.initializeIgnoredNames(env);
+
+        env.setSourceRoot(repository.getSourceRoot());
+        env.setDataRoot(repository.getDataRoot());
+        env.setHistoryEnabled(false);
+
+        Indexer.getInstance().prepareIndexer(env, true, true,
+                null, null);
+        env.setDefaultProjectsFromNames(new TreeSet<>(Collections.singletonList("/c")));
+        Indexer.getInstance().doIndexerExecution(null, null);
+
+        configFile = File.createTempFile("configuration", ".xml");
+        env.writeConfiguration(configFile);
+        RuntimeEnvironment.getInstance().readConfiguration(new File(configFile.getAbsolutePath()));
+    }
+
+    @AfterAll
+    static void tearDownClass() throws Exception {
+        repository.destroy();
+        configFile.delete();
+    }
+
+    @Test
+    void testIsValidQuery() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertFalse(instance.isValidQuery());
+        instance.setFile("foo");
+        assertTrue(instance.isValidQuery());
+    }
+
+    @Test
+    void testDefinition() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getDefinition());
+        String defs = "This is a definition";
+        instance.setDefinition(defs);
+        assertEquals(defs, instance.getDefinition());
+    }
+
+    @Test
+    void testFile() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getFile());
+        String file = "This is a File";
+        instance.setFile(file);
+        assertEquals(file, instance.getFile());
+    }
+
+    @Test
+    void testFreetext() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getFreetext());
+        String freetext = "This is just a piece of text";
+        instance.setFreetext(freetext);
+        assertEquals(freetext, instance.getFreetext());
+    }
+
+    @Test
+    void testHistory() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getHistory());
+        String hist = "This is a piece of history";
+        instance.setHistory(hist);
+        assertEquals(hist, instance.getHistory());
+    }
+
+    @Test
+    void testSymbol() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getSymbol());
+        String sym = "This is a symbol";
+        instance.setSymbol(sym);
+        assertEquals(sym, instance.getSymbol());
+    }
+
+    @Test
+    void testGetQuery() throws Exception {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setHistory("Once upon a time");
+        instance.setFile("Makefile");
+        instance.setDefinition("\"std::string\"");
+        instance.setSymbol("toString");
+        instance.setFreetext("OpenGrok");
+        assertTrue(instance.isValidQuery());
+        assertEquals("+defs:\"std string\" +full:opengrok +hist:once +hist:upon +hist:time +path:makefile +refs:toString",
+                instance.getQuery());
+    }
+
+    @Test
+    void testSortOrderLastModified() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFile("main.c");
+        instance.setFreetext("arguments");
+        instance.setSortOrder(SortOrder.LASTMODIFIED);
+        int hitsCount = instance.search();
+        List<Hit> hits = new ArrayList<>();
+        instance.results(0, hitsCount, hits);
+        assertTrue(hits.size() >= 2, "Should return at least 2 hits to verify sort order");
+
+        String[] results = hits.stream().
+                map(hit -> hit.getPath() + "@" + hit.getLineno()).
+                toArray(String[]::new);
+        final String[] expectedResults = {
+                "/teamware/main.c@5",
+                "/rcs_test/main.c@5",
+                "/mercurial/main.c@5",
+                "/git/main.c@5",
+                "/cvs_test/cvsrepo/main.c@7",
+                "/bazaar/main.c@5"
+        };
+
+        assertArrayEquals(expectedResults, results);
+
+        instance.destroy();
+    }
+
+    @Test
+    void testSortOrderByPath() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFile("main.c OR header.h");
+        instance.setFreetext("arguments OR stdio");
+        instance.setSortOrder(SortOrder.BY_PATH);
+        int hitsCount = instance.search();
+        List<Hit> hits = new ArrayList<>();
+        instance.results(0, hitsCount, hits);
+        assertTrue(hits.size() >= 2, "Should return at least 2 hits to verify sort order");
+
+        String[] results = hits.stream().
+                map(hit -> hit.getPath() + "@" + hit.getLineno()).
+                toArray(String[]::new);
+        final String[] expectedResults = {
+            "/bazaar/header.h@2",
+            "/bazaar/main.c@5",
+            "/cvs_test/cvsrepo/main.c@7",
+            "/git/header.h@2",
+            "/git/main.c@5",
+            "/mercurial/header.h@2",
+            "/mercurial/main.c@5",
+            "/rcs_test/header.h@2",
+            "/rcs_test/main.c@5",
+            "/teamware/header.h@2",
+            "/teamware/main.c@5"
+        };
+
+        assertArrayEquals(expectedResults, results);
+
+        instance.destroy();
+    }
+
+    @Test
+    void testDefaultSortOrder() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertNull(instance.getSortOrder(), "Default sort should be relevancy (null implies Lucene score ordering)");
+    }
+
+    @Test
+    void testMaxHitsPerFileDefault() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        assertEquals(0, instance.getMaxHitsPerFile());
+    }
+
+    @Test
+    void testMaxHitsPerFileSetterGetter() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setMaxHitsPerFile(20);
+        assertEquals(20, instance.getMaxHitsPerFile());
+        instance.setMaxHitsPerFile(0);
+        assertEquals(0, instance.getMaxHitsPerFile());
+    }
+
+    @Test
+    void testUnlimitedHitsPerFileContainLineNumbers() {
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFile("main.c");
+        instance.setFreetext("arguments");
+        instance.setMaxHitsPerFile(0);
+        int hitsCount = instance.search();
+        List<Hit> hits = new ArrayList<>();
+        instance.results(0, hitsCount, hits);
+        assertFalse(hits.isEmpty());
+        assertTrue(hits.stream().allMatch(h -> !h.getLineno().isEmpty()));
+        instance.destroy();
+    }
+
+    @Test
+    void testMaxHitsPerFileLimitsHitsPerFile() {
+        SearchEngine unlimited = new SearchEngine(Integer.MAX_VALUE);
+        unlimited.setFile("main.c");
+        unlimited.setFreetext("printf");
+        unlimited.setMaxHitsPerFile(0);
+        int hitsCount = unlimited.search();
+        List<Hit> allHits = new ArrayList<>();
+        unlimited.results(0, hitsCount, allHits);
+        unlimited.destroy();
+
+        int maxPerFile = 1;
+        SearchEngine limited = new SearchEngine(Integer.MAX_VALUE);
+        limited.setFile("main.c");
+        limited.setFreetext("printf");
+        limited.setMaxHitsPerFile(maxPerFile);
+        hitsCount = limited.search();
+        List<Hit> cappedHits = new ArrayList<>();
+        limited.results(0, hitsCount, cappedHits);
+        limited.destroy();
+
+        assertTrue(allHits.size() > cappedHits.size());
+        Map<String, Long> hitsPerFile = cappedHits.stream()
+                .collect(java.util.stream.Collectors.groupingBy(Hit::getPath, java.util.stream.Collectors.counting()));
+        hitsPerFile.values().forEach(count -> assertTrue(count <= maxPerFile));
+    }
+
+    /**
+     * Verify that totalHits is exact (not an approximate lower bound) even when the collector
+     * is restricted to a single document; an inaccurate totalHitsThreshold would silently
+     * under-report the match count callers paginate by.
+     */
+    @Test
+    void testTotalHitsIsExactUnderTightCap() {
+        SearchEngine unlimited = new SearchEngine(Integer.MAX_VALUE);
+        unlimited.setFile("main.c");
+        unlimited.setFreetext("arguments");
+        int realTotal = unlimited.search();
+        unlimited.destroy();
+        assertTrue(realTotal > 1, "Query should match multiple documents across test repositories");
+
+        SearchEngine capped = new SearchEngine(1);
+        capped.setFile("main.c");
+        capped.setFreetext("arguments");
+        capped.search();
+        assertEquals(realTotal, capped.getTotalHits(),
+                "totalHits must be exact regardless of how few documents are collected");
+        capped.destroy();
+    }
+
+    /* see https://github.com/oracle/opengrok/issues/2030
+    @Test
+    void testSearch() {
+        List<Hit> hits = new ArrayList<>();
+
+        SearchEngine instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setHistory("\"Add lint make target and fix lint warnings\"");
+        int noHits =  instance.search();
+        if (noHits > 0) {
+            instance.results(0, noHits, hits);
+            assertEquals(noHits, hits.size());
+        }
+        instance.destroy();
+
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setSymbol("printf");
+        instance.setFile("main.c");
+        noHits = instance.search();
+        assertEquals(8, noHits);
+        hits.clear();
+        instance.results(0, noHits, hits);
+        for (Hit hit : hits) {
+            assertEquals("main.c", hit.getFilename());
+            assertEquals(1, 1);
+        }
+        instance.setFile("main.c OR Makefile");
+        noHits = instance.search();
+        assertEquals(8, noHits);
+        instance.destroy();
+
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFreetext("arguments");
+        instance.setFile("main.c");
+        noHits = instance.search();
+        hits.clear();
+        instance.results(0, noHits, hits);
+        for (Hit hit : hits) {
+            assertEquals("main.c", hit.getFilename());
+            if (!hit.getLine().contains("arguments")) {
+               fail("got an incorrect match: " + hit.getLine());
+            }
+        }
+        assertEquals(8, noHits);
+        instance.destroy();
+
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setDefinition("main");
+        instance.setFile("main.c");
+        noHits = instance.search();
+        hits.clear();
+        instance.results(0, noHits, hits);
+        for (Hit hit : hits) {
+            assertEquals("main.c", hit.getFilename());
+            if (!hit.getLine().contains("main")) {
+               fail("got an incorrect match: " + hit.getLine());
+            }
+        }
+        assertEquals(8, noHits);
+        instance.destroy();
+
+        // negative symbol test (comments should be ignored)
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setSymbol("Ordinary");
+        instance.setFile("\"Main.java\"");
+        instance.search();
+        assertEquals("+path:\"main . java\" +refs:Ordinary",
+                     instance.getQuery());
+        assertEquals(0, instance.search());
+        instance.destroy();
+
+        // wildcards and case sensitivity of definition search
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setDefinition("Mai*"); // definition is case sensitive
+        instance.setFile("\"Main.java\" OR \"main.c\"");
+        instance.search();
+        assertEquals("+defs:Mai* +(path:\"main . java\" path:\"main . c\")",
+                     instance.getQuery());
+        assertEquals(2, instance.search());
+        instance.setDefinition("MaI*"); // should not match Main
+        instance.search();
+        assertEquals(0, instance.search());
+        instance.destroy();
+
+        // wildcards and case sensitivity of symbol search
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setSymbol("Mai*"); // symbol is case sensitive
+        instance.setFile("\"Main.java\" OR \"main.c\"");
+        instance.search();
+        assertEquals(2, instance.search());
+        instance.setSymbol("MaI*"); // should not match Main
+        instance.search();
+        assertEquals(0, instance.search());
+        instance.destroy();
+
+        // wildcards and case insensitivity of freetext search
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFreetext("MaI*"); // should match both Main and main
+        instance.setFile("\"Main.java\" OR \"main.c\"");
+        assertEquals(10, instance.search());
+        instance.destroy();
+
+        // file name search is case insensitive
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFile("JaVa"); // should match java
+        int count=instance.search();
+        if (count > 0) {
+        instance.results(0, count, hits);
+        }
+        assertEquals(8, count); // path is now case sensitive ... but only in SearchEngine !
+        instance.destroy();
+
+        //test eol and eof
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFreetext("makeW");
+        assertEquals(1, instance.search());
+        instance.destroy();
+
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFreetext("WeirdEOL");
+        assertEquals(1, instance.search());
+        instance.destroy();
+
+        //test bcel jar parser
+        instance = new SearchEngine(Integer.MAX_VALUE);
+        instance.setFreetext("InstConstraintVisitor");
+        assertEquals(1, instance.search());
+        instance.destroy();
+    }
+    */
+
+    @Test
+    void testMaxDocsConstructorGetter() {
+        assertEquals(5, new SearchEngine(5).getMaxDocs());
+    }
+
+    @Test
+    void testConstructorRejectsNonPositiveMaxDocs() {
+        assertThrows(IllegalArgumentException.class, () -> new SearchEngine(0));
+        assertThrows(IllegalArgumentException.class, () -> new SearchEngine(-1));
+    }
+
+    @Test
+    void testMaxDocsLimitsCollectedHits() {
+        SearchEngine unlimited = new SearchEngine(Integer.MAX_VALUE);
+        unlimited.setFreetext("arguments");
+        int totalCount = unlimited.search();
+        unlimited.destroy();
+        assertTrue(totalCount > 1, "Query must match multiple documents for this test to be meaningful");
+
+        SearchEngine limited = new SearchEngine(1);
+        limited.setFreetext("arguments");
+        limited.search();
+        assertEquals(1, limited.scoreDocs().length);
+        limited.destroy();
+    }
+
+    @Test
+    void testSearchReturnsCollectedCountWhenMaxDocsCaps() {
+        SearchEngine unlimited = new SearchEngine(Integer.MAX_VALUE);
+        unlimited.setFreetext("arguments");
+        assertTrue(unlimited.search() > 1, "Query must match multiple documents");
+        unlimited.destroy();
+
+        // search() must report the collected count so that its return value
+        // is safe to pass to results() as the end index.
+        SearchEngine limited = new SearchEngine(1);
+        limited.setFreetext("arguments");
+        assertEquals(1, limited.search());
+        limited.destroy();
+    }
+
+    @Test
+    void testGetTotalHitsReportsFullCountWhenMaxDocsCaps() {
+        SearchEngine unlimited = new SearchEngine(Integer.MAX_VALUE);
+        unlimited.setFreetext("arguments");
+        int realTotal = unlimited.search();
+        unlimited.destroy();
+        assertTrue(realTotal > 1, "Query must match multiple documents");
+
+        // totalHits must stay accurate even when collection is capped —
+        // callers need it to paginate correctly.
+        SearchEngine limited = new SearchEngine(1);
+        limited.setFreetext("arguments");
+        limited.search();
+        assertEquals(realTotal, limited.getTotalHits());
+        limited.destroy();
+    }
+
+    @Test
+    void testMaxDocsResultsRespectBound() {
+        SearchEngine instance = new SearchEngine(1);
+        instance.setFreetext("arguments");
+        int collected = instance.search();
+        assertTrue(instance.getTotalHits() > 1, "Total should exceed maxDocs for this test to exercise the cap");
+
+        List<Hit> hits = new ArrayList<>();
+        instance.results(0, collected, hits);
+        assertEquals(1, hits.size());
+        instance.destroy();
+    }
+
+    @Test
+    void testResultsWithoutSearchThrows() {
+        SearchEngine instance = new SearchEngine(1);
+        assertThrows(IllegalStateException.class, () -> instance.results(0, 1, new ArrayList<>()));
+    }
+
+    @Test
+    void testResultsClampsEndBeyondCollected() {
+        SearchEngine instance = new SearchEngine(1);
+        instance.setFreetext("arguments");
+        instance.search();
+        assertTrue(instance.getTotalHits() > 1, "Total should exceed maxDocs for this test to be meaningful");
+
+        // asking past the collected window must not blow up, only serve what was collected
+        List<Hit> hits = new ArrayList<>();
+        instance.results(0, instance.getTotalHits(), hits);
+        assertEquals(1, hits.size());
+        instance.destroy();
+    }
+}

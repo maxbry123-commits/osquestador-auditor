@@ -1,0 +1,223 @@
+/*
+ * CDDL HEADER START
+ *
+ * The contents of this file are subject to the terms of the
+ * Common Development and Distribution License (the "License").
+ * You may not use this file except in compliance with the License.
+ *
+ * See LICENSE.txt included in this distribution for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * When distributing Covered Code, include this CDDL HEADER in each
+ * file and include the License file at LICENSE.txt.
+ * If applicable, add the following below this CDDL HEADER, with the
+ * fields enclosed by brackets "[]" replaced with your own identifying
+ * information: Portions Copyright [yyyy] [name of copyright owner]
+ *
+ * CDDL HEADER END
+ */
+
+/*
+ * Copyright (c) 2018, 2026, Oracle and/or its affiliates. All rights reserved.
+ * Portions Copyright (c) 2020, Chris Fraire <cfraire@me.com>.
+ */
+package org.opengrok.web.api.v1.controller;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.apache.lucene.search.Query;
+import org.opengrok.indexer.configuration.Project;
+import org.opengrok.indexer.configuration.RuntimeEnvironment;
+import org.opengrok.indexer.search.Hit;
+import org.opengrok.indexer.search.SearchEngine;
+import org.opengrok.indexer.web.QueryParameters;
+import org.opengrok.indexer.web.SortOrder;
+import org.opengrok.web.PageConfig;
+import org.opengrok.web.api.v1.filter.CorsEnable;
+import org.opengrok.web.api.v1.suggester.provider.service.SuggesterService;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Path(SearchController.PATH)
+public class SearchController {
+
+    public static final String PATH = "search";
+
+    private static final String DEFAULT_SORT_ORDER = "relevancy";
+
+    private final SuggesterService suggester;
+
+    @Inject
+    public SearchController(SuggesterService suggester) {
+        this.suggester = suggester;
+    }
+
+    @GET
+    @CorsEnable
+    @Produces(MediaType.APPLICATION_JSON)
+    @SuppressWarnings("java:S107")
+    public SearchResult search(
+            @Context final HttpServletRequest req,
+            @QueryParam(QueryParameters.FULL_SEARCH_PARAM) final String full,
+            @QueryParam("def") final String def, // Nearly QueryParameters.DEFS_SEARCH_PARAM
+            @QueryParam("symbol") final String symbol, // Akin to QueryBuilder.REFS_SEARCH_PARAM
+            @QueryParam(QueryParameters.PATH_SEARCH_PARAM) final String path,
+            @QueryParam(QueryParameters.HIST_SEARCH_PARAM) final String hist,
+            @QueryParam(QueryParameters.TYPE_SEARCH_PARAM) final String type,
+            @QueryParam("projects") final List<String> projects,
+            @QueryParam(QueryParameters.MAXRESULTS_PARAM) final Integer maxResultsParam,
+            @QueryParam(QueryParameters.START_PARAM) @DefaultValue(0 + "") final int startDocIndex,
+            @QueryParam(QueryParameters.SORT_PARAM) @DefaultValue(DEFAULT_SORT_ORDER) final String sort,
+            @QueryParam(QueryParameters.MAXHITSPERFILE_PARAM) @DefaultValue("0") final int maxHitsPerFile
+    ) {
+        if ((maxResultsParam != null && maxResultsParam < 0) || startDocIndex < 0 || maxHitsPerFile < 0) {
+            throw new WebApplicationException("Negative integer parameters are not allowed",
+                    Response.Status.BAD_REQUEST);
+        }
+
+        final int maxResults;
+        if (maxResultsParam != null) {
+            maxResults = maxResultsParam;
+        } else {
+            RuntimeEnvironment env = RuntimeEnvironment.getInstance();
+            maxResults = env.getHitsPerPage() * env.getCachePages();
+        }
+
+        final int maxDocs;
+        try {
+            maxDocs = Math.max(Math.addExact(startDocIndex, maxResults), 1);
+        } catch (ArithmeticException e) {
+            throw new WebApplicationException("Sum of start and maxresults parameters must not exceed "
+                    + Integer.MAX_VALUE, Response.Status.BAD_REQUEST);
+        }
+
+        try (SearchEngineWrapper engine = new SearchEngineWrapper(full, def, symbol, path, hist, type,
+                SortOrder.get(sort), maxHitsPerFile, maxDocs)) {
+
+            if (!engine.isValid()) {
+                throw new WebApplicationException("Invalid request", Response.Status.BAD_REQUEST);
+            }
+
+            Instant startTime = Instant.now();
+
+            suggester.onSearch(projects, engine.getQuery());
+
+            Map<String, List<SearchHit>> hits = engine.search(req, projects, startDocIndex, maxResults)
+                    .stream()
+                    .collect(Collectors.groupingBy(Hit::getPath,
+                            LinkedHashMap::new,
+                            Collectors.mapping(h -> new SearchHit(h.getLine(), h.getLineno(), h.getTag()),
+                                    Collectors.toList())));
+
+            long duration = Duration.between(startTime, Instant.now()).toMillis();
+
+            int pageSize = Math.clamp(engine.numResults - startDocIndex, 0, maxResults);
+            int endDocument = pageSize > 0 ? startDocIndex + pageSize - 1 : startDocIndex;
+
+            return new SearchResult(duration, engine.numResults, hits, startDocIndex, endDocument);
+        }
+    }
+
+    private static class SearchEngineWrapper implements AutoCloseable {
+
+        private final SearchEngine engine;
+
+        private int numResults;
+
+        private SearchEngineWrapper(
+                final String full,
+                final String def,
+                final String symbol,
+                final String path,
+                final String hist,
+                final String type,
+                final SortOrder sortOrder,
+                final int maxHitsPerFile,
+                final int maxDocs
+        ) {
+            engine = new SearchEngine(maxDocs);
+            engine.setFreetext(full);
+            engine.setDefinition(def);
+            engine.setSymbol(symbol);
+            engine.setFile(path);
+            engine.setHistory(hist);
+            engine.setType(type);
+            engine.setSortOrder(sortOrder);
+            engine.setMaxHitsPerFile(maxHitsPerFile);
+        }
+
+        public List<Hit> search(
+                final HttpServletRequest req,
+                final List<String> projects,
+                final int startDocIndex,
+                final int maxResults
+        ) {
+            Set<Project> allProjects = PageConfig.get(req).getProjectHelper().getAllProjects();
+            int collected;
+            if (projects == null || projects.isEmpty()) {
+                collected = engine.search(new ArrayList<>(allProjects));
+            } else {
+                collected = engine.search(allProjects.stream()
+                        .filter(p -> projects.contains(p.getName()))
+                        .collect(Collectors.toList()));
+            }
+            numResults = engine.getTotalHits();
+
+            if (startDocIndex >= collected) {
+                return Collections.emptyList();
+            }
+
+            int resultSize = collected - startDocIndex;
+            if (resultSize > maxResults) {
+                resultSize = maxResults;
+            }
+
+            List<Hit> results = new ArrayList<>();
+            engine.results(startDocIndex, startDocIndex + resultSize, results);
+
+            return results;
+        }
+
+        private boolean isValid() {
+            return engine.isValidQuery();
+        }
+
+        private Query getQuery() {
+            return engine.getQueryObject();
+        }
+
+        @Override
+        public void close() {
+            engine.destroy();
+        }
+    }
+
+    private record SearchResult(
+            long time,
+            int resultCount,
+            Map<String, List<SearchHit>> results,
+            int startDocument,
+            int endDocument
+    ) {
+    }
+
+    private record SearchHit(String line, String lineNumber, String tag) {
+    }
+}
