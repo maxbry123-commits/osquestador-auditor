@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 34890668,
+  "bundle_sha256": "f081d3244e67ce39f38a515a419bf1615d1c4638664da7b395a595f7194019a1",
+  "extracted_tree": {
+    "bytes": 95267540,
+    "files": 10858,
+    "sha256": "f6b6fbf37ae4e35a34b618f249ce4406f51cdec8b4740068814d3302b142d921"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "haystack.bundle.zip.part-0001",
+      "sha256": "11de5d9c1e4a9fdfb0b70dffd37f91ae6e7d4779a6a798f36d3bceb1c9ab67f5"
+    },
+    {
+      "bytes": 12582912,
+      "name": "haystack.bundle.zip.part-0002",
+      "sha256": "b5d87a18997d03298a8aed9a2f1ffe024934a6ff0a751f3cb9d32f0590aecdc2"
+    },
+    {
+      "bytes": 9724844,
+      "name": "haystack.bundle.zip.part-0003",
+      "sha256": "2c212b5e24e7ac9fc9f3177f7e1e83d17ebd6fa965d777dbdad35609968a3bf1"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "haystack",
+  "source_bytes": 95267540,
+  "source_commit": "6f58c5fe7d5c15cb429910dbb30fc475155de7a9",
+  "source_files": 10858,
+  "source_ref": "HEAD",
+  "source_repo": "deepset-ai/haystack",
+  "source_tree": {
+    "bytes": 95267540,
+    "files": 10858,
+    "sha256": "f6b6fbf37ae4e35a34b618f249ce4406f51cdec8b4740068814d3302b142d921"
+  }
+}
