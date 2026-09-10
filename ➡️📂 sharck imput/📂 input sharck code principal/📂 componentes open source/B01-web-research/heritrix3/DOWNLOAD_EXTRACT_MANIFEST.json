@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2774936,
+  "bundle_sha256": "92457ba8fd00c864fc317e86b03ced899c602b9c96865990e7cea1b3aee7459a",
+  "extracted_tree": {
+    "bytes": 7510189,
+    "files": 1007,
+    "sha256": "f1afa55d0206ba6680a91f8464952d903ad40d10e2bd20b4ed941c272bd50c18"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2774936,
+      "name": "heritrix3.bundle.zip.part-0001",
+      "sha256": "92457ba8fd00c864fc317e86b03ced899c602b9c96865990e7cea1b3aee7459a"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "heritrix3",
+  "source_bytes": 7510189,
+  "source_commit": "0d3582a136f6c04999f830bf37b1108c6de35308",
+  "source_files": 1007,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/internetarchive/heritrix3",
+  "source_tree": {
+    "bytes": 7510189,
+    "files": 1007,
+    "sha256": "f1afa55d0206ba6680a91f8464952d903ad40d10e2bd20b4ed941c272bd50c18"
+  }
+}

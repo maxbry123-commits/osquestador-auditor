@@ -1,0 +1,265 @@
+/*
+ *  This file is part of the Heritrix web crawler (crawler.archive.org).
+ *
+ *  Licensed to the Internet Archive (IA) by one or more individual 
+ *  contributors. 
+ *
+ *  The IA licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package org.archive.modules.net;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Serializable;
+import java.nio.Buffer;
+import java.nio.CharBuffer;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.IOUtils;
+import org.archive.bdb.AutoKryo;
+import org.archive.io.ReadSource;
+
+/**
+ * Utility class for parsing and representing 'robots.txt' format 
+ * directives, into a list of named user-agents and map from user-agents 
+ * to RobotsDirectives. 
+ */
+public class Robotstxt implements Serializable {
+    static final long serialVersionUID = 7025386509301303890L;
+    private static final Logger logger =
+        Logger.getLogger(Robotstxt.class.getName());
+
+    protected static final int MAX_SIZE = 500*1024;
+    private static final Pattern LINE_SEPARATOR = Pattern.compile("\r\n|\r|\n");
+    
+    // all user agents contained in this robots.txt
+    // in order of declaration
+    // TODO: consider discarding irrelevant entries
+    protected LinkedList<String> namedUserAgents = new LinkedList<String>();
+    // map user-agents to directives
+    protected Map<String,RobotsDirectives> agentsToDirectives = 
+        new HashMap<String,RobotsDirectives>();
+    protected RobotsDirectives wildcardDirectives = null; 
+    
+    protected boolean hasErrors = false;
+    
+    protected static RobotsDirectives NO_DIRECTIVES = new RobotsDirectives();
+    /** empty, reusable instance for all sites providing no rules */
+    public static Robotstxt NO_ROBOTS = new Robotstxt();
+    
+    public Robotstxt() {
+    }
+
+    public Robotstxt(Reader reader) throws IOException {
+        try {
+            initializeFromReader(reader);
+        } finally {
+            IOUtils.closeQuietly(reader);
+        }
+    }
+
+    public Robotstxt(ReadSource customRobots) {
+        Reader reader = customRobots.obtainReader();
+        try {
+            initializeFromReader(reader);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE,
+                    "robots ReadSource problem: potential for inadvertent overcrawling",
+                    e);
+        } finally {
+            IOUtils.closeQuietly(reader); 
+        }
+    }
+
+    protected void initializeFromReader(Reader reader) throws IOException {
+        CharBuffer buffer = CharBuffer.allocate(MAX_SIZE);
+        while (buffer.hasRemaining() && reader.read(buffer) >= 0) ;
+        //buffer.flip();
+        // Explicit cast as per https://stackoverflow.com/questions/61267495/exception-in-thread-main-java-lang-nosuchmethoderror-java-nio-bytebuffer-flip
+        ((Buffer) buffer).flip();
+
+        String[] lines = LINE_SEPARATOR.split(buffer);
+        if (buffer.limit() == buffer.capacity()) {
+            int processed = buffer.capacity();
+            if (lines.length != 0) {
+                // discard the partial line at the end so we don't process a truncated path
+                int last = lines.length - 1;
+                processed -= lines[last].length();
+                lines[last] = "";
+            }
+            logger.warning("processed " + processed + " characters, ignoring the rest (see HER-1990)");
+        }
+
+        // current is the disallowed paths for the preceding User-Agent(s)
+        RobotsDirectives current = null;
+        for (String read: lines) {
+            read = read.trim();
+            if (!read.isEmpty() && !read.startsWith("#")) {
+                // remove any html markup
+                read = read.replaceAll("<[^>]+>","");
+                int commentIndex = read.indexOf("#");
+                if (commentIndex > -1) {
+                    // Strip trailing comment
+                    read = read.substring(0, commentIndex);
+                }
+                read = read.trim();
+                if (read.matches("(?i)^User-agent:.*")) {
+                    String ua = read.substring(11).trim().toLowerCase();
+                    RobotsDirectives preexisting;
+                    if (ua.equals("*")) {
+                        preexisting = wildcardDirectives;
+                    } else {
+                        preexisting = agentsToDirectives.get(ua);
+                    }
+                    if (preexisting != null && preexisting.hasDirectives) {
+                        current = preexisting;
+                    } else if (current == null || current.hasDirectives) {
+                        // only create new rules-list if necessary
+                        // otherwise share with previous user-agent
+                        current = new RobotsDirectives();
+                    }
+                    if (ua.equals("*")) {
+                        wildcardDirectives = current;
+                    } else {
+                        namedUserAgents.addLast(ua);
+                        agentsToDirectives.put(ua, current);
+                    }
+                    continue;
+                }
+                if (read.matches("(?i)Disallow:.*")) {
+                    if (current == null) {
+                        // buggy robots.txt
+                        hasErrors = true;
+                        continue;
+                    }
+                    String path = read.substring(9).trim();
+                    // tolerate common error of ending path with '*' character
+                    // (not allowed by original spec; redundant but harmless with 
+                    // Google's wildcarding extensions -- which we don't yet fully
+                    // support). 
+                    if(path.endsWith("*")) {
+                        path = path.substring(0,path.length()-1); 
+                    }
+                    current.addDisallow(path);
+                    continue;
+                }
+                if (read.matches("(?i)Crawl-delay:.*")) {
+                    if (current == null) {
+                        // buggy robots.txt
+                        hasErrors = true;
+                        continue;
+                    }
+                    // consider a crawl-delay as sufficient to end a grouping of
+                    // User-Agent lines
+                    String val = read.substring(12).trim();
+                    try {
+                        val = val.split("[^\\d\\.]+")[0];
+                        current.setCrawlDelay(Float.parseFloat(val));
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // ignore 
+                    } catch (NumberFormatException nfe) {
+                        // ignore
+                    }
+                    continue;
+                }
+                if (read.matches("(?i)Allow:.*")) {
+                    if (current == null) {
+                        // buggy robots.txt
+                        hasErrors = true;
+                        continue;
+                    }
+                    String path = read.substring(6).trim();
+                    // tolerate common error of ending path with '*' character
+                    // (not allowed by original spec; redundant but harmless with 
+                    // Google's wildcarding extensions -- which we don't yet fully
+                    // support). 
+                    if(path.endsWith("*")) {
+                        path = path.substring(0,path.length()-1); 
+                    }
+                    current.addAllow(path);
+                    continue;
+                }
+                // unknown line; do nothing for now
+            }
+        }
+    }
+
+    /**
+     * Does this policy effectively allow everything? (No 
+     * disallows or timing (crawl-delay) directives?)
+     */
+    public boolean allowsAll() {
+        // TODO: refine so directives that are all empty are also 
+        // recognized as allowing all
+        return agentsToDirectives.isEmpty();
+    }
+    
+    public List<String> getNamedUserAgents() {
+        return namedUserAgents;
+    }
+
+    /**
+     * Return the RobotsDirectives, if any, appropriate for the given User-Agent
+     * string. If useFallbacks is true, a wildcard ('*') directives or the default
+     * of NO_DIRECTIVES will be returned, as appropriate, if there is no better
+     * match. If useFallbacks is false, a null will be returned if no declared
+     * directives targeted the given User-Agent.
+     * 
+     * @param ua String User-Agent to lookup
+     * @param useFallbacks if true, fall-back to wildcard directives or 
+     * default allow as needed
+     * @return directives to use, or null if useFallbacks is false and no 
+     * non-wildcard directives match the supplied User-Agent
+     */
+    public RobotsDirectives getDirectivesFor(String ua, boolean useFallbacks) {
+        // find matching ua
+        for(String uaListed : namedUserAgents) {
+            if(ua.indexOf(uaListed)>-1) {
+                return agentsToDirectives.get(uaListed);
+            }
+        }
+        if(useFallbacks==false) {
+            return null; 
+        }
+        if (wildcardDirectives!=null) {
+            return wildcardDirectives;
+        }
+        // no applicable user-agents, so empty directives
+        return NO_DIRECTIVES; 
+    }
+
+    /**
+     * Return directives to use for the given User-Agent, resorting to wildcard
+     * rules or the default no-directives if necessary.
+     * 
+     * @param userAgent String User-Agent to lookup
+     * @return directives to use
+     */
+    public RobotsDirectives getDirectivesFor(String userAgent) {
+        return getDirectivesFor(userAgent, true);
+    }
+    
+    // Kryo support
+    public static void autoregisterTo(AutoKryo kryo) {
+        kryo.register(Robotstxt.class);
+        kryo.autoregister(HashMap.class);
+        kryo.autoregister(LinkedList.class);
+        kryo.autoregister(RobotsDirectives.class);
+    }
+}
