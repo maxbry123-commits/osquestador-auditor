@@ -1,123 +1,357 @@
 {
   "audit_schema": "wanted-shark.acquisition-gap-audit.v3",
   "candidates": 19,
-  "failed_closed": 19,
-  "ready_for_publish": 0,
+  "failed_closed": 0,
+  "ready_for_publish": 19,
   "results": [
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/Vane/code/searxng/limiter.toml\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/Vane/code/searxng/limiter.toml\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 3,
+      "restored_paths": [
+        "searxng/limiter.toml",
+        "searxng/settings.yml",
+        "searxng/uwsgi.ini"
+      ],
       "slug": "Vane",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "348feca3e378fb4157b217724ed508dc707f853f",
+      "source_repo": "ItzCrazyKns/Vane",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/gpt-researcher/code/.cursorrules\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/gpt-researcher/code/.cursorrules\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        ".cursorrules",
+        "CURSOR_RULES.md"
+      ],
       "slug": "gpt-researcher",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "6f998577d547b1e54ec662dac63583aa11e3b84b",
+      "source_repo": "assafelovic/gpt-researcher",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/MindSearch/code/.DS_Store\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/MindSearch/code/.DS_Store\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 1,
+      "restored_paths": [
+        ".DS_Store"
+      ],
       "slug": "MindSearch",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "7952c5f8a956fe6a44228a6a7d528a35340e7c87",
+      "source_repo": "InternLM/MindSearch",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/deer-flow/code/backend/.vscode/extensions.json\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/deer-flow/code/backend/.vscode/extensions.json\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 3,
+      "restored_paths": [
+        "backend/.vscode/extensions.json",
+        "backend/.vscode/settings.json",
+        "frontend/.vscode/settings.json"
+      ],
       "slug": "deer-flow",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "48a8978b7b6e1ce84454103f1831bf0c5cc3b1eb",
+      "source_repo": "bytedance/deer-flow",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/crawl4ai/code/.claude/commands/c4ai-check.md\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/crawl4ai/code/.claude/commands/c4ai-check.md\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 16,
+      "restored_paths": [
+        ".claude/commands/c4ai-check.md",
+        ".claude/settings.local.json",
+        ".context/PR-TODOLIST.md",
+        "docs/examples/c4a_script/tutorial/scripts/01-basic-interaction.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/02-login-flow.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/03-infinite-scroll.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/04-multi-step-form.c4a",
+        "docs/examples/c4a_script/tutorial/scripts/05-complex-workflow.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/01-basic-interaction.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/02-login-flow.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/03-infinite-scroll.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/04-multi-step-form.c4a",
+        "docs/md_v2/apps/c4a-script/scripts/05-complex-workflow.c4a",
+        "scripts/gen-sbom.sh",
+        "scripts/update_stats.py",
+        "tests/test_webhook_feature.sh"
+      ],
       "slug": "crawl4ai",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "862f6bccb9c063f49b9d42701baa0eea17a4993f",
+      "source_repo": "unclecode/crawl4ai",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/search/browser-use/code/browser_use/mcp/manifest.json\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/search/browser-use/code/browser_use/mcp/manifest.json\"' for reading: No such file or directory\n",
       "lane": "search",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        "browser_use/mcp/manifest.json",
+        "tests/mind2web_data/processed.json"
+      ],
       "slug": "browser-use",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "50f205533fe10ba35b553d2a3689c77b87bd5d0a",
+      "source_repo": "browser-use/browser-use",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/code/opengrok/code/opengrok-indexer/index/dirty\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/code/opengrok/code/opengrok-indexer/index/dirty\"' for reading: No such file or directory\n",
       "lane": "code",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 1,
+      "restored_paths": [
+        "opengrok-indexer/index/dirty"
+      ],
       "slug": "opengrok",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "74f9e21e2e1dc6dbfe7d3e0f0e2cd53642b9a3dd",
+      "source_repo": "oracle/opengrok",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/code/ast-grep/code/fixtures/json-linux.so\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/code/ast-grep/code/fixtures/json-linux.so\"' for reading: No such file or directory\n",
       "lane": "code",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        "fixtures/json-linux.so",
+        "fixtures/json-mac.so"
+      ],
       "slug": "ast-grep",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "fc2b1530db74de49131b725221de98036a552a9f",
+      "source_repo": "ast-grep/ast-grep",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/code/pyright/code/build/azuredevops/azure-pipelines-release.yml\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/code/pyright/code/build/azuredevops/azure-pipelines-release.yml\"' for reading: No such file or directory\n",
       "lane": "code",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 23,
+      "restored_paths": [
+        "build/azuredevops/azure-pipelines-release.yml",
+        "build/azuredevops/azure-pipelines.yml",
+        "build/benchmark/README.md",
+        "build/benchmark/UPSTREAM_LICENSE.txt",
+        "build/benchmark/baselines/benchmark_2026-08-20_linux-x64.json",
+        "build/benchmark/baselines/latest-linux-x64.json",
+        "build/benchmark/compare_benchmarks.py",
+        "build/benchmark/install_envs.json",
+        "build/benchmark/render_benchmark_html.py",
+        "build/benchmark/test_compare_benchmarks.py",
+        "build/benchmark/test_render_benchmark_html.py",
+        "build/benchmark/test_typecheck_benchmark.py",
+        "build/benchmark/typecheck_benchmark.py",
+        "build/generateUnicodeTables.py",
+        "build/installPinnedPackageManager.js",
+        "build/lib/updateDeps.js",
+        "build/lib/webpack.js",
+        "build/perfCompare.py",
+        "build/templates/npmAuthenticate.yml",
+        "build/updateDeps.js",
+        "build/updateTypeshed.py",
+        "packages/vscode-pyright/build/checkPackage.js",
+        "packages/vscode-pyright/build/renamePackage.js"
+      ],
       "slug": "pyright",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "0653de232eef08dd1ee79373e26f59cfcc0c015f",
+      "source_repo": "microsoft/pyright",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/rag/llama_index/code/docs/examples/index_structs/knowledge_graph/storage/graph_store.json\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/rag/llama_index/code/docs/examples/index_structs/knowledge_graph/storage/graph_store.json\"' for reading: No such file or directory\n",
       "lane": "rag",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 7,
+      "restored_paths": [
+        "docs/examples/index_structs/knowledge_graph/storage/graph_store.json",
+        "llama-index-core/llama_index/core/_static/.gitignore",
+        "llama-index-core/llama_index/core/_static/nltk_cache/.gitignore",
+        "llama-index-core/llama_index/core/_static/tiktoken_cache/.gitignore",
+        "llama-index-integrations/vector_stores/llama-index-vector-stores-objectbox/llama_index/vector_stores/objectbox/__init__.py",
+        "llama-index-integrations/vector_stores/llama-index-vector-stores-objectbox/llama_index/vector_stores/objectbox/base.py",
+        "uv.lock"
+      ],
       "slug": "llama_index",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "5be447943168d8ac800901a623ca50bdbdee1c8e",
+      "source_repo": "run-llama/llama_index",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/rag/ColBERT/code/.env\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/rag/ColBERT/code/.env\"' for reading: No such file or directory\n",
       "lane": "rag",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 3,
+      "restored_paths": [
+        ".env",
+        "data/5k-eval.qrels.tsv",
+        "data/5k-eval.queries.tsv"
+      ],
       "slug": "ColBERT",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "cc4f3dc91c0b45d2d08c251d9d95178285c65f1c",
+      "source_repo": "stanford-futuredata/ColBERT",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/skills/mcp-registry/code/cmd/registry/main.go\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/skills/mcp-registry/code/cmd/registry/main.go\"' for reading: No such file or directory\n",
       "lane": "skills",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 3,
+      "restored_paths": [
+        "cmd/registry/main.go",
+        "tools/validate-examples/main.go",
+        "tools/validate-schemas/main.go"
+      ],
       "slug": "mcp-registry",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "739b70e8bc1bea203c5a35ab699f1df51d091568",
+      "source_repo": "modelcontextprotocol/registry",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/skills/skill-hub/code/internal/cli/mcp/build/build.go\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/skills/skill-hub/code/internal/cli/mcp/build/build.go\"' for reading: No such file or directory\n",
       "lane": "skills",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        "internal/cli/mcp/build/build.go",
+        "internal/registry/api/ui/dist/.gitignore"
+      ],
       "slug": "skill-hub",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "a4aa9b21a05c180246e86ad484cbabee421bad85",
+      "source_repo": "yaogdu/skill-hub",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/skills/ToolBench/code/assets/.DS_Store\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/skills/ToolBench/code/assets/.DS_Store\"' for reading: No such file or directory\n",
       "lane": "skills",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 10,
+      "restored_paths": [
+        "assets/.DS_Store",
+        "data_example/answer/.DS_Store",
+        "data_example/toolenv/.DS_Store",
+        "data_example/toolenv/response_examples/.DS_Store",
+        "data_example/toolenv/tools/.DS_Store",
+        "data_example/toolenv/tools/Advertising/.DS_Store",
+        "data_example/toolenv/tools/Artificial_Intelligence_Machine_Learning/.DS_Store",
+        "data_example/toolenv/tools/Business/.DS_Store",
+        "data_example/toolenv/tools/Commerce/.DS_Store",
+        "data_example/toolenv/tools/Music/.DS_Store"
+      ],
       "slug": "ToolBench",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "d56fdd89faf8c91fa135090b212bb9057ee5cfc2",
+      "source_repo": "OpenBMB/ToolBench",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/skills/ToolUniverse/code/docs/translation_tools/AGENTIC_TRANSLATION_TOOL_SUMMARY.md\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/skills/ToolUniverse/code/docs/translation_tools/AGENTIC_TRANSLATION_TOOL_SUMMARY.md\"' for reading: No such file or directory\n",
       "lane": "skills",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 6,
+      "restored_paths": [
+        "docs/translation_tools/AGENTIC_TRANSLATION_TOOL_SUMMARY.md",
+        "scripts/gen_api_key_catalog.py",
+        "skills/setup-tooluniverse/SKILL_SUMMARY.md",
+        "src/tooluniverse/tools/ReactomeAnalysis_token_result.py",
+        "tests/api/test_api_key_validation.py",
+        "tests/unit/test_api_key_catalog.py"
+      ],
       "slug": "ToolUniverse",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "7a0ceb2f3a2ae28594e55ec27344e839df8bc9f7",
+      "source_repo": "mims-harvard/ToolUniverse",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/media-input-router/guidance/code/client/graphpaper-inline/dist/.gitignore\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/media-input-router/guidance/code/client/graphpaper-inline/dist/.gitignore\"' for reading: No such file or directory\n",
       "lane": "media-input-router",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        "client/graphpaper-inline/dist/.gitignore",
+        "notebooks/unstable/State Debugging.ipynb"
+      ],
       "slug": "guidance",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "21b1d90dfbebff4b141df70c714c8af15aa5f4af",
+      "source_repo": "guidance-ai/guidance",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/media-input-router/antlr4/code/runtime/Java/lib/org.abego.treelayout.core.jar\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/media-input-router/antlr4/code/runtime/Java/lib/org.abego.treelayout.core.jar\"' for reading: No such file or directory\n",
       "lane": "media-input-router",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 2,
+      "restored_paths": [
+        "runtime/Java/lib/org.abego.treelayout.core.jar",
+        "runtime/JavaScript/.project"
+      ],
       "slug": "antlr4",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "7d5770395bb7b02eb56e7c62662cb1d7c08f42a3",
+      "source_repo": "antlr/antlr4",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/media-input-router/whisper.cpp/code/bindings/java/.idea/uiDesigner.xml\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/media-input-router/whisper.cpp/code/bindings/java/.idea/uiDesigner.xml\"' for reading: No such file or directory\n",
       "lane": "media-input-router",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 26,
+      "restored_paths": [
+        "bindings/java/.idea/uiDesigner.xml",
+        "examples/whisper.android/.idea/.gitignore",
+        "examples/whisper.android/.idea/.name",
+        "examples/whisper.android/.idea/compiler.xml",
+        "examples/whisper.android/.idea/gradle.xml",
+        "examples/whisper.android/.idea/misc.xml",
+        "examples/whisper.android/.idea/vcs.xml",
+        "examples/whisper.swiftui/whisper.swiftui.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist",
+        "examples/whisper.swiftui/whisper.swiftui.xcodeproj/xcshareddata/xcschemes/WhisperCppDemo.xcscheme",
+        "models/for-tests-ggml-base.bin",
+        "models/for-tests-ggml-base.en.bin",
+        "models/for-tests-ggml-large.bin",
+        "models/for-tests-ggml-medium.bin",
+        "models/for-tests-ggml-medium.en.bin",
+        "models/for-tests-ggml-parakeet-tdt-bad-nfft0.bin",
+        "models/for-tests-ggml-parakeet-tdt.bin",
+        "models/for-tests-ggml-small.bin",
+        "models/for-tests-ggml-small.en.bin",
+        "models/for-tests-ggml-tiny.bin",
+        "models/for-tests-ggml-tiny.en.bin",
+        "models/for-tests-silero-v6.2.0-ggml.bin",
+        "samples/.gitignore",
+        "samples/README.md",
+        "samples/jfk.wav",
+        "tests/earnings21/requirements.txt",
+        "tests/librispeech/requirements.txt"
+      ],
       "slug": "whisper.cpp",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "a2b36eb677918d4f9ab1db7b8a7ff968563ed163",
+      "source_repo": "ggml-org/whisper.cpp",
+      "verdict": "READY_FOR_PUBLISH"
     },
     {
-      "error": "COMMAND_FAILED:['git', 'hash-object', '\"\\\\342\\\\236\\\\241\\\\357\\\\270\\\\217\\\\360\\\\237\\\\223\\\\202 Shack imput/\\\\360\\\\237\\\\223\\\\202 Componentes para integraci\\\\303\\\\263n sharck imput/orchestration/langgraph/code/libs/cli/examples/.env.example\"']:fatal: could not open '\"\\342\\236\\241\\357\\270\\217\\360\\237\\223\\202 Shack imput/\\360\\237\\223\\202 Componentes para integraci\\303\\263n sharck imput/orchestration/langgraph/code/libs/cli/examples/.env.example\"' for reading: No such file or directory\n",
       "lane": "orchestration",
+      "motor_1": "VERIFIED_CLOSED",
+      "motor_3": "VERIFIED_CLOSED",
+      "restored_files": 6,
+      "restored_paths": [
+        "libs/cli/examples/.env.example",
+        "libs/cli/js-examples/.editorconfig",
+        "libs/cli/js-examples/.env.example",
+        "libs/cli/python-monorepo-example/apps/agent/.env.example",
+        "libs/cli/uv-examples/monorepo/apps/agent/.env.example",
+        "libs/cli/uv-examples/simple/.env.example"
+      ],
       "slug": "langgraph",
-      "verdict": "REPAIR_FAILED_CLOSED"
+      "source_commit": "e539ac122f4126f6dd850581c1494948cf620e31",
+      "source_repo": "langchain-ai/langgraph",
+      "verdict": "READY_FOR_PUBLISH"
     }
   ],
-  "schema": "wanted-shark.ignored-publication-repair.v1"
+  "schema": "wanted-shark.ignored-publication-repair.v2"
 }
