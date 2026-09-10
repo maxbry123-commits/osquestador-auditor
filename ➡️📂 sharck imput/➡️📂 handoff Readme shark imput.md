@@ -16,7 +16,8 @@ V1 preservada: `➡️📂 Shack imput/` — referencia histórica, no destruir.
 6. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json`
 7. log propio `SOL-LOG.md | ASTRA-LOG.md | GROK-LOG.md | CLAUDE-LOG.md`
 8. `PARCHE-RECUPERACION-SHARK-IMPUT.md`
-9. este Handoff
+9. `REVIEW-GATE-ASTRA-ENGINEERING.md`
+10. este Handoff
 
 ## Contrato de trabajo — 3 pasos
 1. ANOTAR + ARQUITECTURA + INVENTARIO.
@@ -29,7 +30,7 @@ Catálogo V1: 77.
 GAP residuales: 30.
 No se declara V1 77/77.
 
-## Estado V2
+## Estado V2 comprobado
 Catálogo total documentado: 107 = 77 V1 + 30 nuevos investigados.
 Los 30 nuevos están divididos exactamente en:
 - B01 web/research/capture: 10.
@@ -39,8 +40,14 @@ Los 30 nuevos están divididos exactamente en:
 Workflow: `.github/workflows/sharck-input-v2-components.yml`
 Commit de montaje: `c276f51a56f5c0bc433d2991240c72f14142d464`
 Run inicial: `34514168678`
-Último estado comprobado al escribir este handoff: `QUEUED`; conclusión `null`.
-Por tanto: `MOTORES_MONTADOS`, pero `0/30 VERIFIED_CLOSED` hasta que los state/index/read-back demuestren lo contrario.
+Último estado comprobado: `IN_PROGRESS`; conclusión `null`.
+Jobs B01/B02/B03: los tres `IN_PROGRESS`.
+Gates ya comprobados en los tres jobs:
+- `Partial sparse checkout — NO LFS`: PASS 3/3.
+- `Verify canonical motor blob SHAs`: PASS 3/3.
+- `Execute canonical queue download + extraction motor`: IN_PROGRESS 3/3.
+
+Por tanto: `MOTORES_MONTADOS_Y_EJECUTANDO`, pero todavía `0/30 VERIFIED_CLOSED` hasta que state/index/read-back demuestren resultados individuales.
 
 ## Motores canónicos — INMUTABLES
 Raíz externa de control:
@@ -72,15 +79,20 @@ OSS, comunidad, Hugging Face/labs, alternativas, issues/benchmarks y contradicci
 ASTRA no duplica implementación rutinaria de SOL/CLAUDE.
 
 ## Gate antes de integración
-No iniciar Paso 3 mientras no estén registradas las revisiones M06 ASTRA, M07 CLAUDE y M08 GROK, además del gate que defina el director.
-Una revisión externa adicional puede usar este Handoff, pero al momento de crear este documento no existe evidencia de que un equipo externo haya revisado el proyecto. No atribuir supervisión ni aprobación sin prueba.
+No iniciar Paso 3 mientras no estén registradas las revisiones M06 ASTRA, M07 CLAUDE y M08 GROK, además del gate que defina el director y los estados reales de adquisición.
+`REVIEW-GATE-ASTRA-ENGINEERING.md` contiene la checklist de revisión.
+Una revisión externa adicional puede usar este paquete, pero actualmente no existe evidencia de que un equipo externo haya revisado/aprobado el proyecto. No atribuir supervisión ni aprobación sin prueba.
+
+## Watchdog
+El watchdog horario de ChatGPT/SOL fue actualizado a V2. Lee método/PLAN/STATE/CHECKPOINT/Handoff/Recovery, vigila el run y reanuda desde `resume_from`. No puede saltar el review gate.
 
 ## Contrato de checkpoint
 Cada agente: `READ → CLAIM → RUN → EVIDENCE → CHECKPOINT → READY_FOR_REVIEW`.
-Si encuentra GAP: registrar evidencia, investigar StrategyDelta y continuar otra tarea independiente si existe. No loop CPU infinito; la persistencia + watchdog reanudan el LOOP.
+Si encuentra GAP: registrar evidencia, investigar StrategyDelta y continuar otra tarea independiente si existe. No loop CPU infinito; persistencia + watchdog reanudan el LOOP.
 
 ## Próximo nodo seguro
-1. verificar run `34514168678` y jobs;
-2. actualizar STATE/CHECKPOINT con resultados reales;
-3. ejecutar revisiones independientes M06/M07/M08;
-4. sólo con gate favorable preparar Paso 3 1×1.
+1. finalizar/leer run `34514168678` y state/index por batch;
+2. sincronizar STATE/CHECKPOINT con resultados reales;
+3. M06 ASTRA + M07 CLAUDE + M08 GROK independientes;
+4. gate del director/revisión adicional indicada;
+5. sólo entonces preparar Paso 3 1×1.
