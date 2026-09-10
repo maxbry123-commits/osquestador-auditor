@@ -1,0 +1,17 @@
+{
+  "schema": "sharck-input.acquisition-queue.v2",
+  "batch": "B02",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence",
+  "queue": [
+    {"id":"B02-01","source_repo":"https://github.com/apache/lucene","source_ref":"HEAD","slug":"lucene","publish":true},
+    {"id":"B02-02","source_repo":"https://github.com/castorini/pyserini","source_ref":"HEAD","slug":"pyserini","publish":true},
+    {"id":"B02-03","source_repo":"https://github.com/terrier-org/pyterrier","source_ref":"HEAD","slug":"pyterrier","publish":true},
+    {"id":"B02-04","source_repo":"https://github.com/opensearch-project/OpenSearch","source_ref":"HEAD","slug":"OpenSearch","publish":true},
+    {"id":"B02-05","source_repo":"https://github.com/vespa-engine/vespa","source_ref":"HEAD","slug":"vespa","publish":true},
+    {"id":"B02-06","source_repo":"https://github.com/quickwit-oss/tantivy","source_ref":"HEAD","slug":"tantivy","publish":true},
+    {"id":"B02-07","source_repo":"https://github.com/networkx/networkx","source_ref":"HEAD","slug":"networkx","publish":true},
+    {"id":"B02-08","source_repo":"https://github.com/RDFLib/rdflib","source_ref":"HEAD","slug":"rdflib","publish":true},
+    {"id":"B02-09","source_repo":"https://github.com/rapidfuzz/RapidFuzz","source_ref":"HEAD","slug":"RapidFuzz","publish":true},
+    {"id":"B02-10","source_repo":"https://github.com/ekzhu/datasketch","source_ref":"HEAD","slug":"datasketch","publish":true}
+  ]
+}
