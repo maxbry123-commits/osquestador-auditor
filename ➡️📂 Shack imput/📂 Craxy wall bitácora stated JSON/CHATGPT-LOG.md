@@ -67,7 +67,7 @@
 
 - Releídos handoff, parche y `STATE.json` antes de actuar; ASTRA y GROK continúan sin nodos reclamados.
 - Run `34483843389` terminó `completed/success`, pero su evidencia física fue `candidates=19`, `ready_for_publish=0`, `failed_closed=19`; por tanto NO reparó componentes y NO se contabilizó mejora.
-- Causa verificada en `IGNORED-PUBLICATION-REPAIR.json`: el helper interpretaba rutas emitidas por `git diff --name-status` como strings citados/escapados (`\342...`) y las entregaba literalmente a `git hash-object`, produciendo `No such file or directory`.
+- Causa verificada en `IGNORED-PUBLICATION-REPAIR.json`: el helper interpretaba rutas emitidas por `git diff --name-status` como strings citados/escapados (`\\342...`) y las entregaba literalmente a `git hash-object`, produciendo `No such file or directory`.
 - Reparación aplicada exclusivamente a `repair_ignored_publication.py`: parser de rutas staged cambiado a `git diff --cached --name-only -z` con separación NUL y chequeo separado de cambios no aditivos. Se añadió `git hash-object -- <path>` para proteger rutas que empiezan con guion. Ningún motor canónico fue editado.
 - Commit del helper: `3f03ec86e231673f7ceae293217a9e5850c12bc1`.
 - El push disparó run `34484946622`; ya pasó `Partial sparse checkout — no LFS` y `Verify canonical motors unchanged`; actualmente ejecuta `Restore only missing tracked files through canonical motors`.
@@ -91,3 +91,18 @@
 - ASTRA/GROK no fueron reclamados. Motores canónicos intactos. No force push. No sobrescritura silenciosa.
 
 `NEXT=RUN_34488269513_VERDICT → REMOTE_REAUDIT → ACTUALIZAR_BALANCE_SOLO_CON_BLOB_IDENTITY_VERIFIED → CLASIFICAR_RESTANTES`
+
+## 2026-09-10 — Watchdog T04 / 19 recuperados con read-back
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Releídos handoff, parche y `STATE.json`; SOL conserva ownership de T04 y ASTRA/GROK siguen en `READY_TO_JOIN`.
+- Run `34488269513` terminó `completed/success`; sus 7 steps fueron success: checkout parcial NO LFS, lock de seis motores, restauración, publicación aditiva, re-auditoría remota y cierre.
+- `repair_ignored_publication.py` devolvió `candidates=19`, `ready_for_publish=19`, `failed_closed=0`.
+- Publicación real: commit `72e5a22601ade382975e9fbecd1a8a7caf3a30c6`, sin force; restauró 121 archivos tracked respetando bytes upstream.
+- La re-auditoría contra ese commit devolvió `exact_existing_destinations=19`, `verdict=AUDIT_COMPLETE`; los 19 destinos están registrados en `queues/07-existing-destination-recovery.json` con source commit fijado y `publish=false` para impedir re-publicación ciega.
+- Esta evidencia permite reclasificar esos 19 fallos como recuperados/verificados: balance operativo `47 VERIFIED_CLOSED / 30 FAILED / 0 PENDING`.
+- `STATE.json` actualizado a revision 9; distribución de clases restante NO se inventa: queda `REQUIRES_FRESH_AUDIT_AFTER_19_RECOVERIES`.
+- Motores canónicos intactos. No LFS. No force. No sobrescritura silenciosa. T05 sigue bloqueado porque T04 aún tiene 30 fallos reales.
+
+`NEXT=FRESH_AUDIT_30_REMAINING → SEPARATE_SOURCE_SPECIAL_FILE_GAP_AND_OTHER → REPAIR_ONLY_WITH_CANONICAL_MOTORS_OR_FAIL_CLOSED`
