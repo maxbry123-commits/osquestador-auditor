@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 3699189,
+  "bundle_sha256": "26a77dd422bfff4590094f18b3e1626636086312914a4c874e4541bd67fd8d10",
+  "extracted_tree": {
+    "bytes": 12360660,
+    "files": 1239,
+    "sha256": "1262e8f0af03a73f1eb79a03b38ca6dee76c2d1695944aa4123d26bda597ac4c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 3699189,
+      "name": "yt-dlp.bundle.zip.part-0001",
+      "sha256": "26a77dd422bfff4590094f18b3e1626636086312914a4c874e4541bd67fd8d10"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "yt-dlp",
+  "source_bytes": 12360660,
+  "source_commit": "bbc809a1161d3bfca51fa36f59dda35556ee85a0",
+  "source_files": 1239,
+  "source_ref": "HEAD",
+  "source_repo": "yt-dlp/yt-dlp",
+  "source_tree": {
+    "bytes": 12360660,
+    "files": 1239,
+    "sha256": "1262e8f0af03a73f1eb79a03b38ca6dee76c2d1695944aa4123d26bda597ac4c"
+  }
+}
