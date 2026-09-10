@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 6,
+  "revision": 7,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
@@ -25,7 +25,8 @@
     "M07":{"status":"READY_FOR_CLAUDE_REVIEW"},
     "M08":{"status":"READY_FOR_GROK_REVIEW"},
     "M09":{"status":"NOT_PERFORMED_NO_EVIDENCE"},
-    "M10":{"status":"BLOCKED_BY_REVIEW_GATE"}
+    "M10":{"status":"BLOCKED_BY_REVIEW_GATE"},
+    "M11":{"owner":"SOL","name":"READBACK_XRAY_11_PARTIAL_DESTINATIONS","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]}
   },
   "acquisition_v2": {
     "workflow":".github/workflows/sharck-input-v2-components.yml",
@@ -45,11 +46,18 @@
     "pending":0,
     "semantic_verdict":"GAPS_PENDING"
   },
-  "gap_classes":["DESTINATION_EXISTS","READBACK_TREE_HASH_GAP","SOURCE_SPECIAL_FILE_GAP","WORKFLOW_FALSE_GREEN_FIXED"],
+  "xray_v2": {
+    "initial_failure_classes":{"DESTINATION_EXISTS":6,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":9},
+    "readback_recovery":{"workflow":".github/workflows/sharck-input-v2-readback-recover.yml","runs":[34535896880,34536177351],"destinations_audited":11,"recovered":0,"still_gap":11,"canonical_helper_blob":"91e6e4486692eab314be5c7130d8310d3c855397","result":"ALL_11_PARTIAL_DESTINATION_READBACK_GAP"},
+    "operational_gap_classes":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},
+    "evidence":"📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md"
+  },
+  "gap_classes":["PARTIAL_DESTINATION_READBACK_GAP","SOURCE_SPECIAL_FILE_GAP","WORKFLOW_FALSE_GREEN_FIXED"],
   "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
   "review":{"review_packet":"REVIEW-GATE-ASTRA-ENGINEERING.md","astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
   "watchdog":{"title":"Sharck Input V2 Watchdog","enabled":true,"frequency":"HOURLY","timezone":"America/Bogota","duty":"monitor gaps/reviews and resume from checkpoint"},
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS"},
+  "next_safe_actions":["ASTRA_M06_REVIEW","CLAUDE_M07_REVIEW","GROK_M08_REVIEW","SOL_MONITOR_ONLY_OR_READ_ONLY_GAP_EVIDENCE"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T13:42:00-05:00"
+  "updated_at":"2026-09-10T17:15:00-05:00"
 }
