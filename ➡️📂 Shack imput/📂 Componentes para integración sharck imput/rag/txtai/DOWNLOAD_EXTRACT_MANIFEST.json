@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 33252453,
+  "bundle_sha256": "0bdaea07fdf6898e3e14ebfd51d58efc724e2a628f70d4875376166d7b97cde1",
+  "extracted_tree": {
+    "bytes": 44092440,
+    "files": 633,
+    "sha256": "9c97069be6fbd89f35ad16e67f7c18f4bf2d47939d9d62008eeebad8d7516047"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "txtai.bundle.zip.part-0001",
+      "sha256": "e334b87d91c6bb7ccbedb2fa4b1c47ee9db0974beb0d2c8b24c1ce2202195d0a"
+    },
+    {
+      "bytes": 12582912,
+      "name": "txtai.bundle.zip.part-0002",
+      "sha256": "982a426009149afc100a9f3367943edf29bd8e7f03db2a7869cced00ec17095b"
+    },
+    {
+      "bytes": 8086629,
+      "name": "txtai.bundle.zip.part-0003",
+      "sha256": "4a830c275420c914ca6c19f8403a20576c6a9b9527de22e6b2c12e5fffb90786"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "txtai",
+  "source_bytes": 44092440,
+  "source_commit": "2bae6e4d43a12a778e01adb35b37f3fbe8a8dbe6",
+  "source_files": 633,
+  "source_ref": "HEAD",
+  "source_repo": "neuml/txtai",
+  "source_tree": {
+    "bytes": 44092440,
+    "files": 633,
+    "sha256": "9c97069be6fbd89f35ad16e67f7c18f4bf2d47939d9d62008eeebad8d7516047"
+  }
+}
