@@ -106,3 +106,20 @@
 - Motores canónicos intactos. No LFS. No force. No sobrescritura silenciosa. T05 sigue bloqueado porque T04 aún tiene 30 fallos reales.
 
 `NEXT=FRESH_AUDIT_30_REMAINING → SEPARATE_SOURCE_SPECIAL_FILE_GAP_AND_OTHER → REPAIR_ONLY_WITH_CANONICAL_MOTORS_OR_FAIL_CLOSED`
+
+## 2026-09-10 — Watchdog T04 / residual 30 + auditoría exacta de destinos
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Run residual `34494879182` terminó `completed/success`, con persistencia de `RESIDUAL-GAP-AUDIT.json` y lock de los seis motores canónicos en PASS.
+- Clasificación residual verificada: `30` fallos = `SOURCE_SPECIAL_FILE_GAP=19`, `OTHER=8`, `DESTINATION_EXISTS=2`, `READBACK_TREE_HASH_GAP=1`.
+- Los dos `DESTINATION_EXISTS` son `search/firecrawl` y `code/tree-sitter`.
+- Se creó auditor sidecar `audit_existing_destination_exact.py` y workflow `shack-input-existing-destination-audit.yml`; run `34501468676` pasó checkout NO LFS y motor blob gate, pero cerró failure porque ninguno de los dos destinos coincide exactamente con su manifest.
+- `firecrawl`: manifest source commit `4d9847872f3c8e89ff7080e48778c778c04b3fb3`; archive parts 3/3 hash exacto; expected tree `1872 files / 52345224 bytes`; actual tree `1870 files / 52338361 bytes`. Conclusión: faltan exactamente 2 archivos, candidato a reparación aditiva.
+- `tree-sitter`: manifest source commit `de98c6c970f4c5d3a725ee48199c478090d614af`; archive part hash exacto; expected `616 files / 4340154 bytes`; actual `616 files / 4340153 bytes`. Existe diferencia de contenido de 1 byte; queda explícitamente excluido de overwrite automático.
+- Se creó `repair_firecrawl_additive.py`, que reutiliza `repair_ignored_publication.repair_one()` y por tanto ejecuta `motor_1_extract_only.py` + `motor_3_copy_batches.py` con `COLLISION_POLICY=fail`, valida blobs upstream y sólo permite adiciones.
+- Workflow `shack-input-firecrawl-additive-repair.yml` publicado; run `34501597027` disparado. No se contabiliza recuperación hasta read-back posterior.
+- `STATE.json` actualizado a revision 10. Balance oficial sigue `47 VERIFIED_CLOSED / 30 FAILED / 0 PENDING`.
+- ASTRA/GROK no fueron reclamados. Motores canónicos intactos. No LFS. No force. No sobrescritura silenciosa.
+
+`NEXT=RUN_34501597027_VERDICT → READBACK_FIRECRAWL → ACTUALIZAR_BALANCE_SOLO_SI_EXACTO → AUDITAR_TREE_SITTER_1_BYTE → SEPARAR_8_OTHER → SOURCE_SPECIAL_FILE_GAP_STRATEGY`
