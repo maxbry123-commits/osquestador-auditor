@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 6617240,
+  "bundle_sha256": "a83593e4c91b178a1ffe93967421cc7e12d7d6c414645de7abe814548c153f1f",
+  "extracted_tree": {
+    "bytes": 11972540,
+    "files": 761,
+    "sha256": "cfb8cebce81153e10cdc47e32a2e4b7bf58355b54a2bf4662b67a34c2127769c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 6617240,
+      "name": "pyserini.bundle.zip.part-0001",
+      "sha256": "a83593e4c91b178a1ffe93967421cc7e12d7d6c414645de7abe814548c153f1f"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "pyserini",
+  "source_bytes": 11972540,
+  "source_commit": "b0ad28270848f9b34ca822827bf5f71717255e84",
+  "source_files": 761,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/castorini/pyserini",
+  "source_tree": {
+    "bytes": 11972540,
+    "files": 761,
+    "sha256": "cfb8cebce81153e10cdc47e32a2e4b7bf58355b54a2bf4662b67a34c2127769c"
+  }
+}

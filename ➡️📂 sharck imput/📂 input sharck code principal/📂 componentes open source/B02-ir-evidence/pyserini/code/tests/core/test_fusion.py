@@ -1,0 +1,365 @@
+#
+# Pyserini: Reproducible IR research with sparse and dense representations
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import gzip
+import os
+import random
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+from pyserini.encode import AutoQueryEncoder
+from pyserini.search import get_topics
+from pyserini.search.faiss import FaissSearcher
+from pyserini.search.lucene import LuceneFlatDenseSearcher, LuceneSearcher
+from pyserini.util import compare_trec_files_with_tolerance, download_url
+
+
+def retrieve_and_save_runs(test_obj, searcher, topics_name, searcher_type='bm25', qids=None):
+    """Retrieve search results and save to file."""
+    topics = get_topics(topics_name)
+    random_number = random.randint(0, 1000000)
+    if qids is None:
+        qids = list(topics.keys())[:5]
+    run_path = f'{searcher_type}_{searcher_type}_{random_number}.txt'
+    with open(run_path, 'w') as run_file:
+        for qid in qids:
+            query = topics[qid]['title']
+            if searcher_type == 'bm25':
+                hits = searcher.search(query, k=10)
+            else:  # dense
+                raw_hits = searcher.search(query, k=20)
+                hits = [h for h in raw_hits if h.docid != qid][:10]
+            run_file.writelines(f'{qid} Q0 {hit.docid} {rank} {hit.score:.6f} {searcher_type}_search\n' for rank, hit in enumerate(hits, start=1))
+    # Only assert if test_obj is an instance (has assertTrue method), not a class
+
+    if hasattr(test_obj, 'assertTrue'):
+        test_obj.assertTrue(os.path.exists(run_path), f"{searcher_type} run file not created: {run_path}")
+    else:
+        # For class-level calls, just check and raise if file doesn't exist
+        if not os.path.exists(run_path):
+            raise FileNotFoundError(f"{searcher_type} run file not created: {run_path}")
+
+    return run_path
+
+def run_fusion_on_saved_runs(self, bm25_path, dense_path, method, expected_results, runtag, extra_args='', output_path=None):
+    """Run fusion on saved run files and validate results."""
+    if output_path is None:
+        output_path = self.output_path
+    
+    cmd = [
+        sys.executable, '-m', 'pyserini.fusion',
+        '--method', method,
+        *shlex.split(extra_args),
+        '--runs', bm25_path, dense_path,
+        '--output', output_path,
+        '--runtag', runtag,
+        '--k', '10',
+        '--depth', '1000',
+    ]
+    subprocess.run(cmd, check=True)
+    self.assertTrue(os.path.exists(output_path), f"{method} fusion run file not created: {output_path}")
+
+    with open(output_path, 'r') as f:
+        lines = f.readlines()
+
+    if expected_results:
+        for i, (expected_qid, expected_docid, expected_rank, expected_score) in enumerate(expected_results):
+            if i < len(lines):
+                line = lines[i].strip()
+                parts = line.split()
+                self.assertEqual(len(parts), 6)
+                self.assertEqual(parts[0], expected_qid)
+                self.assertEqual(parts[1], 'Q0')
+                self.assertEqual(parts[2], expected_docid)
+                self.assertEqual(int(parts[3]), expected_rank)
+                self.assertAlmostEqual(float(parts[4]), expected_score, places=4)
+                self.assertEqual(parts[5], runtag)
+
+class TestFusion(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        test_file_dir = os.path.dirname(__file__)
+        cls.resource_dir = os.path.join(os.path.dirname(test_file_dir), 'resources')
+
+        # Initialize searchers and encoder at class level (shared across all tests)
+        cls.encoder = AutoQueryEncoder('BAAI/bge-base-en-v1.5', pooling='cls', l2_norm=True, prefix='Represent this sentence for searching relevant passages:')
+        cls.bm25_searcher = LuceneSearcher.from_prebuilt_index('beir-v1.0.0-arguana.flat')
+        cls.lucene_dense_searcher = LuceneFlatDenseSearcher.from_prebuilt_index('beir-v1.0.0-arguana.bge-base-en-v1.5.flat', encoder='BgeBaseEn15')
+        cls.faiss_dense_searcher_normalized = FaissSearcher.from_prebuilt_index('beir-v1.0.0-arguana.bge-base-en-v1.5', cls.encoder, True)
+        cls.qids = ['test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con02a']
+        cls.long_qids = ['test-sport-tshbmlbscac-con01a']
+        
+        # Generate run files at class level (shared across all tests)
+        cls.bm25_path = retrieve_and_save_runs(cls, cls.bm25_searcher, 'beir-v1.0.0-arguana-test', 'bm25', cls.qids)
+        cls.lucene_flat_dense_path = retrieve_and_save_runs(cls, cls.lucene_dense_searcher, 'beir-v1.0.0-arguana-test', 'lucene_flat_dense', cls.qids)
+        cls.faiss_flat_dense_normalized_path = retrieve_and_save_runs(cls, cls.faiss_dense_searcher_normalized, 'beir-v1.0.0-arguana-test', 'faiss_flat_dense_normalized', cls.qids)
+
+        cls.bm25_path_long = retrieve_and_save_runs(cls, cls.bm25_searcher, 'beir-v1.0.0-arguana-test', 'bm25', cls.long_qids)
+        cls.lucene_flat_dense_path_long = retrieve_and_save_runs(cls, cls.lucene_dense_searcher, 'beir-v1.0.0-arguana-test', 'lucene_flat_dense', cls.long_qids)
+        cls.faiss_flat_dense_normalized_path_long = retrieve_and_save_runs(cls, cls.faiss_dense_searcher_normalized, 'beir-v1.0.0-arguana-test', 'faiss_flat_dense_normalized', cls.long_qids)
+
+        cls.expected_results = {
+            'rrf': [
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03a', 1, 0.03252247488101534),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01b', 2, 0.03200204813108039),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02b', 3, 0.03149801587301587),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03a', 4, 0.03076923076923077),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02a', 5, 0.030330882352941176),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01a', 6, 0.03007688828584351),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01b', 7, 0.03007688828584351),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03b', 8, 0.028991596638655463),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03b', 9, 0.028985507246376812),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01a', 10, 0.01639344262295082),
+            ],
+            'interpolation': [
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01a', 1, 149.4593505),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03a', 2, 49.1152155),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01b', 3, 44.2424875),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02b', 4, 44.1182435),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03a', 5, 41.5627015),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01b', 6, 40.811),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01a', 7, 40.463996),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02a', 8, 39.7919365),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03b', 9, 33.580975),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03b', 10, 33.2027485),
+            ],
+            'average': [
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01a', 1, 149.4593505),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03a', 2, 49.1152155),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01b', 3, 44.2424875),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02b', 4, 44.1182435),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03a', 5, 41.5627015),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01b', 6, 40.811),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01a', 7, 40.463996),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02a', 8, 39.7919365),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03b', 9, 33.580975),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03b', 10, 33.2027485),
+            ],
+            'normalize': [
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03a', 1, 1.1361973700957502),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01b', 2, 1.0801439128220096),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02b', 3, 1.0236731626672213),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con01a', 4, 1.0),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03a', 5, 0.914668969951034),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro02a', 6, 0.9023852508973691),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01a', 7, 0.39388699776179686),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro01b', 8, 0.37685087599339195),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-pro03b', 9, 0.3064502564965106),
+                ('test-culture-ahrtsdlgra-con01a', 'test-culture-ahrtsdlgra-con03b', 10, 0.20806094221452542),
+            ]
+        }
+
+        cls.expected_results_long = {
+            'rrf': [
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03a', 1, 0.03177805800756621),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01b', 2, 0.031754032258064516),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02a', 3, 0.03125763125763126),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03b', 4, 0.031054405392392875),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04a', 5, 0.031024531024531024),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04b', 6, 0.030117753623188408),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02b', 7, 0.028991596638655463),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01a', 8, 0.01639344262295082),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro01b', 9, 0.015151515151515152),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con03b', 10, 0.014925373134328358),
+            ],
+            'interpolation': [
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01a', 1, 313.293762),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01b', 2, 123.4811905),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02a', 3, 115.9562525),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04b', 4, 100.3106235),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03a', 5, 96.617538),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04a', 6, 90.22844),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03b', 7, 89.52266449999999),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro04a', 8, 88.4228975),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02b', 9, 76.0090455),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro01a', 10, 75.683502),
+            ],
+            'average': [
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01a', 1, 313.293762),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01b', 2, 123.4811905),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02a', 3, 115.9562525),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04b', 4, 100.3106235),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03a', 5, 96.617538),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04a', 6, 90.22844),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03b', 7, 89.52266449999999),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro04a', 8, 88.4228975),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02b', 9, 76.0090455),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro01a', 10, 75.683502),
+            ],
+            'normalize': [
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03a', 1, 1.086607319504881),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01a', 2, 1.0),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro03b', 3, 0.9586720309553366),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con01b', 4, 0.8569299856864847),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02a', 5, 0.7658100119231028),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04a', 6, 0.7480911577762183),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro01b', 7, 0.5282379673621154),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con03b', 8, 0.24125180747779343),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-pro02b', 9, 0.1595744680851058),
+                ('test-sport-tshbmlbscac-con01a', 'test-sport-tshbmlbscac-con04b', 10, 0.1576201723584239),
+            ]
+        }
+
+    def setUp(self):
+        self.output_path = 'output_test_fusion.txt'
+
+    def run_fusion(self, input_paths, method, runtag, extra_args=None, output_path=None):
+        if output_path is None:
+            output_path = self.output_path
+
+        cmd = [
+            sys.executable, '-m', 'pyserini.fusion',
+            '--method', method,
+            *(extra_args or []),
+            '--runs', *input_paths,
+            '--output', output_path,
+            '--runtag', runtag,
+        ]
+        subprocess.run(cmd, check=True)
+
+        return output_path
+
+
+    def test_reciprocal_rank_fusion_simple(self):
+        input_paths = [os.path.join(self.resource_dir, 'simple_trec_run_fusion_1.txt'),
+                       os.path.join(self.resource_dir, 'simple_trec_run_fusion_2.txt')]
+        verify_path = os.path.join(self.resource_dir, 'simple_trec_run_rrf_verify.txt')
+
+        self.run_fusion(input_paths, 'rrf', 'test')
+        self.assertTrue(compare_trec_files_with_tolerance(verify_path, self.output_path))
+
+    def test_interpolation_fusion_simple(self):
+        input_paths = [os.path.join(self.resource_dir, 'simple_trec_run_fusion_1.txt'),
+                       os.path.join(self.resource_dir, 'simple_trec_run_fusion_2.txt')]
+        verify_path = os.path.join(self.resource_dir, 'simple_trec_run_interpolation_verify.txt')
+
+        self.run_fusion(input_paths, 'interpolation', 'test', ['--alpha', '0.4'])
+        self.assertTrue(compare_trec_files_with_tolerance(verify_path, self.output_path))
+
+    def test_average_fusion_simple(self):
+        input_paths = [os.path.join(self.resource_dir, 'simple_trec_run_fusion_1.txt'),
+                       os.path.join(self.resource_dir, 'simple_trec_run_fusion_2.txt')]
+        verify_path = os.path.join(self.resource_dir, 'simple_trec_run_average_verify.txt')
+
+        self.run_fusion(input_paths, 'average', 'test')
+        self.assertTrue(compare_trec_files_with_tolerance(verify_path, self.output_path))
+
+    def test_normalize_fusion_simple(self):
+        input_paths = [os.path.join(self.resource_dir, 'simple_trec_run_fusion_1.txt'),
+                       os.path.join(self.resource_dir, 'simple_trec_run_fusion_2.txt')]
+        verify_path = os.path.join(self.resource_dir, 'simple_fusion_normalize_verify.txt')
+
+        self.run_fusion(input_paths, 'normalize', 'test')
+        self.assertTrue(compare_trec_files_with_tolerance(verify_path, self.output_path))
+
+    def test_reciprocal_rank_fusion_complex(self):
+        os.makedirs('tmp', exist_ok=True)
+        urls = [
+            'https://raw.githubusercontent.com/castorini/anserini-data/master/TREC-COVID-covidex-runs/round2/anserini.covid-r2.abstract.qq.bm25.txt.gz',
+            'https://raw.githubusercontent.com/castorini/anserini-data/master/TREC-COVID-covidex-runs/round2/anserini.covid-r2.full-text.qq.bm25.txt.gz',
+            'https://raw.githubusercontent.com/castorini/anserini-data/master/TREC-COVID-covidex-runs/round2/anserini.covid-r2.paragraph.qq.bm25.txt.gz',
+            'https://raw.githubusercontent.com/castorini/anserini-data/master/TREC-COVID-covidex-runs/round2/anserini.covid-r2.fusion1.txt.gz',
+        ]
+        with tempfile.TemporaryDirectory(dir='tmp') as tmpdir:
+            txt_paths = []
+            for url in urls:
+                gz_path = download_url(url, tmpdir, verbose=False)
+                txt_path = gz_path[:-3]
+                with gzip.open(gz_path, 'rb') as src, open(txt_path, 'wb') as dst:
+                    shutil.copyfileobj(src, dst)
+                if not txt_path.endswith('fusion1.txt'):
+                    txt_paths.append(txt_path)
+
+            verify_path = os.path.join(tmpdir, 'anserini.covid-r2.fusion1.txt')
+            output_path = os.path.join(tmpdir, 'output_test_fusion.txt')
+            self.run_fusion(txt_paths, 'rrf', 'reciprocal_rank_fusion_k=60', output_path=output_path)
+            self.assertTrue(compare_trec_files_with_tolerance(verify_path, output_path))
+
+    def test_lucene_flat_dense_rrf_fusion(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.lucene_flat_dense_path, 'rrf', self.expected_results['rrf'], 'fusion_rrf', '--rrf.k 60')
+
+    def test_lucene_flat_dense_interpolation_fusion(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.lucene_flat_dense_path, 'interpolation', self.expected_results['interpolation'], 'fusion_interpolation', '--alpha 0.5')
+
+    def test_lucene_flat_dense_average_fusion(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.lucene_flat_dense_path, 'average', self.expected_results['average'], 'fusion_average')
+
+    def test_lucene_flat_dense_normalize_fusion(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.lucene_flat_dense_path, 'normalize', self.expected_results['normalize'], 'fusion_normalize')
+
+    def test_faiss_flat_dense_rrf_fusion_normalize_distances(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.faiss_flat_dense_normalized_path, 'rrf', self.expected_results['rrf'], 'fusion_rrf', '--rrf.k 60')
+
+    def test_faiss_flat_dense_interpolation_fusion_normalize_distances(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.faiss_flat_dense_normalized_path, 'interpolation', self.expected_results['interpolation'], 'fusion_interpolation', '--alpha 0.5')
+
+    def test_faiss_flat_dense_average_fusion_normalize_distances(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.faiss_flat_dense_normalized_path, 'average', self.expected_results['average'], 'fusion_average')
+
+    def test_faiss_flat_dense_normalize_fusion_normalize_distances(self):
+        run_fusion_on_saved_runs(self, self.bm25_path, self.faiss_flat_dense_normalized_path, 'normalize', self.expected_results['normalize'], 'fusion_normalize')
+
+    def test_lucene_flat_dense_rrf_fusion_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.lucene_flat_dense_path_long, 'rrf', self.expected_results_long['rrf'], 'fusion_rrf', '--rrf.k 60')
+
+    def test_lucene_flat_dense_interpolation_fusion_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.lucene_flat_dense_path_long, 'interpolation', self.expected_results_long['interpolation'], 'fusion_interpolation', '--alpha 0.5')
+
+    def test_lucene_flat_dense_average_fusion_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.lucene_flat_dense_path_long, 'average', self.expected_results_long['average'], 'fusion_average')
+
+    def test_lucene_flat_dense_normalize_fusion_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.lucene_flat_dense_path_long, 'normalize', self.expected_results_long['normalize'], 'fusion_normalize')
+
+    def test_faiss_flat_dense_rrf_fusion_normalize_distances_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.faiss_flat_dense_normalized_path_long, 'rrf', self.expected_results_long['rrf'], 'fusion_rrf', '--rrf.k 60')
+
+    def test_faiss_flat_dense_interpolation_fusion_normalize_distances_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.faiss_flat_dense_normalized_path_long, 'interpolation', self.expected_results_long['interpolation'], 'fusion_interpolation', '--alpha 0.5')
+
+    def test_faiss_flat_dense_average_fusion_normalize_distances_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.faiss_flat_dense_normalized_path_long, 'average', self.expected_results_long['average'], 'fusion_average')
+
+    def test_faiss_flat_dense_normalize_fusion_normalize_distances_long_queries(self):
+        run_fusion_on_saved_runs(self, self.bm25_path_long, self.faiss_flat_dense_normalized_path_long, 'normalize', self.expected_results_long['normalize'], 'fusion_normalize')
+
+    def tearDown(self):
+        # Only clean up test-specific output file
+        if os.path.exists(self.output_path):
+            os.unlink(self.output_path)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up shared run files created at class level
+        if hasattr(cls, 'bm25_path') and os.path.exists(cls.bm25_path):
+            os.unlink(cls.bm25_path)
+        if hasattr(cls, 'lucene_flat_dense_path') and os.path.exists(cls.lucene_flat_dense_path):
+            os.unlink(cls.lucene_flat_dense_path)
+        if hasattr(cls, 'faiss_flat_dense_normalized_path') and os.path.exists(cls.faiss_flat_dense_normalized_path):
+            os.unlink(cls.faiss_flat_dense_normalized_path)
+        if hasattr(cls, 'bm25_path_long') and os.path.exists(cls.bm25_path_long):
+            os.unlink(cls.bm25_path_long)
+        if hasattr(cls, 'lucene_flat_dense_path_long') and os.path.exists(cls.lucene_flat_dense_path_long):
+            os.unlink(cls.lucene_flat_dense_path_long)
+        if hasattr(cls, 'faiss_flat_dense_normalized_path_long') and os.path.exists(cls.faiss_flat_dense_normalized_path_long):
+            os.unlink(cls.faiss_flat_dense_normalized_path_long)
+
+if __name__ == '__main__':
+    unittest.main()
