@@ -42,3 +42,21 @@
 - No se editó ningún motor canónico. No LFS. No force push. No sobrescritura silenciosa.
 
 `NEXT=CLASIFICAR_49_FAILURES → RECUPERAR_DESTINATION_EXISTS_CON_READBACK → ESTRATEGIA_SEPARADA_SOURCE_SPECIAL_FILE_GAP → ESTRATEGIA_SEPARADA_READBACK_TREE_HASH_GAP → SOLO_DESPUES_T05_WIRE_TEST`
+
+## 2026-09-10 — Watchdog T04 / auditoría de GAPs y reparación aditiva
+
+`NODE=T04_ACQUISITION_GAP_RECOVERY`
+
+- Clasificación forense de los 49 FAILED confirmada por workflow: `DESTINATION_EXISTS=17`, `READBACK_TREE_HASH_GAP=5`, `SOURCE_SPECIAL_FILE_GAP=19`, `OTHER=8`.
+- Se creó `acquisition_gap_audit.py` como sidecar de auditoría; no sustituye ni modifica motores.
+- Se corrigieron dos fallos del sidecar/workflow antes de aceptar evidencia: persistencia que borraba outputs durante rebase y resolución de árbol destino mediante ref de rama en Git Data API.
+- Run de auditoría válido `34483405056`: checkout parcial sin LFS PASS, seis blob SHA canónicos PASS, auditoría por Git blob identity PASS, persistencia PASS y read-back de `ACQUISITION-GAP-AUDIT.json` realizado.
+- Hallazgo físico: los destinos parciales no están vacíos. Ejemplos: Vane `235/238`, MindSearch `116/117`, DeerFlow `2650/2653`, Pyright `7561/7584` archivos Git frente a sus fuentes fijadas.
+- Los faltantes coinciden con reglas ignore: Vane perdió `searxng/limiter.toml`, `searxng/settings.yml`, `searxng/uwsgi.ini`; MindSearch perdió `.DS_Store`; DeerFlow perdió `.vscode/*`; Pyright perdió rutas `build/*`. Esto confirma un GAP de publicación de archivos tracked ignorados después de una descarga/extracción correcta.
+- No se consideran idénticos los destinos con `changed_count>0`; quedan fuera de la reparación aditiva inicial.
+- Se creó `repair_ignored_publication.py`: usa `motor_1_extract_only.py` sobre `_archives` existentes con hashes de partes verificados y `motor_3_copy_batches.py` con `COLLISION_POLICY=fail`; sólo después hace `git add -f` de los archivos tracked faltantes. Cualquier colisión o cambio no aditivo falla cerrado y revierte el target.
+- Se creó workflow `.github/workflows/shack-input-ignored-repair.yml`; run `34483843389` activo. Ya pasó checkout NO LFS y lock de motores; está ejecutando restauración canónica y luego hará publicación sin force + auditoría remota por blob SHA.
+- `STATE.json` actualizado a revision 6. El balance oficial sigue `28 VERIFIED_CLOSED / 49 FAILED` hasta que el run de reparación cierre y el read-back posterior confirme una mejora; T05 continúa bloqueado.
+- ASTRA y GROK no fueron reclamados ni modificados. SOL mantiene ownership exclusivo de `T04_ACQUISITION_GAP_RECOVERY`.
+
+`NEXT=ESPERAR_VEREDICTO_RUN_34483843389 → READBACK_REAUDIT → ACTUALIZAR_BALANCE_SI_Y_SOLO_SI_VERIFICADO → DESPUES_TRATAR_CHANGED_COUNT_Y_SOURCE_SPECIAL_FILE_GAP`
