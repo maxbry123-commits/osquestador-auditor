@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2978938,
+  "bundle_sha256": "8df33669e3ba6b75c1d3555314927bb92f3c52ddb84e0d98dabbeda1ea2a9e2b",
+  "extracted_tree": {
+    "bytes": 10307221,
+    "files": 249,
+    "sha256": "b380c87591f79196cfddbb09419cdf02d6fe751426a3e86401ce40b5c0a98401"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2978938,
+      "name": "pyterrier.bundle.zip.part-0001",
+      "sha256": "8df33669e3ba6b75c1d3555314927bb92f3c52ddb84e0d98dabbeda1ea2a9e2b"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "pyterrier",
+  "source_bytes": 10307221,
+  "source_commit": "9230fe5dc85358027ecda53d330a542e41a270cd",
+  "source_files": 249,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/terrier-org/pyterrier",
+  "source_tree": {
+    "bytes": 10307221,
+    "files": 249,
+    "sha256": "b380c87591f79196cfddbb09419cdf02d6fe751426a3e86401ce40b5c0a98401"
+  }
+}

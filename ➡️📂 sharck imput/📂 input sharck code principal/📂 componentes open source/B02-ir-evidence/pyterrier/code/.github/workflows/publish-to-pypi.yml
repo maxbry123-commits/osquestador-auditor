@@ -1,0 +1,55 @@
+# follows https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+name: Publish Python 🐍  distributions 📦 to PyPI/TestPyPI
+
+on: 
+  workflow_dispatch:
+    inputs:
+      releasetype:
+        description: "Is this a 'release' or a 'test'?" 
+        required: true
+        default: 'test'
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Display phase
+      run: echo "Deploying "${{github.event.inputs.releasetype}}" $INPUT_RELEASETYPE to PyPI"
+
+    - uses: actions/checkout@v6
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.9
+
+    - name: Install build tool
+      run: pip install build
+
+    - name: Amend version for test release
+      if: github.event.inputs.releasetype == 'test'
+      run: |
+        export PYTERRIER_VERSION_SUFFIX=".`date +%s`"
+        sed -Ei "1 s/'\$/$PYTERRIER_VERSION_SUFFIX'/g" pyterrier/__init__.py
+        head -n 1 pyterrier/__init__.py
+
+    - name: Build source tarball
+      run: python -m build
+  
+    - name: Publish distribution 📦 to Test PyPI
+      if: github.event.inputs.releasetype == 'test'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.test_pypi_password }}
+        repository-url: https://test.pypi.org/legacy/
+
+    - name: Publish distribution 📦 to PyPI
+      if: github.event.inputs.releasetype == 'release'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.pypi_password }}

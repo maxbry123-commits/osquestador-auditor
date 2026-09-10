@@ -1,0 +1,15 @@
+#following https://github.com/databricks/koalas/pull/889/files
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - openjdk
+  - python=3.12
+  - libstdcxx-ng>=13
+  - libgcc-ng>=13
+  - icu<78
+  - pip
+  - pip:
+    -  ../[all]
+    - -r ./requirements.txt
+    - -r ./extensions.txt
