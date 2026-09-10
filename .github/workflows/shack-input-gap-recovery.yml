@@ -92,8 +92,6 @@ jobs:
           set -euo pipefail
           git config user.name 'wanted-shark-watchdog'
           git config user.email 'wanted-shark-watchdog@users.noreply.github.com'
-          git fetch origin main
-          git rebase origin/main || { git rebase --abort || true; git reset --hard origin/main; }
           for path in \
             '➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/ACQUISITION-GAP-AUDIT.json' \
             '➡️📂 Shack imput/➡️📂 shart imput code Run/queues/07-existing-destination-recovery.json' \
@@ -107,9 +105,10 @@ jobs:
           fi
           git commit -m 'chore(shack-input): persist acquisition gap recovery evidence'
           for attempt in 1 2 3; do
-            if git push origin HEAD:main; then exit 0; fi
             git fetch origin main
-            git rebase origin/main
+            if git rebase origin/main && git push origin HEAD:main; then exit 0; fi
+            git rebase --abort || true
+            sleep 2
           done
           echo PERSISTENCE_FAILURE
           exit 42
