@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 9,
+  "revision": 10,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -15,7 +15,7 @@
     {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
     {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
-    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622,"upstream_byte_preserving_repair_run":34488269513},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"GAPS_PENDING_REPAIR_ACTIVE","workflow_run_initial":34470498878,"workflow_run_optimized":34470821525,"gap_audit_run":34483405056,"ignored_repair_run":34483843389,"nul_safe_repair_run":34484946622,"upstream_byte_preserving_repair_run":34488269513,"residual_gap_audit_run":34494879182,"existing_destination_exact_audit_run":34501468676,"firecrawl_additive_repair_run":34501597027},
     {"id":"T05","name":"wire/test integracion","status":"PENDING_BLOCKED_BY_T04"},
     {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
@@ -31,13 +31,16 @@
     "ignored_publication_repair":{"workflow":".github/workflows/shack-input-ignored-repair.yml","run_id":34483843389,"status":"COMPLETED_SUCCESS_BUT_0_REPAIRED","candidates":19,"ready_for_publish":0,"failed_closed":19,"finding":"HELPER_PATH_PARSING_QUOTED_GIT_PATHS","motor_integrity":"PASS_NO_CANONICAL_MOTOR_EDIT"},
     "nul_safe_repair":{"run_id":34484946622,"status":"COMPLETED_FAILURE_AT_PUBLICATION_GATE","helper_commit":"3f03ec86e231673f7ceae293217a9e5850c12bc1","candidates":19,"ready_for_publish":19,"failed_closed":0,"finding":"GIT_DIFF_CHECK_REJECTED_LEGITIMATE_UPSTREAM_TRAILING_WHITESPACE","motor_blob_gate":"PASS","publication":"NOT_PERSISTED","remote_reaudit":"SKIPPED"},
     "upstream_byte_preserving_repair":{"run_id":34488269513,"status":"COMPLETED_SUCCESS_REMOTE_REAUDIT_PASS","workflow_commit":"6038a3e6e065c78efe354236a05b4a5aff0d9558","repair_commit":"72e5a22601ade382975e9fbecd1a8a7caf3a30c6","post_audit_commit":"12e045a2e","candidates":19,"ready_for_publish":19,"failed_closed":0,"exact_existing_destinations":19,"change":"REPLACE_WHITESPACE_STYLE_GATE_WITH_ADDITIVE_PATH_ALLOWLIST_AND_NO_DELETE_GATE","policy":"PRESERVE_SOURCE_BYTES + MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + NO_DELETE + COMPONENT_PATH_ALLOWLIST + NO_FORCE + REMOTE_REAUDIT","motor_blob_gate":"PASS"},
+    "residual_gap_audit":{"run_id":34494879182,"status":"COMPLETED_SUCCESS_PUBLISHED","remaining_failed":30,"remaining_failure_classes":{"DESTINATION_EXISTS":2,"OTHER":8,"READBACK_TREE_HASH_GAP":1,"SOURCE_SPECIAL_FILE_GAP":19},"motor_blob_gate":"PASS"},
+    "existing_destination_exact_audit":{"run_id":34501468676,"status":"COMPLETED_FAILURE_GAPS_CONFIRMED","targets":2,"verified":0,"motor_blob_gate":"PASS","firecrawl":{"expected_files":1872,"actual_files":1870,"archive_parts_ok":true,"finding":"2_FILES_MISSING_ADDITIVE_CANDIDATE"},"tree-sitter":{"expected_files":616,"actual_files":616,"expected_bytes":4340154,"actual_bytes":4340153,"archive_parts_ok":true,"finding":"CONTENT_MISMATCH_1_BYTE_NO_AUTO_OVERWRITE"}},
+    "firecrawl_additive_repair":{"run_id":34501597027,"status":"QUEUED_OR_RUNNING","policy":"MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + ADDITIVE_ONLY + NO_DELETE + NO_FORCE","expected_missing_files":2},
     "verified_closed":47,
     "failed":30,
     "pending":0,
-    "remaining_failure_classification":"REQUIRES_FRESH_AUDIT_AFTER_19_RECOVERIES",
-    "status":"GAPS_PENDING_19_RECOVERED_NO_BLIND_RETRY"
+    "remaining_failure_classification":"SOURCE_SPECIAL_FILE_GAP=19; OTHER=8; READBACK_TREE_HASH_GAP=1; DESTINATION_EXISTS firecrawl targeted additive repair + tree-sitter content mismatch",
+    "status":"GAPS_PENDING_TARGETED_REPAIR_ACTIVE"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T10:16:33-05:00"
+  "updated_at":"2026-09-10T11:23:00-05:00"
 }
