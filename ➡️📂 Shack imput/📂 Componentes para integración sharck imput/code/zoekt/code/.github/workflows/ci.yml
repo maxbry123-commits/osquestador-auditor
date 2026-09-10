@@ -1,0 +1,102 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+name: CI
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: alpine:3
+    steps:
+      - name: add dependencies
+        # zstd for faster actions/cache
+        # tar needed for actions/cache (busybox tar is incompatible)
+        # git for a native checkout (also needed in tests)
+        run: apk add zstd git tar
+
+      - name: checkout
+        uses: actions/checkout@v7
+
+      - name: setup go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Cache ctags
+        uses: actions/cache@v6
+        with:
+          path: |
+            /usr/bin/ctags
+            /usr/bin/universal-ctags
+          key: ${{ runner.os }}-ctags-${{ hashFiles('install-ctags-alpine.sh') }}
+
+      - name: install ctags
+        run: |
+          if [ ! -f /usr/bin/ctags ]; then
+            ./install-ctags-alpine.sh
+          fi
+
+      - name: test
+        run: go test ./...
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+
+  shfmt:
+    name: shfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: reviewdog/action-shfmt@v1.0.4
+        with:
+          filter_mode: "nofilter"
+          fail_on_error: "true"
+          shfmt_flags: "-i 2 -ci -bn"
+
+  lint-protos:
+    name: "buf lint"
+    runs-on: ubuntu-latest
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v6
+      # Install the `buf` CLI
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+      # Lint your Protobuf sources
+      - run: .github/workflows/buf-lint-check.sh
+
+  format-protos:
+    name: "buf format"
+    runs-on: ubuntu-latest
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v6
+      # Install the `buf` CLI
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+      # Check to see if the Protobuf sources are formatted
+      - run: .github/workflows/buf-format-check.sh
+
+  generate-protos:
+    name: "buf generate"
+    runs-on: ubuntu-latest
+    steps:
+      # Run `git checkout`
+      - uses: actions/checkout@v6
+      # Install the `buf` CLI
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+      # Check if the generated code is up-to-date
+      - run: .github/workflows/buf-generate-check.sh
+

@@ -1,0 +1,307 @@
+// Copyright 2016 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Command zoekt-index indexes a directory of files.
+package main
+
+import (
+	"encoding/json"
+	"flag"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"runtime/pprof"
+	"strings"
+
+	"go.uber.org/automaxprocs/maxprocs"
+
+	"github.com/sourcegraph/zoekt/cmd"
+	"github.com/sourcegraph/zoekt/ignore"
+	"github.com/sourcegraph/zoekt/index"
+	"github.com/sourcegraph/zoekt/internal/tenant"
+)
+
+type fileInfo struct {
+	name      string
+	size      int64
+	isSymlink bool
+}
+
+type fileAggregator struct {
+	ignoreDirs map[string]struct{}
+	ignore     *ignore.Matcher
+	root       string
+	sizeMax    int64
+	sink       chan fileInfo
+}
+
+func (a *fileAggregator) add(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if info.IsDir() {
+		base := filepath.Base(path)
+		if _, ok := a.ignoreDirs[base]; ok {
+			return filepath.SkipDir
+		}
+	}
+	if path != a.root {
+		rel, err := filepath.Rel(a.root, path)
+		if err != nil {
+			return err
+		}
+		if a.ignore.Match(filepath.ToSlash(rel)) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+	}
+
+	mode := info.Mode()
+	if mode.IsRegular() || mode&os.ModeSymlink != 0 {
+		a.sink <- fileInfo{
+			name:      path,
+			size:      info.Size(),
+			isSymlink: mode&os.ModeSymlink != 0,
+		}
+	}
+	return nil
+}
+
+func main() {
+	cpuProfile := flag.String("cpu_profile", "", "write cpu profile to file")
+	ignoreDirs := flag.String("ignore_dirs", ".git,.hg,.svn", "comma separated list of directories to ignore.")
+	metaFile := flag.String("meta", "", "path to .meta JSON file with repository description")
+	flag.Parse()
+
+	if flag.NArg() == 0 {
+		fmt.Fprintf(flag.CommandLine.Output(), "USAGE: %s [options] PATHS...\n", filepath.Base(os.Args[0]))
+		fmt.Fprintln(flag.CommandLine.Output(), "Options:")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	// Tune GOMAXPROCS to match Linux container CPU quota.
+	_, _ = maxprocs.Set()
+
+	opts := cmd.OptionsFromFlags()
+	if *cpuProfile != "" {
+		f, err := os.Create(*cpuProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			log.Fatal(err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	ignoreDirMap := map[string]struct{}{}
+	if *ignoreDirs != "" {
+		dirs := strings.SplitSeq(*ignoreDirs, ",")
+		for d := range dirs {
+			d = strings.TrimSpace(d)
+			if d != "" {
+				ignoreDirMap[d] = struct{}{}
+			}
+		}
+	}
+
+	if *metaFile != "" {
+		// Read and parse the .meta JSON file into opts.RepositoryDescription
+		data, err := os.ReadFile(*metaFile)
+		if err != nil {
+			log.Fatalf("failed to read .meta file %s: %v", *metaFile, err)
+		}
+		if err := json.Unmarshal(data, &opts.RepositoryDescription); err != nil {
+			log.Fatalf("failed to decode .meta file %s: %v", *metaFile, err)
+		}
+	}
+
+	if err := checkDuplicateShardPrefixes(flag.Args(), *opts); err != nil {
+		log.Fatal(err)
+	}
+
+	for _, arg := range flag.Args() {
+		opts.RepositoryDescription.Source = arg
+		if err := indexArg(arg, *opts, ignoreDirMap); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func checkDuplicateShardPrefixes(args []string, opts index.Options) error {
+	seen := make(map[string]string, len(args))
+	for _, arg := range args {
+		prefix, err := shardPrefix(arg, opts)
+		if err != nil {
+			return err
+		}
+		if previous, ok := seen[prefix]; ok {
+			return fmt.Errorf("cannot index %q and %q in one invocation: both use shard prefix %q, so the latter would overwrite the former", previous, arg, prefix)
+		}
+		seen[prefix] = arg
+	}
+	return nil
+}
+
+func shardPrefix(arg string, opts index.Options) (string, error) {
+	if opts.ShardPrefixOverride != "" {
+		return opts.ShardPrefixOverride, nil
+	}
+	if tenant.UseIDBasedShardNames() {
+		return fmt.Sprintf("%09d_%09d", opts.RepositoryDescription.TenantID, opts.RepositoryDescription.ID), nil
+	}
+	if opts.RepositoryDescription.Name != "" {
+		return opts.RepositoryDescription.Name, nil
+	}
+
+	dir, err := filepath.Abs(filepath.Clean(arg))
+	if err != nil {
+		return "", err
+	}
+	return filepath.Base(dir), nil
+}
+
+func indexArg(arg string, opts index.Options, ignore map[string]struct{}) error {
+	dir, err := filepath.Abs(filepath.Clean(arg))
+	if err != nil {
+		return err
+	}
+	ignoreMatcher, err := newIgnoreMatcher(dir)
+	if err != nil {
+		return err
+	}
+
+	if opts.RepositoryDescription.Name == "" {
+		opts.RepositoryDescription.Name = filepath.Base(dir)
+	}
+	builder, err := index.NewBuilder(opts)
+	if err != nil {
+		return err
+	}
+	// we don't need to check error, since we either already have an error, or
+	// we returning the first call to builder.Finish.
+	defer builder.Finish() // nolint:errcheck
+
+	branches := make([]string, 0, len(opts.RepositoryDescription.Branches))
+	for _, branch := range opts.RepositoryDescription.Branches {
+		branches = append(branches, branch.Name)
+	}
+
+	comm := make(chan fileInfo, 100)
+	agg := fileAggregator{
+		ignoreDirs: ignore,
+		ignore:     ignoreMatcher,
+		root:       dir,
+		sink:       comm,
+		sizeMax:    int64(opts.SizeMax),
+	}
+
+	go func() {
+		if err := filepath.Walk(dir, agg.add); err != nil {
+			log.Fatal(err)
+		}
+		close(comm)
+	}()
+
+	for f := range comm {
+		displayName := strings.TrimPrefix(f.name, dir+"/")
+		if f.size > int64(opts.SizeMax) && !opts.IgnoreSizeMax(displayName) {
+			if err := builder.Add(index.Document{
+				Name:       displayName,
+				Branches:   branches,
+				SkipReason: index.SkipReasonTooLarge,
+			}); err != nil {
+				return err
+			}
+			continue
+		}
+		var content []byte
+		if f.isSymlink {
+			target, err := os.Readlink(f.name)
+			if err != nil {
+				return err
+			}
+			content = []byte(target)
+		} else {
+			var err error
+			content, err = os.ReadFile(f.name)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err := builder.Add(index.Document{
+			Name:     displayName,
+			Content:  content,
+			Branches: branches,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return builder.Finish()
+}
+
+func newIgnoreMatcher(root string) (*ignore.Matcher, error) {
+	rootInfo, err := os.Lstat(root)
+	if err != nil {
+		return nil, err
+	}
+	if !rootInfo.IsDir() {
+		return &ignore.Matcher{}, nil
+	}
+
+	sourcegraphDir := filepath.Join(root, ".sourcegraph")
+	info, err := os.Lstat(sourcegraphDir)
+	if os.IsNotExist(err) {
+		return &ignore.Matcher{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	// Do not resolve a symlinked .sourcegraph directory.
+	if !info.IsDir() {
+		return &ignore.Matcher{}, nil
+	}
+
+	ignorePath := filepath.Join(root, ignore.IgnoreFile)
+	info, err = os.Lstat(ignorePath)
+	if os.IsNotExist(err) {
+		return &ignore.Matcher{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	// Ignore files must be regular files; in particular, do not follow symlinks.
+	if !info.Mode().IsRegular() {
+		return &ignore.Matcher{}, nil
+	}
+
+	f, err := os.Open(ignorePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	matcher, err := ignore.ParseIgnoreFile(f)
+	if err != nil {
+		return nil, fmt.Errorf("parse %s: %w", ignorePath, err)
+	}
+	return matcher, nil
+}

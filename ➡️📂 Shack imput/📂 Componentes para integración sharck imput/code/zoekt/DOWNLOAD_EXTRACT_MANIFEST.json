@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 932962,
+  "bundle_sha256": "b6204b133d1cbbea58e42dbbcdbbefe73a509860f1cd62481935336b968d5c78",
+  "extracted_tree": {
+    "bytes": 3693520,
+    "files": 345,
+    "sha256": "b825aff1c4681ca7553daa852da7168a5c29a7e85e1c8f723f34777183423b82"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 932962,
+      "name": "zoekt.bundle.zip.part-0001",
+      "sha256": "b6204b133d1cbbea58e42dbbcdbbefe73a509860f1cd62481935336b968d5c78"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "zoekt",
+  "source_bytes": 3693520,
+  "source_commit": "3fd430410e3ff5e17ecf1f8327f0b36b00a7a18d",
+  "source_files": 345,
+  "source_ref": "HEAD",
+  "source_repo": "sourcegraph/zoekt",
+  "source_tree": {
+    "bytes": 3693520,
+    "files": 345,
+    "sha256": "b825aff1c4681ca7553daa852da7168a5c29a7e85e1c8f723f34777183423b82"
+  }
+}
