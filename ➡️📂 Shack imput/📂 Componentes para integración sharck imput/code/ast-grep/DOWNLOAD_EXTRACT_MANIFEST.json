@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 741591,
+  "bundle_sha256": "1166df309a8e82724e2db7ddf2412ccae5f07964f44206f9cdd0b2b1f7e04fa1",
+  "extracted_tree": {
+    "bytes": 2954513,
+    "files": 320,
+    "sha256": "690789b05e689746b4749732158102dc28363d9a72668d9ab2090f0e83fc2150"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 741591,
+      "name": "ast-grep.bundle.zip.part-0001",
+      "sha256": "1166df309a8e82724e2db7ddf2412ccae5f07964f44206f9cdd0b2b1f7e04fa1"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ast-grep",
+  "source_bytes": 2954513,
+  "source_commit": "fc2b1530db74de49131b725221de98036a552a9f",
+  "source_files": 320,
+  "source_ref": "HEAD",
+  "source_repo": "ast-grep/ast-grep",
+  "source_tree": {
+    "bytes": 2954513,
+    "files": 320,
+    "sha256": "690789b05e689746b4749732158102dc28363d9a72668d9ab2090f0e83fc2150"
+  }
+}
