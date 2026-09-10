@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 24117357,
+  "bundle_sha256": "ed1ee077d786569d6f5370ee19392b104c265050ccc596ea0573ed669e907897",
+  "extracted_tree": {
+    "bytes": 47600598,
+    "files": 4845,
+    "sha256": "e310730c3eab76399c5e7f4df153cabb0623b0b0eee28f8b1aa195620ac0e44f"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "semantic-kernel.bundle.zip.part-0001",
+      "sha256": "16b0282d1d7ab2a5a699030229064f133964f59ab7609b7b9c12a7e45e209042"
+    },
+    {
+      "bytes": 11534445,
+      "name": "semantic-kernel.bundle.zip.part-0002",
+      "sha256": "fd2b0c1bf24b9411cf4b99b0cb488f4ef9d3b13153b45d075fbbc61e49fb3694"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "semantic-kernel",
+  "source_bytes": 47600598,
+  "source_commit": "35511712230dc6ccf16cea08de0a7dc85e563640",
+  "source_files": 4845,
+  "source_ref": "HEAD",
+  "source_repo": "microsoft/semantic-kernel",
+  "source_tree": {
+    "bytes": 47600598,
+    "files": 4845,
+    "sha256": "e310730c3eab76399c5e7f4df153cabb0623b0b0eee28f8b1aa195620ac0e44f"
+  }
+}
