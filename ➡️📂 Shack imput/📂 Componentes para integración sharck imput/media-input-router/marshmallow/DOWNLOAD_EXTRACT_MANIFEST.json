@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 331290,
+  "bundle_sha256": "5d8e643a60edc3e0611ec045d2e7b8034b417771a9cc13d2b4446bd948cfa047",
+  "extracted_tree": {
+    "bytes": 1149687,
+    "files": 103,
+    "sha256": "9286189c464c26178fb98840353ca8ce48e57f638b50f7ffb23088ab78ac8388"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 331290,
+      "name": "marshmallow.bundle.zip.part-0001",
+      "sha256": "5d8e643a60edc3e0611ec045d2e7b8034b417771a9cc13d2b4446bd948cfa047"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "marshmallow",
+  "source_bytes": 1149687,
+  "source_commit": "d73848e5a5e108ae64bcd313079206acba2aca80",
+  "source_files": 103,
+  "source_ref": "HEAD",
+  "source_repo": "marshmallow-code/marshmallow",
+  "source_tree": {
+    "bytes": 1149687,
+    "files": 103,
+    "sha256": "9286189c464c26178fb98840353ca8ce48e57f638b50f7ffb23088ab78ac8388"
+  }
+}
