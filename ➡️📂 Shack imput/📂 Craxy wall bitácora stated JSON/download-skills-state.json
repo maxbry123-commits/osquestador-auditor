@@ -1,0 +1,301 @@
+{
+  "created_at": 1789039569,
+  "items": {
+    "skills-01": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 3950441,
+        "bundle_sha256": "767665edd939484ae3c5aa3ac5073925dca389cbc7d2993afa2368d44f474d08",
+        "elapsed_seconds": 15.58,
+        "extracted_tree": {
+          "bytes": 10976962,
+          "files": 419,
+          "sha256": "4b8075110b47461de6c24e3ca4b0b06a7627f2dfc326a69e80d78c8d354b0790"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 3950441,
+            "name": "anthropic-skills.bundle.zip.part-0001",
+            "sha256": "767665edd939484ae3c5aa3ac5073925dca389cbc7d2993afa2368d44f474d08"
+          }
+        ],
+        "publish": {
+          "commit": "886117708f96228ab00ee65629d38989df9b16df",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "anthropic-skills",
+        "source_bytes": 10976962,
+        "source_commit": "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f",
+        "source_files": 419,
+        "source_ref": "HEAD",
+        "source_repo": "anthropics/skills",
+        "source_tree": {
+          "bytes": 10976962,
+          "files": 419,
+          "sha256": "4b8075110b47461de6c24e3ca4b0b06a7627f2dfc326a69e80d78c8d354b0790"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "anthropic-skills",
+      "source_repo": "anthropics/skills",
+      "status": "VERIFIED_CLOSED"
+    },
+    "skills-02": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 702590,
+        "bundle_sha256": "3ab59622603c549c655a73aee0c1d616f2b2c742985d98ba5f97096f8751796d",
+        "elapsed_seconds": 14.26,
+        "extracted_tree": {
+          "bytes": 1776245,
+          "files": 203,
+          "sha256": "e485bbd3f9e83f5a67237245bf5f15f4a6a1bf5c147e45bf9481eb4479e3496f"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 702590,
+            "name": "huggingface-skills.bundle.zip.part-0001",
+            "sha256": "3ab59622603c549c655a73aee0c1d616f2b2c742985d98ba5f97096f8751796d"
+          }
+        ],
+        "publish": {
+          "commit": "a8c47f29765b0fa6a95984fe6ce6e0daef94532a",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "huggingface-skills",
+        "source_bytes": 1776245,
+        "source_commit": "f3186efbbc322121eb5d0f31e8a1d669ee961159",
+        "source_files": 203,
+        "source_ref": "HEAD",
+        "source_repo": "huggingface/skills",
+        "source_tree": {
+          "bytes": 1776245,
+          "files": 203,
+          "sha256": "e485bbd3f9e83f5a67237245bf5f15f4a6a1bf5c147e45bf9481eb4479e3496f"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "huggingface-skills",
+      "source_repo": "huggingface/skills",
+      "status": "VERIFIED_CLOSED"
+    },
+    "skills-03": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.github/plugins/microsoft-foundry/skills/foundry-governance,.github/plugins/microsoft-foundry/skills/foundry-hosted-agents,.github/plugins/microsoft-foundry/skills/foundry-iq-knowledge-bases,.github/plugins/microsoft-foundry/skills/foundry-managed-skills,.github/plugins/microsoft-foundry/skills/foundry-memory,.github/plugins/microsoft-foundry/skills/foundry-models,.github/plugins/microsoft-foundry/skills/foundry-observability,.github/plugins/microsoft-foundry/skills/foundry-projects-resources,.github/plugins/microsoft-foundry/skills/foundry-toolboxes,.github/plugins/microsoft-foundry/skills/foundry-workflows,.github/plugins/microsoft-foundry/skills/microsoft-foundry,.github/skills/agent-framework-azure-ai-py,.github/skills/azure-ai-contentsafety-py,.github/skills/azure-ai-contentunderstanding-py,.github/skills/azure-ai-language-conversations-py,.github/skills/azure-ai-ml-py,.github/skills/azure-ai-projects-py,.github/skills/azure-ai-textanalytics-py,.github/skills/azure-ai-transcription-py,.github/skills/azure-ai-translation-document-py,.github/skills/azure-ai-translation-text-py,.github/skills/azure-ai-vision-imageanalysis-py,.github/skills/azure-ai-voicelive-py,.github/skills/azure-appconfiguration-py,.github/skills/azure-containerregistry-py,.github/skills/azure-cosmos-db-py,.github/skills/azure-cosmos-py,.github/skills/azure-cosmos-rust,.github/skills/azure-data-tables-py,.github/skills/azure-eventgrid-py\n",
+      "slug": "microsoft-skills",
+      "source_repo": "microsoft/skills",
+      "status": "FAILED"
+    },
+    "skills-04": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 1870242,
+        "bundle_sha256": "e2b94c87f9e188437c76b5a6b2ddf1edc55aad153d781dd6f1cd91048cf46270",
+        "elapsed_seconds": 15.62,
+        "extracted_tree": {
+          "bytes": 4596024,
+          "files": 783,
+          "sha256": "091849f79137fd814d94abfb69a46da3c5392574a04000a08b2df9d49dbe4c9e"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 1870242,
+            "name": "openai-skills.bundle.zip.part-0001",
+            "sha256": "e2b94c87f9e188437c76b5a6b2ddf1edc55aad153d781dd6f1cd91048cf46270"
+          }
+        ],
+        "publish": {
+          "commit": "12af0ff0e80049cf5ae6e5152a84dc71cb9ac141",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "openai-skills",
+        "source_bytes": 4596024,
+        "source_commit": "49f948faa9258a0c61caceaf225e179651397431",
+        "source_files": 783,
+        "source_ref": "HEAD",
+        "source_repo": "openai/skills",
+        "source_tree": {
+          "bytes": 4596024,
+          "files": 783,
+          "sha256": "091849f79137fd814d94abfb69a46da3c5392574a04000a08b2df9d49dbe4c9e"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "openai-skills",
+      "source_repo": "openai/skills",
+      "status": "VERIFIED_CLOSED"
+    },
+    "skills-05": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [remote rejected]     HEAD -> main (cannot lock ref 'refs/heads/main': is at 8c85ffba1bc205864cba6931a4c29158617e90f6 but expected 533b4b89d5582342e422aa9340495495b51a060a)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\n\n",
+      "slug": "awesome-copilot",
+      "source_repo": "github/awesome-copilot",
+      "status": "FAILED"
+    },
+    "skills-06": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:AGENTS.md\n",
+      "slug": "toolhive",
+      "source_repo": "stacklok/toolhive",
+      "status": "FAILED"
+    },
+    "skills-07": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 2268051,
+        "bundle_sha256": "2fa1837b61e764cb9e13fb5e513710425337d8816bbc97e1bdb3c8b161514281",
+        "elapsed_seconds": 14.2,
+        "extracted_tree": {
+          "bytes": 13036847,
+          "files": 925,
+          "sha256": "76f8d82f7e8e39d44d53d7e2f26e38b28ea1de5a590596fec3958036e61bab7c"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 2268051,
+            "name": "toolhive-catalog.bundle.zip.part-0001",
+            "sha256": "2fa1837b61e764cb9e13fb5e513710425337d8816bbc97e1bdb3c8b161514281"
+          }
+        ],
+        "publish": {
+          "commit": "e14befc8a1f9363c4c25e8d445dfbad84d33bd40",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "toolhive-catalog",
+        "source_bytes": 13036847,
+        "source_commit": "c3805418495146577e192aecb6f1de1c924cc9e6",
+        "source_files": 925,
+        "source_ref": "HEAD",
+        "source_repo": "stacklok/toolhive-catalog",
+        "source_tree": {
+          "bytes": 13036847,
+          "files": 925,
+          "sha256": "76f8d82f7e8e39d44d53d7e2f26e38b28ea1de5a590596fec3958036e61bab7c"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "toolhive-catalog",
+      "source_repo": "stacklok/toolhive-catalog",
+      "status": "VERIFIED_CLOSED"
+    },
+    "skills-08": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "slug": "mcp-registry",
+      "source_repo": "modelcontextprotocol/registry",
+      "status": "FAILED"
+    },
+    "skills-09": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md\n",
+      "slug": "skills-registry",
+      "source_repo": "nikships/skills-registry",
+      "status": "FAILED"
+    },
+    "skills-10": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 Shack imput/\ud83d\udcc2 Componentes para integraci\u00f3n sharck imput/skills/skill-hub\n",
+      "slug": "skill-hub",
+      "source_repo": "yaogdu/skill-hub",
+      "status": "FAILED"
+    },
+    "skills-11": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                      ^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 42, in acquire\n    run(['git','fetch','--depth=1','--filter=blob:none','origin',SOURCE_REF],d); run(['git','checkout','-q','--detach','FETCH_HEAD'],d)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:128:fatal: could not read Username for 'https://github.com': No such device or address\n\n",
+      "slug": "agentic-registry",
+      "source_repo": "tesserix/agentic-registry",
+      "status": "FAILED"
+    },
+    "skills-12": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 307451,
+        "bundle_sha256": "324f5870b037ac6b2d556b4707690e75ff5be11b2a07582ba7651d3b613f8509",
+        "elapsed_seconds": 10.77,
+        "extracted_tree": {
+          "bytes": 832412,
+          "files": 227,
+          "sha256": "d8541b520ca4101b64f1f63a52d6f128f1751a10a905efe840eee86f71d5ed4d"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 307451,
+            "name": "mcp-skills-registry.bundle.zip.part-0001",
+            "sha256": "324f5870b037ac6b2d556b4707690e75ff5be11b2a07582ba7651d3b613f8509"
+          }
+        ],
+        "publish": {
+          "commit": "57a8bc22da05a6e1c8ecfacc03793b5faa15631f",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "mcp-skills-registry",
+        "source_bytes": 832412,
+        "source_commit": "3291a9408d67338cfdbaf61c63ee90fc7a549cec",
+        "source_files": 227,
+        "source_ref": "HEAD",
+        "source_repo": "sarveshtalele/mcp-skills-registry",
+        "source_tree": {
+          "bytes": 832412,
+          "files": 227,
+          "sha256": "d8541b520ca4101b64f1f63a52d6f128f1751a10a905efe840eee86f71d5ed4d"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "mcp-skills-registry",
+      "source_repo": "sarveshtalele/mcp-skills-registry",
+      "status": "VERIFIED_CLOSED"
+    },
+    "skills-13": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 56, in scan_tree\n    if ptr: raise RuntimeError('SOURCE_LFS_POINTER_GAP:'+','.join(ptr[:30]))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_LFS_POINTER_GAP:skills/timesfm-forecasting/examples/anomaly-detection/output/anomaly_detection.png,skills/timesfm-forecasting/examples/covariates-forecasting/output/covariates_data.png,skills/timesfm-forecasting/examples/global-temperature/output/forecast_animation.gif,skills/timesfm-forecasting/examples/global-temperature/output/forecast_visualization.png\n",
+      "slug": "agent-skills-hub",
+      "source_repo": "agent-skills-hub/agent-skills-hub",
+      "status": "FAILED"
+    },
+    "skills-14": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 Shack imput/\ud83d\udcc2 Componentes para integraci\u00f3n sharck imput/skills/ToolBench\n",
+      "slug": "ToolBench",
+      "source_repo": "OpenBMB/ToolBench",
+      "status": "FAILED"
+    },
+    "skills-15": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 Shack imput/\ud83d\udcc2 Componentes para integraci\u00f3n sharck imput/skills/ToolUniverse\n",
+      "slug": "ToolUniverse",
+      "source_repo": "mims-harvard/ToolUniverse",
+      "status": "FAILED"
+    }
+  },
+  "schema": "yaiwes.frontend.download-extract-queue.v1"
+}
