@@ -1,0 +1,51 @@
+{
+  "schema": "sharck-input.state.v2",
+  "revision": 1,
+  "project": "Wanted Shark Web / Sharck Input V2",
+  "root": "➡️📂 sharck imput",
+  "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
+  "status": "ACTIVE_LOOP",
+  "current_step": 2,
+  "current_node": "M03_MOUNT_BATCHES",
+  "catalog": {"legacy":77,"new":30,"total":107},
+  "legacy_v1": {"verified_closed":47,"gaps":30,"state_source":"➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/STATE.json"},
+  "agents": {
+    "SOL":{"status":"ACTIVE","node":"M03_MOUNT_BATCHES","log":"SOL-LOG.md"},
+    "ASTRA":{"status":"READY_TO_JOIN","node":"M06_INDEPENDENT_AUDIT","log":"ASTRA-LOG.md","dedicated_scope":["XRAY_ARQUITECTURA","EVALUACION_PREVIA","MEJORA_VERSIONADA","COMPONENT_GAP_RESEARCH","INDEPENDENT_VERIFY"]},
+    "GROK":{"status":"READY_TO_JOIN","node":"M08_OSS_REFUTATION","log":"GROK-LOG.md"},
+    "CLAUDE":{"status":"READY_TO_JOIN","node":"M07_CODE_PORTS_TEST_REVIEW","log":"CLAUDE-LOG.md"}
+  },
+  "tasks": {
+    "M01":{"status":"PUBLISHED","evidence_commit":"e3dd941e2aa48875654dc7fbed7074eb4abb8fe0"},
+    "M02":{"status":"PUBLISHED","evidence_commit":"c77cdbbe64b80ae4ff1ec040155bc023f7007189"},
+    "ARCH":{"status":"PUBLISHED","evidence_commit":"e8d160185e8088b59809d0f73e402d7df227b3a5"},
+    "M03":{"status":"IN_PROGRESS"},
+    "M04":{"status":"PENDING"},
+    "M05":{"status":"PENDING"},
+    "M06":{"status":"READY_AFTER_M03"},
+    "M07":{"status":"READY_AFTER_M03"},
+    "M08":{"status":"READY_AFTER_M03"},
+    "M09":{"status":"NOT_PERFORMED_NO_EVIDENCE"},
+    "M10":{"status":"BLOCKED_BY_REVIEW_GATE"}
+  },
+  "acquisition_v2": {
+    "batches": {
+      "B01":{"count":10,"status":"QUEUE_PENDING"},
+      "B02":{"count":10,"status":"QUEUE_PENDING"},
+      "B03":{"count":10,"status":"QUEUE_PENDING"}
+    },
+    "verified_closed":0,
+    "failed":0,
+    "pending":30
+  },
+  "locks": {
+    "input_raw":"IMMUTABLE",
+    "motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY",
+    "legacy_v1":"READ_ONLY",
+    "owner_lock":true,
+    "no_lfs":true,
+    "no_force":true
+  },
+  "last_writer":"SOL",
+  "updated_at":"2026-09-10T12:45:00-05:00"
+}
