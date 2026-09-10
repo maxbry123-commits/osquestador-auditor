@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 9690909,
+  "bundle_sha256": "7455a3e59b9de1819ee6601507563c845fffd5e84a96d47b09c7beaecbc53193",
+  "extracted_tree": {
+    "bytes": 28989953,
+    "files": 928,
+    "sha256": "660c64d057a8a5ad6cd74ef223cf2125f7d55fc9e84aa1a51cb16f8ab4e4d754"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 9690909,
+      "name": "crawl4ai.bundle.zip.part-0001",
+      "sha256": "7455a3e59b9de1819ee6601507563c845fffd5e84a96d47b09c7beaecbc53193"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "crawl4ai",
+  "source_bytes": 28989953,
+  "source_commit": "862f6bccb9c063f49b9d42701baa0eea17a4993f",
+  "source_files": 928,
+  "source_ref": "HEAD",
+  "source_repo": "unclecode/crawl4ai",
+  "source_tree": {
+    "bytes": 28989953,
+    "files": 928,
+    "sha256": "660c64d057a8a5ad6cd74ef223cf2125f7d55fc9e84aa1a51cb16f8ab4e4d754"
+  }
+}
