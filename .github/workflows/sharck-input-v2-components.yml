@@ -5,7 +5,6 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/workflows/sharck-input-v2-components.yml'
       - '➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/queues/**'
 
 permissions:
@@ -106,13 +105,34 @@ jobs:
           git add -- "$STATE_FILE" "$INDEX_PATH" || true
           if git diff --cached --quiet; then
             echo 'No state/index changes to persist.'
-            exit 0
+          else
+            git commit -m "chore(sharck-input): persist ${{ matrix.batch }} acquisition state"
+            pushed=0
+            for attempt in 1 2 3; do
+              if git push origin HEAD:main; then pushed=1; break; fi
+              git fetch origin main
+              git rebase origin/main
+            done
+            test "$pushed" = 1 || { echo 'PERSISTENCE_FAILURE'; exit 42; }
           fi
-          git commit -m "chore(sharck-input): persist ${{ matrix.batch }} acquisition state"
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then exit 0; fi
-            git fetch origin main
-            git rebase origin/main
-          done
-          echo 'PERSISTENCE_FAILURE'
-          exit 42
+
+      - name: Enforce canonical motor batch verdict
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          p = pathlib.Path(os.environ['STATE_FILE'])
+          if not p.exists():
+              print(json.dumps({'verdict':'STATE_READBACK_GAP','state_file':str(p)}))
+              sys.exit(43)
+          state = json.loads(p.read_text())
+          rows = list(state.get('items', {}).values())
+          verified = sum(1 for r in rows if r.get('status') == 'VERIFIED_CLOSED')
+          failed = sum(1 for r in rows if r.get('status') == 'FAILED')
+          pending = len(rows) - verified - failed
+          verdict = 'VERIFIED_CLOSED' if rows and verified == len(rows) else 'GAPS_PENDING'
+          print(json.dumps({'batch': os.getenv('DEST_ROOT','').split('/')[-1], 'total':len(rows), 'verified_closed':verified, 'failed':failed, 'pending':pending, 'verdict':verdict}, sort_keys=True))
+          sys.exit(0 if verdict == 'VERIFIED_CLOSED' else 44)
+          PY
