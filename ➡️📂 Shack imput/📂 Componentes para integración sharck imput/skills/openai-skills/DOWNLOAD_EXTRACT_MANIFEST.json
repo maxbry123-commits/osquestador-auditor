@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1870242,
+  "bundle_sha256": "e2b94c87f9e188437c76b5a6b2ddf1edc55aad153d781dd6f1cd91048cf46270",
+  "extracted_tree": {
+    "bytes": 4596024,
+    "files": 783,
+    "sha256": "091849f79137fd814d94abfb69a46da3c5392574a04000a08b2df9d49dbe4c9e"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1870242,
+      "name": "openai-skills.bundle.zip.part-0001",
+      "sha256": "e2b94c87f9e188437c76b5a6b2ddf1edc55aad153d781dd6f1cd91048cf46270"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "openai-skills",
+  "source_bytes": 4596024,
+  "source_commit": "49f948faa9258a0c61caceaf225e179651397431",
+  "source_files": 783,
+  "source_ref": "HEAD",
+  "source_repo": "openai/skills",
+  "source_tree": {
+    "bytes": 4596024,
+    "files": 783,
+    "sha256": "091849f79137fd814d94abfb69a46da3c5392574a04000a08b2df9d49dbe4c9e"
+  }
+}
