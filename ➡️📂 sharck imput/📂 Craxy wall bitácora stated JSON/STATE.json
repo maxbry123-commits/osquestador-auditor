@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 2,
+  "revision": 3,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
@@ -19,8 +19,8 @@
     "M01":{"status":"PUBLISHED","evidence_commit":"e3dd941e2aa48875654dc7fbed7074eb4abb8fe0"},
     "M02":{"status":"PUBLISHED","evidence_commit":"c77cdbbe64b80ae4ff1ec040155bc023f7007189"},
     "ARCH":{"status":"PUBLISHED","evidence_commit":"e8d160185e8088b59809d0f73e402d7df227b3a5"},
-    "M03":{"status":"MOUNTED_RUN_QUEUED","workflow_commit":"c276f51a56f5c0bc433d2991240c72f14142d464","run_id":34514168678},
-    "M04":{"status":"PENDING_WATCHDOG_UPDATE"},
+    "M03":{"status":"MOUNTED_RUN_IN_PROGRESS","workflow_commit":"c276f51a56f5c0bc433d2991240c72f14142d464","run_id":34514168678},
+    "M04":{"status":"WATCHDOG_V2_ENABLED"},
     "M05":{"status":"READBACK_IN_PROGRESS"},
     "M06":{"status":"READY_FOR_ASTRA_REVIEW"},
     "M07":{"status":"READY_FOR_CLAUDE_REVIEW"},
@@ -31,12 +31,13 @@
   "acquisition_v2": {
     "workflow":".github/workflows/sharck-input-v2-components.yml",
     "run_id":34514168678,
-    "run_status":"QUEUED",
+    "run_status":"IN_PROGRESS",
     "run_conclusion":null,
+    "shared_gates":{"partial_sparse_checkout":"PASS_3_OF_3","canonical_motor_blob_sha":"PASS_3_OF_3","no_lfs_checkout":"PASS_3_OF_3"},
     "batches": {
-      "B01":{"count":10,"status":"WORKFLOW_QUEUED"},
-      "B02":{"count":10,"status":"WORKFLOW_QUEUED"},
-      "B03":{"count":10,"status":"WORKFLOW_QUEUED"}
+      "B01":{"count":10,"status":"MOTOR_EXECUTION_IN_PROGRESS"},
+      "B02":{"count":10,"status":"MOTOR_EXECUTION_IN_PROGRESS"},
+      "B03":{"count":10,"status":"MOTOR_EXECUTION_IN_PROGRESS"}
     },
     "verified_closed":0,
     "failed":0,
@@ -53,10 +54,12 @@
   },
   "evidence": [
     {"type":"workflow_mount","commit":"c276f51a56f5c0bc433d2991240c72f14142d464"},
-    {"type":"github_actions_run","run_id":34514168678,"status":"queued"},
+    {"type":"github_actions_run","run_id":34514168678,"status":"in_progress"},
+    {"type":"jobs","count":3,"motor_hash_gate":"passed","checkout_gate":"passed"},
     {"type":"handoff","commit":"9c0cf7b1122165de4e7de35d9454db44aeb4140b"},
-    {"type":"recovery","commit":"2fb21038b1a38fb0fea4a34e11c377d1039c2062"}
+    {"type":"recovery","commit":"2fb21038b1a38fb0fea4a34e11c377d1039c2062"},
+    {"type":"watchdog","status":"enabled_hourly_v2"}
   ],
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T13:26:00-05:00"
+  "updated_at":"2026-09-10T13:30:00-05:00"
 }
