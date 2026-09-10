@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1197176,
+  "bundle_sha256": "67f3c7de3136f24229ec749964bc92c68c85bcae5f79f109d996db9d27b143a0",
+  "extracted_tree": {
+    "bytes": 4340154,
+    "files": 616,
+    "sha256": "1a76350c8084a100a6b239f74f512708ed0afff70d1f7c5b17a5f0344e8ad0f6"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1197176,
+      "name": "tree-sitter.bundle.zip.part-0001",
+      "sha256": "67f3c7de3136f24229ec749964bc92c68c85bcae5f79f109d996db9d27b143a0"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "tree-sitter",
+  "source_bytes": 4340154,
+  "source_commit": "de98c6c970f4c5d3a725ee48199c478090d614af",
+  "source_files": 616,
+  "source_ref": "HEAD",
+  "source_repo": "tree-sitter/tree-sitter",
+  "source_tree": {
+    "bytes": 4340154,
+    "files": 616,
+    "sha256": "1a76350c8084a100a6b239f74f512708ed0afff70d1f7c5b17a5f0344e8ad0f6"
+  }
+}
