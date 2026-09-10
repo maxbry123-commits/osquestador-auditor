@@ -1,0 +1,42 @@
+# Gradle.
+# Ignore the generated local settings file.
+/gradle.properties
+/build-options.local.properties
+.gradle/
+build/
+
+# Ignore gradle wrapper jar.
+gradle/wrapper/gradle-wrapper.jar
+
+# IntelliJ IDEA
+**/.idea/*
+# Do add the icon to git
+!/.idea/icon.*
+# IntelliJ creates this folder, ignore.
+/build-tools/build-infra/out/
+/dev-tools/missing-doclet/out/
+
+# Eclipse
+/.project
+/.classpath
+/.settings/
+
+# Eclipse Gradle oddity
+**/bin/default/
+
+# macOS
+.DS_Store
+
+# Python
+.pydevproject
+__pycache__
+.venv
+
+# Emacs backup
+*~
+
+# SDKMAN
+.sdkmanrc
+
+# Directenv
+.envrc

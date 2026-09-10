@@ -1,0 +1,58 @@
+{
+  "bundle_bytes": 63957415,
+  "bundle_sha256": "14a371f8ff933ce0185aa865dbe18d413404c0cb70d9df48a0072edf364974a7",
+  "extracted_tree": {
+    "bytes": 136991124,
+    "files": 7581,
+    "sha256": "99303b1401e6dc4369b2bb1f9b9482c695f4ec76f342b432da8d007c59c9d21e"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "lucene.bundle.zip.part-0001",
+      "sha256": "fd7ee0e7243491c4ce4bbd471b9cd1b8446f3c7ccb741092e32190e0b1946f3b"
+    },
+    {
+      "bytes": 12582912,
+      "name": "lucene.bundle.zip.part-0002",
+      "sha256": "2251d2cec2540bee08845adac0f12fca3bd35f819fbb1fd68c3a71d83477d235"
+    },
+    {
+      "bytes": 12582912,
+      "name": "lucene.bundle.zip.part-0003",
+      "sha256": "e2488bea8d7962043472cfb85d4dc29aae58ad470f42a19cf4f00e84020f1339"
+    },
+    {
+      "bytes": 12582912,
+      "name": "lucene.bundle.zip.part-0004",
+      "sha256": "f86bf6902e1f60d38466deb23a59b9744bc2052a8d2ba7b5a568c5bd3af0d538"
+    },
+    {
+      "bytes": 12582912,
+      "name": "lucene.bundle.zip.part-0005",
+      "sha256": "c8e607516acc45124068643a09c4372e838aee686cfebbd2acf9a2b5dfd5ffd3"
+    },
+    {
+      "bytes": 1042855,
+      "name": "lucene.bundle.zip.part-0006",
+      "sha256": "cd0d5d469d8553c60cf29197b384720138c36d65e346fb6c3d0afb9ee886f9cb"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "lucene",
+  "source_bytes": 136991124,
+  "source_commit": "1a65ceae18eaecf4af344dfcdb54f9fa37f77be0",
+  "source_files": 7581,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/apache/lucene",
+  "source_tree": {
+    "bytes": 136991124,
+    "files": 7581,
+    "sha256": "99303b1401e6dc4369b2bb1f9b9482c695f4ec76f342b432da8d007c59c9d21e"
+  }
+}
