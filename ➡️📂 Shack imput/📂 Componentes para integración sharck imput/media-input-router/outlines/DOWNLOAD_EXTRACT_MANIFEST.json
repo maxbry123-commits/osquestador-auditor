@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2995802,
+  "bundle_sha256": "1a477654fc49b6e9e4fab49fd8f6735cec9d1f0ff770e66604fd69b656c47cb6",
+  "extracted_tree": {
+    "bytes": 4774185,
+    "files": 298,
+    "sha256": "8d9731bcd3b0a3be4fa930e2cdd3e54ab43fbf2599c06de8e6e43b30006022d0"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2995802,
+      "name": "outlines.bundle.zip.part-0001",
+      "sha256": "1a477654fc49b6e9e4fab49fd8f6735cec9d1f0ff770e66604fd69b656c47cb6"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "outlines",
+  "source_bytes": 4774185,
+  "source_commit": "c52af8472c6fe8a607a733ec11b709476af77a96",
+  "source_files": 298,
+  "source_ref": "HEAD",
+  "source_repo": "dottxt-ai/outlines",
+  "source_tree": {
+    "bytes": 4774185,
+    "files": 298,
+    "sha256": "8d9731bcd3b0a3be4fa930e2cdd3e54ab43fbf2599c06de8e6e43b30006022d0"
+  }
+}
