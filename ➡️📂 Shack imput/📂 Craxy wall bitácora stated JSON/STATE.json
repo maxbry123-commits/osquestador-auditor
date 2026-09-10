@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 2,
+  "revision": 3,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -11,19 +11,27 @@
     "3_CABLEAR_PODAR_MINIMO_CODE_TEST"
   ],
   "agents": {
-    "SOL_CHATGPT": {"status":"ACTIVE","node":"GITHUB_PUBLISH","log":"CHATGPT-LOG.md"},
+    "SOL_CHATGPT": {"status":"ACTIVE","node":"T04_ACQUISITION_MONITOR","log":"CHATGPT-LOG.md"},
     "ASTRA": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"ASTRA-LOG.md"},
     "GROK": {"status":"READY_TO_JOIN","node":"READ_HANDOFF","log":"GROK-LOG.md"}
   },
   "tasks": [
-    {"id":"T01","name":"arquitectura+input literal","status":"LOCAL_VERIFY_PASS"},
-    {"id":"T02","name":"indice 77 componentes","status":"LOCAL_VERIFY_PASS"},
-    {"id":"T03","name":"publicar root main","status":"READY_FOR_PUBLISH"},
-    {"id":"T04","name":"descarga/extraccion lanes","status":"PENDING"},
+    {"id":"T01","name":"arquitectura+input literal","status":"PUBLISHED_AND_READBACK_VERIFIED"},
+    {"id":"T02","name":"indice 77 componentes","status":"PUBLISHED_AND_READBACK_VERIFIED"},
+    {"id":"T03","name":"publicar root main","status":"PUBLISHED_AND_READBACK_VERIFIED"},
+    {"id":"T04","name":"descarga/extraccion 6 lanes 77 componentes","status":"RUNNING","workflow_run_id":34470498878},
     {"id":"T05","name":"wire/test integracion","status":"PENDING"},
-    {"id":"T06","name":"watchdog horario ChatGPT","status":"PENDING"}
+    {"id":"T06","name":"watchdog horario ChatGPT","status":"ACTIVE","cadence":"HOURLY","timezone":"America/Bogota"}
   ],
+  "acquisition": {
+    "workflow":".github/workflows/shack-input-components.yml",
+    "run_id":34470498878,
+    "lanes":["search","code","rag","skills","media-input-router","orchestration"],
+    "catalog_total":77,
+    "verified_closed":0,
+    "status":"IN_PROGRESS_NO_PASS_YET"
+  },
   "locks": {"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T05:58:00-05:00"
+  "updated_at":"2026-09-10T06:19:06-05:00"
 }
