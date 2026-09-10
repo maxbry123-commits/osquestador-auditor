@@ -1,52 +1,59 @@
 # 🦈 GAPS — ADQUISICIÓN V2
 
-Estado: `ACTIVE_LOOP / FAIL_CLOSED`.
+Estado: `ACTIVE_LOOP / FAIL_CLOSED / REVIEW_REQUIRED`.
 
-## Balance comprobado parcial
-- B01: 3 VERIFIED_CLOSED / 7 FAILED / 0 pending en su motor.
-- B02: 5 VERIFIED_CLOSED / 5 FAILED / 0 pending en su motor.
-- B03: motor todavía IN_PROGRESS al crear este ledger.
-- Total comprobado de B01+B02: 8 VERIFIED_CLOSED + 12 FAILED.
+## Balance comprobado final del run inicial 34514168678
+- B01: 3 VERIFIED_CLOSED / 7 FAILED / 0 pending.
+- B02: 5 VERIFIED_CLOSED / 5 FAILED / 0 pending.
+- B03: 2 VERIFIED_CLOSED / 8 FAILED / 0 pending.
+- TOTAL: **10 VERIFIED_CLOSED / 20 FAILED / 0 pending**.
+
+Los tres jobs del run inicial aparecieron `success` en GitHub porque Motor 2 imprime `GAPS_PENDING` pero no sale con código no-cero. Eso se clasifica como `WORKFLOW_FALSE_GREEN_GAP`; no se interpreta como 30/30.
+
+## G4 WORKFLOW_FALSE_GREEN_GAP — CORREGIDO PARA FUTUROS RUNS
+Workflow actualizado en commit `1bb43ca45bd548278cb2074cb563bd2ece0cab43` con un guard posterior que lee `STATE_FILE` y falla el job si no están todos los items en `VERIFIED_CLOSED`. Los motores canónicos no fueron editados. También se quitó el auto-trigger por editar el workflow para evitar retries destructivos/no deliberados.
 
 ## Clases de GAP observadas
 ### G1 DESTINATION_EXISTS
-El retry encuentra un destino ya creado por un intento anterior. No borrar ni reemplazar automáticamente. Primero inventariar/read-back y decidir si es una publicación parcial, completa-no-reconciliada o colisión real.
+Un retry encuentra destino creado por intento anterior. No borrar/reemplazar automáticamente; primero read-back/inventario.
 
 ### G2 READBACK_TREE_HASH_GAP
-La publicación llegó a crear contenido/commit, pero el árbol releído no coincide con el tree hash esperado. Nunca promover como VERIFIED_CLOSED. Inspeccionar manifest, commit fuente, árbol remoto y concurrencia antes de decidir.
+La publicación creó contenido/commit pero el árbol releído no coincide con el tree hash esperado. Mantener FAILED hasta diagnóstico.
 
 ### G3 SOURCE_SPECIAL_FILE_GAP
-El source contiene symlink u otro special file rechazado por el motor canónico. Es un rechazo de seguridad válido; no parchear el motor para aceptarlo.
+El source contiene symlink/archivo especial rechazado por el motor. El rechazo es un gate de seguridad válido; no parchear motor.
 
-## StrategyDelta — hasta 20 vías, ordenadas por menor riesgo
-1. Releer destino existente y su `DOWNLOAD_EXTRACT_MANIFEST.json` antes de cualquier retry.
-2. Comparar source commit del intento con el commit/material publicado y clasificar partial vs complete.
-3. Si existe copia idéntica verificada en otra raíz del repo, reutilizarla con motor canónico de copia en vez de descargar otra vez.
-4. Buscar el mismo componente ya presente/VERIFIED_CLOSED en V1 antes de nueva adquisición.
-5. Pinnear `source_ref` a SHA/tag exacto en vez de `HEAD` para reproducibilidad.
-6. Reintentar 1×1, no en matrix concurrente, cuando el fallo pueda relacionarse con concurrencia de pushes/read-back.
-7. Crear destino versionado nuevo sólo después de preservar/documentar el destino fallido; no sobrescribir silenciosamente.
-8. Separar cada componente conflictivo en job propio con state/checkpoint propio.
-9. Para `READBACK_TREE_HASH_GAP`, comparar manifest remoto y conteo de archivos antes de repetir adquisición.
-10. Revisar si el componente genera/modifica archivos durante checkout/build; el motor sólo debe copiar source estático.
-11. Revisar `.gitattributes`/filtros que puedan alterar bytes y documentar el efecto; no desactivar controles a ciegas.
-12. Revisar tamaño/blob limits y partes ZIP aunque el error final sea distinto, para descartar corrupción previa.
-13. Para special files, probar un `source_ref` estable/tag donde el árbol sea compatible, si existe y mantiene la funcionalidad requerida.
-14. Buscar una distribución/source snapshot oficial equivalente que ya exista físicamente en una fuente autorizada y pueda pasar por los motores existentes; no inventar downloader.
-15. Si el repo completo es incompatible por symlinks, buscar un subproyecto/repositorio oficial equivalente que contenga sólo la capacidad necesaria.
-16. Sustituir componente por alternativa OSS funcionalmente equivalente que pase los gates, preservando el candidato fallido en el índice como `REJECTED_BY_ACQUISITION_GATE`.
-17. Priorizar componentes pequeños/maduros para construir el primer vertical slice y aplazar gigantes que no sean indispensables.
-18. Para herramientas que sólo se necesitan por API/MCP, evaluar si basta referencia/adapter sin importar todo el source al runtime; requiere review arquitectónica.
-19. Para bibliotecas que ya pueden consumirse como dependencia versionada, evaluar pointer/lockfile en vez de vendorizar todo el repo; requiere review y no sustituye evidencia de origen.
-20. Si ninguna vía compatible con el skill resuelve el componente, mantener GAP abierto y escalar sólo la decisión arquitectónica al review gate; nunca alterar el motor para forzar PASS.
+### G4 WORKFLOW_FALSE_GREEN_GAP
+GitHub job-success no equivalía a batch-success. Corregido en wrapper para futuras ejecuciones; run inicial conserva su historia sin reescritura.
 
-## Reglas de ejecución
-- Estrategias 1–12 pueden investigarse sin modificar motores; cualquier escritura sigue usando motores canónicos.
-- Estrategias 13–19 cambian fuente/ref/diseño y deben ser revisadas por ASTRA/CLAUDE/GROK antes de promoción.
-- Estrategia 20 mantiene el GAP visible.
-- Ninguna StrategyDelta autoriza borrar evidencia, force push, LFS o editar motores.
+## StrategyDelta — 20 vías
+1. Releer destino existente y `DOWNLOAD_EXTRACT_MANIFEST.json` antes de retry.
+2. Comparar source commit con material publicado; clasificar partial/complete/collision.
+3. Reutilizar copia idéntica verificada existente mediante motor canónico de copia.
+4. Buscar componente VERIFIED_CLOSED en V1 antes de nueva adquisición.
+5. Pinnear `source_ref` a SHA/tag exacto.
+6. Retry 1×1 cuando concurrencia pueda afectar push/read-back.
+7. Crear destino versionado nuevo sólo preservando/documentando destino fallido.
+8. Separar cada conflictivo en job/state/checkpoint propio.
+9. Para hash gap, comparar manifest remoto + conteo + tree hash antes de retry.
+10. Revisar si checkout/source cambia bytes durante adquisición.
+11. Revisar `.gitattributes`/filtros; no desactivar controles a ciegas.
+12. Descartar límites/blob/ZIP corruption con hashes y CRC existentes.
+13. Probar tag/ref estable compatible con el gate de special files.
+14. Usar snapshot/distribución oficial equivalente sólo si ya es fuente autorizada y puede entrar por motores canónicos.
+15. Buscar subproyecto/repo oficial de la capacidad si el monorepo completo es incompatible.
+16. Sustituir por alternativa OSS equivalente, dejando candidato fallido trazado.
+17. Priorizar vertical slice con componentes ya verificados; aplazar gigantes no indispensables.
+18. Si sólo se necesita API/MCP, evaluar adapter/reference en vez de vendorizar todo source, sujeto a review.
+19. Si es biblioteca consumible por dependencia versionada, evaluar pointer/lockfile, sujeto a review.
+20. Si no hay vía compatible, mantener GAP abierto; nunca modificar motor para forzar PASS.
+
+## Reglas
+- No borrar evidencia, no force, no LFS, no editar motores.
+- StrategyDelta que cambie source/ref/diseño requiere ASTRA/CLAUDE/GROK review antes de promoción.
+- El watchdog puede investigar/registrar y ejecutar únicamente acciones ya permitidas por los contratos y gates.
 
 ## Review solicitado
-ASTRA: validar que estas StrategyDelta no degraden arquitectura/seguridad.
-CLAUDE: validar causas técnicas de hash/collisions/special files y proponer verifier/adapter sólo si hace falta.
-GROK: buscar alternativas OSS/source refs oficiales para componentes incompatibles.
+ASTRA: seguridad/arquitectura/falsos PASS/StrategyDelta.
+CLAUDE: diagnóstico técnico de collisions/hash/special files y contracts/adapters/tests.
+GROK: alternativas OSS/source refs oficiales/licencias/mantenimiento/contradicciones.
