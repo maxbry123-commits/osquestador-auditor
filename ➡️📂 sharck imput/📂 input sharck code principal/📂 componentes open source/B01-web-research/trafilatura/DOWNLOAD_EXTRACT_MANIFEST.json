@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 31606804,
+  "bundle_sha256": "a49749263e26e19a80d5d3647a36ac41f04134632fa2100eb18913986b4bd1a6",
+  "extracted_tree": {
+    "bytes": 153214859,
+    "files": 1169,
+    "sha256": "9c240f2ae4a51c959b010710802f6fe5561df5cb16d4f407deff8fe1625eb832"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "trafilatura.bundle.zip.part-0001",
+      "sha256": "abb7957211b32382bb2c24905672c89a1692067ce463d17f2a35578401a5921c"
+    },
+    {
+      "bytes": 12582912,
+      "name": "trafilatura.bundle.zip.part-0002",
+      "sha256": "922034c8504410f7e7bd175e56dd605bbc4842890187fff6f328b28a5f467c04"
+    },
+    {
+      "bytes": 6440980,
+      "name": "trafilatura.bundle.zip.part-0003",
+      "sha256": "d6431dc1db9eefbc5177ed52509eb55c13ac421619ccebde2a037fab90a48135"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "trafilatura",
+  "source_bytes": 153214859,
+  "source_commit": "2e1d38b2dff26f1598500c7a7702755cd01e7a6e",
+  "source_files": 1169,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/adbar/trafilatura",
+  "source_tree": {
+    "bytes": 153214859,
+    "files": 1169,
+    "sha256": "9c240f2ae4a51c959b010710802f6fe5561df5cb16d4f407deff8fe1625eb832"
+  }
+}
