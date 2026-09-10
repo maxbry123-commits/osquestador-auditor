@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 581215,
+  "bundle_sha256": "b410e1250bc528aae59c7588f4d9b97214c672e09bf9b3d9b57c9852559001a4",
+  "extracted_tree": {
+    "bytes": 1557043,
+    "files": 385,
+    "sha256": "056879ba238affa93dab59353881f3906d66b1c4d78881e028e16aa1609441f3"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 581215,
+      "name": "jedi.bundle.zip.part-0001",
+      "sha256": "b410e1250bc528aae59c7588f4d9b97214c672e09bf9b3d9b57c9852559001a4"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "jedi",
+  "source_bytes": 1557043,
+  "source_commit": "ef5d3611210655b6af53596d205c53f0293e0d60",
+  "source_files": 385,
+  "source_ref": "HEAD",
+  "source_repo": "davidhalter/jedi",
+  "source_tree": {
+    "bytes": 1557043,
+    "files": 385,
+    "sha256": "056879ba238affa93dab59353881f3906d66b1c4d78881e028e16aa1609441f3"
+  }
+}
