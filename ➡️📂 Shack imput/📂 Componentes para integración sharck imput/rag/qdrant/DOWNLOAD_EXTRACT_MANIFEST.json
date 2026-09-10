@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 9683369,
+  "bundle_sha256": "2b79ce7cc78b7c563d792451473c58d65b0fba2aaba58f9a064d4d4b00f0be37",
+  "extracted_tree": {
+    "bytes": 37548748,
+    "files": 2358,
+    "sha256": "4b6b20eff53b6ec18384ed690b1fb46bbcc0b1431d9cf5414e0357336dfd586f"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 9683369,
+      "name": "qdrant.bundle.zip.part-0001",
+      "sha256": "2b79ce7cc78b7c563d792451473c58d65b0fba2aaba58f9a064d4d4b00f0be37"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "qdrant",
+  "source_bytes": 37548748,
+  "source_commit": "6ab21cac18ebb6f4ae29102c7f8f5cc11affd5de",
+  "source_files": 2358,
+  "source_ref": "HEAD",
+  "source_repo": "qdrant/qdrant",
+  "source_tree": {
+    "bytes": 37548748,
+    "files": 2358,
+    "sha256": "4b6b20eff53b6ec18384ed690b1fb46bbcc0b1431d9cf5414e0357336dfd586f"
+  }
+}
