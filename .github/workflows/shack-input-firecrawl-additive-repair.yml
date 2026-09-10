@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - '.github/workflows/shack-input-firecrawl-additive-repair.yml'
+      - '➡️📂 Shack imput/➡️📂 shart imput code Run/repair_firecrawl_additive.py'
   workflow_dispatch:
 
 permissions:
@@ -86,3 +87,30 @@ jobs:
           done
           echo PERSISTENCE_FAILURE
           exit 44
+
+      - name: Remote read-back — exact firecrawl tree
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" || { echo REMOTE_HEAD_MISMATCH; exit 51; }
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+          target=pathlib.Path('➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl')
+          manifest=json.loads((target/'DOWNLOAD_EXTRACT_MANIFEST.json').read_text())
+          root=target/'code'
+          h=hashlib.sha256(); files=0; total=0
+          for p in sorted((x for x in root.rglob('*') if x.is_file()), key=lambda x:x.relative_to(root).as_posix()):
+              rel=p.relative_to(root).as_posix()
+              d=hashlib.sha256(p.read_bytes()).hexdigest()
+              h.update(rel.encode()+b'\0'); h.update(d.encode()+b'\n')
+              files+=1; total+=p.stat().st_size
+          actual={'files':files,'bytes':total,'sha256':h.hexdigest()}
+          expected=manifest['extracted_tree']
+          print(json.dumps({'expected':expected,'actual':actual},sort_keys=True))
+          if actual != expected:
+              raise SystemExit('REMOTE_READBACK_TREE_HASH_GAP')
+          print('PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED')
+          PY
