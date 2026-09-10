@@ -1,6 +1,6 @@
 {
   "schema": "wanted-shark.craxy-wall.state.v1",
-  "revision": 8,
+  "revision": 9,
   "project": "Wanted Shark Web / Shack imput",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -25,25 +25,19 @@
     "lanes":["search","code","rag","skills","media-input-router","orchestration"],
     "initial_run":{"id":34470498878,"status":"SUPERSEDED_HEAVY_CHECKOUT","checkout_mode":"full","repo_size_kb":9516442},
     "optimized_run":{"id":34470821525,"status":"COMPLETED_6_OF_6_JOBS_SUCCESS","checkout_mode":"partial_sparse_blob_none","motor_blob_gate":"PASS"},
-    "lane_balance": {
-      "search":{"total":13,"verified_closed":3,"failed":10,"pending":0},
-      "code":{"total":12,"verified_closed":2,"failed":10,"pending":0},
-      "rag":{"total":13,"verified_closed":8,"failed":5,"pending":0},
-      "skills":{"total":15,"verified_closed":5,"failed":10,"pending":0},
-      "media_input_router":{"total":18,"verified_closed":10,"failed":8,"pending":0},
-      "orchestration":{"total":6,"verified_closed":0,"failed":6,"pending":0}
-    },
-    "verified_closed":28,
-    "failed":49,
-    "pending":0,
-    "failure_classes":{"DESTINATION_EXISTS":17,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":19,"OTHER":8},
-    "gap_audit":{"schema":"wanted-shark.acquisition-gap-audit.v3","run_id":34483405056,"status":"PUBLISHED_AND_READBACK_VERIFIED","finding":"PARTIAL_PUBLICATION_CAUSED_BY_IGNORED_TRACKED_PATHS","examples":{"Vane":"235/238; missing searxng limiter/settings/uwsgi","MindSearch":"116/117; missing .DS_Store","deer-flow":"2650/2653; missing .vscode paths","pyright":"7561/7584; missing build paths"}},
+    "baseline_balance":{"verified_closed":28,"failed":49,"pending":0},
+    "failure_classes_baseline":{"DESTINATION_EXISTS":17,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":19,"OTHER":8},
+    "gap_audit":{"schema":"wanted-shark.acquisition-gap-audit.v3","run_id":34483405056,"status":"PUBLISHED_AND_READBACK_VERIFIED","finding":"PARTIAL_PUBLICATION_CAUSED_BY_IGNORED_TRACKED_PATHS"},
     "ignored_publication_repair":{"workflow":".github/workflows/shack-input-ignored-repair.yml","run_id":34483843389,"status":"COMPLETED_SUCCESS_BUT_0_REPAIRED","candidates":19,"ready_for_publish":0,"failed_closed":19,"finding":"HELPER_PATH_PARSING_QUOTED_GIT_PATHS","motor_integrity":"PASS_NO_CANONICAL_MOTOR_EDIT"},
     "nul_safe_repair":{"run_id":34484946622,"status":"COMPLETED_FAILURE_AT_PUBLICATION_GATE","helper_commit":"3f03ec86e231673f7ceae293217a9e5850c12bc1","candidates":19,"ready_for_publish":19,"failed_closed":0,"finding":"GIT_DIFF_CHECK_REJECTED_LEGITIMATE_UPSTREAM_TRAILING_WHITESPACE","motor_blob_gate":"PASS","publication":"NOT_PERSISTED","remote_reaudit":"SKIPPED"},
-    "upstream_byte_preserving_repair":{"run_id":34488269513,"status":"IN_PROGRESS","workflow_commit":"6038a3e6e065c78efe354236a05b4a5aff0d9558","change":"REPLACE_WHITESPACE_STYLE_GATE_WITH_ADDITIVE_PATH_ALLOWLIST_AND_NO_DELETE_GATE","policy":"PRESERVE_SOURCE_BYTES + MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + NO_DELETE + COMPONENT_PATH_ALLOWLIST + NO_FORCE + REMOTE_REAUDIT","motor_blob_gate":"PASS"},
-    "status":"GAPS_PENDING_NO_BLIND_RETRY"
+    "upstream_byte_preserving_repair":{"run_id":34488269513,"status":"COMPLETED_SUCCESS_REMOTE_REAUDIT_PASS","workflow_commit":"6038a3e6e065c78efe354236a05b4a5aff0d9558","repair_commit":"72e5a22601ade382975e9fbecd1a8a7caf3a30c6","post_audit_commit":"12e045a2e","candidates":19,"ready_for_publish":19,"failed_closed":0,"exact_existing_destinations":19,"change":"REPLACE_WHITESPACE_STYLE_GATE_WITH_ADDITIVE_PATH_ALLOWLIST_AND_NO_DELETE_GATE","policy":"PRESERVE_SOURCE_BYTES + MOTOR1_EXTRACT_VERIFIED + MOTOR3_COLLISION_FAIL + NO_DELETE + COMPONENT_PATH_ALLOWLIST + NO_FORCE + REMOTE_REAUDIT","motor_blob_gate":"PASS"},
+    "verified_closed":47,
+    "failed":30,
+    "pending":0,
+    "remaining_failure_classification":"REQUIRES_FRESH_AUDIT_AFTER_19_RECOVERIES",
+    "status":"GAPS_PENDING_19_RECOVERED_NO_BLIND_RETRY"
   },
   "locks":{"motor_code":"IMMUTABLE_COPY_ONLY","input_raw":"IMMUTABLE","github_source_of_truth":true},
   "last_writer":"SOL_CHATGPT",
-  "updated_at":"2026-09-10T09:20:00-05:00"
+  "updated_at":"2026-09-10T10:16:33-05:00"
 }
