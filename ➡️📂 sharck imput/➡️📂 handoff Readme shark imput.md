@@ -4,9 +4,9 @@
 Repo: `maxbry123-commits/osquestador-auditor` · Branch: `main`
 Raíz activa: `➡️📂 sharck imput/`
 Código principal: `➡️📂 sharck imput/📂 input sharck code principal/`
-V1 preservada: `➡️📂 Shack imput/` — último estado leído 47/77 VERIFIED_CLOSED + 30 GAP; no destruir.
+V1 preservada: `➡️📂 Shack imput/` — último estado leído 47/77 VERIFIED_CLOSED + 30 GAP.
 
-## Orden de recuperación
+## Orden de lectura
 1. `README-METODO-TRABAJO-MULTIAGENTE.md`
 2. `📁 readme arquitectura sharck imput.md`
 3. `➡️📂 readme indice de componentes sharck imput.md`
@@ -19,55 +19,70 @@ V1 preservada: `➡️📂 Shack imput/` — último estado leído 47/77 VERIFIE
 10. `REVIEW-GATE-ASTRA-ENGINEERING.md`
 11. este Handoff
 
-## Método aprobado — 3 pasos
+## Método — 3 pasos
 1. ANOTAR + ARQUITECTURA + INVENTARIO.
-2. ADQUIRIR sólo con motores canónicos, lotes máximo 10, destino explícito, NO LFS/force, read-back.
-3. CABLEAR + PODA MÍNIMA + CODE FALTANTE + TEST sólo después de adquisición/review gate.
+2. ADQUIRIR sólo con motores canónicos, lotes máximo 10, destinos explícitos, NO LFS/force y read-back.
+3. CABLEAR + PODA MÍNIMA + CODE FALTANTE + TEST sólo después del review gate.
 
-## V2 — arquitectura y componentes
-Catálogo: 107 = 77 V1 + 30 nuevos investigados.
-B01 web/research/capture = 10.
-B02 IR/evidence/index = 10.
-B03 code intelligence/runtime = 10.
+## Plan y arquitectura listos
+- método multiagente publicado con 5 refutaciones, 12 GOALS, Council12 y 6 simulaciones;
+- arquitectura PRE-LLM/microkernel publicada;
+- catálogo 107 = 77 V1 + 30 nuevos investigados;
+- PLAN/STATE/CHECKPOINT + logs separados creados;
+- memoria de búsqueda creada;
+- review packet creado;
+- watchdog horario V2 habilitado.
 
-Workflow: `.github/workflows/sharck-input-v2-components.yml`
-Commit: `c276f51a56f5c0bc433d2991240c72f14142d464`
-Run: `34514168678`.
+## Adquisición inicial — evidencia final
+Workflow inicial: `.github/workflows/sharck-input-v2-components.yml`
+Run inicial: `34514168678`, GitHub UI `completed/success`.
 
-### Último balance con read-back
-- B01: `3 VERIFIED_CLOSED / 7 FAILED / 0 pending`.
-- B02: `5 VERIFIED_CLOSED / 5 FAILED / 0 pending`.
-- B03: `IN_PROGRESS`, 10 aún sin verdict remoto persistido al actualizar este handoff.
-- Total V2 demostrado: `8 VERIFIED_CLOSED / 12 FAILED / 10 EN EJECUCIÓN`.
+Estado individual por motor/read-back:
+- B01 = 3 VERIFIED_CLOSED / 7 FAILED.
+- B02 = 5 VERIFIED_CLOSED / 5 FAILED.
+- B03 = 2 VERIFIED_CLOSED / 8 FAILED.
+- TOTAL = **10 VERIFIED_CLOSED / 20 FAILED / 0 pending**.
 
-Gates de los tres jobs: sparse checkout NO LFS PASS 3/3 + blob SHA de motores PASS 3/3.
-Los 12 fallos están registrados en `GAPS-ACQUISITION-V2.md`; clases observadas: `DESTINATION_EXISTS`, `READBACK_TREE_HASH_GAP`, `SOURCE_SPECIAL_FILE_GAP`.
+Por tanto el veredicto semántico del Paso 2 es `GAPS_PENDING`, no PASS.
+Índices fuente: `B01-INDEX.md`, `B02-INDEX.md`, `B03-INDEX.md` bajo `📂 input sharck code principal/📂 component acquisition/state/`.
+
+## Fix de false-green
+Se detectó que Motor 2 puede devolver `GAPS_PENDING` sin código de salida no-cero y el wrapper inicial dejaba el job verde. El motor NO se modificó.
+Workflow corregido en commit `1bb43ca45bd548278cb2074cb563bd2ece0cab43`: un guard final lee `STATE_FILE` y futuras ejecuciones fallan si el batch no queda 10/10 VERIFIED_CLOSED. También se quitó el auto-trigger por editar el propio workflow para evitar retries involuntarios sobre destinos parciales.
+
+## GAPs
+`📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md` registra 20 StrategyDelta y estas clases observadas:
+- DESTINATION_EXISTS
+- READBACK_TREE_HASH_GAP
+- SOURCE_SPECIAL_FILE_GAP
+- WORKFLOW_FALSE_GREEN_GAP (wrapper corregido)
+
+No borrar destinos, no alterar motores, no forzar PASS.
 
 ## Motores canónicos — NO EDITAR
 Raíz: `➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/`
-Blobs:
-- motor_1 `a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500`
-- motor_2 `84d566e2ee4e98e42eb3a864026d067d48caabd9`
-- hf engine `91e6e4486692eab314be5c7130d8310d3c855397`
-- motor_3 `3689924361ce4a1a9fde4ae2b6f6009c37a6042d`
-- copy-root `8281211da76db3080fe1f1ea38b3eb0c45d655cb`
-- motor_4 `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`
+Blobs: motor1 `a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500`; motor2 `84d566e2ee4e98e42eb3a864026d067d48caabd9`; HF engine `91e6e4486692eab314be5c7130d8310d3c855397`; motor3 `3689924361ce4a1a9fde4ae2b6f6009c37a6042d`; copy-root `8281211da76db3080fe1f1ea38b3eb0c45d655cb`; motor4 `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`.
 
 ## Ownership
-- SOL: estado, consolidación, integración y motor-watch.
-- CLAUDE: Code Pointer RAG, contracts/ports/adapters/plugins, typing/tests.
-- GROK: OSS/comunidad/HF/labs/alternativas/contradicciones.
-- ASTRA — separado: XRAY_ARQUITECTURA, EVALUACION_PREVIA, MEJORA_VERSIONADA, COMPONENT_GAP_RESEARCH, INDEPENDENT_VERIFY.
+- SOL: estado/consolidación/integración/motor-watch.
+- CLAUDE: code/ports/adapters/typing/tests + diagnóstico técnico de GAPs.
+- GROK: OSS/comunidad/HF/labs/alternativas/licencias/contradicciones.
+- ASTRA: exclusivamente XRAY_ARQUITECTURA, EVALUACION_PREVIA, MEJORA_VERSIONADA, COMPONENT_GAP_RESEARCH, INDEPENDENT_VERIFY.
 
 ## Review gate
-`REVIEW-GATE-ASTRA-ENGINEERING.md` está listo. M06 ASTRA, M07 CLAUDE y M08 GROK permanecen pendientes de revisión real. Paso 3 = BLOCKED.
-No existe evidencia de revisión/aprobación externa todavía; este paquete sólo la habilita.
+M06 ASTRA = READY_FOR_REVIEW.
+M07 CLAUDE = READY_FOR_REVIEW.
+M08 GROK = READY_FOR_REVIEW.
+Paso 3 = BLOCKED.
+
+`REVIEW-GATE-ASTRA-ENGINEERING.md` contiene la checklist. No existe evidencia de revisión/aprobación externa todavía; el paquete queda preparado para el equipo que el director indique.
 
 ## Watchdog
-`Sharck Input V2 Watchdog` está ENABLED cada hora (America/Bogota). Relee PLAN/STATE/CHECKPOINT/Handoff/Recovery, vigila batches y no salta el review gate.
+`Sharck Input V2 Watchdog` ENABLED cada hora, America/Bogota. Relee STATE/CHECKPOINT/Handoff/Recovery y mantiene los GAPs visibles; no puede saltar review gate.
 
 ## Checkpoint vivo
-`CP-V2-PARTIAL-ACQUISITION-004` → `resume_from=MONITOR_B03_AND_REVIEW_GAPS`.
+`CP-V2-PRE-REVIEW-005`
+`resume_from=M06_M07_M08_REVIEW_AND_GAP_STRATEGY`.
 
-## Siguiente nodo
-Leer B03 state/index cuando se publique → sincronizar balance → revisiones ASTRA/CLAUDE/GROK → gate director → sólo entonces Paso 3.
+## Próximo nodo
+ASTRA/CLAUDE/GROK revisan en paralelo → registrar evidencias en Craxy Wall → seleccionar StrategyDelta por los 20 GAPs → gate director/revisión adicional → sólo entonces Paso 3 1×1.
