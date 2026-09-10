@@ -28,6 +28,14 @@ def run(argv: list[str], *, env: dict[str, str] | None = None, check: bool = Tru
     return p
 
 
+def run_bytes(argv: list[str], *, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if check and p.returncode:
+        tail = p.stdout[-3000:].decode("utf-8", errors="replace")
+        raise RuntimeError(f"COMMAND_FAILED:{argv}:{tail}")
+    return p
+
+
 def sha256_file(path: pathlib.Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as fh:
@@ -96,6 +104,13 @@ def rollback_target(target: pathlib.Path) -> None:
     run(["git", "clean", "-fdx", "--", (target / "code").as_posix()], check=False)
 
 
+def staged_paths(target: pathlib.Path, diff_filter: str) -> list[str]:
+    raw = run_bytes([
+        "git", "diff", "--cached", "--name-only", "-z", f"--diff-filter={diff_filter}", "--", target.as_posix()
+    ]).stdout
+    return [item.decode("utf-8", errors="strict") for item in raw.split(b"\0") if item]
+
+
 def repair_one(row: dict) -> dict:
     lane = row["lane"]
     slug = row["slug"]
@@ -136,18 +151,17 @@ def repair_one(row: dict) -> dict:
             raise RuntimeError("MOTOR3_NOT_CLOSED:" + json.dumps(v3, ensure_ascii=False))
 
     run(["git", "add", "-f", "--", (target / "code").as_posix()])
-    diff = run(["git", "diff", "--cached", "--name-status", "--", (target / "code").as_posix()]).stdout
+    non_additive = staged_paths(target / "code", "DMRTUXB")
+    if non_additive:
+        raise RuntimeError("NON_ADDITIVE_CHANGE:" + json.dumps(non_additive, ensure_ascii=False))
+
+    added_paths = staged_paths(target / "code", "A")
     added: list[str] = []
     prefix = (target / "code").as_posix().rstrip("/") + "/"
-    for line in diff.splitlines():
-        if not line.strip():
-            continue
-        status, path = line.split("\t", 1)
-        if status != "A":
-            raise RuntimeError(f"NON_ADDITIVE_CHANGE:{status}:{path}")
+    for path in added_paths:
         rel = path[len(prefix):] if path.startswith(prefix) else path
         added.append(rel)
-        actual_blob = run(["git", "hash-object", path]).stdout.strip()
+        actual_blob = run(["git", "hash-object", "--", path]).stdout.strip()
         if expected_blobs.get(rel) != actual_blob:
             raise RuntimeError(f"STAGED_SOURCE_BLOB_MISMATCH:{rel}")
 
@@ -196,7 +210,7 @@ def main() -> None:
             })
 
     payload = {
-        "schema": "wanted-shark.ignored-publication-repair.v1",
+        "schema": "wanted-shark.ignored-publication-repair.v2",
         "audit_schema": audit.get("schema"),
         "candidates": len(candidates),
         "ready_for_publish": sum(1 for x in results if x.get("verdict") == "READY_FOR_PUBLISH"),
