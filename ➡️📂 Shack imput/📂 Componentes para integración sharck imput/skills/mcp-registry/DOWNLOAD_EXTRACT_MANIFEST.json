@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 24064020,
+  "bundle_sha256": "624878e862146fb6af4aa8ff8cc19caf90f2e1c8dc9009ce0b55921064f6f041",
+  "extracted_tree": {
+    "bytes": 33346031,
+    "files": 255,
+    "sha256": "04e6fcecbe6bdb163b0a646560d7c8e337c83f66db882d35383e530b627c26f5"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "mcp-registry.bundle.zip.part-0001",
+      "sha256": "003a3618dd0e459a6532d1538aaf3204875835f96a95fefdefee0deaa2d847d3"
+    },
+    {
+      "bytes": 11481108,
+      "name": "mcp-registry.bundle.zip.part-0002",
+      "sha256": "c39bf43e22bf44fbcb09319415a30a1bdcd713086451d1c36b2f47067bbfd114"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "mcp-registry",
+  "source_bytes": 33346031,
+  "source_commit": "739b70e8bc1bea203c5a35ab699f1df51d091568",
+  "source_files": 255,
+  "source_ref": "HEAD",
+  "source_repo": "modelcontextprotocol/registry",
+  "source_tree": {
+    "bytes": 33346031,
+    "files": 255,
+    "sha256": "04e6fcecbe6bdb163b0a646560d7c8e337c83f66db882d35383e530b627c26f5"
+  }
+}
