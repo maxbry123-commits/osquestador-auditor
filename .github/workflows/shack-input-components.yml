@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: shack-input-component-acquisition
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   acquire:
@@ -50,12 +50,25 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Checkout main — NO LFS
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
-          lfs: false
+      - name: Partial sparse checkout main — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /.github/workflows/shack-input-components.yml
+          /➡️📂 Shack imput/➡️📂 shart imput code Run/queues/
+          /➡️📂 Shack imput/📂 Craxy wall bitácora stated JSON/
+          /➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/
+          EOF
+          AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 | tr -d '\n')"
+          git config http.https://github.com/.extraheader "AUTHORIZATION: basic $AUTH"
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
 
       - name: Verify all six canonical motor Git blob SHAs
         shell: bash
