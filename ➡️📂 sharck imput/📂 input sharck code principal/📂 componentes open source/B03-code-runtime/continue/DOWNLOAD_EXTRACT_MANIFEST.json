@@ -1,0 +1,133 @@
+{
+  "bundle_bytes": 252734447,
+  "bundle_sha256": "0cb61146af331417f521fec87064a326f445f64a9b463ee5693e7a69ab239075",
+  "extracted_tree": {
+    "bytes": 283463694,
+    "files": 3058,
+    "sha256": "a45ea11f541eda5c5bd1604a39c893afda9d35e9f296a430505b5c4375ac70dc"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0001",
+      "sha256": "0c72a4697895f64e5eb64c8b1023a57a45cb15d828395a8a0eb3343de86a0c91"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0002",
+      "sha256": "903172ad26c52d38de2a22a1aa4911d71140cd2fdb42417efde92ff3201bc881"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0003",
+      "sha256": "c29a0dc82c4d803b62028b9b55a8eb2ffaa802522cc3a0a87cc73acb6bf228db"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0004",
+      "sha256": "3dca105fe7ea715820e368b26ab61bb801c73cbc34213be4ef2aec17b9d2d476"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0005",
+      "sha256": "d12ef84d9fdbc6bd78846c0f61b1a0a230507886f86c8d3ed338bd35fb12001a"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0006",
+      "sha256": "60580d6fa81a7aa042af5c49d3dd9c568a92700ba57af62e9ab39752fc0cc874"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0007",
+      "sha256": "fa4648f51b6f2cf16d929e0ea8f617ccff3d22c4c088c161e010f05792190d83"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0008",
+      "sha256": "067e1c105875af8cafe0c044319efae213062a8797064195c7471f342e8856a1"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0009",
+      "sha256": "99b42b5d004a81931e69db0457baaf401eecdd96b536ca21a2bbcad76c87a6ff"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0010",
+      "sha256": "bb4686a0829dd880e3c2ee71dc0ebef1a5d84f1f59db53949406cc6027603966"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0011",
+      "sha256": "132906207a1e665256a3022ca79ea164f0eab05a04eeeb0e48547c34c5614010"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0012",
+      "sha256": "413abd7f28e8851c515f60b51352051e926645186b5e9541cadb4c495b2f5381"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0013",
+      "sha256": "25a7e27aec01f037283e064d6195ca907e990fa0227af4e882e6002ed0529327"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0014",
+      "sha256": "48be7626b4e2a473df9119617492987d153cde1a0cd6eb4898d0a9694ac869fd"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0015",
+      "sha256": "715ed03b1dcdc443ed8d31ff3c26d509162136ea939d4948d595de2f6b5ecb8c"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0016",
+      "sha256": "98e693c999beebf364a923e0b7af90ffa0af98768bf4fe16018a7a60566bdfcb"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0017",
+      "sha256": "032fded10366194147ade0bb5f5835ac2eefe73744e1dc88dbc5314f00f21d6f"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0018",
+      "sha256": "59c7aabfa21e492ac1810f46cee1af3c876ea347a4789bc9a4a5f40fdfb46111"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0019",
+      "sha256": "a1fe5dfcaa2f9badf7a07388405f35b383e15f451db0c2981d98b4abbb42e315"
+    },
+    {
+      "bytes": 12582912,
+      "name": "continue.bundle.zip.part-0020",
+      "sha256": "c32e6736c327bbe5899191addf80c36812f60bf8672d0329228c90ab0ab0eba1"
+    },
+    {
+      "bytes": 1076207,
+      "name": "continue.bundle.zip.part-0021",
+      "sha256": "554e250e7bb5c210b4b20e3a06a88c3d1274f59201a965d499405886865c398e"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "continue",
+  "source_bytes": 283463694,
+  "source_commit": "5522c6f44ca0ac3528b37244818fbfa39b5af470",
+  "source_files": 3058,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/continuedev/continue",
+  "source_tree": {
+    "bytes": 283463694,
+    "files": 3058,
+    "sha256": "a45ea11f541eda5c5bd1604a39c893afda9d35e9f296a430505b5c4375ac70dc"
+  }
+}
