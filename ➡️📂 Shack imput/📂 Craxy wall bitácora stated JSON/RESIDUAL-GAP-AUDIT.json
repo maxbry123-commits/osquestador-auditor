@@ -1,0 +1,308 @@
+{
+  "baseline_failed": 49,
+  "lane_counts": {
+    "code": {
+      "baseline_failed": 10,
+      "recovered": 3,
+      "remaining": 7
+    },
+    "media-input-router": {
+      "baseline_failed": 8,
+      "recovered": 3,
+      "remaining": 5
+    },
+    "orchestration": {
+      "baseline_failed": 6,
+      "recovered": 1,
+      "remaining": 5
+    },
+    "rag": {
+      "baseline_failed": 5,
+      "recovered": 2,
+      "remaining": 3
+    },
+    "search": {
+      "baseline_failed": 10,
+      "recovered": 6,
+      "remaining": 4
+    },
+    "skills": {
+      "baseline_failed": 10,
+      "recovered": 4,
+      "remaining": 6
+    }
+  },
+  "recovered_item_ids": [
+    "code-05",
+    "code-06",
+    "code-08",
+    "input-08",
+    "input-09",
+    "media-04",
+    "orch-01",
+    "rag-01",
+    "rag-12",
+    "search-02",
+    "search-04",
+    "search-07",
+    "search-08",
+    "search-11",
+    "search-12",
+    "skills-08",
+    "skills-10",
+    "skills-14",
+    "skills-15"
+  ],
+  "remaining_failed": 30,
+  "remaining_failure_classes": {
+    "DESTINATION_EXISTS": 2,
+    "OTHER": 8,
+    "READBACK_TREE_HASH_GAP": 1,
+    "SOURCE_SPECIAL_FILE_GAP": 19
+  },
+  "rows": [
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:utils/templates/etc/apache2\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "search-01",
+      "lane": "search",
+      "slug": "SearXNG",
+      "source_repo": "searxng/searxng"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "search-03",
+      "lane": "search",
+      "slug": "Morphic",
+      "source_repo": "miurla/morphic"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [rejected]            HEAD -> main (fetch first)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\nhint: Updates were rejected because the remote contains work that you do not\nhint: have locally. This is usually caused by another repository pushing to\nhint: the same ref. If you want to integrate the remote changes, use\nhint: 'git pull' before pushing again.\nhint: See the 'Note about fast-forwards' in 'git push --help' for details.\n\n",
+      "error_class": "OTHER",
+      "item_id": "search-09",
+      "lane": "search",
+      "slug": "khoj",
+      "source_repo": "khoj-ai/khoj"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:➡️📂 Shack imput/📂 Componentes para integración sharck imput/search/firecrawl\n",
+      "error_class": "DESTINATION_EXISTS",
+      "item_id": "search-10",
+      "lane": "search",
+      "slug": "firecrawl",
+      "source_repo": "firecrawl/firecrawl"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:aider/website/_posts/2023-05-25-ctags.md,aider/website/_posts/2023-07-02-benchmarks.md,aider/website/_posts/2023-11-06-benchmarks-1106.md,aider/website/_posts/2023-11-06-benchmarks-speed-1106.md,aider/website/_posts/2023-12-21-unified-diffs.md,aider/website/_posts/2024-01-25-benchmarks-0125.md\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-01",
+      "lane": "code",
+      "slug": "aider",
+      "source_repo": "Aider-AI/aider"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:➡️📂 Shack imput/📂 Componentes para integración sharck imput/code/tree-sitter\n",
+      "error_class": "DESTINATION_EXISTS",
+      "item_id": "code-02",
+      "lane": "code",
+      "slug": "tree-sitter",
+      "source_repo": "tree-sitter/tree-sitter"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:bindings/dotnet/LICENSE,bindings/haskell/LICENSE,bindings/rust/LICENSE,bindings/typescript/LICENSE\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-03",
+      "lane": "code",
+      "slug": "scip",
+      "source_repo": "scip-code/scip"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:bin,cli/LICENSE,cli/README.md,cli/src/semgrep/semgrep_interfaces/generate,cli/tests/default/e2e-other/rules,cli/tests/default/e2e-other/targets,interfaces/semgrep_interfaces,src/configuring/Rule_options.atd,src/osemgrep/core/semgrep_metrics.atd,src/parsing/Parsing_stats.atd,src/prefiltering/Semgrep_prefilter.atd,src/rule/rule_schema_v2.atd,src/spacegrep/bin/spacecat,src/spacegrep/bin/spacegrep,test,tests/rules/inception.yl,tests/rules/inception2.yl,tests/rules/js_no_ts.yl\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-07",
+      "lane": "code",
+      "slug": "semgrep",
+      "source_repo": "semgrep/semgrep"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:crates/ty_python_semantic/resources/corpus/83_jupyter_notebook_ipython_magic.ipynb\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-09",
+      "lane": "code",
+      "slug": "ruff",
+      "source_repo": "astral-sh/ruff"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:NEWS.rst\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-11",
+      "lane": "code",
+      "slug": "ctags",
+      "source_repo": "universal-ctags/ctags"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:HomebrewFormula\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "code-12",
+      "lane": "code",
+      "slug": "ripgrep",
+      "source_repo": "BurntSushi/ripgrep"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md,internal/deepdoc/parser/pdf/tool/testdata\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "rag-04",
+      "lane": "rag",
+      "slug": "ragflow",
+      "source_repo": "infiniflow/ragflow"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:docs/mintlify/CLAUDE.md,rust/types/idl\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "rag-07",
+      "lane": "rag",
+      "slug": "chroma",
+      "source_repo": "chroma-core/chroma"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md,nodejs/CLAUDE.md,python/CLAUDE.md,python/LICENSE\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "rag-08",
+      "lane": "rag",
+      "slug": "lancedb",
+      "source_repo": "lancedb/lancedb"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:.github/plugins/microsoft-foundry/skills/foundry-governance,.github/plugins/microsoft-foundry/skills/foundry-hosted-agents,.github/plugins/microsoft-foundry/skills/foundry-iq-knowledge-bases,.github/plugins/microsoft-foundry/skills/foundry-managed-skills,.github/plugins/microsoft-foundry/skills/foundry-memory,.github/plugins/microsoft-foundry/skills/foundry-models,.github/plugins/microsoft-foundry/skills/foundry-observability,.github/plugins/microsoft-foundry/skills/foundry-projects-resources,.github/plugins/microsoft-foundry/skills/foundry-toolboxes,.github/plugins/microsoft-foundry/skills/foundry-workflows,.github/plugins/microsoft-foundry/skills/microsoft-foundry,.github/skills/agent-framework-azure-ai-py,.github/skills/azure-ai-contentsafety-py,.github/skills/azure-ai-contentunderstanding-py,.github/skills/azure-ai-language-conversations-py,.github/skills/azure-ai-ml-py,.github/skills/azure-ai-projects-py,.github/skills/azure-ai-textanalytics-py,.github/skills/azure-ai-transcription-py,.github/skills/azure-ai-translation-document-py,.github/skills/azure-ai-translation-text-py,.github/skills/azure-ai-vision-imageanalysis-py,.github/skills/azure-ai-voicelive-py,.github/skills/azure-appconfiguration-py,.github/skills/azure-containerregistry-py,.github/skills/azure-cosmos-db-py,.github/skills/azure-cosmos-py,.github/skills/azure-cosmos-rust,.github/skills/azure-data-tables-py,.github/skills/azure-eventgrid-py\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "skills-03",
+      "lane": "skills",
+      "slug": "microsoft-skills",
+      "source_repo": "microsoft/skills"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [remote rejected]     HEAD -> main (cannot lock ref 'refs/heads/main': is at 8c85ffba1bc205864cba6931a4c29158617e90f6 but expected 533b4b89d5582342e422aa9340495495b51a060a)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\n\n",
+      "error_class": "OTHER",
+      "item_id": "skills-05",
+      "lane": "skills",
+      "slug": "awesome-copilot",
+      "source_repo": "github/awesome-copilot"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:AGENTS.md\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "skills-06",
+      "lane": "skills",
+      "slug": "toolhive",
+      "source_repo": "stacklok/toolhive"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "skills-09",
+      "lane": "skills",
+      "slug": "skills-registry",
+      "source_repo": "nikships/skills-registry"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                      ^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 42, in acquire\n    run(['git','fetch','--depth=1','--filter=blob:none','origin',SOURCE_REF],d); run(['git','checkout','-q','--detach','FETCH_HEAD'],d)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:128:fatal: could not read Username for 'https://github.com': No such device or address\n\n",
+      "error_class": "OTHER",
+      "item_id": "skills-11",
+      "lane": "skills",
+      "slug": "agentic-registry",
+      "source_repo": "tesserix/agentic-registry"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 56, in scan_tree\n    if ptr: raise RuntimeError('SOURCE_LFS_POINTER_GAP:'+','.join(ptr[:30]))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_LFS_POINTER_GAP:skills/timesfm-forecasting/examples/anomaly-detection/output/anomaly_detection.png,skills/timesfm-forecasting/examples/covariates-forecasting/output/covariates_data.png,skills/timesfm-forecasting/examples/global-temperature/output/forecast_animation.gif,skills/timesfm-forecasting/examples/global-temperature/output/forecast_visualization.png\n",
+      "error_class": "OTHER",
+      "item_id": "skills-13",
+      "lane": "skills",
+      "slug": "agent-skills-hub",
+      "source_repo": "agent-skills-hub/agent-skills-hub"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CONTRIBUTING.md,tests/pydantic_core\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "input-01",
+      "lane": "media-input-router",
+      "slug": "pydantic",
+      "source_repo": "pydantic/pydantic"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:json/tests/latest\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "input-02",
+      "lane": "media-input-router",
+      "slug": "jsonschema",
+      "source_repo": "python-jsonschema/jsonschema"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:docs/CONTRIBUTING.md\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "input-04",
+      "lane": "media-input-router",
+      "slug": "pyparsing",
+      "source_repo": "pyparsing/pyparsing"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [remote rejected]     HEAD -> main (cannot lock ref 'refs/heads/main': is at ba0303af18860f423d724ecd58a674aa897059a9 but expected 72f03d046062c5061fa7174a15c22ab4c93a138d)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\n\n",
+      "error_class": "OTHER",
+      "item_id": "router-01",
+      "lane": "media-input-router",
+      "slug": "semantic-router",
+      "source_repo": "aurelio-labs/semantic-router"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:onnx-binding/ort-ck-flash-attn/prebuilt/libort_ck_flash_attn.so,src/semantic-router/go.onnx.sum\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "router-02",
+      "lane": "media-input-router",
+      "slug": "vllm-semantic-router",
+      "source_repo": "vllm-project/semantic-router"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:config/development.yaml,schema/elasticsearch/visibility/index_template_v7.json\n",
+      "error_class": "SOURCE_SPECIAL_FILE_GAP",
+      "item_id": "orch-02",
+      "lane": "orchestration",
+      "slug": "temporal",
+      "source_repo": "temporalio/temporal"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [remote rejected]     HEAD -> main (cannot lock ref 'refs/heads/main': is at 15890adf58a710defbb430b375c5792b1390e111 but expected f33a4514ef09bf24226b2c51bfdde75494210a07)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\n\n",
+      "error_class": "OTHER",
+      "item_id": "orch-03",
+      "lane": "orchestration",
+      "slug": "hatchet",
+      "source_repo": "hatchet-dev/hatchet"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 56, in scan_tree\n    if ptr: raise RuntimeError('SOURCE_LFS_POINTER_GAP:'+','.join(ptr[:30]))\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_LFS_POINTER_GAP:dotnet/website/images/articles/DynamicGroupChat/dynamicChat.gif,dotnet/website/images/articles/PrintMessageMiddleware/streamingoutput.gif,dotnet/website/images/articles/SequentialGroupChat/SearcherSummarizer.gif\n",
+      "error_class": "OTHER",
+      "item_id": "orch-04",
+      "lane": "orchestration",
+      "slug": "autogen",
+      "source_repo": "microsoft/autogen"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 138, in publish\n    run(['git','push','origin',f'HEAD:{DEST_BRANCH}'],dst,env=env); commit=run(['git','rev-parse','HEAD'],dst)\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 16, in run\n    if check and p.returncode: raise RuntimeError(f'COMMAND_FAILED:{argv[0]}:{p.returncode}:{p.stdout[-3000:]}')\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: COMMAND_FAILED:git:1:To https://github.com/maxbry123-commits/osquestador-auditor.git\n ! [remote rejected]     HEAD -> main (cannot lock ref 'refs/heads/main': is at 25862e2a92e90b628fea004d267782e4f903607a but expected ba0303af18860f423d724ecd58a674aa897059a9)\nerror: failed to push some refs to 'https://github.com/maxbry123-commits/osquestador-auditor.git'\n\n",
+      "error_class": "OTHER",
+      "item_id": "orch-05",
+      "lane": "orchestration",
+      "slug": "crewai",
+      "source_repo": "crewAIInc/crewAI"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py\", line 144, in publish\n    if actual['sha256']!=remote['extracted_tree']['sha256'] or actual['files']!=remote['extracted_tree']['files']: raise RuntimeError('READBACK_TREE_HASH_GAP')\n                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: READBACK_TREE_HASH_GAP\n",
+      "error_class": "READBACK_TREE_HASH_GAP",
+      "item_id": "orch-06",
+      "lane": "orchestration",
+      "slug": "semantic-kernel",
+      "source_repo": "microsoft/semantic-kernel"
+    }
+  ],
+  "schema": "wanted-shark.residual-gap-audit.v1",
+  "verdict": "RESIDUAL_AUDIT_COMPLETE",
+  "verified_recoveries": 19
+}
