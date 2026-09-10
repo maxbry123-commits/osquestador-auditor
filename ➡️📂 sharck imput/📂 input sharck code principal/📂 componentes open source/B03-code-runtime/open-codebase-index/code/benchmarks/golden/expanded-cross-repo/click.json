@@ -1,0 +1,194 @@
+{
+  "version": "1.2.0",
+  "name": "expanded-click-mixed-intent",
+  "description": "Hand-curated definition, keyword-heavy, implementation-intent, and conceptual queries for the pinned expanded public benchmark cohort.",
+  "queries": [
+    {
+      "id": "click-echo",
+      "query": "where is echo defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "echo"
+      },
+      "expected": {
+        "filePath": "src/click/utils.py",
+        "symbol": "echo",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "click-prompt",
+      "query": "where is prompt defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "prompt"
+      },
+      "expected": {
+        "filePath": "src/click/termui.py",
+        "symbol": "prompt",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "click-confirm",
+      "query": "where is confirm defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "confirm"
+      },
+      "expected": {
+        "filePath": "src/click/termui.py",
+        "symbol": "confirm",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "click-style",
+      "query": "where is style defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "style"
+      },
+      "expected": {
+        "filePath": "src/click/termui.py",
+        "symbol": "style",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "click-option",
+      "query": "where is option defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "option"
+      },
+      "expected": {
+        "filePath": "src/click/decorators.py",
+        "symbol": "option",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "click-shell-completion",
+      "query": "shell_complete CompletionItem incomplete get_completions BashComplete ZshComplete",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "python",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "shell-completion",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "src/click/shell_completion.py",
+            "relevance": 3
+          },
+          {
+            "path": "src/click/core.py",
+            "relevance": 2
+          },
+          {
+            "path": "src/click/types.py",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "click-atomic-lazy-file-io",
+      "query": "atomic _LazyFile open_stream stdin stdout temporary os.replace close_intelligently",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "python",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "file-io",
+        "resource-lifecycle",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "src/click/_compat.py",
+            "relevance": 3
+          },
+          {
+            "path": "src/click/utils.py",
+            "relevance": 3
+          },
+          {
+            "path": "src/click/types.py",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "click-command-invocation-implementation",
+      "query": "implementation that parses command line arguments invokes command callbacks and formats command errors",
+      "queryType": "implementation-intent",
+      "retrievalMode": "context",
+      "language": "python",
+      "difficulty": "medium",
+      "tags": [
+        "implementation",
+        "command-lifecycle",
+        "errors"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "src/click/core.py",
+            "relevance": 3
+          },
+          {
+            "path": "src/click/exceptions.py",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "click-shell-completion-concept",
+      "query": "resolve shell completion context and produce completion items for command line arguments",
+      "queryType": "conceptual",
+      "retrievalMode": "context",
+      "language": "python",
+      "difficulty": "medium",
+      "tags": [
+        "conceptual",
+        "shell-completion",
+        "arguments"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "src/click/shell_completion.py",
+            "relevance": 3
+          },
+          {
+            "path": "src/click/core.py",
+            "relevance": 2
+          }
+        ]
+      }
+    }
+  ]
+}

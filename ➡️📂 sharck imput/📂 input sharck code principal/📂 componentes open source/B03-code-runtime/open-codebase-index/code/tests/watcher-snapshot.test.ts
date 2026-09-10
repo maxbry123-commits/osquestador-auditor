@@ -1,0 +1,229 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import { buildFileSnapshot } from "../src/watcher/snapshot.js";
+import { LocalModuleConfigTracker } from "../src/watcher/local-module-config.js";
+
+describe("watcher snapshot builder", () => {
+  let projectRoot: string;
+
+  beforeEach(() => {
+    projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "watcher-snapshot-"));
+  });
+
+  afterEach(() => {
+    fs.rmSync(projectRoot, { recursive: true, force: true });
+  });
+
+  it("includes only indexable in-project files and skips ignored/restricted paths", async () => {
+    const includeRoot = path.join(projectRoot, "src");
+    fs.mkdirSync(includeRoot, { recursive: true });
+    fs.writeFileSync(path.join(includeRoot, "index.ts"), "export const x = 1;");
+    fs.writeFileSync(path.join(includeRoot, "index.test.ts"), "export const y = 2;");
+    fs.writeFileSync(path.join(projectRoot, "README.md"), "# README");
+
+    const nodeModulesDir = path.join(projectRoot, "node_modules");
+    fs.mkdirSync(path.join(nodeModulesDir, "pkg"), { recursive: true });
+    fs.writeFileSync(path.join(nodeModulesDir, "pkg", "ignored.ts"), "export const ignored = true;");
+
+    const hiddenDir = path.join(projectRoot, ".hidden");
+    fs.mkdirSync(path.join(hiddenDir, "nested"), { recursive: true });
+    fs.writeFileSync(path.join(hiddenDir, "nested", "ignored.ts"), "export const hidden = true;");
+
+    const restrictedDir = path.join(projectRoot, "Library");
+    fs.mkdirSync(path.join(restrictedDir, "runtime"), { recursive: true });
+    fs.writeFileSync(path.join(restrictedDir, "runtime", "ignored.ts"), "export const restricted = true;");
+
+    const snapshot = await buildFileSnapshot(
+      projectRoot,
+      {
+        include: ["**/*.{ts,md}"],
+        additionalInclude: [],
+        exclude: ["**/*.test.ts"],
+      },
+      [],
+    );
+
+    const expectedPaths = new Set([
+      path.join(includeRoot, "index.ts"),
+      path.join(projectRoot, "README.md"),
+    ]);
+
+    for (const entryPath of Array.from(snapshot.keys())) {
+      expect(path.isAbsolute(entryPath)).toBe(true);
+    }
+
+    expect(Array.from(snapshot.keys()).sort()).toEqual(Array.from(expectedPaths).sort());
+    expect(snapshot.has(path.join(includeRoot, "index.test.ts"))).toBe(false);
+    expect(snapshot.has(path.join(nodeModulesDir, "pkg", "ignored.ts"))).toBe(false);
+    expect(snapshot.has(path.join(hiddenDir, "nested", "ignored.ts"))).toBe(false);
+    expect(snapshot.has(path.join(restrictedDir, "runtime", "ignored.ts"))).toBe(false);
+  });
+
+  it("includes explicit hidden and external config files outside the project", async () => {
+    const insideHiddenConfig = path.join(projectRoot, ".config", "watcher.config");
+    fs.mkdirSync(path.join(projectRoot, ".config"), { recursive: true });
+    fs.writeFileSync(insideHiddenConfig, "{}");
+
+    const outsideRoot = fs.mkdtempSync(path.join(os.tmpdir(), "watcher-snapshot-config-"));
+    const outsideConfig = path.join(outsideRoot, ".external-config");
+    fs.writeFileSync(outsideConfig, "{}");
+
+    const trackedFile = path.join(projectRoot, "index.ts");
+    fs.writeFileSync(trackedFile, "export const x = 1;");
+
+    try {
+      const snapshot = await buildFileSnapshot(
+        projectRoot,
+        {
+          include: ["**/*.ts"],
+          additionalInclude: [],
+          exclude: ["**/*.test.ts"],
+        },
+        [insideHiddenConfig, outsideConfig],
+      );
+
+      expect(snapshot.has(path.join(projectRoot, "index.ts"))).toBe(true);
+      expect(snapshot.has(insideHiddenConfig)).toBe(true);
+      expect(snapshot.has(outsideConfig)).toBe(true);
+    } finally {
+      fs.rmSync(outsideRoot, { recursive: true, force: true });
+    }
+  });
+
+  it("tracks nested TypeScript and JavaScript configs while honoring ignored paths", async () => {
+    const tsConfig = path.join(projectRoot, "packages", "app", "tsconfig.json");
+    const jsConfig = path.join(projectRoot, "packages", "web", "jsconfig.json");
+    const ignoredConfig = path.join(projectRoot, "generated", "tsconfig.json");
+    fs.mkdirSync(path.dirname(tsConfig), { recursive: true });
+    fs.mkdirSync(path.dirname(jsConfig), { recursive: true });
+    fs.mkdirSync(path.dirname(ignoredConfig), { recursive: true });
+    fs.writeFileSync(tsConfig, "{}");
+    fs.writeFileSync(jsConfig, "{}");
+    fs.writeFileSync(ignoredConfig, "{}");
+    fs.writeFileSync(path.join(projectRoot, ".gitignore"), "generated/\n");
+
+    const snapshot = await buildFileSnapshot(
+      projectRoot,
+      { include: ["**/*.ts"], additionalInclude: [], exclude: [] },
+      [],
+    );
+
+    expect(snapshot.has(tsConfig)).toBe(true);
+    expect(snapshot.has(jsConfig)).toBe(true);
+    expect(snapshot.has(ignoredConfig)).toBe(false);
+  });
+
+  it("tracks existing and missing local extends targets with arbitrary JSON names", () => {
+    const appConfig = path.join(projectRoot, "packages", "app", "tsconfig.json");
+    const baseConfig = path.join(projectRoot, "packages", "config", "base.json");
+    const missingConfig = path.join(projectRoot, "packages", "config", "missing.json");
+    fs.mkdirSync(path.dirname(appConfig), { recursive: true });
+    fs.mkdirSync(path.dirname(baseConfig), { recursive: true });
+    fs.writeFileSync(appConfig, JSON.stringify({ extends: "../config/base" }));
+    fs.writeFileSync(baseConfig, JSON.stringify({ extends: "./missing" }));
+
+    const tracker = new LocalModuleConfigTracker(projectRoot, {});
+    tracker.refresh();
+
+    expect(tracker.has(appConfig)).toBe(true);
+    expect(tracker.has(baseConfig)).toBe(true);
+    expect(tracker.has(missingConfig)).toBe(true);
+  });
+
+  it("does not track a local extends target hidden by gitignore", () => {
+    const appConfig = path.join(projectRoot, "packages", "app", "tsconfig.json");
+    const ignoredConfig = path.join(projectRoot, "generated", "base.json");
+    fs.mkdirSync(path.dirname(appConfig), { recursive: true });
+    fs.mkdirSync(path.dirname(ignoredConfig), { recursive: true });
+    fs.writeFileSync(path.join(projectRoot, ".gitignore"), "generated/\n");
+    fs.writeFileSync(appConfig, JSON.stringify({ extends: "../../generated/base" }));
+    fs.writeFileSync(ignoredConfig, "{}");
+
+    const tracker = new LocalModuleConfigTracker(projectRoot, {});
+    tracker.refresh();
+
+    expect(tracker.has(appConfig)).toBe(true);
+    expect(tracker.has(ignoredConfig)).toBe(false);
+  });
+
+  it("tracks only workspace manifests selected by included source ancestors", () => {
+    const rootManifest = path.join(projectRoot, "package.json");
+    const packageManifest = path.join(projectRoot, "packages", "shared", "package.json");
+    const excludedManifest = path.join(projectRoot, "packages", "private", "package.json");
+    const unrelatedManifest = path.join(projectRoot, "tools", "unrelated", "package.json");
+    for (const manifestPath of [packageManifest, excludedManifest, unrelatedManifest]) {
+      fs.mkdirSync(path.join(path.dirname(manifestPath), "src"), { recursive: true });
+      fs.writeFileSync(path.join(path.dirname(manifestPath), "src", "index.ts"), "export const value = 1;");
+      fs.writeFileSync(manifestPath, JSON.stringify({ name: path.basename(path.dirname(manifestPath)) }));
+    }
+    fs.writeFileSync(rootManifest, JSON.stringify({
+      workspaces: ["packages/*", "!packages/private"],
+    }));
+
+    const tracker = new LocalModuleConfigTracker(projectRoot, {
+      include: ["**/*.ts"],
+      additionalInclude: [],
+      exclude: [],
+    });
+    tracker.refresh();
+
+    expect(tracker.has(rootManifest)).toBe(true);
+    expect(tracker.has(packageManifest)).toBe(true);
+    expect(tracker.has(excludedManifest)).toBe(false);
+    expect(tracker.has(unrelatedManifest)).toBe(false);
+  });
+
+  it("limits traversal depth using config.indexing.maxDepth", async () => {
+    const rootFile = path.join(projectRoot, "root.ts");
+    const nestedLevelOne = path.join(projectRoot, "level-one", "nested.ts");
+    const nestedLevelTwo = path.join(projectRoot, "level-one", "level-two", "deeper.ts");
+
+    fs.mkdirSync(path.dirname(nestedLevelOne), { recursive: true });
+    fs.mkdirSync(path.dirname(nestedLevelTwo), { recursive: true });
+    fs.writeFileSync(rootFile, "export const root = 1;");
+    fs.writeFileSync(nestedLevelOne, "export const one = 1;");
+    fs.writeFileSync(nestedLevelTwo, "export const two = 1;");
+
+    const limitedDepth = await buildFileSnapshot(
+      projectRoot,
+      {
+        include: ["**/*.ts"],
+        additionalInclude: [],
+        exclude: [],
+        indexing: {
+          maxDepth: 1,
+        },
+      },
+      [],
+    );
+
+    expect(Array.from(limitedDepth.keys()).sort()).toEqual([rootFile, nestedLevelOne].sort());
+  });
+
+  it("preserves unlimited traversal when indexing.maxDepth is absent", async () => {
+    const rootFile = path.join(projectRoot, "root.ts");
+    const nestedLevelOne = path.join(projectRoot, "level-one", "nested.ts");
+    const nestedLevelTwo = path.join(projectRoot, "level-one", "level-two", "deeper.ts");
+
+    fs.mkdirSync(path.dirname(nestedLevelOne), { recursive: true });
+    fs.mkdirSync(path.dirname(nestedLevelTwo), { recursive: true });
+    fs.writeFileSync(rootFile, "export const root = 1;");
+    fs.writeFileSync(nestedLevelOne, "export const one = 1;");
+    fs.writeFileSync(nestedLevelTwo, "export const two = 1;");
+
+    const unlimitedDepth = await buildFileSnapshot(
+      projectRoot,
+      {
+        include: ["**/*.ts"],
+        additionalInclude: [],
+        exclude: [],
+      },
+      [],
+    );
+
+    expect(Array.from(unlimitedDepth.keys()).sort()).toEqual([rootFile, nestedLevelOne, nestedLevelTwo].sort());
+  });
+});

@@ -1,0 +1,183 @@
+{
+  "version": "1.2.0",
+  "name": "expanded-axios-mixed-intent",
+  "description": "Hand-curated definition, keyword-heavy, implementation-intent, and conceptual queries for pinned axios revision d8233d9e8e9a64bfba9bbe01d475ba417510b82b.",
+  "queries": [
+    {
+      "id": "axios-build-url",
+      "query": "where is buildURL defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "buildURL"
+      },
+      "expected": {
+        "filePath": "lib/helpers/buildURL.js",
+        "symbol": "buildURL",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "axios-to-form-data",
+      "query": "where is toFormData defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "toFormData"
+      },
+      "expected": {
+        "filePath": "lib/helpers/toFormData.js",
+        "symbol": "toFormData",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "axios-throttle",
+      "query": "where is throttle defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "throttle"
+      },
+      "expected": {
+        "filePath": "lib/helpers/throttle.js",
+        "symbol": "throttle",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "axios-spread",
+      "query": "where is spread defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "spread"
+      },
+      "expected": {
+        "filePath": "lib/helpers/spread.js",
+        "symbol": "spread",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "axios-create-instance",
+      "query": "where is createInstance defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "createInstance"
+      },
+      "expected": {
+        "filePath": "lib/axios.js",
+        "symbol": "createInstance",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "axios-config-merge-strategies",
+      "query": "merge config url method data baseURL validateStatus caseless headers defaultToConfig2 mergeDirectKeys",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "javascript",
+      "difficulty": "easy",
+      "tags": [
+        "keyword",
+        "configuration",
+        "merge-strategy"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/core/mergeConfig.js",
+            "relevance": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "axios-node-http-transport-controls",
+      "query": "maxRedirects beforeRedirect setProxy socketPath maxBodyLength maxContentLength decompress createUnzip",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "javascript",
+      "difficulty": "hard",
+      "tags": [
+        "keyword",
+        "node-http",
+        "redirects",
+        "limits",
+        "compression"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/adapters/http.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/core/mergeConfig.js",
+            "relevance": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "axios-request-dispatch-implementation",
+      "query": "implementation that prepares request data applies transforms flattens headers and invokes the configured adapter",
+      "queryType": "implementation-intent",
+      "retrievalMode": "context",
+      "language": "javascript",
+      "difficulty": "medium",
+      "tags": [
+        "implementation",
+        "request-lifecycle",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/core/dispatchRequest.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/core/transformData.js",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "axios-config-merge-concept",
+      "query": "combine default request configuration with request-specific values and select property merge strategies",
+      "queryType": "conceptual",
+      "retrievalMode": "context",
+      "language": "javascript",
+      "difficulty": "medium",
+      "tags": [
+        "conceptual",
+        "configuration",
+        "merge-strategy"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/core/mergeConfig.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/axios.js",
+            "relevance": 1
+          }
+        ]
+      }
+    }
+  ]
+}

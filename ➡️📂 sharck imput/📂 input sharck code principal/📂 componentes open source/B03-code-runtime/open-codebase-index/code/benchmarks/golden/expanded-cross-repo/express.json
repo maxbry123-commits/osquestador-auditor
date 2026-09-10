@@ -1,0 +1,187 @@
+{
+  "version": "1.2.0",
+  "name": "expanded-express-mixed-intent",
+  "description": "Hand-curated definition, keyword-heavy, implementation-intent, and conceptual queries for the pinned expanded public benchmark cohort.",
+  "queries": [
+    {
+      "id": "express-create-application",
+      "query": "where is createApplication defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "createApplication"
+      },
+      "expected": {
+        "filePath": "lib/express.js",
+        "symbol": "createApplication",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "express-authenticate",
+      "query": "where is authenticate defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "authenticate"
+      },
+      "expected": {
+        "filePath": "examples/auth/index.js",
+        "symbol": "authenticate",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "express-format",
+      "query": "where is format defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "format"
+      },
+      "expected": {
+        "filePath": "examples/content-negotiation/index.js",
+        "symbol": "format",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "express-error-handler",
+      "query": "where is error defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "error"
+      },
+      "expected": {
+        "filePath": "examples/error/index.js",
+        "symbol": "error",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "express-github-view",
+      "query": "where is GithubView defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "GithubView"
+      },
+      "expected": {
+        "filePath": "examples/view-constructor/github-view.js",
+        "symbol": "GithubView",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "express-view-render-resolution",
+      "query": "res.render _locals app.render view cache defaultEngine engines lookup nextTick",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "javascript",
+      "difficulty": "hard",
+      "tags": [
+        "keyword",
+        "rendering",
+        "view-resolution",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/application.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/view.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/response.js",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-response-file-transfer",
+      "query": "sendFile download attachment Content-Disposition root sendfile onaborted onfinish",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "javascript",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "response",
+        "file-transfer",
+        "streaming"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/response.js",
+            "relevance": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-view-rendering-implementation",
+      "query": "implementation that resolves a view renders a response and propagates rendering callback errors",
+      "queryType": "implementation-intent",
+      "retrievalMode": "context",
+      "language": "javascript",
+      "difficulty": "medium",
+      "tags": [
+        "implementation",
+        "rendering",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/application.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/view.js",
+            "relevance": 3
+          },
+          {
+            "path": "lib/response.js",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "express-file-transfer-concept",
+      "query": "send response files safely with root containment range support headers and transfer callbacks",
+      "queryType": "conceptual",
+      "retrievalMode": "context",
+      "language": "javascript",
+      "difficulty": "hard",
+      "tags": [
+        "conceptual",
+        "response",
+        "file-transfer"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "lib/response.js",
+            "relevance": 3
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,475 @@
+import { tool, type ToolDefinition } from "@opencode-ai/plugin";
+
+import type { HostMode } from "../../config/host.js";
+import type { ParsedCodebaseIndexConfig } from "../../config/schema.js";
+import type { Indexer } from "../../indexer/index.js";
+import {
+  CALL_GRAPH_DIRECTIONS,
+  CHUNK_TYPES,
+  INDEX_LOG_LEVELS,
+  INDEX_LOG_CATEGORIES,
+  RELATIONSHIP_TYPES,
+  CODE_COMMUNITIES_DEFAULT_HUB_THRESHOLD,
+  CODE_COMMUNITIES_DEFAULT_LIMIT,
+  CODE_COMMUNITIES_MAX_LIMIT,
+  CODE_COMMUNITIES_MIN_SIZE,
+  CODE_COMMUNITIES_MIN_COUPLING,
+  CODE_COMMUNITIES_DEFAULT_COUPLING_LIMIT,
+  CODE_COMMUNITIES_MAX_COUPLING_LIMIT,
+  DEFAULT_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT,
+  MAX_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT,
+  MIN_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT,
+} from "../../tools/contracts.js";
+import {
+  DEFAULT_CONTEXT_PACK_TOKEN_BUDGET,
+  formatCodebasePeek,
+  formatSearchResults,
+  MAX_CONTEXT_PACK_TOKEN_BUDGET,
+  MIN_CONTEXT_PACK_TOKEN_BUDGET,
+} from "../../tools/utils.js";
+import {
+  addKnowledgeBase,
+  findSimilarCode,
+  getIndexerForProject as getOperationIndexerForProject,
+  getSharedIndexer as getOperationSharedIndexer,
+  initializeTools as initializeToolOperations,
+  listKnowledgeBases,
+  removeKnowledgeBase,
+  searchCodebaseWithEffectiveness,
+} from "../../tools/operations.js";
+import { pr_impact } from "./pr-impact.js";
+import {
+  executeCallGraph,
+  executeCallGraphPath,
+  executeCodebaseContext,
+  executeCodebaseEditContext,
+  executeCodeCommunities,
+  executeArchitectureContext,
+  executeIndexCodebase,
+  executeIndexHealthCheck,
+  executeIndexLogs,
+  executeIndexMetrics,
+  executeIndexStatus,
+  executeImplementationLookup,
+} from "../../tools/execute-common.js";
+import {
+  MAX_CONTEXT_PATH_DEPTH,
+  MAX_CONTEXT_RESULT_LIMIT,
+  MIN_CONTEXT_PATH_DEPTH,
+  MIN_CONTEXT_RESULT_LIMIT,
+} from "../../tools/context.js";
+import { writeFileSync } from "fs";
+import * as os from "os";
+import * as path from "path";
+import { attachRecentActivity } from "../../tools/visualize/activity.js";
+import { generateVisualizationHtml, transformForVisualization } from "../../tools/visualize/index.js";
+
+const z = tool.schema;
+const DEFAULT_HOST: HostMode = "opencode";
+const CHUNK_TYPE_VALUES = CHUNK_TYPES;
+const RELATIONSHIP_TYPE_VALUES = RELATIONSHIP_TYPES;
+
+function stableSortedDiagnosticValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => stableSortedDiagnosticValue(item));
+  }
+
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+
+  const entries = Object.entries(value)
+    .sort(([left], [right]) => left.localeCompare(right));
+  const sorted: Record<string, unknown> = {};
+
+  for (const [key, item] of entries) {
+    sorted[key] = stableSortedDiagnosticValue(item);
+  }
+
+  return sorted;
+}
+
+function formatCodebaseContextDiagnostic(details: unknown): string {
+  const sorted = stableSortedDiagnosticValue(details);
+  return `\nDiagnostics:\n${JSON.stringify(sorted, null, 2)}`;
+}
+
+export function initializeTools(projectRoot: string, config: ParsedCodebaseIndexConfig): void {
+  initializeToolOperations(projectRoot, config, DEFAULT_HOST);
+}
+
+export function getSharedIndexer(): Indexer {
+  return getOperationSharedIndexer(DEFAULT_HOST);
+}
+
+export function getIndexerForProject(directory: string): Indexer {
+  return getOperationIndexerForProject(directory, DEFAULT_HOST);
+}
+
+export const codebase_context: ToolDefinition = tool({
+  description:
+    "PREFERRED FIRST TOOL for repository questions. Returns a deduplicated, file-diverse evidence pack within tokenBudget. Provide from and to for dependency paths, with optional fromFilePath/toFilePath when names are ambiguous; provide symbol for definitions; or provide only query for conceptual discovery.",
+  args: {
+    query: z.string().describe("The repository question or behavior to locate"),
+    from: z.string().nullable().optional().describe("Source symbol for a dependency path"),
+    to: z.string().nullable().optional().describe("Target symbol for a dependency path"),
+    fromFilePath: z.string().nullable().optional().describe("Optional source file path used only to disambiguate duplicate source names"),
+    toFilePath: z.string().nullable().optional().describe("Optional target file path used only to disambiguate duplicate target names"),
+    symbol: z.string().nullable().optional().describe("Exact symbol for authoritative definition lookup"),
+    limit: z.number().int().min(MIN_CONTEXT_RESULT_LIMIT).max(MAX_CONTEXT_RESULT_LIMIT).nullable().optional().default(10)
+      .describe(`Maximum number of results (${MIN_CONTEXT_RESULT_LIMIT}-${MAX_CONTEXT_RESULT_LIMIT})`),
+    maxDepth: z.number().int().min(MIN_CONTEXT_PATH_DEPTH).max(MAX_CONTEXT_PATH_DEPTH).nullable().optional().default(10)
+      .describe(`Maximum call-path traversal depth (${MIN_CONTEXT_PATH_DEPTH}-${MAX_CONTEXT_PATH_DEPTH})`),
+    fileType: z.string().nullable().optional().describe("Filter by file extension"),
+    directory: z.string().nullable().optional().describe("Filter by directory path"),
+    tokenBudget: z.number().int().min(MIN_CONTEXT_PACK_TOKEN_BUDGET).max(MAX_CONTEXT_PACK_TOKEN_BUDGET)
+      .nullable().optional().default(DEFAULT_CONTEXT_PACK_TOKEN_BUDGET)
+      .describe(`Maximum response tokens (${MIN_CONTEXT_PACK_TOKEN_BUDGET}-${MAX_CONTEXT_PACK_TOKEN_BUDGET})`),
+    diagnostic: z.boolean().optional().describe("Collect diagnostic routing and search traces without changing normal text output."),
+  },
+  async execute(args, context) {
+    const result = await executeCodebaseContext(context?.worktree, DEFAULT_HOST, args);
+    if (!args.diagnostic || !result.details?.diagnostic) {
+      return result.text;
+    }
+
+    return `${result.text}${formatCodebaseContextDiagnostic(result.details.diagnostic)}`;
+  },
+});
+
+export const codebase_edit_context: ToolDefinition = tool({
+  description: "PRE-EDIT TOOL for a known or suspected symbol. Returns token-bounded target source, direct callers and callees, or a risk-marked conceptual fallback when the target cannot be resolved.",
+  args: {
+    query: z.string().describe("The requested change or target behavior"),
+    symbol: z.string().nullable().optional().describe("Authoritative target symbol when known"),
+    filePath: z.string().nullable().optional().describe("Optional file path used to disambiguate duplicate symbol names"),
+    callerLimit: z.number().int().min(MIN_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT).max(MAX_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT)
+      .nullable().optional().default(DEFAULT_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT),
+    calleeLimit: z.number().int().min(MIN_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT).max(MAX_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT)
+      .nullable().optional().default(DEFAULT_CODEBASE_EDIT_CONTEXT_EDGE_LIMIT),
+    tokenBudget: z.number().int().min(MIN_CONTEXT_PACK_TOKEN_BUDGET).max(MAX_CONTEXT_PACK_TOKEN_BUDGET)
+      .nullable().optional().default(DEFAULT_CONTEXT_PACK_TOKEN_BUDGET),
+  },
+  async execute(args, context) {
+    return (await executeCodebaseEditContext(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const codebase_peek: ToolDefinition = tool({
+  description:
+    "Quick lookup of code locations by meaning. Returns only metadata (file, line, name, type) WITHOUT code content. Use this first to find WHERE code is, then use Read tool to examine specific files. Saves tokens by not returning full code blocks. Best for: discovery, navigation, finding multiple related locations.",
+  args: {
+    query: z.string().describe("Natural language description of what code you're looking for."),
+    limit: z.number().optional().default(10).describe("Maximum number of results to return"),
+    fileType: z.string().optional().describe("Filter by file extension (e.g., 'ts', 'py', 'rs')"),
+    directory: z.string().optional().describe("Filter by directory path (e.g., 'src/utils', 'lib')"),
+    chunkType: z.enum(CHUNK_TYPE_VALUES).optional().describe("Filter by code chunk type"),
+    blameAuthor: z.string().optional().describe("Filter by git blame author name or email"),
+    blameSha: z.string().optional().describe("Filter by git blame commit SHA or prefix"),
+    blameSince: z.string().optional().describe("Filter to chunks last changed on or after this date (e.g., 2025-01-01)"),
+    blameUntil: z.string().optional().describe("Filter to chunks last changed on or before this date (e.g., 2025-01-31)"),
+  },
+  async execute(args, context) {
+    return searchCodebaseWithEffectiveness(context?.worktree, DEFAULT_HOST, "peek", args.query, {
+      limit: args.limit ?? 10,
+      fileType: args.fileType,
+      directory: args.directory,
+      chunkType: args.chunkType,
+      metadataOnly: true,
+      blameAuthor: args.blameAuthor,
+      blameSha: args.blameSha,
+      blameSince: args.blameSince,
+      blameUntil: args.blameUntil,
+    }, (results) => {
+      const text = formatCodebasePeek(results);
+      return { output: text, text };
+    });
+  },
+});
+
+export const index_codebase: ToolDefinition = tool({
+  description:
+    "Index the codebase for semantic search. Creates vector embeddings of code chunks. Incremental - only re-indexes changed files (~50ms when nothing changed). Run before first codebase_search.",
+  args: {
+    force: z.boolean().optional().default(false).describe("Force reindex even if already indexed"),
+    estimateOnly: z.boolean().optional().default(false).describe("Only show cost estimate without indexing"),
+    dryRun: z.boolean().optional().default(false).describe("Parse the file set and report the exact embedding token total without indexing. Read-only; the index is not changed. The total is the value 'Tokens used' climbs to for a force index (and an upper bound for an incremental)."),
+    verbose: z.boolean().optional().default(false).describe("Show detailed info about skipped files and parsing failures"),
+  },
+  async execute(args, context) {
+    return (await executeIndexCodebase(context?.worktree, DEFAULT_HOST, args, (title, metadata) => {
+      context.metadata({ title, metadata });
+    })).text;
+  },
+});
+
+export const index_status: ToolDefinition = tool({
+  description:
+    "Check the status of the codebase index. Shows whether the codebase is indexed, how many chunks are stored, and the embedding provider being used.",
+  args: {},
+  async execute(_args, context) {
+    return (await executeIndexStatus(context?.worktree, DEFAULT_HOST)).text;
+  },
+});
+
+export const index_health_check: ToolDefinition = tool({
+  description:
+    "Check index health and remove stale entries from deleted files. Run this to clean up the index after files have been deleted.",
+  args: {},
+  async execute(_args, context) {
+    return (await executeIndexHealthCheck(context?.worktree, DEFAULT_HOST)).text;
+  },
+});
+
+export const index_metrics: ToolDefinition = tool({
+  description:
+    "Get operational metrics plus opt-in privacy-safe repository-tool effectiveness counters. Use reset=true to clear in-memory metrics before reading. Operational metrics require debug.enabled=true and debug.metrics=true. Privacy-safe aggregates require only effectivenessMetrics.enabled=true.",
+  args: {
+    reset: z.boolean().optional().default(false).describe("Reset in-memory operational and effectiveness metrics before returning the snapshot"),
+  },
+  async execute(args, context) {
+    return (await executeIndexMetrics(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const index_logs: ToolDefinition = tool({
+  description:
+    "Get recent debug logs from the codebase indexer. Shows timestamped log entries with level and category. Requires debug.enabled=true in config.",
+  args: {
+    limit: z.number().optional().default(20).describe("Maximum number of log entries to return"),
+    category: z.enum(INDEX_LOG_CATEGORIES).optional().describe("Filter by log category"),
+    level: z.enum(INDEX_LOG_LEVELS).optional().describe("Filter by minimum log level"),
+  },
+  async execute(args, context) {
+    return (await executeIndexLogs(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const find_similar: ToolDefinition = tool({
+  description:
+    "Find code similar to a given snippet. Use for duplicate detection, pattern discovery, or refactoring prep. Paste code and find semantically similar implementations elsewhere in the codebase.",
+  args: {
+    code: z.string().describe("The code snippet to find similar code for"),
+    limit: z.number().optional().default(10).describe("Maximum number of results to return"),
+    fileType: z.string().optional().describe("Filter by file extension (e.g., 'ts', 'py', 'rs')"),
+    directory: z.string().optional().describe("Filter by directory path (e.g., 'src/utils', 'lib')"),
+    chunkType: z.enum(CHUNK_TYPE_VALUES).optional().describe("Filter by code chunk type"),
+    excludeFile: z.string().optional().describe("Exclude results from this file path (useful when searching for duplicates of code from a specific file)"),
+    blameSince: z.string().optional().describe("Filter to chunks last changed on or after this date (e.g., 2025-01-01)"),
+    blameUntil: z.string().optional().describe("Filter to chunks last changed on or before this date (e.g., 2025-01-31)"),
+  },
+  async execute(args, context) {
+    const results = await findSimilarCode(context?.worktree, DEFAULT_HOST, args.code, {
+      limit: args.limit,
+      fileType: args.fileType,
+      directory: args.directory,
+      chunkType: args.chunkType,
+      excludeFile: args.excludeFile,
+      blameSince: args.blameSince,
+      blameUntil: args.blameUntil,
+    });
+
+    if (results.length === 0) {
+      return "No similar code found. Try a different snippet or run index_codebase first.";
+    }
+
+    return formatSearchResults(results);
+  },
+});
+
+export const codebase_search: ToolDefinition = tool({
+  description:
+    "Search codebase by MEANING, not keywords. Returns full code content. Use when you need to see actual implementation. For just finding WHERE code is (saves ~90% tokens), use codebase_peek instead. For known identifiers like 'validateToken', use grep - it's faster.",
+  args: {
+    query: z.string().describe("Natural language description of what code you're looking for. Describe behavior, not syntax."),
+    limit: z.number().optional().default(5).describe("Maximum number of results to return"),
+    fileType: z.string().optional().describe("Filter by file extension (e.g., 'ts', 'py', 'rs')"),
+    directory: z.string().optional().describe("Filter by directory path (e.g., 'src/utils', 'lib')"),
+    chunkType: z.enum(CHUNK_TYPE_VALUES).optional().describe("Filter by code chunk type"),
+    contextLines: z.number().optional().describe("Number of extra lines to include before/after each match (default: 0)"),
+    blameAuthor: z.string().optional().describe("Filter by git blame author name or email"),
+    blameSha: z.string().optional().describe("Filter by git blame commit SHA or prefix"),
+    blameSince: z.string().optional().describe("Filter to chunks last changed on or after this date (e.g., 2025-01-01)"),
+    blameUntil: z.string().optional().describe("Filter to chunks last changed on or before this date (e.g., 2025-01-31)"),
+  },
+  async execute(args, context) {
+    return searchCodebaseWithEffectiveness(context?.worktree, DEFAULT_HOST, "search", args.query, {
+      limit: args.limit ?? 5,
+      fileType: args.fileType,
+      directory: args.directory,
+      chunkType: args.chunkType,
+      contextLines: args.contextLines,
+      blameAuthor: args.blameAuthor,
+      blameSha: args.blameSha,
+      blameSince: args.blameSince,
+      blameUntil: args.blameUntil,
+    }, (results) => {
+      const text = results.length === 0
+        ? "No matching code found. Try a different query or run index_codebase first."
+        : formatSearchResults(results, "score");
+      return { output: text, text };
+    });
+  },
+});
+
+export const implementation_lookup: ToolDefinition = tool({
+  description:
+    "Jump to symbol definition. Find WHERE something is defined. " +
+    "Returns the authoritative source location(s) for a function, class, method, type, or variable. " +
+    "Prefers real implementation files over tests, docs, examples, and fixtures. " +
+    "Use when you need the definition site, not all usages.",
+  args: {
+    query: z.string().describe("Symbol name or natural language description (e.g., 'validateToken', 'where is the payment handler defined')"),
+    limit: z.number().optional().default(5).describe("Maximum number of results"),
+    fileType: z.string().optional().describe("Filter by file extension (e.g., 'ts', 'py')"),
+    directory: z.string().optional().describe("Filter by directory path (e.g., 'src/utils')"),
+  },
+  async execute(args, context) {
+    return (await executeImplementationLookup(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const call_graph: ToolDefinition = tool({
+  description:
+    "Query the call graph by function or method name to find direct callers or callees. Unique names resolve automatically; use filePath only when duplicate names are reported."
+    + " Supports relationship types: Call, MethodCall, Constructor, Import, Inherits, Implements.",
+  args: {
+    name: z.string().describe("Function or method name to query"),
+    direction: z.enum(CALL_GRAPH_DIRECTIONS).default("callers").describe("Direction: 'callers' finds who calls this function, 'callees' finds what this function calls"),
+    filePath: z.string().optional().describe("Optional file path used to disambiguate duplicate symbol names"),
+    symbolId: z.string().optional().describe("Optional backward-compatible symbol ID escape hatch"),
+    relationshipType: z.enum(RELATIONSHIP_TYPE_VALUES).optional().describe("Filter by relationship type. Omit to show all."),
+  },
+  async execute(args, context) {
+    return (await executeCallGraph(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const call_graph_path: ToolDefinition = tool({
+  description:
+    "Find the shortest connection path between two named symbols. Unique names resolve automatically; use fromFilePath or toFilePath only when duplicate endpoint names are reported.",
+  args: {
+    from: z.string().describe("Source function/method name (starting point)"),
+    to: z.string().describe("Target function/method name (destination)"),
+    fromFilePath: z.string().optional().describe("Optional source file path used to disambiguate duplicate source names"),
+    toFilePath: z.string().optional().describe("Optional target file path used to disambiguate duplicate target names"),
+    maxDepth: z.number().optional().default(10).describe("Maximum traversal depth (default: 10)"),
+  },
+  async execute(args, context) {
+    return (await executeCallGraphPath(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const add_knowledge_base: ToolDefinition = tool({
+  description:
+    "Add a folder as a knowledge base to the semantic search index. " +
+    "The folder will be indexed alongside the main project code. " +
+    "Supports absolute paths or relative paths (relative to the project root).",
+  args: {
+    path: z.string().describe("Path to the folder to add as a knowledge base (absolute or relative to the project root)"),
+  },
+  async execute(args, context) {
+    return addKnowledgeBase(context?.worktree, DEFAULT_HOST, args.path);
+  },
+});
+
+export const list_knowledge_bases: ToolDefinition = tool({
+  description:
+    "List all configured knowledge base folders that are indexed alongside the main project.",
+  args: {},
+  async execute(_args, context) {
+    return listKnowledgeBases(context?.worktree, DEFAULT_HOST);
+  },
+});
+
+export const remove_knowledge_base: ToolDefinition = tool({
+  description:
+    "Remove a knowledge base folder from the semantic search index.",
+  args: {
+    path: z.string().describe("Path of the knowledge base to remove (must match the configured path exactly)"),
+  },
+  async execute(args, context) {
+    return removeKnowledgeBase(context?.worktree, DEFAULT_HOST, args.path.trim());
+  },
+});
+
+export { pr_impact };
+
+export const architecture_context: ToolDefinition = tool({
+  description: "Repository-scale architecture map backed by cited graph symbols and relationships. Use before focused retrieval when you need module boundaries, entry points, and safe next steps.",
+  args: {
+    query: z.string().nullable().optional().describe("Optional subsystem or planning focus"),
+    directory: z.string().nullable().optional().describe("Constrain the map to this directory"),
+    depth: z.number().int().min(1).max(3).optional().default(2).describe("Summary detail level (1-3)"),
+    includeRecentActivity: z.boolean().optional().default(false).describe("Include matching Git activity from the last 90 days when available"),
+    tokenBudget: z.number().int().min(128).max(4000).optional().default(1200).describe("Maximum response token budget"),
+  },
+  async execute(args, context) {
+    return (await executeArchitectureContext(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const code_communities: ToolDefinition = tool({
+  description:
+    "Discover natural module boundaries and hub symbols in the codebase using graph community detection. " +
+    "Clusters symbols by call-graph connectivity, reports community memberships, and identifies hub nodes " +
+    "with cross-community connections, and summarizes couplings between communities.",
+  args: {
+    branch: z.string().optional().describe("Branch name to analyze (defaults to current branch)"),
+    minSize: z.number().int().min(CODE_COMMUNITIES_MIN_SIZE).optional().default(CODE_COMMUNITIES_MIN_SIZE).describe("Minimum community size to include (default: 1)"),
+    limit: z.number().int().min(1).max(CODE_COMMUNITIES_MAX_LIMIT).optional().default(CODE_COMMUNITIES_DEFAULT_LIMIT).describe("Maximum number of communities and hub nodes to return (default: 20)"),
+    hubThreshold: z.number().int().min(0).optional().default(CODE_COMMUNITIES_DEFAULT_HUB_THRESHOLD).describe("Minimum distinct cross-community neighbors to flag a hub node (default: 5)"),
+    minCoupling: z.number().int().min(CODE_COMMUNITIES_MIN_COUPLING).optional().default(CODE_COMMUNITIES_MIN_COUPLING).describe("Minimum distinct cross-community connection count to report a coupling (default: 1)"),
+    couplingLimit: z.number().int().min(1).max(CODE_COMMUNITIES_MAX_COUPLING_LIMIT).optional().default(CODE_COMMUNITIES_DEFAULT_COUPLING_LIMIT).describe("Maximum number of couplings to return (default: 20)"),
+  },
+  async execute(args, context) {
+    return (await executeCodeCommunities(context?.worktree, DEFAULT_HOST, args)).text;
+  },
+});
+
+export const index_visualize: ToolDefinition = tool({
+  description:
+    "Generate an interactive HTML visualization of recent code movement and the call graph. " +
+    "Starts with temporal onboarding context from Git history, then supports module, symbol, hotspot, and cycle drill-down.",
+  args: {
+    directory: z.string().optional().describe("Filter to symbols in this directory (e.g., 'src/services')"),
+    maxNodes: z.number().optional().default(5000).describe("Maximum nodes to include (default 5000)"),
+    includeOrphans: z.boolean().optional().default(false).describe("Include symbols with no call relationships"),
+  },
+  async execute(args, context) {
+    const projectRoot = context?.worktree ?? process.cwd();
+    const indexer = getIndexerForProject(projectRoot);
+    const rawData = await indexer.getVisualizationData({
+      directory: args.directory,
+    });
+
+    if (rawData.symbols.length === 0) {
+      return "No call graph data found. Run index_codebase first to build the call graph.";
+    }
+
+    const vizData = attachRecentActivity(transformForVisualization(rawData.symbols, rawData.edges, {
+      includeOrphans: args.includeOrphans,
+      directory: args.directory,
+      maxNodes: args.maxNodes,
+    }), projectRoot);
+
+    if (vizData.nodes.length === 0) {
+      return "No connected symbols found for visualization. Try including orphans with includeOrphans=true, or check that the call graph has resolved edges.";
+    }
+
+    const html = generateVisualizationHtml(vizData);
+    const outputPath = path.join(os.tmpdir(), `call-graph-${Date.now()}.html`);
+    writeFileSync(outputPath, html, "utf-8");
+
+    let result = `Temporal call graph visualization generated: ${outputPath}\n\n`;
+    result += `Nodes: ${vizData.nodes.length} | Edges: ${vizData.edges.length}\n`;
+    result += `Recent change lenses: ${vizData.changes?.length ?? 0}\n`;
+    result += `Files: ${new Set(vizData.nodes.map(n => n.filePath)).size}\n`;
+    result += `Directories: ${new Set(vizData.nodes.map(n => n.directory)).size}`;
+    if (vizData.metadata.truncated) {
+      result += `\n\n\u26a0\ufe0f Graph truncated to ${args.maxNodes} most-connected nodes (total: ${rawData.symbols.length}).`;
+    }
+
+    return result;
+  },
+});

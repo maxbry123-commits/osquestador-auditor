@@ -1,0 +1,501 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
+
+import { buildPerQueryResult, computeEvalMetrics } from "../src/eval/metrics.js";
+import * as runner from "../src/eval/runner.js";
+import {
+  loadFixedDataset,
+  parseCliArgs,
+  runForRepo,
+  type CliOptions,
+} from "../scripts/cross-repo-benchmark.js";
+
+vi.mock("../src/eval/runner.js", () => ({
+  runEvaluation: vi.fn(),
+}));
+
+const tempDirs: string[] = [];
+
+function tempDir(prefix: string): string {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tempDirs.push(directory);
+  return directory;
+}
+
+function datasetPathForRepo(datasetDir: string, repoName: string): string {
+  return path.join(datasetDir, `${repoName}.json`);
+}
+
+function writeJson(filePath: string, value: unknown): void {
+  fs.writeFileSync(filePath, JSON.stringify(value, null, 2), "utf-8");
+}
+let originalBenchmarkRepos: string | undefined;
+
+beforeEach(() => {
+  originalBenchmarkRepos = process.env.BENCHMARK_REPOS;
+  delete process.env.BENCHMARK_REPOS;
+});
+
+afterEach(() => {
+  if (originalBenchmarkRepos === undefined) {
+    delete process.env.BENCHMARK_REPOS;
+  } else {
+    process.env.BENCHMARK_REPOS = originalBenchmarkRepos;
+  }
+
+  vi.restoreAllMocks();
+  while (tempDirs.length > 0) {
+    const directory = tempDirs.pop();
+    if (directory) fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+function mockedQueryResult(filePath: string) {
+  return {
+    id: "q-implementation",
+    query: "find implementation query",
+    queryType: "implementation-intent" as const,
+    expected: { filePath },
+    retrievalMode: "search" as const,
+  };
+}
+
+function mockEvalResult(datasetPath: string): Awaited<ReturnType<typeof runner.runEvaluation>> {
+  const query = mockedQueryResult(datasetPath);
+  const results = [
+    buildPerQueryResult(query, [{
+      filePath: query.expected.filePath ?? "src/a.ts",
+      startLine: 1,
+      endLine: 2,
+      score: 1,
+      chunkType: "function",
+      name: "fixture",
+    }], 5, 10),
+  ];
+
+  const metrics = computeEvalMetrics([query], results, 0, 0, 0);
+
+  const outputDir = path.join(path.dirname(datasetPath), "plugin", "result");
+  fs.mkdirSync(outputDir, { recursive: true });
+  writeJson(path.join(outputDir, "summary.json"), {});
+  writeJson(path.join(outputDir, "per-query.json"), []);
+
+  return {
+    outputDir,
+    summary: {
+      generatedAt: new Date().toISOString(),
+      projectRoot: path.dirname(datasetPath),
+      datasetPath,
+      datasetName: "cross-repo-fixed",
+      datasetVersion: "1.0.0",
+      queryCount: results.length,
+      topK: 10,
+      searchConfig: {
+        fusionStrategy: "rrf",
+        hybridWeight: 0.5,
+        rrfK: 60,
+        rerankTopN: 10,
+      },
+      metrics,
+    },
+    perQuery: results,
+  };
+}
+
+function withRunEvaluationMock(result: Awaited<ReturnType<typeof runner.runEvaluation>>): void {
+  vi.mocked(runner.runEvaluation).mockReset();
+  vi.mocked(runner.runEvaluation).mockResolvedValue(result);
+}
+
+describe("cross-repo benchmark dataset-dir flag", () => {
+  it("keeps the expanded frozen cohort balanced and source-evidenced across retrieval modes", () => {
+    const cohortDir = path.join(process.cwd(), "benchmarks", "golden", "expanded-cross-repo");
+    const cohort = JSON.parse(fs.readFileSync(path.join(cohortDir, "cohort.json"), "utf-8")) as {
+      version: string;
+      name: string;
+      queryCount: number;
+      repositories: Array<{ name: string; dataset: string }>;
+    };
+
+    expect(cohort).toMatchObject({
+      version: "1.4.0",
+      name: "expanded-cross-repo-mixed-intent-cohort-v4",
+      queryCount: 100,
+    });
+    expect(cohort.repositories).toHaveLength(9);
+
+    let totalQueries = 0;
+    for (const repository of cohort.repositories) {
+      const dataset = JSON.parse(fs.readFileSync(path.join(cohortDir, repository.dataset), "utf-8")) as {
+        version: string;
+        queries: Array<{
+          id: string;
+          queryType: string;
+          retrievalMode?: string;
+          expected: { expectedRoute?: string; gradedEvidence?: unknown[] };
+        }>;
+      };
+      const definitions = dataset.queries.filter((query) => query.queryType === "definition");
+      const keywordHeavy = dataset.queries.filter((query) => query.queryType === "keyword-heavy");
+      const implementation = dataset.queries.filter((query) => query.queryType === "implementation-intent");
+      const conceptual = dataset.queries.filter((query) => query.queryType === "conceptual");
+
+      expect(dataset.version).toBe("1.2.0");
+      expect(new Set(dataset.queries.map((query) => query.id)).size).toBe(dataset.queries.length);
+      totalQueries += dataset.queries.length;
+      const expectedCount = repository.name === "sinatra"
+        ? 19
+        : repository.name === "newtonsoft-json"
+          ? 18
+          : 9;
+      expect(dataset.queries).toHaveLength(expectedCount);
+      expect(definitions.length).toBeGreaterThanOrEqual(5);
+      expect(keywordHeavy.length).toBeGreaterThanOrEqual(2);
+      expect(implementation.length).toBeGreaterThanOrEqual(1);
+      expect(conceptual.length).toBeGreaterThanOrEqual(1);
+      for (const query of keywordHeavy) {
+        expect(query.retrievalMode).toBe("search");
+        expect(query.expected.expectedRoute).toBe("search");
+        expect(query.expected.gradedEvidence?.length).toBeGreaterThan(0);
+      }
+      for (const query of [...implementation, ...conceptual]) {
+        expect(query.retrievalMode).toBe("context");
+        expect(query.expected.expectedRoute).toBe("search");
+        expect(query.expected.gradedEvidence?.length).toBeGreaterThan(0);
+      }
+    }
+
+    expect(totalQueries).toBe(cohort.queryCount);
+  });
+
+  it("parses --dataset-dir in CLI args", () => {
+    const repoPath = tempDir("cross-repo-benchmark-cli-repo-");
+    const datasetDir = tempDir("cross-repo-benchmark-cli-fixed-");
+
+    const parsed = parseCliArgs(["--repos", repoPath, "--dataset-dir", datasetDir]);
+    expect(parsed.datasetDir).toBe(datasetDir);
+
+    expect(parseCliArgs(["--repos", repoPath]).datasetDir).toBeUndefined();
+  });
+
+  it("parses a selected Ollama embedding model and retains the Nomic default", () => {
+    const repoPath = tempDir("cross-repo-benchmark-cli-model-");
+
+    expect(parseCliArgs(["--repos", repoPath]).embeddingModel).toBe("nomic-embed-text");
+    expect(
+      parseCliArgs(["--repos", repoPath, "--embedding-model", " embeddinggemma "])
+        .embeddingModel
+    ).toBe("embeddinggemma");
+    expect(() => parseCliArgs(["--repos", repoPath, "--embedding-model", " "])).toThrow(
+      "--embedding-model requires a model name"
+    );
+  });
+
+  it("loads a fixed dataset with all supported evidence path fields", () => {
+    const repoPath = tempDir("cross-repo-benchmark-fixed-load-repo-");
+    const fixedDir = tempDir("cross-repo-benchmark-fixed-load-");
+    const repoName = path.basename(repoPath);
+    fs.mkdirSync(path.join(repoPath, "src"), { recursive: true });
+    fs.writeFileSync(path.join(repoPath, "src", "fixture.ts"), "export function fixture() {}", "utf-8");
+    fs.writeFileSync(path.join(repoPath, "src", "other.ts"), "export function other() {}", "utf-8");
+
+    const dataset = {
+      version: "1.0.0",
+      name: "fixed-fixture",
+      queries: [
+        {
+          id: "implementation",
+          query: "where is fixture implemented",
+          queryType: "implementation-intent",
+          expected: {
+            filePath: "src/fixture.ts",
+            acceptableFiles: ["src/other.ts"],
+            gradedEvidence: [
+              {
+                path: "src/other.ts",
+                relevance: 1,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const fixedPath = datasetPathForRepo(fixedDir, repoName);
+    writeJson(fixedPath, dataset);
+
+    const loaded = loadFixedDataset(fixedPath, repoPath);
+    expect(loaded.version).toBe("1.0.0");
+    expect(loaded.name).toBe("fixed-fixture");
+    expect(loaded.queries[0]).toMatchObject(dataset.queries[0]);
+  });
+
+  it("rejects fixed datasets with missing evidence paths", () => {
+    const repoPath = tempDir("cross-repo-benchmark-fixed-missing-");
+    const fixedDir = tempDir("cross-repo-benchmark-fixed-missing-path-");
+    const repoName = path.basename(repoPath);
+    fs.mkdirSync(path.join(repoPath, "src"), { recursive: true });
+    fs.writeFileSync(path.join(repoPath, "src", "fixture.ts"), "export function fixture() {}", "utf-8");
+
+    const fixedPath = datasetPathForRepo(fixedDir, repoName);
+    writeJson(fixedPath, {
+      version: "1.0.0",
+      name: "missing-path",
+      queries: [
+        {
+          id: "implementation",
+          query: "where is missing",
+          queryType: "implementation-intent",
+          expected: {
+            filePath: "src/missing.ts",
+          },
+        },
+      ],
+    });
+
+    expect(() => loadFixedDataset(fixedPath, repoPath)).toThrow(/does not exist/);
+  });
+
+  it("rejects fixed datasets with evidence paths that escape repository root", () => {
+    const repoPath = tempDir("cross-repo-benchmark-fixed-outside-");
+    const fixedDir = tempDir("cross-repo-benchmark-fixed-outside-path-");
+    const repoName = path.basename(repoPath);
+    fs.mkdirSync(path.join(repoPath, "src"), { recursive: true });
+    fs.writeFileSync(path.join(repoPath, "src", "fixture.ts"), "export function fixture() {}", "utf-8");
+
+    const fixedPath = datasetPathForRepo(fixedDir, repoName);
+    writeJson(fixedPath, {
+      version: "1.0.0",
+      name: "outside-path",
+      queries: [
+        {
+          id: "implementation",
+          query: "where is outside",
+          queryType: "implementation-intent",
+          expected: {
+            filePath: "../outside.ts",
+          },
+        },
+      ],
+    });
+
+    expect(() => loadFixedDataset(fixedPath, repoPath)).toThrow(/outside repository/);
+  });
+
+  it("validates fixed definition comparator queries for consistent symbol file targets", () => {
+    const repoPath = tempDir("cross-repo-benchmark-fixed-symbol-validator-repo-");
+    const fixedDir = tempDir("cross-repo-benchmark-fixed-symbol-validator-");
+    const repoName = path.basename(repoPath);
+    fs.mkdirSync(path.join(repoPath, "lib"), { recursive: true });
+    fs.writeFileSync(path.join(repoPath, "lib", "a.ts"), "export function token() {}", "utf-8");
+    fs.writeFileSync(path.join(repoPath, "lib", "b.ts"), "export function token() {}", "utf-8");
+
+    const datasetPath = datasetPathForRepo(fixedDir, repoName);
+    writeJson(datasetPath, {
+      version: "1.0.0",
+      name: "symbol-target-validation",
+      queries: [
+        {
+          id: "good-1",
+          query: "where is token defined",
+          queryType: "definition",
+          retrievalMode: "context",
+          args: {
+            symbol: "token",
+          },
+          expected: {
+            filePath: "lib/a.ts",
+            symbol: "token",
+            expectedRoute: "definition",
+          },
+        },
+        {
+          id: "good-2",
+          query: "where is token defined",
+          queryType: "definition",
+          retrievalMode: "context",
+          args: {
+            symbol: "token",
+          },
+          expected: {
+            filePath: "lib/a.ts",
+            symbol: "token",
+            expectedRoute: "definition",
+          },
+        },
+      ],
+    });
+
+    writeJson(datasetPath, {
+      version: "1.0.0",
+      name: "symbol-target-validation-conflict",
+      queries: [
+        {
+          id: "conflict-1",
+          query: "where is token defined",
+          queryType: "definition",
+          retrievalMode: "context",
+          args: {
+            symbol: "token",
+          },
+          expected: {
+            filePath: "lib/a.ts",
+            symbol: "token",
+            expectedRoute: "definition",
+          },
+        },
+        {
+          id: "conflict-2",
+          query: "where is token defined",
+          queryType: "definition",
+          retrievalMode: "context",
+          args: {
+            symbol: "token",
+          },
+          expected: {
+            filePath: "lib/b.ts",
+            symbol: "token",
+            expectedRoute: "definition",
+          },
+        },
+      ],
+    });
+
+    expect(() => loadFixedDataset(datasetPath, repoPath)).toThrow(
+      /Conflicting fixed-definition dataset target/
+    );
+  });
+
+  it("uses fixed dataset file when present and copies it to run artifacts", async () => {
+    const repoPath = tempDir("cross-repo-benchmark-run-fixed-repo-");
+    const fixedDir = tempDir("cross-repo-benchmark-run-fixed-");
+    const runRoot = tempDir("cross-repo-benchmark-run-fixed-artifacts-");
+    const repoName = path.basename(repoPath);
+    const datasetPath = datasetPathForRepo(fixedDir, repoName);
+
+    fs.mkdirSync(path.join(repoPath, "src"), { recursive: true });
+    fs.writeFileSync(path.join(repoPath, "src", "fixture.ts"), "export function fixture() {}", "utf-8");
+
+    const dataset = {
+      version: "1.0.0",
+      name: "fixed-fixture",
+      queries: [
+        {
+          id: "implementation",
+          query: "where is fixture",
+          queryType: "implementation-intent",
+          expected: {
+            filePath: "src/fixture.ts",
+          },
+        },
+      ],
+    };
+    writeJson(datasetPath, dataset);
+
+    const expectedRunDatasetPath = path.join(runRoot, "datasets", `${repoName}.json`);
+    withRunEvaluationMock(mockEvalResult(expectedRunDatasetPath));
+
+    const options: CliOptions = {
+      repos: [repoPath],
+      outputRoot: runRoot,
+      datasetDir: fixedDir,
+      reindex: false,
+      repeats: 1,
+      maxParseFiles: 20,
+      persistDatasets: false,
+      skipRipgrep: true,
+      skipSg: true,
+      codegraph: false,
+      codebaseMemoryMcp: false,
+      embeddingModel: "embeddinggemma",
+    };
+
+    const result = await runForRepo(
+      repoPath,
+      options,
+      runRoot,
+      path.join(runRoot, "datasets"),
+      path.join(runRoot, "persist")
+    );
+
+    expect(result.error).toBeUndefined();
+    expect(result.datasetPath).toBe(expectedRunDatasetPath);
+    expect(result.datasetQueryCount).toBe(1);
+
+    const copied = JSON.parse(fs.readFileSync(result.datasetPath, "utf-8")) as { name: string; queries: unknown[] };
+    expect(copied).toEqual(dataset);
+    expect(vi.mocked(runner.runEvaluation).mock.calls[0]?.[0].datasetPath).toBe(result.datasetPath);
+    expect(
+      JSON.parse(
+        fs.readFileSync(path.join(runRoot, "eval-configs", `${repoName}-benchmark.json`), "utf-8")
+      )
+    ).toMatchObject({
+      indexing: {
+        maxDepth: -1,
+      },
+      embeddingProvider: "ollama",
+      embeddingModel: "embeddinggemma",
+    });
+  });
+
+  it("reports an error when a fixed dataset is absent for a repository", async () => {
+    const repoPath = process.cwd();
+    const fixedDir = tempDir("cross-repo-benchmark-run-missing-");
+    const runRoot = tempDir("cross-repo-benchmark-run-generated-artifacts-");
+    const datasetToIgnore = {
+      version: "1.0.0",
+      name: "wrong-repo",
+      queries: [
+        {
+          id: "other",
+          query: "never used",
+          queryType: "implementation-intent",
+          expected: {
+            filePath: "src/fixture.ts",
+          },
+        },
+      ],
+    };
+    writeJson(path.join(fixedDir, `wrong-repo.json`), datasetToIgnore);
+
+    const options: CliOptions = {
+      repos: [repoPath],
+      outputRoot: runRoot,
+      datasetDir: fixedDir,
+      reindex: false,
+      repeats: 1,
+      maxParseFiles: 20,
+      persistDatasets: false,
+      skipRipgrep: true,
+      skipSg: true,
+      codegraph: false,
+      codebaseMemoryMcp: false,
+      embeddingModel: "nomic-embed-text",
+    };
+
+    const expectedRunDatasetPath = path.join(runRoot, "datasets", `${path.basename(repoPath)}.json`);
+    withRunEvaluationMock(mockEvalResult(expectedRunDatasetPath));
+
+    const result = await runForRepo(
+      repoPath,
+      options,
+      runRoot,
+      path.join(runRoot, "datasets"),
+      path.join(runRoot, "persist")
+    );
+
+    expect(result.error).toContain(`Fixed dataset not found for ${path.basename(repoPath)}`);
+    expect(fs.existsSync(expectedRunDatasetPath)).toBe(false);
+    expect(runner.runEvaluation).not.toHaveBeenCalled();
+  });
+});

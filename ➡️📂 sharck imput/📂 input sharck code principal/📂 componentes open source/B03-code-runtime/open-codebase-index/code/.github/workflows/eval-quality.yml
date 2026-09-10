@@ -1,0 +1,220 @@
+name: Eval Quality Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: Evaluation tier to run
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - full
+  schedule:
+    - cron: "0 3 * * *"
+    - cron: "0 4 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  eval-quality:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@efa25f7f19611383d5b0ccf2d1c8914531636bf9
+        with:
+          toolchain: stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
+        with:
+          workspaces: native -> target
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build native module
+        working-directory: native
+        run: |
+          cargo build --release
+          npx napi build --release --platform
+
+      - name: Resolve evaluation tier
+        id: eval-tier
+        env:
+          DISPATCH_TIER: ${{ inputs.tier }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ "$DISPATCH_TIER" = "full" ] || [ "$SCHEDULE" = "0 4 * * 0" ]; then
+            echo "name=full" >> "$GITHUB_OUTPUT"
+            echo "dataset_path=benchmarks/golden/representative.json" >> "$GITHUB_OUTPUT"
+            echo "ollama_config=.github/eval-ollama-full-config.json" >> "$GITHUB_OUTPUT"
+            echo "absolute_budget=benchmarks/budgets/representative.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=smoke" >> "$GITHUB_OUTPUT"
+            echo "dataset_path=benchmarks/golden/small.json" >> "$GITHUB_OUTPUT"
+            echo "ollama_config=.github/eval-ollama-config.json" >> "$GITHUB_OUTPUT"
+            echo "absolute_budget=benchmarks/budgets/ollama.json" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve eval provider config
+        id: eval-provider
+        env:
+          EVAL_EMBED_BASE_URL: ${{ secrets.EVAL_EMBED_BASE_URL }}
+          EVAL_EMBED_API_KEY: ${{ secrets.EVAL_EMBED_API_KEY }}
+          EVAL_EMBED_MODEL: ${{ secrets.EVAL_EMBED_MODEL }}
+          EVAL_EMBED_DIMENSIONS: ${{ secrets.EVAL_EMBED_DIMENSIONS }}
+          EVAL_TIER: ${{ steps.eval-tier.outputs.name }}
+        run: |
+          if [ -n "$EVAL_EMBED_BASE_URL" ] || [ -n "$EVAL_EMBED_API_KEY" ]; then
+            if [ -z "$EVAL_EMBED_BASE_URL" ] || [ -z "$EVAL_EMBED_API_KEY" ]; then
+              echo "If overriding the default Ollama provider, both EVAL_EMBED_BASE_URL and EVAL_EMBED_API_KEY must be set."
+              exit 1
+            fi
+
+            echo "provider_source=custom-secrets" >> "$GITHUB_OUTPUT"
+            if [ "$EVAL_TIER" = "full" ]; then
+              echo "budget_path=${{ steps.eval-tier.outputs.absolute_budget }}" >> "$GITHUB_OUTPUT"
+              echo "against_path=" >> "$GITHUB_OUTPUT"
+            else
+              echo "budget_path=benchmarks/budgets/default.json" >> "$GITHUB_OUTPUT"
+              echo "against_path=benchmarks/baselines/eval-baseline-summary.json" >> "$GITHUB_OUTPUT"
+            fi
+            echo "base_url=$EVAL_EMBED_BASE_URL" >> "$GITHUB_OUTPUT"
+            echo "api_key=$EVAL_EMBED_API_KEY" >> "$GITHUB_OUTPUT"
+            echo "model=${EVAL_EMBED_MODEL:-text-embedding-3-small}" >> "$GITHUB_OUTPUT"
+            echo "dimensions=${EVAL_EMBED_DIMENSIONS:-1536}" >> "$GITHUB_OUTPUT"
+          else
+            echo "provider_source=ollama" >> "$GITHUB_OUTPUT"
+            echo "budget_path=${{ steps.eval-tier.outputs.absolute_budget }}" >> "$GITHUB_OUTPUT"
+            echo "against_path=" >> "$GITHUB_OUTPUT"
+            echo "model=nomic-embed-text" >> "$GITHUB_OUTPUT"
+            echo "dimensions=768" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Eval quality gate provider::Using local Ollama because no custom embedding provider secrets are configured."
+          fi
+
+      - name: Start local Ollama evaluation provider
+        if: steps.eval-provider.outputs.provider_source == 'ollama'
+        run: |
+          OLLAMA_VERSION=0.32.5
+          INSTALLER="$RUNNER_TEMP/ollama-install.sh"
+          curl --fail --show-error --silent --location \
+            "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/install.sh" \
+            --output "$INSTALLER"
+          echo "25f64b810b947145095956533e1bdf56eacea2673c55a7e586be4515fc882c9f  $INSTALLER" | sha256sum --check
+          OLLAMA_VERSION="$OLLAMA_VERSION" sh "$INSTALLER"
+          ollama serve > "$RUNNER_TEMP/ollama.log" 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:11434/api/tags >/dev/null; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              cat "$RUNNER_TEMP/ollama.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          ollama pull "${{ steps.eval-provider.outputs.model }}"
+
+      - name: Ensure baseline exists for baseline-driven budget
+        if: steps.eval-provider.outputs.against_path != ''
+        run: |
+          if [ ! -f "${{ steps.eval-provider.outputs.against_path }}" ]; then
+            echo "Missing baseline summary: ${{ steps.eval-provider.outputs.against_path }}"
+            exit 1
+          fi
+
+      - name: Create eval quality config
+        run: |
+          if [ "${{ steps.eval-provider.outputs.provider_source }}" = "ollama" ]; then
+            cp "${{ steps.eval-tier.outputs.ollama_config }}" .github/eval-quality-config.json
+          else
+            EMBED_CONCURRENCY=3
+            EMBED_REQUEST_INTERVAL_MS=1000
+            EMBED_RETRIES=3
+            EMBED_RETRY_DELAY_MS=1000
+            cat > .github/eval-quality-config.json <<EOF
+          {
+            "embeddingProvider": "custom",
+            "customProvider": {
+              "baseUrl": "${{ steps.eval-provider.outputs.base_url }}",
+              "apiKey": "${{ steps.eval-provider.outputs.api_key }}",
+              "model": "${{ steps.eval-provider.outputs.model }}",
+              "dimensions": ${{ steps.eval-provider.outputs.dimensions }},
+              "timeoutMs": 30000,
+              "concurrency": $EMBED_CONCURRENCY,
+              "requestIntervalMs": $EMBED_REQUEST_INTERVAL_MS
+            },
+            "indexing": {
+              "autoIndex": false,
+              "watchFiles": false,
+              "respectGitignore": true,
+              "semanticOnly": false,
+              "requireProjectMarker": false,
+              "retries": $EMBED_RETRIES,
+              "retryDelayMs": $EMBED_RETRY_DELAY_MS
+            },
+            "search": {
+              "maxResults": 10,
+              "minScore": 0,
+              "hybridWeight": 0.4,
+              "fusionStrategy": "rrf",
+              "rrfK": 60,
+              "rerankTopN": 20,
+              "enableCrossLanguage": true
+            },
+            "debug": {
+              "enabled": false,
+              "logLevel": "info",
+              "metrics": true
+            }
+          }
+          EOF
+            if [ "${{ steps.eval-tier.outputs.name }}" = "smoke" ]; then
+              jq '.include = ["src/indexer/*.ts", "src/adapters/opencode/*.ts", "src/config/*.ts"]' \
+                .github/eval-quality-config.json > .github/eval-quality-config.tmp.json
+              mv .github/eval-quality-config.tmp.json .github/eval-quality-config.json
+            fi
+          fi
+
+      - name: Run eval quality gate (real provider config required)
+        run: |
+          ARGS=(eval run --dataset "${{ steps.eval-tier.outputs.dataset_path }}" --config .github/eval-quality-config.json --output "eval-results/${{ steps.eval-tier.outputs.name }}" --reindex --ci --budget "${{ steps.eval-provider.outputs.budget_path }}")
+          if [ -n "${{ steps.eval-provider.outputs.against_path }}" ]; then
+            ARGS+=(--against "${{ steps.eval-provider.outputs.against_path }}")
+          fi
+          npx tsx src/cli.ts "${ARGS[@]}"
+
+      - name: Add evaluation summary
+        if: always()
+        run: |
+          SUMMARY=$(find eval-results -name summary.md -type f -print 2>/dev/null | sort | tail -n 1)
+          if [ -n "$SUMMARY" ]; then
+            cat "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No evaluation summary was generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload evaluation diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: eval-quality-${{ steps.eval-tier.outputs.name }}-${{ github.run_id }}
+          path: eval-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Cleanup eval quality config
+        if: always()
+        run: rm -f .github/eval-quality-config.json

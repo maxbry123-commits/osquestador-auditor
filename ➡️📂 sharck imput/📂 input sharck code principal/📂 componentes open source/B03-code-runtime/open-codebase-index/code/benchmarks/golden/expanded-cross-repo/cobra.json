@@ -1,0 +1,196 @@
+{
+  "version": "1.2.0",
+  "name": "expanded-cobra-mixed-intent",
+  "description": "Hand-curated definition, keyword-heavy, implementation-intent, and conceptual queries for the pinned expanded public benchmark cohort.",
+  "queries": [
+    {
+      "id": "cobra-no-args",
+      "query": "where is NoArgs defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "NoArgs"
+      },
+      "expected": {
+        "filePath": "args.go",
+        "symbol": "NoArgs",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "cobra-minimum-n",
+      "query": "where is MinimumNArgs defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "MinimumNArgs"
+      },
+      "expected": {
+        "filePath": "args.go",
+        "symbol": "MinimumNArgs",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "cobra-exact-args",
+      "query": "where is ExactArgs defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "ExactArgs"
+      },
+      "expected": {
+        "filePath": "args.go",
+        "symbol": "ExactArgs",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "cobra-range-args",
+      "query": "where is RangeArgs defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "RangeArgs"
+      },
+      "expected": {
+        "filePath": "args.go",
+        "symbol": "RangeArgs",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "cobra-on-initialize",
+      "query": "where is OnInitialize defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "OnInitialize"
+      },
+      "expected": {
+        "filePath": "cobra.go",
+        "symbol": "OnInitialize",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "cobra-dynamic-shell-completion",
+      "query": "ValidArgsFunction RegisterFlagCompletionFunc ShellCompDirective NoFileComp FilterFileExt ActiveHelp",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "go",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "shell-completion",
+        "directives",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "completions.go",
+            "relevance": 3
+          },
+          {
+            "path": "command.go",
+            "relevance": 2
+          },
+          {
+            "path": "active_help.go",
+            "relevance": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "cobra-flag-group-validation",
+      "query": "MarkFlagsRequiredTogether MarkFlagsOneRequired MarkFlagsMutuallyExclusive annotations ValidateFlagGroups enforceFlagGroupsForCompletion",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "go",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "flags",
+        "validation",
+        "shell-completion",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "flag_groups.go",
+            "relevance": 3
+          },
+          {
+            "path": "command.go",
+            "relevance": 2
+          },
+          {
+            "path": "completions.go",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "cobra-command-execution-implementation",
+      "query": "implementation that parses command flags validates command groups and invokes command run handlers",
+      "queryType": "implementation-intent",
+      "retrievalMode": "context",
+      "language": "go",
+      "difficulty": "medium",
+      "tags": [
+        "implementation",
+        "command-lifecycle",
+        "flags"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "command.go",
+            "relevance": 3
+          },
+          {
+            "path": "flag_groups.go",
+            "relevance": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "cobra-shell-completion-concept",
+      "query": "generate shell completion candidates directives and active help messages for command arguments",
+      "queryType": "conceptual",
+      "retrievalMode": "context",
+      "language": "go",
+      "difficulty": "medium",
+      "tags": [
+        "conceptual",
+        "shell-completion",
+        "active-help"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "completions.go",
+            "relevance": 3
+          },
+          {
+            "path": "active_help.go",
+            "relevance": 2
+          }
+        ]
+      }
+    }
+  ]
+}

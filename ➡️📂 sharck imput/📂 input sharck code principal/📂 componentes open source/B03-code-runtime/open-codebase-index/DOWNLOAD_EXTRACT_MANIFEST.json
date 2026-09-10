@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 1149870,
+  "bundle_sha256": "8221d2d5786edede6d502ac605e26f20fd82d36865109fc7cb60ec21c90135d6",
+  "extracted_tree": {
+    "bytes": 4882084,
+    "files": 437,
+    "sha256": "061ebdcc3ae69ac7c3b8cd92b03bdf4342fabf51d06f7b3e1d97ee734ff44f35"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 1149870,
+      "name": "open-codebase-index.bundle.zip.part-0001",
+      "sha256": "8221d2d5786edede6d502ac605e26f20fd82d36865109fc7cb60ec21c90135d6"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "open-codebase-index",
+  "source_bytes": 4882084,
+  "source_commit": "50142e2f81eacc74bfc4c2dcecd6f02ddeb77cf7",
+  "source_files": 437,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/Helweg/open-codebase-index",
+  "source_tree": {
+    "bytes": 4882084,
+    "files": 437,
+    "sha256": "061ebdcc3ae69ac7c3b8cd92b03bdf4342fabf51d06f7b3e1d97ee734ff44f35"
+  }
+}

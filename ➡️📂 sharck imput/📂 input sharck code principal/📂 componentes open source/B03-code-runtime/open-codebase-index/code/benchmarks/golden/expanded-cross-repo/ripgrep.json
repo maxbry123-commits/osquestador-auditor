@@ -1,0 +1,191 @@
+{
+  "version": "1.2.0",
+  "name": "expanded-ripgrep-mixed-intent",
+  "description": "Hand-curated definition, keyword-heavy, implementation-intent, and conceptual queries for the pinned expanded public benchmark cohort.",
+  "queries": [
+    {
+      "id": "ripgrep-glob-escape",
+      "query": "where is escape defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "escape"
+      },
+      "expected": {
+        "filePath": "crates/globset/src/lib.rs",
+        "symbol": "escape",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "ripgrep-interpolate",
+      "query": "where is interpolate defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "interpolate"
+      },
+      "expected": {
+        "filePath": "crates/matcher/src/interpolate.rs",
+        "symbol": "interpolate",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "ripgrep-stdout",
+      "query": "where is stdout defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "stdout"
+      },
+      "expected": {
+        "filePath": "crates/cli/src/wtr.rs",
+        "symbol": "stdout",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "ripgrep-hostname",
+      "query": "where is hostname defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "hostname"
+      },
+      "expected": {
+        "filePath": "crates/cli/src/hostname.rs",
+        "symbol": "hostname",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "ripgrep-human-size",
+      "query": "where is parse_human_readable_size defined",
+      "queryType": "definition",
+      "retrievalMode": "context",
+      "args": {
+        "symbol": "parse_human_readable_size"
+      },
+      "expected": {
+        "filePath": "crates/cli/src/human.rs",
+        "symbol": "parse_human_readable_size",
+        "expectedRoute": "definition"
+      }
+    },
+    {
+      "id": "ripgrep-preprocessor-decompression",
+      "query": "preprocessor_globs should_preprocess search_preprocessor search_zip DecompressionReaderBuilder passthru",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "rust",
+      "difficulty": "hard",
+      "tags": [
+        "keyword",
+        "preprocessing",
+        "decompression",
+        "multi-evidence"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "crates/core/search.rs",
+            "relevance": 3
+          },
+          {
+            "path": "crates/cli/src/decompress.rs",
+            "relevance": 2
+          },
+          {
+            "path": "crates/core/flags/hiargs.rs",
+            "relevance": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ripgrep-json-printer-events",
+      "query": "JSONSink Begin Match Context End submatches binary_offset stats",
+      "queryType": "keyword-heavy",
+      "retrievalMode": "search",
+      "language": "rust",
+      "difficulty": "medium",
+      "tags": [
+        "keyword",
+        "json-lines",
+        "printer",
+        "serialization"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "crates/printer/src/json.rs",
+            "relevance": 3
+          },
+          {
+            "path": "crates/printer/src/jsont.rs",
+            "relevance": 2
+          },
+          {
+            "path": "crates/printer/src/stats.rs",
+            "relevance": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ripgrep-search-worker-implementation",
+      "query": "implementation that configures search workers prints matches and handles search failures",
+      "queryType": "implementation-intent",
+      "retrievalMode": "context",
+      "language": "rust",
+      "difficulty": "medium",
+      "tags": [
+        "implementation",
+        "search",
+        "worker"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "crates/core/search.rs",
+            "relevance": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "ripgrep-ignore-filtering-concept",
+      "query": "parse ignore files apply overrides and decide whether a file path should be filtered",
+      "queryType": "conceptual",
+      "retrievalMode": "context",
+      "language": "rust",
+      "difficulty": "hard",
+      "tags": [
+        "conceptual",
+        "ignore",
+        "path-filtering"
+      ],
+      "expected": {
+        "expectedRoute": "search",
+        "expectedOutcome": "results",
+        "gradedEvidence": [
+          {
+            "path": "crates/ignore/src/dir.rs",
+            "relevance": 3
+          },
+          {
+            "path": "crates/ignore/src/overrides.rs",
+            "relevance": 2
+          }
+        ]
+      }
+    }
+  ]
+}

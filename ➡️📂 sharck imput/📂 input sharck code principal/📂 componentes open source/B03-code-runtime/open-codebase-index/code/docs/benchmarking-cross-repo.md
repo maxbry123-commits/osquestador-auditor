@@ -1,0 +1,208 @@
+# Cross-repo benchmarking
+
+This guide documents how to run the cross-repo benchmark runner in a portable way.
+
+## What it measures
+
+- Plugin retrieval quality (`codebase-index`) via eval harness
+- `ripgrep` keyword baseline
+- `ast-grep` structural baseline
+
+Metrics reported per repo and aggregated:
+
+- Hit@1/3/5/10
+- MRR@10
+- nDCG@10
+- Latency p50/p95/p99
+
+## Prerequisites
+
+- Built project dependencies (`npm install`)
+- Local Ollama daemon reachable at `OLLAMA_HOST` (default `http://localhost:11434`)
+- Installed Ollama embedding model `nomic-embed-text`, or the model passed to
+  `--embedding-model`
+- `rg` installed
+- `sg` installed (`brew install ast-grep` on macOS)
+- `npx` (for opt-in CodeGraph and `codebase-memory-mcp` execution)
+
+## Configure repositories (required)
+
+You must provide repository paths explicitly.
+
+Option A: CLI flag
+
+```bash
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2
+```
+
+Option B: environment variable
+
+```bash
+export BENCHMARK_REPOS=/path/to/repo1,/path/to/repo2
+npx tsx scripts/cross-repo-benchmark.ts
+```
+
+## Reindex modes
+
+- Default: `--no-reindex` behavior (fast iteration, reuses existing index)
+- `--reindex` applies on repeat #1 only, then repeat runs measure query-time behavior on a warm index
+
+Examples:
+
+```bash
+# Fast iteration (default)
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2
+
+# Clean baseline
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --reindex
+
+# Repeat runs for stable medians (recommended)
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --repeats 20
+```
+
+## Embedding model selection
+
+The benchmark uses local Ollama and defaults to `nomic-embed-text`. Select a
+different installed model with `--embedding-model`. The selected name is saved
+in the controlled eval config and both report formats.
+
+```bash
+ollama pull embeddinggemma
+npx tsx scripts/cross-repo-benchmark.ts \
+  --repos /path/to/repo1,/path/to/repo2 \
+  --embedding-model embeddinggemma \
+  --reindex
+```
+
+Use `--reindex` whenever the model differs from the model used to create an
+existing index. This keeps the benchmark from measuring incompatible or stale
+vectors. The [local model comparison](benchmarks/2026-08-12-local-embedding-model-comparison.md)
+describes the tested options and their trade-offs.
+
+## Sampling and mutability notes
+
+- By default, generated datasets are written under each run output directory (`<run>/datasets/`) to keep committed benchmark inputs immutable.
+- To run reviewed, frozen inputs instead of generating candidates, pass one JSON file per repository basename with `--dataset-dir`:
+
+  The expanded frozen cohort currently covers Axios, Express, Click, Cobra,
+  ripgrep, Gson, Newtonsoft.Json, Symfony Console, and Sinatra. It contains
+  100 mixed-intent queries across JavaScript, Python, Go, Rust, Java, C#, PHP,
+  and Ruby. Sinatra carries 19 hard routing, reloading, and security queries;
+  Newtonsoft.Json carries 18 serializer, converter, and metadata queries. Exact
+  revisions are recorded in `benchmarks/golden/expanded-cross-repo/cohort.json`.
+
+```bash
+npx tsx scripts/cross-repo-benchmark.ts \
+  --repos /path/to/axios,/path/to/express \
+  --dataset-dir benchmarks/golden/expanded-cross-repo \
+  --reindex --repeats 3 --skip-ripgrep --skip-sg --codegraph --codebase-memory-mcp
+```
+
+  The runner requires `<dataset-dir>/<repository-basename>.json` for every configured repository, validates all evidence paths against that repository, validates definition-comparator queries, and copies the exact inputs into the run artifacts. It fails a repository rather than silently generating a replacement dataset when an input is missing.
+- Persist generated datasets to `benchmarks/golden/cross-repo/` only when explicitly needed:
+
+```bash
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --persist-datasets
+```
+
+- File parsing is capped (`--max-parse-files`, default `2500`). Reports include whether truncation occurred.
+
+## Lightweight CI integrity gate
+
+The main CI workflow first runs a no-model contract check on every pull request. It validates frozen dataset shape, input loading, and the CodeGraph and codebase-memory-mcp comparator contracts without cloning external repositories, invoking Ollama, or running an expensive comparison.
+
+```bash
+npm run benchmark:cross-repo:check
+```
+
+It then runs a deterministic source-evidence gate that fetches and checks out each pinned cohort revision, checks every expected and graded-evidence path, and confirms every definition symbol is present in its target file. It does not execute checked-out code or invoke an embedding provider.
+
+```bash
+npm run benchmark:cross-repo:sources:check
+```
+
+Run the full local benchmark manually or from a scheduled quality workflow when a retrieval change needs measured quality results.
+
+## Optional baseline toggles
+
+```bash
+# Skip ripgrep baseline
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --skip-ripgrep
+
+# Skip ast-grep baseline
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --skip-sg
+
+# Enable CodeGraph baseline (scoped to queries with expected.symbol)
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --codegraph
+
+# Enable codebase-memory-mcp comparator (scoped to definition queries with expected.symbol)
+npx tsx scripts/cross-repo-benchmark.ts --repos /path/to/repo1,/path/to/repo2 --codebase-memory-mcp
+```
+
+Ast-grep baseline scope:
+
+- Only `definition` and `keyword-heavy` query types are included for `sg` baseline comparisons.
+- This avoids scoring ast-grep against non-structural natural-language query types that are outside AST pattern matching semantics.
+- sg metrics are computed on this scoped subset only; report output includes the scoped denominator (`scoped/total`) for transparency.
+
+## CodeGraph fair comparator
+
+Run the opt-in, fixed-version comparator with `--codegraph`:
+
+```bash
+npx tsx scripts/cross-repo-benchmark.ts \
+  --repos /path/to/repo \
+  --reindex --repeats 3 --codegraph
+```
+
+The runner uses `@colbymchenry/codegraph@1.5.0` in a fresh temporary copy for every repeat. It excludes existing `.codegraph`, `.codebase-index`, `.opencode`, build outputs, dependencies, and benchmark results. It initializes CodeGraph in that copy, then runs only generated queries that include `expected.symbol`. Exact-definition candidates from known unsupported paths, currently `.github/workflows/`, plus test, fixture, and documentation paths are excluded because the comparison uses the plugin's source-intent definition route. If no supported definition candidates remain, the runner fails instead of publishing an invalid comparison.
+
+The report places this result in a standalone **Fair CodeGraph Comparator** section. Plugin metrics are recomputed from exactly the same query IDs. A failed CodeGraph initialization, query, or strict-output parse disqualifies that repeat and prevents it from being presented as a comparable result. Raw commands, per-query results, scope IDs, and errors are written under `<run>/codegraph/<repo>/repeat-*.json`.
+
+The comparator intentionally omits latency in the CodeGraph row because each `codegraph query` invocation is measured through `npx`, which includes one-shot CLI process startup. This makes the timing comparable only to plugin-side warm eval timings and is not a fair latency comparison without additional normalization.
+
+## codebase-memory-mcp fair comparator
+
+Run the opt-in, fixed-version comparator with `--codebase-memory-mcp`:
+
+```bash
+npx tsx scripts/cross-repo-benchmark.ts \
+  --repos /path/to/repo \
+  --reindex --repeats 3 --codebase-memory-mcp
+```
+
+The runner invokes the exact package `codebase-memory-mcp@0.8.1` directly through `npx`; it does not run a separate install command and does not write agent configuration. Every repeat creates one fresh isolated source copy and sets `CBM_CACHE_DIR` to a repeat-local directory inside that copy, so the comparator does not read or write global cache state. The copy excludes `.opencode` and other pre-existing generated-index directories before initialization. It initializes the copy with the package CLI's `index_repository` command and uses the returned `project` value for all `search_graph` calls in that repeat. Generated candidates remain aligned with the runner's existing plugin file sampling and controlled file-size configuration because comparator scope is derived only from the same generated dataset.
+
+The comparator scores only generated `definition` queries with a non-empty `expected.symbol`. Each query uses an anchored, regex-escaped `name_pattern`. Because the CLI returns file-level results without scores or start/end spans, the runner assigns a deterministic rank-derived score (`1 / rank`) and does not fabricate source spans. Result paths must resolve inside the isolated repository or the repeat is disqualified.
+
+The report places results in a standalone **Fair codebase-memory-mcp Comparator** section. Plugin metrics are recomputed from exactly the same query IDs. Malformed init or query JSON, path escapes, and failed init or query invocations disqualify the repeat instead of recording a zero score. Raw commands, stdout, parsed result JSON, file-level candidates, scope IDs, and errors are written under `<run>/codebase-memory-mcp/<repo>/repeat-*.json`. Latency is omitted from the comparison table because each query timing includes one-shot `npx` CLI process startup.
+
+## Output artifacts
+
+Reports expose two aggregate quality views:
+
+- **Macro average across repositories** gives every successful repository equal
+  weight. It retains latency rows, which are repository-level repeat summaries.
+- **Query-weighted quality** weights Hit@k, MRR@10, and nDCG@10 by the number
+  of queries evaluated by each comparator. Use this view as the headline when
+  cohorts contain different-sized repository datasets. It deliberately omits
+  latency, token, and cost rows because averaging their per-repository summary
+  values would not produce an exact per-query aggregate.
+
+The JSON report retains the compatibility `aggregate` object for macro metrics
+and adds `queryWeightedQuality` with each comparator's metric values and query
+denominator. Plugin uses the dataset query count, ripgrep its evaluated query
+count, and ast-grep its structural-query scope.
+
+Each run writes to:
+
+- `benchmarks/results/cross-repo/<timestamp>/report.md`
+- `benchmarks/results/cross-repo/<timestamp>/report.json`
+- `benchmarks/results/cross-repo/<timestamp>/repos/<repo>.json`
+- `benchmarks/results/cross-repo/<timestamp>/datasets/<repo>.json`
+- `benchmarks/results/cross-repo/<timestamp>/codegraph/<repo>/repeat-<n>.json` when `--codegraph` is enabled
+- `benchmarks/results/cross-repo/<timestamp>/codebase-memory-mcp/<repo>/repeat-<n>.json` when `--codebase-memory-mcp` is enabled
+
+When `--persist-datasets` is set, auto-generated dataset files are also written to:
+
+- `benchmarks/golden/cross-repo/<repo>.json`
