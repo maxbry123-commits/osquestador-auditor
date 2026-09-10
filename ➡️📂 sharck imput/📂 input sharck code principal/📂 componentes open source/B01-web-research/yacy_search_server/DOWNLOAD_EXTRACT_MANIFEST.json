@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 30001363,
+  "bundle_sha256": "057a3808d4d110918617ffa98d76def45e2c14cdd38a4759234bec8b3752fc13",
+  "extracted_tree": {
+    "bytes": 68987641,
+    "files": 2283,
+    "sha256": "86088c689ff31fcba114892889d7ed10f8ae6be2e388cd0c7e1627ccaaa71388"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "yacy_search_server.bundle.zip.part-0001",
+      "sha256": "95855127857077f7919e9a786a92efcb5f55ad1f24bb846e180e4c3a49b7a25b"
+    },
+    {
+      "bytes": 12582912,
+      "name": "yacy_search_server.bundle.zip.part-0002",
+      "sha256": "ac7bcdd03af8e3fb3eec10118622121eedfd6d5b06d1df2c06854ea4d2b2e39d"
+    },
+    {
+      "bytes": 4835539,
+      "name": "yacy_search_server.bundle.zip.part-0003",
+      "sha256": "4cb06802b664356e8b2965de35b3eaf4db4fd32d13230fe4818cdbebb37ca238"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "yacy_search_server",
+  "source_bytes": 68987641,
+  "source_commit": "e171a4a0e50e08a91f8bcae0a1854d12d895a28a",
+  "source_files": 2283,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/yacy/yacy_search_server",
+  "source_tree": {
+    "bytes": 68987641,
+    "files": 2283,
+    "sha256": "86088c689ff31fcba114892889d7ed10f8ae6be2e388cd0c7e1627ccaaa71388"
+  }
+}

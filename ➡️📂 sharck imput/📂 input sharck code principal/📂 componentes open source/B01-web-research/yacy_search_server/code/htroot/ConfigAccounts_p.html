@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>YaCy '#[clientname]#': Admin Account</title>
+    #%env/templates/metas.template%#
+  </head>
+<body>
+    #%env/templates/header.template%#
+    #%env/templates/submenuUseCaseAccount.template%#
+    <h2>Admin Account</h2>
+
+    #(error)#
+    ::
+    <p class="error">Invalid administrator settings.</p>
+    ::
+    <p class="error">Passwords do not match.</p>
+    ::
+    <p class="error">Administrator username is required.</p>
+    ::
+    <p class="error">Administrator password is required.</p>
+    #(/error)#
+
+    <fieldset><legend>Admin Account</legend>
+      #(changedfltpw)#::
+      <div class="alert alert-danger" role="alert">
+        <b>Default administrator password is active.</b>
+        This YaCy instance can still be administered with the username "admin" and the default password "yacy". Replace these credentials using the form directly below.
+      </div>
+      #(/changedfltpw)#
+      <p>
+        These credentials are used for remote administration and whenever administrative access from localhost without authentication is disabled.
+      </p>
+      <form action="ConfigAccounts_p.html" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="transactionToken" value="#[transactionToken]#"/>
+        <dl class="userConfig">
+          <dt><label for="adminuser">Administrator Username:</label></dt>
+          <dd><input type="text" name="adminuser" id="adminuser" value="#[defaultUser]#" size="16" maxlength="32"/></dd>
+          <dt><label for="adminpw1">New Administrator Password:</label></dt>
+          <dd><input type="password" name="adminpw1" id="adminpw1" value="" size="16" maxlength="1024"/></dd>
+          <dt><label for="adminpw2">Repeat Administrator Password:</label></dt>
+          <dd><input type="password" name="adminpw2" id="adminpw2" value="" size="16" maxlength="1024"/></dd>
+          <dt></dt>
+          <dd><input type="submit" name="setAdmin" value="Change Administrator Credentials" class="btn btn-primary"/></dd>
+          <dt></dt>
+          <dd>
+            <p class="alert alert-info" role="note">
+              If you need to reset the administrator password from the console, run bin/passwd.sh from the YaCy installation directory.
+            </p>
+          </dd>
+        </dl>
+      </form>
+    </fieldset>
+
+    <fieldset><legend>Access Rules</legend>
+      <form action="ConfigAccounts_p.html" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="transactionToken" value="#[transactionToken]#"/>
+        <input type="hidden" id="accessRuleAction" value="1"/>
+        <dl class="userConfig">
+          <dt><label for="adminAccountForLocalhost">Allow administrative access from localhost without authentication</label></dt>
+          <dd><input type="checkbox" name="adminAccountForLocalhost" id="adminAccountForLocalhost" data-size="small"#(adminAccountForLocalhost.checked)#:: checked="checked"#(/adminAccountForLocalhost.checked)# /></dd>
+          <dt></dt>
+          <dd>When enabled, eligible requests from the same computer receive administrator rights without sending credentials.</dd>
+          <dt><label for="adminAccountAllPages">Require administrator authorization for all applicable pages</label></dt>
+          <dd><input type="checkbox" name="adminAccountAllPages" id="adminAccountAllPages" data-size="small"#(adminAccountAllPages.checked)#:: checked="checked"#(/adminAccountAllPages.checked)# /></dd>
+          <dt></dt>
+          <dd>When disabled, administration pages whose names contain "_p" remain protected. When enabled, all applicable pages require administrator authorization.</dd>
+        </dl>
+        <script type="text/javascript">
+        var accessRuleSwitches = $("[name='adminAccountForLocalhost'], [name='adminAccountAllPages']");
+        accessRuleSwitches.bootstrapSwitch();
+        accessRuleSwitches.bootstrapSwitch('onText', 'ON');
+        accessRuleSwitches.bootstrapSwitch('offText', 'OFF');
+        accessRuleSwitches.on('switchChange.bootstrapSwitch', function() {
+          document.getElementById('accessRuleAction').name = this.name === 'adminAccountForLocalhost' ? 'setLocalhostAccess' : 'setAccess';
+          this.form.submit();
+        });
+        </script>
+      </form>
+    </fieldset>
+
+#%env/templates/footer.template%#
+</body>
+</html>
