@@ -1,42 +1,15 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-M13-SIM02-HFSKILL-008",
+  "checkpoint_id": "CP-V2-M13-SIM03-EVIDENCE-009",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M13_SIMULATION_02_AND_HF_SUBSKILL_CANDIDATE_INDEXED",
+  "last_verified_node": "M13_SIMULATION_03_RETRIEVAL_EVIDENCE_COVERAGE_COMPRESSION_PACKAGE",
   "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL",
-  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117_PLUS_HF_SUBSKILL_CANDIDATE","plan":"PASS_REV7","state":"PASS_REV10","handoff":"PASS_SYNCED","recovery":"PASS_UNCHANGED","sol_log":"PASS_SYNCED","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
-  "acquisition": {
-    "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
-    "B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING","failed":["huggingface_hub:SOURCE_SPECIAL_FILE_GAP","spaCy:DESTINATION_EXISTS","unstructured:SOURCE_SPECIAL_FILE_GAP"]},
-    "total_new_batches":{"verified_closed":17,"failed":23,"pending":0}
-  },
-  "xray": {
-    "B01_B03":{"readback_runs":[34535896880,34536177351],"recovered":0,"confirmed_partial":11,"source_special_remaining":9},
-    "B04":{"evidence":"📂 input sharck code principal/📂 component acquisition/state/B04-state.json","physical_repair_attempted_by_this_checkpoint":false}
-  },
-  "research_simulation_02": {
-    "status":"VERIFIED_READ_ONLY",
-    "stages_exercised":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY"],
-    "facts":"fresh official OpenAI/Anthropic/Hugging Face/OpenClaw/GitHub evidence plus Hermes docs/community issues collected; see SOL-LOG",
-    "inference":"preserve literal input before normalization; gate research after intent/entity resolution; progressively disclose tool/skill schemas only when selected",
-    "unknown":"quantitative research trigger, entity confidence and tool-schema budget await tests/review under M07/M10"
-  },
-  "skill_candidate": {
-    "name":"huggingface-datasets",
-    "parent_component":"Hugging Face Skills",
-    "official":true,
-    "license":"Apache-2.0",
-    "maintenance":"ACTIVE",
-    "status":"INDEXED_CANDIDATE_NO_INSTALL"
-  },
-  "open_gaps":[
-    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations confirmed partial"},
-    {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate"},
-    {"id":"G-B04-3","detail":"B04 has 3 FAILED; no blind retry"},
-    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},
-    {"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"},
-    {"id":"G-THRESHOLDS","detail":"research-decision/entity-confidence/tool-schema quantitative thresholds remain UNKNOWN pending M07/M10 tests"}
-  ],
+  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117_PLUS_HF_SUBSKILL_CANDIDATE_NO_NEW_COMPONENT","plan":"PASS_REV8","state":"PASS_REV11","handoff":"PENDING_SYNC_THIS_SEQUENCE","recovery":"PASS_UNCHANGED","sol_log":"PENDING_SYNC_THIS_SEQUENCE","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
+  "acquisition":{"B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},"B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING"},"total_new_batches":{"verified_closed":17,"failed":23,"pending":0}},
+  "xray":{"B01_B03":{"readback_runs":[34535896880,34536177351],"recovered":0,"confirmed_partial":11,"source_special_remaining":9},"B04":{"physical_repair_attempted_by_this_checkpoint":false}},
+  "research_simulation_03":{"status":"VERIFIED_READ_ONLY","stages_exercised":["WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],"fact":"fresh official OpenAI/Anthropic/Hugging Face/OpenClaw/GitHub evidence plus Hermes community failure reports collected","inference":"package every item with provenance/freshness/evidence/contradiction/capability state; bound search by sufficiency rather than successful-call count; preserve citations and unresolved contradictions through compression","unknown":"numeric search budget, coverage threshold, freshness TTL and compression ratio await M07/M10 tests"},
+  "skill_candidate":{"name":"huggingface-datasets","parent_component":"Hugging Face Skills","status":"INDEXED_CANDIDATE_NO_INSTALL"},
+  "open_gaps":[{"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations confirmed partial"},{"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate"},{"id":"G-B04-3","detail":"B04 has 3 FAILED; no blind retry"},{"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},{"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"},{"id":"G-THRESHOLDS","detail":"research/entity/tool/search/coverage/freshness/compression quantitative thresholds remain UNKNOWN pending M07/M10 tests"}],
   "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL"},
   "step3_allowed":false,
   "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis/tests","GROK M08 alternatives/refutation","SOL M13 next read-only simulation","no physical repair or HF subskill installation until corresponding review/gate"]
