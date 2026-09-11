@@ -1,0 +1,105 @@
+{
+  "schema": "sharck-input.multisol-dag.v1",
+  "version": 1,
+  "project": "Wanted Shark Web / Sharck Input V2.1",
+  "created_from_main_sha": "b73c95fa33edfc113c076a6656e9dd6e2a47ef55",
+  "status": "PRESTAGED_WAITING_ACQUISITION_GATE",
+  "source_of_truth": {
+    "repo": "maxbry123-commits/osquestador-auditor",
+    "branch": "main",
+    "root": "➡️📂 sharck imput/",
+    "craxy_wall": "📂 Craxy wall bitácora stated JSON/",
+    "handoff": "HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+  },
+  "director_research_inputs": ["I04", "I06", "I07", "I08", "I09", "I10"],
+  "activation_gate": {
+    "rule": "NO_MULTISOL_EXECUTION_UNTIL_COMPONENT_ACQUISITION_AND_CURRENT_PHYSICAL_GAPS_ARE_VERIFIED_CLOSED",
+    "required": [
+      "B01_B04.failed == 0",
+      "all approved acquisition queues == VERIFIED_CLOSED",
+      "partial_exact_anomalies == 0",
+      "special_source_gaps required for production == CLOSED_OR_EXPLICITLY_DEFERRED_BY_DIRECTOR_WITH_EVIDENCE",
+      "physical_repair_allowed == true",
+      "director_gate == APPROVED"
+    ],
+    "current_snapshot": {
+      "B01_B04_verified_closed": 17,
+      "B01_B04_failed": 23,
+      "partial_exact_anomalies": 139,
+      "B05_B06_downloaded": 0,
+      "physical_repair_allowed": false,
+      "multisol_execution_allowed": false
+    }
+  },
+  "invariants": {
+    "one_task_one_node": true,
+    "max_steps_per_node": 3,
+    "every_agent_claims_only_own_node": true,
+    "every_agent_writes_own_log": true,
+    "craxy_wall_is_shared_control_plane": true,
+    "handoff_is_shared_resume_surface": true,
+    "shared_writes_sequential": true,
+    "fresh_sha_before_shared_write": true,
+    "readback_after_write": true,
+    "no_silent_overwrite": true,
+    "no_force": true,
+    "no_lfs": true,
+    "llm_cannot_self_certify_pass": true
+  },
+  "three_step_contract": [
+    "STEP_1_SYNC_AND_CLAIM: fetch fresh STATE/CHECKPOINT/Handoff/DAG, verify node OPEN and prerequisites, write claim to own log with base SHA",
+    "STEP_2_EXECUTE_AND_VERIFY: execute only node scope, capture hashes/runs/tests/readback and record blockers fail-closed",
+    "STEP_3_REPORT_AND_FANIN: report evidence to own log, publish versioned Crazy Wall delta with fresh SHA, update Handoff sequentially, release node"
+  ],
+  "environments": {
+    "SOL-0": {"role": "SUPERVISOR_FANIN", "log": "SOL-0-SUPERVISOR-LOG.md"},
+    "SOL-1": {"role": "POST_ACQUISITION_XRAY_RESEARCH", "log": "SOL-1-LOG.md"},
+    "SOL-2": {"role": "WIRE_PRUNE_MINCODE", "log": "SOL-2-LOG.md"},
+    "SOL-3": {"role": "TEST_REFUTE_READBACK", "log": "SOL-3-LOG.md"}
+  },
+  "nodes": [
+    {
+      "node_id": "MS-N01",
+      "owner": "SOL-1",
+      "status": "WAITING_ACQUISITION_GATE",
+      "task": "POST_ACQUISITION_XRAY_AND_DIRECTOR_RESEARCH_AUDIT",
+      "steps": ["VERIFY_FINAL_COMPONENT_INVENTORY", "AUDIT_I04_I06_I07_I08_I09_I10_EVIDENCE", "REPORT_RESEARCH_GAPS_AND_COMPONENT_MAP"],
+      "outputs": ["SOL-1-LOG.md", "versioned research audit artifact"]
+    },
+    {
+      "node_id": "MS-N02",
+      "owner": "SOL-3",
+      "status": "WAITING_ACQUISITION_GATE",
+      "task": "ARCHITECTURE_PORTS_ADAPTERS_AND_FAILURE_CONTRACT_REVIEW",
+      "steps": ["MAP_VERIFIED_COMPONENTS_TO_PORTS", "REFUTE_ADAPTER_AND_FAILURE_CONTRACTS", "REPORT_WIRING_ACCEPTANCE_CRITERIA"],
+      "outputs": ["SOL-3-LOG.md", "versioned engineering review artifact"]
+    },
+    {
+      "node_id": "MS-N03",
+      "owner": "SOL-2",
+      "status": "WAITING_FANIN_MS_N01_MS_N02",
+      "task": "WIRE_PRUNE_MINCODE",
+      "steps": ["WIRE_ONLY_APPROVED_PORTS_ADAPTERS", "PRUNE_OVERLAPS_AND_MINIMIZE_CUSTOM_CODE", "RUN_COMPONENT_LEVEL_READBACK_AND_REPORT"],
+      "outputs": ["SOL-2-LOG.md", "wire/prune evidence"]
+    },
+    {
+      "node_id": "MS-N04",
+      "owner": "SOL-3",
+      "status": "WAITING_MS_N03",
+      "task": "SYSTEM_TEST_REFUTATION_AND_READBACK",
+      "steps": ["RUN_FAILURE_PATH_AND_INTEGRATION_TESTS", "RUN_THREE_REFUTATIONS_AND_CROSSCHECK", "PUBLISH_TEST_VERDICT_WITH_EVIDENCE"],
+      "outputs": ["SOL-3-LOG.md", "test/refutation evidence"]
+    },
+    {
+      "node_id": "MS-N05",
+      "owner": "SOL-0",
+      "status": "WAITING_FANIN",
+      "task": "SUPERVISE_FANIN_PROGRESS_AND_DIRECTOR_REPORT",
+      "steps": ["CROSSCHECK_ALL_NODE_EVIDENCE", "SYNC_STATE_CHECKPOINT_HANDOFF", "REPORT_PROGRESS_AND_NEXT_OPEN_NODE_TO_DIRECTOR"],
+      "outputs": ["SOL-0-SUPERVISOR-LOG.md", "STATE/CHECKPOINT/Handoff deltas"]
+    }
+  ],
+  "claim_rule": "No environment may claim a WAITING node until its gate/dependency is satisfied in the latest verified Crazy Wall state.",
+  "supervision_rule": "SOL-0 supervises and reports but never duplicates an active node owned by SOL-1/SOL-2/SOL-3.",
+  "current_verdict": "SCHEMA_CREATED_NOT_ACTIVATED / 23_PHYSICAL_FAILURES_STILL_OPEN / EXISTING_REVIEW_GATE_PRESERVED"
+}
