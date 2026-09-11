@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M25 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M26 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -53,6 +53,18 @@ Prueba representativa con fuentes pinneadas spaCy/OpenSearch/sqry:
 Veredicto: `SANDBOX_PASS / REVIEW_REQUIRED / NO_PHYSICAL_REPAIR`.
 Esto NO autoriza producción, NO repara los 11 partials completos y NO aplica a source-special/symlink gaps.
 
+## M26 — canonical motor integrity watch
+Estado: `VERIFIED_READ_ONLY_NO_DRIFT`.
+Referencia de hashes: `.github/workflows/sharck-input-v2-components.yml`.
+Read-back directo de los seis motores canónicos en `main`:
+- `motor_1_extract_only.py` = `a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500`.
+- `motor_2_queue_download_extract.py` = `84d566e2ee4e98e42eb3a864026d067d48caabd9`.
+- `hf_download_extract_engine.py` = `91e6e4486692eab314be5c7130d8310d3c855397`.
+- `motor_3_copy_batches.py` = `3689924361ce4a1a9fde4ae2b6f6009c37a6042d`.
+- `motor_copy_root_to_repo.py` = `8281211da76db3080fe1f1ea38b3eb0c45d655cb`.
+- `motor_4_move_batches.py` = `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`.
+Los seis coinciden exactamente con el lock canónico. No hubo edición, adquisición ni reparación física. Esta evidencia elimina `MOTOR_DRIFT` como causa nueva para el estado actual, pero no desbloquea producción ni Step3.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
 Auditar M24/M25: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
@@ -64,10 +76,10 @@ Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/1007
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners. Sólo nueva evidencia read-only; no physical repair ni Step3 antes de reviews + gate director.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only; no physical repair ni Step3 antes de reviews + gate director.
 
 ## Current checkpoint
-`CP-V2-STAGING-STRATEGYDELTA-012`
+`CP-V2-MOTOR-INTEGRITY-WATCH-013`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
