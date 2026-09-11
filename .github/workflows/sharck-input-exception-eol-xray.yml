@@ -1,0 +1,126 @@
+name: Sharck Input — exception paths + OpenSearch EOL X-Ray
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-exception-eol-xray.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  exceptions:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - slug: yacy
+            repo: https://github.com/yacy/yacy_search_server.git
+            commit: e171a4a0e50e08a91f8bcae0a1854d12d895a28a
+            path: source/net/yacy/peers/operation/yacyBuildProperties.java
+          - slug: continue
+            repo: https://github.com/continuedev/continue.git
+            commit: 5522c6f44ca0ac3528b37244818fbfa39b5af470
+            path: extensions/intellij/src/main/resources/webview/index.html
+    steps:
+      - name: Fetch exact upstream commit — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q upstream
+          cd upstream
+          git remote add origin '${{ matrix.repo }}'
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin '${{ matrix.commit }}'
+          git checkout -q --detach FETCH_HEAD
+
+      - name: Inspect tracked/ignore state
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd upstream
+          P='${{ matrix.path }}'
+          echo "=== ${{ matrix.slug }} :: $P ==="
+          echo 'TRACKED:'
+          git ls-files -s -- "$P" || true
+          echo 'IGNORE_RULE_WITH_NO_INDEX:'
+          git check-ignore -v --no-index -- "$P" || echo 'NOT_IGNORED_UPSTREAM'
+          echo 'PARENT_IGNORE_FILES:'
+          d="$(dirname "$P")"
+          while [ "$d" != "." ] && [ "$d" != "/" ]; do
+            if [ -f "$d/.gitignore" ]; then echo "--- $d/.gitignore"; cat "$d/.gitignore"; fi
+            d="$(dirname "$d")"
+          done
+          if [ -f .gitignore ]; then echo '--- ROOT .gitignore'; cat .gitignore; fi
+
+  opensearch-eol:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout published OpenSearch changed files only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q project
+          cd project
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code/plugins/ingest-attachment/licenses/
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code/plugins/repository-hdfs/licenses/
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code/server/licenses/
+          EOF
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+
+      - name: Fetch exact upstream OpenSearch commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q upstream
+          cd upstream
+          git remote add origin https://github.com/opensearch-project/OpenSearch.git
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin 0249cde03ef66b56ac61e8929c3ba7e10b062523
+          git checkout -q --detach FETCH_HEAD
+
+      - name: Prove or refute CRLF-to-LF normalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+          src=pathlib.Path('upstream')
+          dst=pathlib.Path('project/➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code')
+          paths=[
+            'plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt',
+            'plugins/ingest-attachment/licenses/commons-collections4-NOTICE.txt',
+            'plugins/ingest-attachment/licenses/xz-LICENSE.txt',
+            'plugins/ingest-attachment/licenses/xz-NOTICE.txt',
+            'plugins/repository-hdfs/licenses/commons-codec-LICENSE.txt',
+            'plugins/repository-hdfs/licenses/commons-codec-NOTICE.txt',
+            'server/licenses/joda-time-LICENSE.txt',
+          ]
+          rows=[]
+          for p in paths:
+            s=(src/p).read_bytes(); d=(dst/p).read_bytes(); norm=s.replace(b'\r\n',b'\n')
+            rows.append({
+              'path':p,
+              'source_bytes':len(s),'published_bytes':len(d),
+              'source_crlf':s.count(b'\r\n'),'published_crlf':d.count(b'\r\n'),
+              'source_lf':s.count(b'\n'),'published_lf':d.count(b'\n'),
+              'normalized_source_equals_published':norm==d,
+              'source_sha256':hashlib.sha256(s).hexdigest(),
+              'published_sha256':hashlib.sha256(d).hexdigest(),
+              'normalized_sha256':hashlib.sha256(norm).hexdigest(),
+            })
+          print(json.dumps({'schema':'sharck-input.opensearch-eol-xray.v1','rows':rows,'all_crlf_to_lf_only':all(r['normalized_source_equals_published'] for r in rows)},sort_keys=True))
+          PY
