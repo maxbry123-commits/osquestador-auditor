@@ -1,0 +1,44 @@
+{
+  "schema": "sharck-input.multienv-dag-delta.v1",
+  "version": 2,
+  "base": {
+    "file": "MULTIENV-DAG-3STEP-v1.json",
+    "blob_sha": "61ffbfb63d611d780782c61e881f115ca6854b57"
+  },
+  "owner": "SOL",
+  "claim_id": "SOL-M38-20260911-1640-COT",
+  "status": "VALID_VERSIONED_STATE_RECONCILIATION",
+  "patch": {
+    "M37": {
+      "from": "CLAIMED_ACTIVE",
+      "to": "COMPLETE_RELEASED",
+      "authority": [
+        "STATE-DELTA-026-20X-MULTIENV.json",
+        "HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+      ]
+    },
+    "M38": {
+      "owner": "SOL",
+      "status": "COMPLETE",
+      "scope": "reconcile stale M37 DAG state without physical mutation",
+      "steps": [
+        "READ_CONTROL_SOURCES_AND_OWNER_LOGS",
+        "CONFIRM_DAG_STATE_CONTRADICTION",
+        "PUBLISH_VERSIONED_RECONCILIATION"
+      ],
+      "evidence": "MULTIENV-DAG-STATE-RECONCILIATION-M38-2026-09-11.md"
+    }
+  },
+  "owner_locked_nodes": {
+    "M06": {"owner": "ASTRA", "status": "OPEN_READY_TO_CLAIM"},
+    "M07": {"owner": "CLAUDE", "status": "OPEN_READY_TO_CLAIM"},
+    "M08": {"owner": "GROK", "status": "OPEN_READY_TO_CLAIM"}
+  },
+  "gates": {
+    "step3_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "fan_in_requires": ["M06", "M07", "M08"],
+    "director_decision_required": true
+  }
+}
