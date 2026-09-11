@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-SPECIAL-PROVENANCE-GAP-019",
+  "checkpoint_id": "CP-V2-SPECIAL-PROVENANCE-RECOVERABILITY-020",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M32_SPECIAL_SNAPSHOT_PROVENANCE_GAP_VERIFIED_READ_ONLY",
-  "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_AND_PROVENANCE_GAP",
+  "last_verified_node": "M33_SPECIAL_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY",
+  "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
-    "plan": "REV11_SYNCED_M01_M31_M32_EVIDENCE_NOT_YET_PLAN_RECONCILED",
-    "state": "REV21_M32_PROVENANCE_GAP",
-    "handoff": "CP018_CURRENT_M32_SYNC_NEXT_IN_SEQUENCE",
+    "plan": "REV11_SYNCED_M01_M31_M32_M33_EVIDENCE_NOT_YET_PLAN_RECONCILED",
+    "state": "REV22_M33_PROVENANCE_RECOVERABILITY",
+    "handoff": "CP019_CURRENT_M33_SYNC_NEXT_IN_SEQUENCE",
     "recovery": "UNCHANGED",
     "review_gate": "BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -40,8 +40,9 @@
       "primary_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md",
       "correction_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md",
       "provenance_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-PROVENANCE-GAP-2026-09-11.md",
+      "recoverability_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-PROVENANCE-RECOVERABILITY-AUDIT-2026-09-11.md",
       "diagnosed":9,
-      "status":"M32_PROVENANCE_GAP_VERIFIED_READ_ONLY",
+      "status":"M33_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY",
       "observed_special_entries_minimum":67,
       "tika_observed_minimum":30,
       "docling_observed":6,
@@ -49,6 +50,8 @@
       "contradiction":"M23 docling path detail was misattributed from cocoindex; canonical B01/B03 state errors are authoritative",
       "exact_git_mode_all_paths":"UNKNOWN_NOT_INFERRED",
       "historical_source_commit_persisted_on_special_failure":false,
+      "historical_source_commit_recoverable_from_current_canonical_persistence":false,
+      "queue_source_ref_for_all_9":"HEAD",
       "provenance_gap":"G-V2-SPECIAL-PROVENANCE-9"
     }
   },
@@ -60,33 +63,34 @@
     "staging_sandbox_run":34568249222,
     "staging_sandbox_verdict":"SANDBOX_PASS_REVIEW_REQUIRED_NOT_PRODUCTION",
     "motor_integrity":"VERIFIED_READ_ONLY_NO_DRIFT",
-    "special_failure_provenance":"ACQUIRE_RETURNS_COMMIT_BUT_SCAN_TREE_SPECIAL_FAILURE_ABORTS_BEFORE_RESULT_PERSISTENCE"
+    "special_failure_provenance":"ACQUIRE_RETURNS_COMMIT_BUT_SCAN_TREE_SPECIAL_FAILURE_ABORTS_BEFORE_RESULT_PERSISTENCE",
+    "special_failure_historical_commit_recovery":"NOT_VERIFIABLY_RECOVERABLE_FROM_CURRENT_STATE_INDEX_QUEUE_OR_PERSISTED_WORKFLOW_OUTPUT"
   },
   "control_plane_reconciliation": {
-    "status":"STATE_CHECKPOINT_M32_SYNCED_HANDOFF_NEXT",
+    "status":"STATE_CHECKPOINT_M33_SYNCED_HANDOFF_NEXT",
     "plan_revision":11,
-    "state_revision":21,
-    "finding":"M32 adds a read-only provenance GAP without changing acquisition/gates; PLAN remains honestly synchronized only through M31 until a later reconciliation",
+    "state_revision":22,
+    "finding":"M32 and M33 add read-only provenance/recoverability evidence without changing acquisition/gates; PLAN remains honestly synchronized only through M31 until a later reconciliation",
     "physical_mutation":false
   },
   "open_gaps": [
     {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations remain partial and FAILED; repair remains review-gated"},
     {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources remain special-file FAILED; exact Git mode for every historical path remains UNKNOWN"},
-    {"id":"G-V2-SPECIAL-PROVENANCE-9","detail":"special-file early failures abort after acquire but before result persistence, so source_commit for the exact historical snapshot is absent from canonical B01-B03 state items"},
+    {"id":"G-V2-SPECIAL-PROVENANCE-9","detail":"M33 confirms all 9 queues used HEAD and current canonical persistence does not retain or emit source_commit before special-file failure; exact historical source_commit is not verifiably recoverable from current persisted evidence"},
     {"id":"G-B04-SPACY","detail":"spaCy partial exact 2 files missing; no physical repair authorized"},
     {"id":"G-B04-HF","detail":"huggingface_hub CLAUDE.md symlink confirmed"},
     {"id":"G-B04-UNSTRUCTURED","detail":"unstructured performance fixture symlinks confirmed"},
-    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta + corrected special ledger + M32 provenance gap pending"},
+    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta + corrected special ledger + M32/M33 provenance findings pending"},
     {"id":"G-PRODUCTION-GATE","detail":"No production staging, source/ref redesign, physical repair or Step3 before reviews + director gate"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL","M33":"SOL"},
   "reviews": {"astra":"PENDING_READY_TO_JOIN","claude":"PENDING_READY_TO_JOIN","grok":"PENDING_READY_TO_JOIN","external":"NOT_PERFORMED_NO_EVIDENCE"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
   "next_safe_actions": [
-    "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta plus M30/M32 special ledger and provenance findings",
+    "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta plus M30/M32/M33 special ledger and provenance findings",
     "CLAUDE M07 validate tracked-set + modes + bytes and evaluate pre-scan provenance persistence without weakening special-file gate",
-    "GROK M08 validate Git vendoring/package/subtree alternatives and account for missing historical source_commit in special failures",
+    "GROK M08 validate Git vendoring/package/subtree alternatives accounting for historical commit nonrecoverability on special failures",
     "SOL monitor reviews and add only genuinely new read-only evidence",
     "NO PHYSICAL REPAIR until reviews + director gate"
   ]
