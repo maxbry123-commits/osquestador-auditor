@@ -5,29 +5,13 @@
 - status: `VERIFIED_CLOSED_CONTROL_ONLY`
 - claim_id: `SOL0-M39-20260911-1641-COT`
 - base_main_sha: `65076a72f3b7e7e38263ff21ce92f225edf654ba`
-- scope: recuperar lista literal de investigación del Director; preparar esquema 4×SOL de tres pasos; integrar Crazy Wall/Handoff sin activar ejecución física antes del gate.
 - physical_mutation: `false`
 - canonical_motors_mutated: `false`
-
-### 3 pasos ejecutados
-1. `VERIFY_DIRECTOR_RESEARCH_LIST_AND_CURRENT_GAPS` — COMPLETE
-2. `WRITE_MULTISOL_DAG_WITH_ACQUISITION_ACTIVATION_GATE` — COMPLETE
-3. `SYNC_STATE_CHECKPOINT_HANDOFF_AND_REPORT` — COMPLETE
-
-### Evidencia
-- `INPUT-DIRECTOR-2026-09-10T2024-05.json` — lista literal recuperada: I04, I06, I07, I08, I09, I10.
-- `MULTISOL-DAG-3STEP-v1.json` — read-back SHA `e8ac66dfac1429bc3c22a89809dcfdb962f2855e`.
-- `STATE-DELTA-028-M39-MULTISOL-PRESTAGED.json`.
-- `CHECKPOINT-DELTA-026-M39-MULTISOL-PRESTAGED.json`.
-- `HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md` — read-back SHA `3e55f60efceb6c74e287ecccf73846621ef9be77`.
-- `SOL-1-LOG.md`, `SOL-2-LOG.md`, `SOL-3-LOG.md` creados en estado WAITING/READY sin claims falsos.
-
-### Veredicto
-`M39_CONTROL_ONLY_COMPLETE / MULTISOL_PRESTAGED_NOT_ACTIVATED / 23_PHYSICAL_FAILURES_REMAIN_OPEN / EXISTING_REVIEW_GATE_PRESERVED`.
+- verdict: `M39_CONTROL_ONLY_COMPLETE / MULTISOL_PRESTAGED_NOT_ACTIVATED / 23_PHYSICAL_FAILURES_REMAIN_OPEN / EXISTING_REVIEW_GATE_PRESERVED`.
 
 ## M40 — DIRECTOR 6-TRACK RESEARCH SHORTLIST
 - owner: `SOL-0`
-- status: `IN_PROGRESS`
+- status: `REVIEW_READY_WAITING_DIRECTOR_APPROVAL`
 - claim_id: `SOL0-M40-20260911-RESEARCH-COT`
 - base_main_sha: `55f039bcad34acd9ed19c2003d266caf8caa15fa`
 - scope: ejecutar I04/I06/I07/I08/I09/I10 con mínimo 10 hallazgos de código/OSS por investigación; separar EXISTING/NEW/REFERENCE/DEFER/REJECT; presentar shortlist al Director antes de cualquier adquisición nueva.
@@ -37,11 +21,21 @@
 
 ### 3 pasos M40
 1. `SYNC_WATCHDOG_AND_RESEARCH_SCOPE` — COMPLETE
-2. `RUN_6TRACK_RESEARCH_10_TO_20_EACH` — IN_PROGRESS
-3. `PUBLISH_SHORTLIST_AND_WAIT_DIRECTOR_APPROVAL` — PENDING
+2. `RUN_6TRACK_RESEARCH_10_TO_20_EACH` — COMPLETE; 65 entradas: I04=10, I06=10, I07=10, I08=11, I09=13, I10=11.
+3. `PUBLISH_SHORTLIST_AND_WAIT_DIRECTOR_APPROVAL` — REVIEW_READY; espera decisión del Director.
 
-### Gates
-- Paso 1 proyecto: `VERIFIED_CLOSED` para inventario/X-Ray/control de investigación, sin afirmar cierre de los 23 fallos físicos.
-- Paso 2 proyecto: `ACTIVE_RESEARCH_REVIEW`.
+### Evidencia M40
+- `RESEARCH-SHORTLIST-M40-6TRACK-2026-09-11.md` — commit `166f9efea6f6e4fe2e570b8490a3b510afdf5f60`.
+- `WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json` — Paso 2 REVIEW_READY, Paso 3 WAITING_DIRECTOR_APPROVAL.
+- `STATE-DELTA-029-M40-RESEARCH-REVIEW.json`.
+- `CHECKPOINT-DELTA-027-M40-RESEARCH-REVIEW.json`.
+
+### Gates vigentes
+- Paso 1 proyecto: `VERIFIED_CLOSED_CONTROL_SCOPE`; no equivale a reparar los 23 fallos físicos.
+- Paso 2 proyecto: `REVIEW_READY_WAITING_DIRECTOR_APPROVAL`.
 - Paso 3 proyecto: `WAITING_DIRECTOR_APPROVAL`; prohibido descargar candidatos nuevos antes de la aprobación de la shortlist.
 - M06/M07/M08 conservan sus owner locks previos.
+- Los 23 FAILED y 139 anomalías continúan abiertos salvo evidencia física posterior.
+
+### Veredicto M40
+`RESEARCH_MINIMUM_SATISFIED / 65_TRACK_ENTRIES / SHORTLIST_PERSISTED / NO_NEW_DOWNLOADS / STEP3_WAITING_DIRECTOR_APPROVAL`.
