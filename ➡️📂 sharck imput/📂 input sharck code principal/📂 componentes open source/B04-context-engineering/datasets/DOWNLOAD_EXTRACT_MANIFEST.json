@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 28591212,
+  "bundle_sha256": "70add404182561b6d5053317cc5737db21036293f4e3fc2e715b29aecb6dc842",
+  "extracted_tree": {
+    "bytes": 66744134,
+    "files": 370,
+    "sha256": "494967c0446f4dcd369d9b9abea220c78fd426234788c38b6b779ae97a52f6f5"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "datasets.bundle.zip.part-0001",
+      "sha256": "1281d16f435e02b3b6713cd669a82d8b9b3926617a9ffe6c1873e1f7aefa15d4"
+    },
+    {
+      "bytes": 12582912,
+      "name": "datasets.bundle.zip.part-0002",
+      "sha256": "aaca8c5fe6f5c063bf196c235e124de0e6fcc6d658cd2b88201ea40d9e92d57d"
+    },
+    {
+      "bytes": 3425388,
+      "name": "datasets.bundle.zip.part-0003",
+      "sha256": "9ca8b98e0ab1c72d8256307c1b2e09863f8784256c0b213a2ddb983b28a3980c"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "datasets",
+  "source_bytes": 66744134,
+  "source_commit": "8606c66ab69037c1d6b1fb7980c025beb2ea3c7c",
+  "source_files": 370,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/huggingface/datasets",
+  "source_tree": {
+    "bytes": 66744134,
+    "files": 370,
+    "sha256": "494967c0446f4dcd369d9b9abea220c78fd426234788c38b6b779ae97a52f6f5"
+  }
+}
