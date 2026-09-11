@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M34 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M35 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -148,22 +148,33 @@ Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
 - Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 - Cero physical repair, source/ref redesign, motor mutation o integración Step3.
 
+## M35 — StrategyDelta coverage audit
+Evidence: `📂 Craxy wall bitácora stated JSON/STRATEGYDELTA-COVERAGE-AUDIT-2026-09-11.md`.
+Estado: `VERIFIED_READ_ONLY / COVERAGE_GAP_IDENTIFIED / NO_PHYSICAL_MUTATION`.
+- Universo partial diagnosticado: 11 partials B01–B03 + spaCy B04 = **12 componentes** y **139 anomalías exactas** (`137` M22 + `2` spaCy).
+- M25 ejercitó directamente spaCy 2/2, sqry 1/21 y 1/7 changed de OpenSearch.
+- Cobertura observable M25: **3/12 componentes = 25%** y **4/139 anomalías = 2.88%**.
+- No se ejercitaron en M25 los árboles completos de heritrix3/yacy/nutch/kythe/scira/continue/datasketch/smolagents/pyserini, los 4 missing `.idea/*` de OpenSearch, los otros 6 changed LICENSE/NOTICE ni modes 100755 donde correspondan.
+- GAP: `G-V2-STRATEGYDELTA-COVERAGE-12`.
+- Conclusión: M25 conserva su valor como PASS representativo, pero NO es cobertura suficiente para autorización de producción. Source-special/symlink permanece fuera por diseño.
+- PLAN rev12 sigue sincronizado sólo hasta M34; M35 es evidencia nueva pendiente de reconciliación posterior.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25/M27/M28 y usar M30+M32+M33 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si persistir provenance pre-scan mantiene el fail-closed sin convertir special-files en bypass. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27/M28/M35 y usar M30+M32+M33 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si ampliar la StrategyDelta sandbox a árboles completos mantiene el fail-closed y si persistir provenance pre-scan mantiene special-files como bloqueo. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. Para source-special, usar M30/M32/M33: el exact historical mode sigue UNKNOWN y M33 confirma que el source commit histórico no es recuperable desde la persistencia actual. Evaluar una mejora versionada que registre provenance pre-scan y luego seleccione staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; tests/read-back obligatorios antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos por árbol/componente, no sólo por muestras M25. Para source-special, usar M30/M32/M33: el exact historical mode sigue UNKNOWN y M33 confirma que el source commit histórico no es recuperable desde la persistencia actual. Evaluar mejora versionada para provenance pre-scan y staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; tests/read-back completos obligatorios antes de repair.
 
 ### GROK / M08
-Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido y M32/M33 como limitación de reproducibilidad histórica; no asumir que HEAD actual equivale al snapshot del intento. Verificar licencia/mantenimiento/source refs; no auto-instalar.
+Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido, M32/M33 como limitación de reproducibilidad histórica y M35 para impedir extrapolar el PASS M25 a clases no cubiertas. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev12 está sincronizado hasta M34; no se declara review externo ni PASS de producción.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev12 está sincronizado hasta M34; M35 queda pendiente de reconciliación PLAN sin falso PASS.
 
 ## Current checkpoint
-`CP-V2-CONTROL-PLANE-RECONCILED-021`
-Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY`.
+`CP-V2-STRATEGYDELTA-COVERAGE-022`
+Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_COVERAGE_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
 
