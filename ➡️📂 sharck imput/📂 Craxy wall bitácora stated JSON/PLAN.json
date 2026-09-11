@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.plan.v2",
-  "revision": 11,
+  "revision": 12,
   "project": "Wanted Shark Web / Sharck Input V2",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -46,7 +46,10 @@
     {"id":"M28","owner":"SOL","status":"ALL_M22_MISSING_ACCOUNTED_BY_IGNORE_RULES_READ_ONLY","name":"complete root/imported/nested ignore causality: 130/130 missing + 7/7 attributes-changed explained","evidence":"📂 Craxy wall bitácora stated JSON/NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md"},
     {"id":"M29","owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED","name":"reconcile stale PLAN task ledger through M28 using current STATE/CHECKPOINT/Handoff; no physical mutation"},
     {"id":"M30","owner":"SOL","status":"SPECIAL_LEDGER_CONTRADICTION_VERIFIED_READ_ONLY","name":"correct M23 docling/cocoindex special-path attribution from canonical B01/B03 states; >=67 observed special entries; exact Git mode remains unknown where not proven","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md"},
-    {"id":"M31","owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M30","name":"reconcile PLAN with M30 corrected special ledger after checkpoint 017; document-only, no physical mutation"}
+    {"id":"M31","owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M30","name":"reconcile PLAN with M30 corrected special ledger after checkpoint 017; document-only, no physical mutation"},
+    {"id":"M32","owner":"SOL","status":"SPECIAL_SNAPSHOT_PROVENANCE_GAP_VERIFIED_READ_ONLY","name":"verify special-source failures abort after acquire but before source_commit result persistence","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-PROVENANCE-GAP-2026-09-11.md"},
+    {"id":"M33","owner":"SOL","status":"SPECIAL_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY","name":"verify exact historical source_commit for the 9 HEAD-based special failures is not recoverable from current canonical persistence","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-PROVENANCE-RECOVERABILITY-AUDIT-2026-09-11.md"},
+    {"id":"M34","owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M32_M33","name":"reconcile PLAN ledger with M32/M33 evidence after checkpoint 020; document-only, no physical mutation"}
   ],
   "research_loop": {
     "stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY","WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],
@@ -67,7 +70,7 @@
   ],
   "catalog":{"legacy":77,"new":40,"total":117},
   "acquisition_summary":{"B01":{"verified":3,"failed":7},"B02":{"verified":5,"failed":5},"B03":{"verified":2,"failed":8},"B04":{"verified":7,"failed":3,"pending":0},"total_new_batches":{"verified":17,"failed":23,"pending":0}},
-  "gap_xray":{"B01_B03_operational":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"B04_observed":{"SOURCE_SYMLINK_GAP":2,"PARTIAL_DESTINATION_READBACK_GAP_EXACT_2_FILES":1},"m22_exact":{"run":34567075204,"missing":130,"changed":7,"extra":0,"causal_explained":137},"special_ledger":{"status":"M30_CORRECTED","observed_special_entries_minimum":67,"docling_observed":6,"cocoindex_observed":7,"exact_git_mode_all_paths":"UNKNOWN_NOT_INFERRED"},"evidence":["📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md","📂 Craxy wall bitácora stated JSON/B04-XRAY-2026-09-11.md","📂 Craxy wall bitácora stated JSON/PARTIALS-XRAY-11-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md","📂 Craxy wall bitácora stated JSON/NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md"]},
+  "gap_xray":{"B01_B03_operational":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"B04_observed":{"SOURCE_SYMLINK_GAP":2,"PARTIAL_DESTINATION_READBACK_GAP_EXACT_2_FILES":1},"m22_exact":{"run":34567075204,"missing":130,"changed":7,"extra":0,"causal_explained":137},"special_ledger":{"status":"M33_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY","observed_special_entries_minimum":67,"docling_observed":6,"cocoindex_observed":7,"exact_git_mode_all_paths":"UNKNOWN_NOT_INFERRED","historical_source_commit_recoverable":false,"provenance_gap":"G-V2-SPECIAL-PROVENANCE-9"},"evidence":["📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md","📂 Craxy wall bitácora stated JSON/B04-XRAY-2026-09-11.md","📂 Craxy wall bitácora stated JSON/PARTIALS-XRAY-11-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-PROVENANCE-GAP-2026-09-11.md","📂 Craxy wall bitácora stated JSON/SPECIAL-PROVENANCE-RECOVERABILITY-AUDIT-2026-09-11.md","📂 Craxy wall bitácora stated JSON/NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md"]},
   "workflow_guard":{"original_run_ui":"SUCCESS","semantic":"GAPS_PENDING","fixed_wrapper_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43","future_policy":"job fails unless every state item VERIFIED_CLOSED"},
   "agent_contracts": {
     "SOL":{"exclusive":["state_control","integration","consolidation","motor_watch","research_orchestration_read_only"],"current_limit":"research_and_read_only_evidence_until_reviews","cannot":["llm_only_pass","duplicate_M06_M07_M08"]},
@@ -79,6 +82,6 @@
   "recovery_files":["RECOVERY-GROK-SHARCK-INPUT.md","RECOVERY-MULTI-ENV-SHARCK-INPUT.md"],
   "legacy_v1":{"catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "gates":["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
-  "checkpoint":"CP-V2-CONTROL-PLANE-RECONCILED-018",
+  "checkpoint":"CP-V2-CONTROL-PLANE-RECONCILED-021",
   "next_action":"WAIT_M06_M07_M08_REVIEWS; SOL_CONTINUE_ONLY_GENUINELY_NEW_READ_ONLY_EVIDENCE_OR_CONTROL_PLANE_RECONCILIATION; NO_PHYSICAL_REPAIR; STEP3_BLOCKED"
 }
