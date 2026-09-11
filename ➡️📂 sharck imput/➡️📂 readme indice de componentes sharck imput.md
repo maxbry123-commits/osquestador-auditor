@@ -182,3 +182,9 @@ B01–B04 contienen exactamente 10 componentes por batch. Los motores canónicos
 - Utilidad Sharck Input: discovery/retrieval read-only de datasets mediante Dataset Viewer API: validación, subsets/splits, rows, search, filter, parquet, size y statistics.
 - Estado: `INDEXED_CANDIDATE_NO_INSTALL`.
 - Motivo de no adquisición: ya vive dentro del componente padre catalogado; cualquier instalación/activación queda detrás del gate y no altera el total de 117 componentes.
+
+## H. Validación M13 Simulation 03 — 2026-09-10
+- Catálogo preservado en **117**; no se detectó componente/skill/dataset nuevo con evidencia suficiente para añadir una entrada.
+- Nuevo hallazgo arquitectónico, no componente: separar `capability_state` en `DISCOVERED → CONFIGURED → HEALTHCHECKED → OPERATIONALLY_VERIFIED` y aplicar stop criteria de cobertura para evitar loops de discovery/retrieval.
+- Fuente comunitaria relevante: Hermes issue https://github.com/NousResearch/hermes-agent/issues/96247 reporta `tool_search` exitoso repetido hasta saturar contexto; se conserva como evidencia de comunidad, no como PASS/FAIL universal del producto.
+- No adquisición, no instalación, no cambio de source/ref, no motores tocados.
