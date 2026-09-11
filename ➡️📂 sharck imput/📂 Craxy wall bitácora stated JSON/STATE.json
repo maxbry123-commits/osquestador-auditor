@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 24,
+  "revision": 25,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
   "status": "ACTIVE_LOOP_REVIEW_GATE",
   "current_step": 2,
-  "current_node": "M35_STRATEGYDELTA_COVERAGE_AUDIT_READ_ONLY",
+  "current_node": "M36_CONTROL_PLANE_PLAN_RECONCILED_M35",
   "catalog": {"legacy":77,"new":40,"total":117},
   "legacy_v1": {"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "agents": {
-    "SOL":{"status":"MONITORING_EVIDENCE_AND_MOTOR_WATCH","node":"GAP_WATCHDOG+M13+M21+M22+M23+M24+M25+M26+M27+M28+M29+M30+M31+M32+M33+M34+M35","log":"SOL-LOG.md"},
+    "SOL":{"status":"MONITORING_EVIDENCE_AND_MOTOR_WATCH","node":"GAP_WATCHDOG+M13+M21+M22+M23+M24+M25+M26+M27+M28+M29+M30+M31+M32+M33+M34+M35+M36","log":"SOL-LOG.md"},
     "ASTRA":{"status":"READY_TO_JOIN","node":"M06_INDEPENDENT_AUDIT","log":"ASTRA-LOG.md","dedicated_scope":["XRAY_ARQUITECTURA","EVALUACION_PREVIA","MEJORA_VERSIONADA","COMPONENT_GAP_RESEARCH","INDEPENDENT_VERIFY"]},
     "GROK":{"status":"READY_TO_JOIN","node":"M08_OSS_REFUTATION","log":"GROK-LOG.md"},
     "CLAUDE":{"status":"READY_TO_JOIN","node":"M07_CODE_PORTS_TEST_REVIEW","log":"CLAUDE-LOG.md"}
@@ -50,7 +50,8 @@
     "M32":{"owner":"SOL","status":"SPECIAL_SNAPSHOT_PROVENANCE_GAP_VERIFIED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-PROVENANCE-GAP-2026-09-11.md","finding":"SOURCE_SPECIAL_FILE_GAP_ABORTS_AFTER_ACQUIRE_BUT_BEFORE_RESULT_PERSISTENCE_SO_FAILED_STATE_DOES_NOT_RETAIN_SOURCE_COMMIT_FOR_EXACT_HISTORICAL_GIT_MODE_VERIFICATION","physical_mutation":false},
     "M33":{"owner":"SOL","status":"SPECIAL_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-PROVENANCE-RECOVERABILITY-AUDIT-2026-09-11.md","finding":"ALL_9_SPECIAL_QUEUES_USED_HEAD_AND_CURRENT_CANONICAL_PERSISTENCE_DOES_NOT_RETAIN_OR_EMIT_SOURCE_COMMIT_BEFORE_SCAN_FAILURE; HISTORICAL_SOURCE_COMMIT_NOT_VERIFIABLY_RECOVERABLE","physical_mutation":false},
     "M34":{"owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M32_M33","finding":"PLAN_REV12_NOW_RECORDS_M32_M33_PROVENANCE_EVIDENCE_AND_M34_WITHOUT_CHANGING_ACQUISITION_GATES_OR_OWNER_LOCKS","physical_mutation":false},
-    "M35":{"owner":"SOL","status":"STRATEGYDELTA_COVERAGE_GAP_VERIFIED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/STRATEGYDELTA-COVERAGE-AUDIT-2026-09-11.md","finding":"M25_DIRECTLY_SAMPLES_3_OF_12_PARTIAL_COMPONENTS_AND_4_OF_139_EXACT_ANOMALIES; REPRESENTATIVE_PASS_NOT_COVERAGE_SUFFICIENT_FOR_PRODUCTION","physical_mutation":false}
+    "M35":{"owner":"SOL","status":"STRATEGYDELTA_COVERAGE_GAP_VERIFIED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/STRATEGYDELTA-COVERAGE-AUDIT-2026-09-11.md","finding":"M25_DIRECTLY_SAMPLES_3_OF_12_PARTIAL_COMPONENTS_AND_4_OF_139_EXACT_ANOMALIES; REPRESENTATIVE_PASS_NOT_COVERAGE_SUFFICIENT_FOR_PRODUCTION","physical_mutation":false},
+    "M36":{"owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M35","finding":"PLAN_REV13_NOW_RECORDS_M35_COVERAGE_EVIDENCE_AND_M36_WITHOUT_CHANGING_ACQUISITION_GATES_OR_OWNER_LOCKS","physical_mutation":false}
   },
   "acquisition_v2": {
     "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"operational_gaps":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"partial_exact_diff":{"run":34567075204,"diagnosed":11,"missing_files":130,"changed_files":7,"extra_files":0}},
@@ -84,14 +85,14 @@
   "nested_ignore_blast_radius": {"status":"VERIFIED_READ_ONLY_COMPLETE","evidence":"📂 Craxy wall bitácora stated JSON/NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md","m22_missing_total":130,"ignore_explained":130,"coverage_percent":100.0,"m22_changed_total":7,"attributes_explained":7,"m22_anomalies_total":137,"m22_anomalies_causally_explained":137,"physical_mutation":false},
   "staging_strategydelta": {"status":"SANDBOX_PASS_REVIEW_REQUIRED_COVERAGE_GAP","evidence":"📂 Craxy wall bitácora stated JSON/STAGING-STRATEGYDELTA-SANDBOX-2026-09-11.md","coverage_evidence":"📂 Craxy wall bitácora stated JSON/STRATEGYDELTA-COVERAGE-AUDIT-2026-09-11.md","run":34568249222,"representative_verified":["spaCy:polyleven.c","spaCy:website/.vscode/extensions.json","sqry:entrypoint.rs","OpenSearch:LICENSE_sample"],"partial_components_total":12,"sampled_components":3,"component_coverage_percent":25.0,"exact_anomalies_total":139,"sampled_anomalies":4,"sample_coverage_percent":2.88,"production_allowed":false},
   "motor_integrity_watch": {"status":"VERIFIED_READ_ONLY_NO_DRIFT","reference":".github/workflows/sharck-input-v2-components.yml","blobs":{"motor_1_extract_only.py":"a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500","motor_2_queue_download_extract.py":"84d566e2ee4e98e42eb3a864026d067d48caabd9","hf_download_extract_engine.py":"91e6e4486692eab314be5c7130d8310d3c855397","motor_3_copy_batches.py":"3689924361ce4a1a9fde4ae2b6f6009c37a6042d","motor_copy_root_to_repo.py":"8281211da76db3080fe1f1ea38b3eb0c45d655cb","motor_4_move_batches.py":"9a21facfe11327cf60a2afca8f415ad52f0ecbe5"},"physical_mutation":false},
-  "control_plane_reconciliation": {"status":"M35_NEW_EVIDENCE_PENDING_PLAN_RECONCILIATION","plan_revision":12,"finding":"PLAN_REV12_RECONCILED_THROUGH_M34; M35_COVERAGE_EVIDENCE_IS_NEW_AND_NOT_YET_RECORDED_IN_PLAN; ACQUISITION_GATES_AND_OWNER_LOCKS_UNCHANGED","physical_mutation":false},
+  "control_plane_reconciliation": {"status":"M36_PLAN_RECONCILED_WITH_M35","plan_revision":13,"finding":"PLAN_REV13_NOW_RECORDS_M35_AND_M36; STATE_CHECKPOINT_HANDOFF_SYNC_IN_SEQUENCE; ACQUISITION_GATES_AND_OWNER_LOCKS_UNCHANGED","physical_mutation":false},
   "review":{"astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false,"physical_repair_allowed":false},
   "research":{"simulation_01":{"status":"VERIFIED_READ_ONLY"},"simulation_02":{"status":"VERIFIED_READ_ONLY"},"simulation_03":{"status":"VERIFIED_READ_ONLY"},"simulation_04":{"status":"VERIFIED_READ_ONLY","scenario":"AMBIGUOUS_ENTITY_CONFLICTING_FRESH_SOURCES_TOOL_DISCOVERY_PRESSURE"}},
   "skill_candidates":[{"name":"huggingface-datasets","parent_component":"Hugging Face Skills","status":"INDEXED_CANDIDATE_NO_INSTALL","official":true,"license":"Apache-2.0","maintenance":"ACTIVE"}],
   "dataset_candidates":[{"name":"MCP-Atlas","source":"https://huggingface.co/datasets/ScaleAI/MCP-Atlas","repo":"https://github.com/scaleapi/mcp-atlas","license":"CC-BY-4.0","maintenance":"UPDATED_2026-08-03","status":"INDEXED_CANDIDATE_NO_INSTALL"}],
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS","no_silent_overwrite":true},
-  "checkpoint":"CP-V2-STRATEGYDELTA-COVERAGE-022",
-  "next_safe_actions":["ASTRA_M06_REVIEW_STAGING_GATES_M30_LEDGER_M32_PROVENANCE_M33_NONRECOVERABILITY_AND_M35_COVERAGE_GAP","CLAUDE_M07_REVIEW_TRACKED_SET_MODES_BYTES_FULL_TREE_SANDBOX_COVERAGE_AND_PRE_SCAN_PROVENANCE_PERSISTENCE","GROK_M08_REVIEW_VENDOR_PACKAGE_SUBTREE_ALTERNATIVES_SPECIAL_SOURCE_PROVENANCE_AND_M35_NONEXTRAPOLATION","SOL_RECONCILE_PLAN_WITH_M35_OR_ADD_ONLY_GENUINELY_NEW_READ_ONLY_EVIDENCE","NO_PHYSICAL_REPAIR_BEFORE_REVIEW_GATE"],
+  "checkpoint":"CP-V2-CONTROL-PLANE-RECONCILED-023",
+  "next_safe_actions":["ASTRA_M06_REVIEW_STAGING_GATES_M30_LEDGER_M32_PROVENANCE_M33_NONRECOVERABILITY_AND_M35_COVERAGE_GAP","CLAUDE_M07_REVIEW_TRACKED_SET_MODES_BYTES_FULL_TREE_SANDBOX_COVERAGE_AND_PRE_SCAN_PROVENANCE_PERSISTENCE","GROK_M08_REVIEW_VENDOR_PACKAGE_SUBTREE_ALTERNATIVES_SPECIAL_SOURCE_PROVENANCE_AND_M35_NONEXTRAPOLATION","SOL_ADD_ONLY_GENUINELY_NEW_READ_ONLY_EVIDENCE_OR_MONITOR_OWNER_CLAIMS","NO_PHYSICAL_REPAIR_BEFORE_REVIEW_GATE"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-11T13:50:18-05:00"
+  "updated_at":"2026-09-11T14:52:23-05:00"
 }
