@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 10667323,
+  "bundle_sha256": "6bd189162ca951d304375b24e292b111963bb5936020e575999511759ab24571",
+  "extracted_tree": {
+    "bytes": 14045060,
+    "files": 354,
+    "sha256": "67372c358645ea7783b44ca2abbcc67ca3bc58e805cdb30391d7772009009179"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 10667323,
+      "name": "chonkie.bundle.zip.part-0001",
+      "sha256": "6bd189162ca951d304375b24e292b111963bb5936020e575999511759ab24571"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "chonkie",
+  "source_bytes": 14045060,
+  "source_commit": "664454b689d68614bcfc0b1d57fc2a28b5862825",
+  "source_files": 354,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/feyninc/chonkie",
+  "source_tree": {
+    "bytes": 14045060,
+    "files": 354,
+    "sha256": "67372c358645ea7783b44ca2abbcc67ca3bc58e805cdb30391d7772009009179"
+  }
+}
