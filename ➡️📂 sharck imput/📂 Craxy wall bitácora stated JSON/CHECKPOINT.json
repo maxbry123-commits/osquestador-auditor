@@ -1,17 +1,58 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-M13-SIM04-ABSTAIN-010",
+  "checkpoint_id": "CP-V2-EXACT-GAP-XRAY-011",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M13_SIMULATION_04_AMBIGUITY_CONTRADICTION_ABSTENTION",
-  "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL",
-  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117_PLUS_HF_SUBSKILL_AND_MCP_ATLAS_DATASET_CANDIDATES_NO_INSTALL","plan":"PASS_REV9_READBACK","state":"PASS_REV12_READBACK","handoff":"PASS_SYNCED_READBACK","recovery":"PASS_UNCHANGED","sol_log":"PASS_SYNCED_READBACK","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
-  "acquisition":{"B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},"B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING"},"total_new_batches":{"verified_closed":17,"failed":23,"pending":0}},
-  "xray":{"B01_B03":{"readback_runs":[34535896880,34536177351],"recovered":0,"confirmed_partial":11,"source_special_remaining":9},"B04":{"physical_repair_attempted_by_this_checkpoint":false}},
-  "research_simulation_04":{"status":"VERIFIED_READ_ONLY","stages_exercised":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY","WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],"scenario":"ambiguous entity + contradictory fresh evidence + tool-discovery pressure","facts":["OpenAI Web/File Search are available for dynamic retrieval","Anthropic recommends smallest high-signal context and just-in-time exploration","GitHub supports explicit tool subsets and on-demand tool search","OpenClaw skill allowlists are not shell-time authorization boundaries","Hermes community has a 2026 report of 1523 successful tool_search calls exhausting context without an answer","ScaleAI MCP-Atlas exposes 500 public benchmark tasks across real MCP servers and is CC-BY-4.0"],"inference":"preserve ambiguity and contradiction through compression; emit explicit ANSWERABLE|ANSWERABLE_WITH_CAVEATS|ABSTAIN_NEEDS_REVIEW plus stop_reason; benchmark this policy before wiring","unknown":"numeric ambiguity/source-count/search-budget/coverage/freshness/compression thresholds await M07/M10 tests"},
-  "dataset_candidate":{"name":"MCP-Atlas","source":"https://huggingface.co/datasets/ScaleAI/MCP-Atlas","repo":"https://github.com/scaleapi/mcp-atlas","maintenance":"UPDATED_2026-08-03","license":"CC-BY-4.0","status":"INDEXED_CANDIDATE_NO_INSTALL"},
-  "skill_candidate":{"name":"huggingface-datasets","parent_component":"Hugging Face Skills","status":"INDEXED_CANDIDATE_NO_INSTALL"},
-  "open_gaps":[{"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations confirmed partial"},{"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate"},{"id":"G-B04-3","detail":"B04 has 3 FAILED; no blind retry"},{"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},{"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"},{"id":"G-THRESHOLDS","detail":"ambiguity/source-count/research/entity/tool/search/coverage/freshness/compression quantitative thresholds remain UNKNOWN pending M07/M10 tests"}],
-  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL"},
-  "step3_allowed":false,
-  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis/tests","GROK M08 alternatives/refutation","SOL M13 next read-only simulation","review MCP-Atlas candidate without installation","no physical repair or HF subskill/dataset installation until corresponding review/gate"]
+  "last_verified_node": "M22_B01_B03_11_PARTIALS_EXACT_DIFF_VERIFIED",
+  "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_EXACT_XRAY_EVIDENCE",
+  "control_plane": {
+    "method": "PASS",
+    "architecture": "PASS",
+    "index": "PASS_117",
+    "plan": "PASS_REV9",
+    "state": "PASS_REV13",
+    "handoff": "NEEDS_SYNC_AFTER_M22",
+    "recovery": "PASS_UNCHANGED",
+    "review_gate": "PASS",
+    "watchdog": "ENABLED_HOURLY"
+  },
+  "acquisition": {
+    "B01_B03": {"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
+    "B04": {"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING"},
+    "total_new_batches": {"verified_closed":17,"failed":23,"pending":0}
+  },
+  "exact_xray": {
+    "B04": {
+      "evidence": "📂 Craxy wall bitácora stated JSON/B04-XRAY-2026-09-11.md",
+      "huggingface_hub": "SOURCE_SYMLINK_GAP_CONFIRMED",
+      "spaCy": {"class":"PARTIAL_DESTINATION_READBACK_GAP_EXACT_2_FILES","missing":["spacy/matcher/polyleven.c","website/.vscode/extensions.json"],"readback_run":34566821665,"diff_run":34566985338},
+      "unstructured": "SOURCE_SYMLINK_GAP_CONFIRMED"
+    },
+    "B01_B03": {
+      "evidence": "📂 Craxy wall bitácora stated JSON/PARTIALS-XRAY-11-2026-09-11.md",
+      "run": 34567075204,
+      "diagnosed": 11,
+      "missing_files": 130,
+      "changed_files": 7,
+      "extra_files": 0,
+      "priority": ["sqry","OpenSearch","heritrix3","yacy_search_server","nutch","kythe","scira","continue","datasketch","smolagents","pyserini"]
+    }
+  },
+  "open_gaps": [
+    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations now have exact source-vs-published diffs"},
+    {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate"},
+    {"id":"G-B04-SPACY","detail":"spaCy partial exact 2 files missing"},
+    {"id":"G-B04-HF","detail":"huggingface_hub CLAUDE.md symlink confirmed"},
+    {"id":"G-B04-UNSTRUCTURED","detail":"unstructured performance fixture symlinks confirmed"},
+    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},
+    {"id":"G-THRESHOLDS","detail":"research/entity/tool/search/coverage/freshness/compression quantitative thresholds await M07/M10 tests"}
+  ],
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL"},
+  "step3_allowed": false,
+  "next_safe_actions": [
+    "ASTRA M06 review exact X-Ray and architecture gates",
+    "CLAUDE M07 classify repairability/runtime importance for exact diffs",
+    "GROK M08 validate official package/subtree alternatives for symlink sources",
+    "SOL sync Handoff/PLAN and continue read-only evidence",
+    "NO PHYSICAL REPAIR until review/director gate"
+  ]
 }
