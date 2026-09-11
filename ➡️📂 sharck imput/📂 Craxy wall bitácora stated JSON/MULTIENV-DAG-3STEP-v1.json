@@ -1,0 +1,202 @@
+{
+  "schema": "sharck-input.multienv-dag.v1",
+  "version": 1,
+  "project": "Wanted Shark Web / Sharck Input V2.1",
+  "source_of_truth": {
+    "repo": "maxbry123-commits/osquestador-auditor",
+    "branch": "main",
+    "root": "➡️📂 sharck imput",
+    "base_state_revision": 25,
+    "base_checkpoint": "CP-V2-CONTROL-PLANE-RECONCILED-023"
+  },
+  "invariants": {
+    "one_task_one_node": true,
+    "max_steps_per_node": 3,
+    "input_raw_immutable": true,
+    "llm_cannot_declare_pass": true,
+    "shared_writes_sequential": true,
+    "fresh_sha_required_for_shared_write": true,
+    "owner_lock_required": true,
+    "no_silent_overwrite": true,
+    "no_lfs": true,
+    "no_force": true
+  },
+  "statuses": [
+    "OPEN",
+    "CLAIMED",
+    "IN_PROGRESS",
+    "BLOCKED",
+    "REVIEW_READY",
+    "VERIFIED_CLOSED"
+  ],
+  "claim_protocol": [
+    "FETCH_FRESH_STATE_AND_CHECKPOINT",
+    "VERIFY_NODE_OPEN_OR_OWNED_BY_SELF",
+    "WRITE_CLAIM_TO_OWN_LOG_WITH_BASE_SHA_AND_CLAIM_ID"
+  ],
+  "completion_protocol": [
+    "WRITE_EVIDENCE",
+    "REPORT_RESULT_OR_BLOCKER_IN_OWN_LOG",
+    "WRITE_CHECKPOINT_DELTA_WITH_FRESH_SHARED_SHA"
+  ],
+  "shared_files": [
+    "📂 Craxy wall bitácora stated JSON/PLAN.json",
+    "📂 Craxy wall bitácora stated JSON/STATE.json",
+    "📂 Craxy wall bitácora stated JSON/CHECKPOINT.json",
+    "➡️📂 handoff Readme shark imput.md",
+    "PARCHE-RECUPERACION-SHARK-IMPUT.md"
+  ],
+  "agent_logs": {
+    "SOL": "📂 Craxy wall bitácora stated JSON/SOL-LOG.md",
+    "ASTRA": "📂 Craxy wall bitácora stated JSON/ASTRA-LOG.md",
+    "CLAUDE": "📂 Craxy wall bitácora stated JSON/CLAUDE-LOG.md",
+    "GROK": "📂 Craxy wall bitácora stated JSON/GROK-LOG.md"
+  },
+  "node_contract_schema": {
+    "required": [
+      "node_id",
+      "task_id",
+      "owner",
+      "status",
+      "scope",
+      "steps",
+      "inputs",
+      "outputs",
+      "evidence",
+      "writes",
+      "forbidden_writes",
+      "handoff"
+    ],
+    "max_steps": 3,
+    "claim": {
+      "claim_id": "string|null",
+      "base_state_sha": "string|null",
+      "claimed_at": "iso8601|null"
+    },
+    "heartbeat": {
+      "last_seen": "iso8601|null",
+      "status": "string"
+    }
+  },
+  "nodes": [
+    {
+      "node_id": "N-SOL-M37",
+      "task_id": "M37",
+      "owner": "SOL",
+      "status": "CLAIMED",
+      "scope": "cross-check attachments+repo, publish 20X plan, architecture V2.1 and multienv control deltas",
+      "depends_on": ["M36"],
+      "steps": [
+        "CROSSCHECK_SOURCE_OF_TRUTH",
+        "WRITE_20X_ARCHITECTURE_AND_DAG",
+        "REPORT_HANDOFF_AND_CHECKPOINT_DELTA"
+      ],
+      "inputs": [
+        "STATE rev25",
+        "PLAN rev13",
+        "CHECKPOINT CP-V2-CONTROL-PLANE-RECONCILED-023",
+        "project attachments",
+        "117-component index"
+      ],
+      "outputs": [
+        "20X-OSS-MEJORAS-2026-09-11.md",
+        "readme arquitectura sharck imput V2.1.md",
+        "MULTIENV-DAG-3STEP-v1.json",
+        "HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+      ],
+      "evidence": [],
+      "claim": {
+        "claim_id": "SOL-M37-20260911-1531-COT",
+        "base_state_sha": "bb20f03d01f4930a47eb971eae36e0234c502cf8",
+        "claimed_at": "2026-09-11T15:31:00-05:00"
+      },
+      "heartbeat": {
+        "last_seen": "2026-09-11T15:31:00-05:00",
+        "status": "ACTIVE"
+      },
+      "writes": [
+        "versioned architecture",
+        "Craxy Wall versioned research/control deltas",
+        "versioned handoff"
+      ],
+      "forbidden_writes": [
+        "ASTRA-LOG.md",
+        "CLAUDE-LOG.md",
+        "GROK-LOG.md",
+        "canonical motors",
+        "physical component destinations"
+      ],
+      "handoff": "publish evidence and release only SOL-owned node"
+    },
+    {
+      "node_id": "N-ASTRA-M06",
+      "task_id": "M06",
+      "owner": "ASTRA",
+      "status": "OPEN",
+      "scope": "independent architecture/security/recovery review of M24-M35 and V2.1/20X plan",
+      "depends_on": ["M35"],
+      "steps": [
+        "READ_XRAY_AND_V2_1",
+        "REVIEW_STRATEGYDELTA_GATES_AND_ROLLBACK",
+        "REPORT_REVIEW_PASS_OR_REPAIR_REQUIRED"
+      ],
+      "inputs": ["M24-M35 evidence", "architecture V2.1", "20X plan"],
+      "outputs": ["ASTRA review evidence"],
+      "evidence": [],
+      "claim": {"claim_id": null, "base_state_sha": null, "claimed_at": null},
+      "heartbeat": {"last_seen": null, "status": "READY_TO_CLAIM"},
+      "writes": ["ASTRA-LOG.md", "ASTRA-owned review artifact"],
+      "forbidden_writes": ["CLAUDE-LOG.md", "GROK-LOG.md", "canonical motors", "physical repair"],
+      "handoff": "verdict to director gate"
+    },
+    {
+      "node_id": "N-CLAUDE-M07",
+      "task_id": "M07",
+      "owner": "CLAUDE",
+      "status": "OPEN",
+      "scope": "validate full-tree StrategyDelta design, ports/adapters/tests and 20X integration contracts",
+      "depends_on": ["M35"],
+      "steps": [
+        "VERIFY_FULL_COVERAGE_AND_PROVENANCE_DESIGN",
+        "TEST_PORTS_ADAPTERS_FAILURE_CONTRACTS",
+        "REPORT_REVIEW_RESULT"
+      ],
+      "inputs": ["M22/M24/M25/M32/M33/M35", "architecture V2.1", "20X plan"],
+      "outputs": ["CLAUDE engineering review evidence"],
+      "evidence": [],
+      "claim": {"claim_id": null, "base_state_sha": null, "claimed_at": null},
+      "heartbeat": {"last_seen": null, "status": "READY_TO_CLAIM"},
+      "writes": ["CLAUDE-LOG.md", "CLAUDE-owned test/review artifact"],
+      "forbidden_writes": ["ASTRA-LOG.md", "GROK-LOG.md", "canonical motors", "production repair without gate"],
+      "handoff": "coverage/contract verdict to director gate"
+    },
+    {
+      "node_id": "N-GROK-M08",
+      "task_id": "M08",
+      "owner": "GROK",
+      "status": "OPEN",
+      "scope": "OSS/source/license/maintenance/overlap/refutation review including 20X B05-B06 candidates",
+      "depends_on": ["M37"],
+      "steps": [
+        "VERIFY_20X_SOURCE_LICENSE_MAINTENANCE",
+        "REFUTE_OVERLAPS_AND_ASSIGN_KEEP_DEFER_REJECT",
+        "REPORT_PINNED_CANDIDATE_SET"
+      ],
+      "inputs": ["117-component index", "20X plan", "special-source evidence"],
+      "outputs": ["GROK OSS review evidence", "pruned B05/B06 candidate set"],
+      "evidence": [],
+      "claim": {"claim_id": null, "base_state_sha": null, "claimed_at": null},
+      "heartbeat": {"last_seen": null, "status": "READY_TO_CLAIM"},
+      "writes": ["GROK-LOG.md", "GROK-owned OSS review artifact"],
+      "forbidden_writes": ["ASTRA-LOG.md", "CLAUDE-LOG.md", "canonical motors", "auto-download"],
+      "handoff": "pruned/pinned OSS set to director gate"
+    }
+  ],
+  "fan_in_gate": {
+    "requires": ["M06", "M07", "M08"],
+    "director_decision_required": true,
+    "step3_allowed_before_gate": false,
+    "physical_repair_allowed_before_gate": false,
+    "b05_b06_download_allowed_before_gate": false
+  }
+}
