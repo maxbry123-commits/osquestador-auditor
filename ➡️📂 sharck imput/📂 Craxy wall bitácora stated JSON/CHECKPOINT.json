@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-STAGING-STRATEGYDELTA-012",
+  "checkpoint_id": "CP-V2-MOTOR-INTEGRITY-WATCH-013",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M25_STAGING_STRATEGYDELTA_SANDBOX_PASS_REVIEW_REQUIRED",
+  "last_verified_node": "M26_MOTOR_INTEGRITY_WATCH_VERIFIED_READ_ONLY",
   "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
     "plan": "PASS_REV9_STALE_TASK_LEDGER_BEYOND_M20",
-    "state": "PASS_REV14",
-    "handoff": "PASS_SYNCED_CP_V2_STAGING_STRATEGYDELTA_012",
+    "state": "PASS_REV15",
+    "handoff": "PENDING_SYNC_CP_V2_MOTOR_INTEGRITY_WATCH_013",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -56,6 +56,18 @@
     "production_allowed":false,
     "scope":"representative spaCy + sqry + OpenSearch paths only"
   },
+  "motor_integrity_watch": {
+    "status":"VERIFIED_READ_ONLY_NO_DRIFT",
+    "reference":".github/workflows/sharck-input-v2-components.yml",
+    "verified_blobs":6,
+    "motor_1_extract_only.py":"a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500",
+    "motor_2_queue_download_extract.py":"84d566e2ee4e98e42eb3a864026d067d48caabd9",
+    "hf_download_extract_engine.py":"91e6e4486692eab314be5c7130d8310d3c855397",
+    "motor_3_copy_batches.py":"3689924361ce4a1a9fde4ae2b6f6009c37a6042d",
+    "motor_copy_root_to_repo.py":"8281211da76db3080fe1f1ea38b3eb0c45d655cb",
+    "motor_4_move_batches.py":"9a21facfe11327cf60a2afca8f415ad52f0ecbe5",
+    "physical_mutation":false
+  },
   "open_gaps": [
     {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations have exact source-vs-published diffs; root cause now confirmed as staging ignore/filter behavior for representative classes"},
     {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate; remain separate from staging StrategyDelta"},
@@ -65,7 +77,7 @@
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta pending"},
     {"id":"G-PRODUCTION-GATE","detail":"SANDBOX_PASS does not authorize production staging, git add -f, plumbing strategy, or physical repair"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
   "next_safe_actions": [
