@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 3868287,
+  "bundle_sha256": "5c4d359149c6e2585baec0304b882aa65b3b3247bfcf49673e09b1f5d7172a55",
+  "extracted_tree": {
+    "bytes": 4431066,
+    "files": 74,
+    "sha256": "dbf0c0ec094bbef9fe37e66568cdabef831be8fc63bc63cd2b7c3111ae477e4d"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 3868287,
+      "name": "LLMLingua.bundle.zip.part-0001",
+      "sha256": "5c4d359149c6e2585baec0304b882aa65b3b3247bfcf49673e09b1f5d7172a55"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "LLMLingua",
+  "source_bytes": 4431066,
+  "source_commit": "5a4c78ae18ab17a98cf997e8259354e546081d64",
+  "source_files": 74,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/microsoft/LLMLingua",
+  "source_tree": {
+    "bytes": 4431066,
+    "files": 74,
+    "sha256": "dbf0c0ec094bbef9fe37e66568cdabef831be8fc63bc63cd2b7c3111ae477e4d"
+  }
+}
