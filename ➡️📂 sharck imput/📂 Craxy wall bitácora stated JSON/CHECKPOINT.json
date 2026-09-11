@@ -10,7 +10,7 @@
     "index": "PASS_117",
     "plan": "PASS_REV9_STALE_TASK_LEDGER_BEYOND_M20",
     "state": "PASS_REV15",
-    "handoff": "PENDING_SYNC_CP_V2_MOTOR_INTEGRITY_WATCH_013",
+    "handoff": "PASS_SYNCED_CP_V2_MOTOR_INTEGRITY_WATCH_013",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
