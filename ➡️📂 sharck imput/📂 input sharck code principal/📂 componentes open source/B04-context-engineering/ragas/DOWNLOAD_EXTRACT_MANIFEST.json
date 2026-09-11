@@ -1,0 +1,48 @@
+{
+  "bundle_bytes": 44317169,
+  "bundle_sha256": "4c511da0a47c3bea5fcf65b3b9cfed8904ff478a422082f79a173085fd33975b",
+  "extracted_tree": {
+    "bytes": 48763989,
+    "files": 694,
+    "sha256": "be8cd510bfa6f8c3ed979e0bbc232de4c160726fb3ce0476bed289a29ff298fb"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "ragas.bundle.zip.part-0001",
+      "sha256": "ba578ef67dafb9667e6067fa04e1fd09f45f4d6897ce7b934056a7474eb4cc45"
+    },
+    {
+      "bytes": 12582912,
+      "name": "ragas.bundle.zip.part-0002",
+      "sha256": "3347af9cc94409803086f23d64d5dbab5c02287a8686e9a0194ce5976c27afc4"
+    },
+    {
+      "bytes": 12582912,
+      "name": "ragas.bundle.zip.part-0003",
+      "sha256": "41a2caa2e1252813f9d958850530fe068466d56b4962fc94a15053219f484d55"
+    },
+    {
+      "bytes": 6568433,
+      "name": "ragas.bundle.zip.part-0004",
+      "sha256": "deec2acff00566946208f095137892f8dc13fc8318ee8f0ab728e209713c7b6b"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ragas",
+  "source_bytes": 48763989,
+  "source_commit": "298b68274234c060deacab3cf5fb52aa3a20e885",
+  "source_files": 694,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/vibrantlabsai/ragas",
+  "source_tree": {
+    "bytes": 48763989,
+    "files": 694,
+    "sha256": "be8cd510bfa6f8c3ed979e0bbc232de4c160726fb3ce0476bed289a29ff298fb"
+  }
+}
