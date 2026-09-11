@@ -1,0 +1,372 @@
+{
+  "created_at": 1789090727,
+  "items": {
+    "B04-01": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:CLAUDE.md\n",
+      "slug": "huggingface_hub",
+      "source_repo": "https://github.com/huggingface/huggingface_hub",
+      "status": "FAILED"
+    },
+    "B04-02": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 28591212,
+        "bundle_sha256": "70add404182561b6d5053317cc5737db21036293f4e3fc2e715b29aecb6dc842",
+        "elapsed_seconds": 22.23,
+        "extracted_tree": {
+          "bytes": 66744134,
+          "files": 370,
+          "sha256": "494967c0446f4dcd369d9b9abea220c78fd426234788c38b6b779ae97a52f6f5"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "datasets.bundle.zip.part-0001",
+            "sha256": "1281d16f435e02b3b6713cd669a82d8b9b3926617a9ffe6c1873e1f7aefa15d4"
+          },
+          {
+            "bytes": 12582912,
+            "name": "datasets.bundle.zip.part-0002",
+            "sha256": "aaca8c5fe6f5c063bf196c235e124de0e6fcc6d658cd2b88201ea40d9e92d57d"
+          },
+          {
+            "bytes": 3425388,
+            "name": "datasets.bundle.zip.part-0003",
+            "sha256": "9ca8b98e0ab1c72d8256307c1b2e09863f8784256c0b213a2ddb983b28a3980c"
+          }
+        ],
+        "publish": {
+          "commit": "4e607583304c1526ddf7534741e3a4b182fd1e82",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "datasets",
+        "source_bytes": 66744134,
+        "source_commit": "8606c66ab69037c1d6b1fb7980c025beb2ea3c7c",
+        "source_files": 370,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/huggingface/datasets",
+        "source_tree": {
+          "bytes": 66744134,
+          "files": 370,
+          "sha256": "494967c0446f4dcd369d9b9abea220c78fd426234788c38b6b779ae97a52f6f5"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "datasets",
+      "source_repo": "https://github.com/huggingface/datasets",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-03": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 735241,
+        "bundle_sha256": "fae6d5434706051cf552eca30ed3e35c88afcb06e184f06aadfebfb3b2f6ab3e",
+        "elapsed_seconds": 11.16,
+        "extracted_tree": {
+          "bytes": 2281649,
+          "files": 335,
+          "sha256": "b9875f05cc8d207c62ee969155772ac44e2cf2cb29e60901236171fd6aeab21d"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 735241,
+            "name": "hf-mcp-server.bundle.zip.part-0001",
+            "sha256": "fae6d5434706051cf552eca30ed3e35c88afcb06e184f06aadfebfb3b2f6ab3e"
+          }
+        ],
+        "publish": {
+          "commit": "afd65239c332c8e13a95f56bf548e65822b6bde7",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "hf-mcp-server",
+        "source_bytes": 2281649,
+        "source_commit": "ea617e0b897e27af8cedd01203cd732e79c6e12e",
+        "source_files": 335,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/huggingface/hf-mcp-server",
+        "source_tree": {
+          "bytes": 2281649,
+          "files": 335,
+          "sha256": "b9875f05cc8d207c62ee969155772ac44e2cf2cb29e60901236171fd6aeab21d"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "hf-mcp-server",
+      "source_repo": "https://github.com/huggingface/hf-mcp-server",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-04": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 3868287,
+        "bundle_sha256": "5c4d359149c6e2585baec0304b882aa65b3b3247bfcf49673e09b1f5d7172a55",
+        "elapsed_seconds": 11.38,
+        "extracted_tree": {
+          "bytes": 4431066,
+          "files": 74,
+          "sha256": "dbf0c0ec094bbef9fe37e66568cdabef831be8fc63bc63cd2b7c3111ae477e4d"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 3868287,
+            "name": "LLMLingua.bundle.zip.part-0001",
+            "sha256": "5c4d359149c6e2585baec0304b882aa65b3b3247bfcf49673e09b1f5d7172a55"
+          }
+        ],
+        "publish": {
+          "commit": "b2362d4841adfbdcc6baa22887919a3f31801530",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "LLMLingua",
+        "source_bytes": 4431066,
+        "source_commit": "5a4c78ae18ab17a98cf997e8259354e546081d64",
+        "source_files": 74,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/microsoft/LLMLingua",
+        "source_tree": {
+          "bytes": 4431066,
+          "files": 74,
+          "sha256": "dbf0c0ec094bbef9fe37e66568cdabef831be8fc63bc63cd2b7c3111ae477e4d"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "LLMLingua",
+      "source_repo": "https://github.com/microsoft/LLMLingua",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-05": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 158, in main\n    pub=publish(work,parts_dir,extracted,mp,slug) if PUBLISH else {'verdict':'DRY_RUN_DOWNLOAD_EXTRACT_VERIFIED'}\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 128, in publish\n    if target.exists(): raise RuntimeError('DESTINATION_EXISTS:'+rel)\n                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: DESTINATION_EXISTS:\u27a1\ufe0f\ud83d\udcc2 sharck imput/\ud83d\udcc2 input sharck code principal/\ud83d\udcc2 componentes open source/B04-context-engineering/spaCy\n",
+      "slug": "spaCy",
+      "source_repo": "https://github.com/explosion/spaCy",
+      "status": "FAILED"
+    },
+    "B04-06": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 4055426,
+        "bundle_sha256": "d5ff2b5dc59dbd69a9f57bbf30af797bd4818a1836a9b029c39b4a9a204a5168",
+        "elapsed_seconds": 13.22,
+        "extracted_tree": {
+          "bytes": 25058079,
+          "files": 184,
+          "sha256": "22e66e4a25fce3d2b3eed2f44068eea01add60206f24f4c92e4bc7cd5c41590c"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 4055426,
+            "name": "markitdown.bundle.zip.part-0001",
+            "sha256": "d5ff2b5dc59dbd69a9f57bbf30af797bd4818a1836a9b029c39b4a9a204a5168"
+          }
+        ],
+        "publish": {
+          "commit": "01771bbf5af105226a20798763666582c79573d8",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "markitdown",
+        "source_bytes": 25058079,
+        "source_commit": "9480644d9c3b7397b9bf0156f858fa3a5aad7d2c",
+        "source_files": 184,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/microsoft/markitdown",
+        "source_tree": {
+          "bytes": 25058079,
+          "files": 184,
+          "sha256": "22e66e4a25fce3d2b3eed2f44068eea01add60206f24f4c92e4bc7cd5c41590c"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "markitdown",
+      "source_repo": "https://github.com/microsoft/markitdown",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-07": {
+      "attempts": 3,
+      "error": "Traceback (most recent call last):\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 161, in <module>\n    if __name__=='__main__': main()\n                             ^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 152, in main\n    work=pathlib.Path(td); src,commit=acquire(work); rows,src_bytes=scan_tree(src); src_tree=tree_hash(src)\n                                                                    ^^^^^^^^^^^^^^\n  File \"/home/runner/work/osquestador-auditor/osquestador-auditor/\u27a1\ufe0f\ud83d\udcc2motores de descarga extracci\u00f3n copiado movimiento archivos osquestador-auditor/\ud83d\udcc2Motor descarga de componentes y extracci\u00f3n de zip/hf_download_extract_engine.py\", line 57, in scan_tree\n    if special: raise RuntimeError('SOURCE_SPECIAL_FILE_GAP:'+','.join(special[:30]))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: SOURCE_SPECIAL_FILE_GAP:scripts/performance/docs/DA-1p.pdf,scripts/performance/docs/DA-619p.pdf,scripts/performance/docs/book-war-and-peace-1225p.txt,scripts/performance/docs/book-war-and-peace-1p.txt,scripts/performance/docs/example-10k-1p.html,scripts/performance/docs/example-10k-230p.html,scripts/performance/docs/handbook-1p.docx,scripts/performance/docs/handbook-872p.docx,scripts/performance/docs/layout-parser-paper-10p.jpg,scripts/performance/docs/layout-parser-paper-1p.jpg,scripts/performance/docs/layout-parser-paper-fast-16p.pdf,scripts/performance/docs/layout-parser-paper-hi_res-16p.pdf,scripts/performance/docs/science-exploration-1p.pptx,scripts/performance/docs/science-exploration-369p.pptx,scripts/performance/warmup_docs/warmup.docx,scripts/performance/warmup_docs/warmup.html,scripts/performance/warmup_docs/warmup.jpg,scripts/performance/warmup_docs/warmup.pdf,scripts/performance/warmup_docs/warmup.pptx,scripts/performance/warmup_docs/warmup.txt\n",
+      "slug": "unstructured",
+      "source_repo": "https://github.com/Unstructured-IO/unstructured",
+      "status": "FAILED"
+    },
+    "B04-08": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 10667323,
+        "bundle_sha256": "6bd189162ca951d304375b24e292b111963bb5936020e575999511759ab24571",
+        "elapsed_seconds": 13.98,
+        "extracted_tree": {
+          "bytes": 14045060,
+          "files": 354,
+          "sha256": "67372c358645ea7783b44ca2abbcc67ca3bc58e805cdb30391d7772009009179"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 10667323,
+            "name": "chonkie.bundle.zip.part-0001",
+            "sha256": "6bd189162ca951d304375b24e292b111963bb5936020e575999511759ab24571"
+          }
+        ],
+        "publish": {
+          "commit": "565fda0832aeaf47db678150c3c7619eea4ed081",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "chonkie",
+        "source_bytes": 14045060,
+        "source_commit": "664454b689d68614bcfc0b1d57fc2a28b5862825",
+        "source_files": 354,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/feyninc/chonkie",
+        "source_tree": {
+          "bytes": 14045060,
+          "files": 354,
+          "sha256": "67372c358645ea7783b44ca2abbcc67ca3bc58e805cdb30391d7772009009179"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "chonkie",
+      "source_repo": "https://github.com/feyninc/chonkie",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-09": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 44317169,
+        "bundle_sha256": "4c511da0a47c3bea5fcf65b3b9cfed8904ff478a422082f79a173085fd33975b",
+        "elapsed_seconds": 22.36,
+        "extracted_tree": {
+          "bytes": 48763989,
+          "files": 694,
+          "sha256": "be8cd510bfa6f8c3ed979e0bbc232de4c160726fb3ce0476bed289a29ff298fb"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "ragas.bundle.zip.part-0001",
+            "sha256": "ba578ef67dafb9667e6067fa04e1fd09f45f4d6897ce7b934056a7474eb4cc45"
+          },
+          {
+            "bytes": 12582912,
+            "name": "ragas.bundle.zip.part-0002",
+            "sha256": "3347af9cc94409803086f23d64d5dbab5c02287a8686e9a0194ce5976c27afc4"
+          },
+          {
+            "bytes": 12582912,
+            "name": "ragas.bundle.zip.part-0003",
+            "sha256": "41a2caa2e1252813f9d958850530fe068466d56b4962fc94a15053219f484d55"
+          },
+          {
+            "bytes": 6568433,
+            "name": "ragas.bundle.zip.part-0004",
+            "sha256": "deec2acff00566946208f095137892f8dc13fc8318ee8f0ab728e209713c7b6b"
+          }
+        ],
+        "publish": {
+          "commit": "c0125360693b3485990425f1988fa03c0ed920b1",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "ragas",
+        "source_bytes": 48763989,
+        "source_commit": "298b68274234c060deacab3cf5fb52aa3a20e885",
+        "source_files": 694,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/vibrantlabsai/ragas",
+        "source_tree": {
+          "bytes": 48763989,
+          "files": 694,
+          "sha256": "be8cd510bfa6f8c3ed979e0bbc232de4c160726fb3ce0476bed289a29ff298fb"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "ragas",
+      "source_repo": "https://github.com/vibrantlabsai/ragas",
+      "status": "VERIFIED_CLOSED"
+    },
+    "B04-10": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 23967269,
+        "bundle_sha256": "5963b46a3ca51734dfc5d990049c4fed16c6f85011f790fe06898be17700f448",
+        "elapsed_seconds": 22.77,
+        "extracted_tree": {
+          "bytes": 42417205,
+          "files": 2772,
+          "sha256": "eab82e4f59eeaeedf95f40b4a818b677a84844f958cd6bfc5ce5c5080bd8b35f"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 12582912,
+            "name": "deepeval.bundle.zip.part-0001",
+            "sha256": "036051ff84e92c353aa1588bde005669ae11c87937756ff1e92935501718be9c"
+          },
+          {
+            "bytes": 11384357,
+            "name": "deepeval.bundle.zip.part-0002",
+            "sha256": "97f03afd317097dd65535eb7360bec045f3b37f0bf4d95f016567339f17152a8"
+          }
+        ],
+        "publish": {
+          "commit": "a5f18335a234e4cd3df7cda33a14ad7df1f58dec",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "deepeval",
+        "source_bytes": 42417205,
+        "source_commit": "f94d940c1e5afc4b280420fe73fe17d146274018",
+        "source_files": 2772,
+        "source_ref": "HEAD",
+        "source_repo": "https://github.com/confident-ai/deepeval",
+        "source_tree": {
+          "bytes": 42417205,
+          "files": 2772,
+          "sha256": "eab82e4f59eeaeedf95f40b4a818b677a84844f958cd6bfc5ce5c5080bd8b35f"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "deepeval",
+      "source_repo": "https://github.com/confident-ai/deepeval",
+      "status": "VERIFIED_CLOSED"
+    }
+  },
+  "schema": "yaiwes.frontend.download-extract-queue.v1"
+}
