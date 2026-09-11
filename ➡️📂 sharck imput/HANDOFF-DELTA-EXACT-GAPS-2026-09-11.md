@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M26 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M27 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -65,12 +65,22 @@ Read-back directo de los seis motores canónicos en `main`:
 - `motor_4_move_batches.py` = `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`.
 Los seis coinciden exactamente con el lock canónico. No hubo edición, adquisición ni reparación física. Esta evidencia elimina `MOTOR_DRIFT` como causa nueva para el estado actual, pero no desbloquea producción ni Step3.
 
+## M27 — root ignore blast radius cuantificado
+Evidence: `📂 Craxy wall bitácora stated JSON/ROOT-IGNORE-BLAST-RADIUS-2026-09-11.md`.
+Relectura read-only del run M22 `34567075204` + `.gitignore` raíz del repo destino:
+- heritrix3: 57/57 missing bajo `dist/` → regla raíz `dist/`.
+- sqry: 21/21 missing bajo `sqry-core/src/graph/unified/build/` → regla raíz `build/`.
+- yacy_search_server: `.env` → regla raíz `.env`.
+- mínimo directo probado por reglas root: **79/130 missing = 60.77%**.
+- los 7/7 changed de OpenSearch permanecen separados y ya están probados como `CRLF → LF` por attributes.
+Esto cuantifica el blast-radius del problema de staging; NO autoriza reparación física ni debilitar gates.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos; decidir entre Git plumbing (`hash-object --no-filters`/index-tree) y neutralización temporal controlada de attributes. Definir tests/read-back antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos; decidir entre Git plumbing (`hash-object --no-filters`/index-tree) y neutralización temporal controlada de attributes. M27 muestra que el staging debe resolver como mínimo reglas root `dist/`, `build/`, `.env` sin perder tracked files. Definir tests/read-back antes de repair.
 
 ### GROK / M08
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Verificar licencia/mantenimiento/source refs; no auto-instalar.
@@ -79,7 +89,7 @@ Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree 
 Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only; no physical repair ni Step3 antes de reviews + gate director.
 
 ## Current checkpoint
-`CP-V2-MOTOR-INTEGRITY-WATCH-013`
+`CP-V2-ROOT-IGNORE-BLAST-RADIUS-014`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
