@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M29 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M30 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -25,10 +25,11 @@ Agregado: 130 missing + 7 changed + 0 extra.
 Prioridad: sqry, OpenSearch, heritrix3, yacy_search_server, nutch, kythe, scira, continue, datasketch, smolagents, pyserini.
 
 ## M23 — 9 source-special B01–B03 mapped
-Evidence: `📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md`.
+Evidence primaria: `📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md`.
 - B01: stormcrawler, tika, docling.
 - B02: vespa, networkx.
 - B03: cocoindex, pydantic-ai, litellm, fastmcp.
+- El detalle de paths de `docling` en M23 queda corregido por M30; no usar ese detalle aislado para diseñar StrategyDelta.
 No motor changes. StrategyDelta debe preferir package/subtree/reference oficial cuando corresponda, sin debilitar special-file safety.
 
 ## M24 — causa raíz de los partials
@@ -88,28 +89,39 @@ Read-only, sin repetir M21/M22/M23.
 ## M29 — control-plane PLAN reconciliation
 Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
 - `CHECKPOINT 015` marcaba explícitamente `PLAN rev9` como `STALE_TASK_LEDGER_BEYOND_M20` mientras STATE/Handoff ya registraban M21–M28.
-- SOL reconcili ó el ledger: `PLAN rev10` contiene ahora M21–M29 y mantiene los mismos ownership locks y gates.
+- SOL reconcilió el ledger: `PLAN rev10` contiene M21–M29 y mantiene los mismos ownership locks y gates.
 - `STATE rev18` registra M29 sin alterar adquisición, fuentes, motores ni destinos.
 - Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 - M06/M07/M08 siguen sin claim/review/verdict verificable en sus logs; no se infiere revisión externa.
 - Este nodo corrige coherencia documental; NO autoriza StrategyDelta de producción, repair físico ni Step3.
 
+## M30 — source-special state ledger contradiction audit
+Evidence: `📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md`.
+Estado: `VERIFIED_READ_ONLY_LEDGER_CORRECTION / NO_PHYSICAL_MUTATION`.
+- Se releyeron los errores persistidos en `B01-state.json`, `B02-state.json` y `B03-state.json`; no se usó evidencia externa ni se ejecutó adquisición.
+- El detalle M23 de `docling` estaba mal atribuido: M23 le asignó 7 paths tipo cocoindex, pero el estado B01 registra 6 paths de skills `building-pydantic-ai-agents` / `dignified-python` distribuidos bajo `.claude`, `.codex` y `.opencode`.
+- Los 7 paths tipo cocoindex sí aparecen exactamente bajo `cocoindex` en B03.
+- Blast-radius mínimo observado por `scan_tree()`: **>=67 special entries** en los 9 componentes: stormcrawler=2, tika>=30, docling=6, vespa=3, networkx=1, cocoindex=7, pydantic-ai=15, litellm=1, fastmcp=2.
+- Tika permanece `>=30`, no `=30`, porque el motor persiste sólo `special[:30]` en el error.
+- `special` NO se promueve automáticamente a `symlink`: Git mode exacto de cada path continúa UNKNOWN salvo donde ya exista evidencia individual.
+- Los 9 componentes siguen FAILED; ningún gate cambia.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25/M27/M28: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27/M28 y usar M30 como corrección del ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. M28 elimina la incógnita causal de M22: los 130 missing provienen de semántica ignore durante re-staging y los 7 changed de attributes. Seleccionar una implementación de staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; comparar Git plumbing (`hash-object --no-filters`/index-tree) vs neutralización temporal controlada de attributes, con tests/read-back antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. M28 elimina la incógnita causal de M22: los 130 missing provienen de semántica ignore durante re-staging y los 7 changed de attributes. Para source-special, usar el ledger M30 corregido y no asumir symlink sin mode evidence. Seleccionar una implementación de staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; comparar Git plumbing (`hash-object --no-filters`/index-tree) vs neutralización temporal controlada de attributes, con tests/read-back antes de repair.
 
 ### GROK / M08
-Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
+Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido de docling/cocoindex. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director.
+Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev10 permanece sincronizado sólo hasta M29; M30 deberá entrar en la próxima reconciliación de PLAN y no se declara falsamente sincronizado.
 
 ## Current checkpoint
-`CP-V2-PLAN-RECONCILED-016`
-Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA`.
+`CP-V2-SPECIAL-LEDGER-AUDIT-017`
+Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_AND_CORRECTED_SPECIAL_LEDGER`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
 
