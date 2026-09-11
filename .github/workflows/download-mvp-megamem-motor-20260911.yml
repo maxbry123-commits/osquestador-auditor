@@ -1,0 +1,57 @@
+name: MVP MegaMem canonical motor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/download-mvp-megamem-motor-20260911.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mvp-megamem-canonical-motor
+  cancel-in-progress: false
+
+jobs:
+  download-extract-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+
+      - name: Execute immutable canonical Motor 2
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          QUEUE_FILE: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/queue.json
+          STATE_FILE: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/state.json
+          INDEX_PATH: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/index.md
+          ENGINE_PATH: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py
+          MAX_RETRIES: '3'
+        run: |
+          set -euo pipefail
+          RUNTIME_DIR='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime'
+          mkdir -p "$RUNTIME_DIR"
+          cat > "$RUNTIME_DIR/queue.json" <<'JSON'
+          {
+            "queue": [
+              {
+                "id": "0001:megamem",
+                "source_repo": "C-Bjorn/MegaMem",
+                "source_ref": "HEAD",
+                "slug": "MegaMem",
+                "publish": true,
+                "dest_repo": "maxbry123-commits/osquestador-auditor",
+                "dest_branch": "main",
+                "dest_root": "."
+              }
+            ]
+          }
+          JSON
+          python3 '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py'
