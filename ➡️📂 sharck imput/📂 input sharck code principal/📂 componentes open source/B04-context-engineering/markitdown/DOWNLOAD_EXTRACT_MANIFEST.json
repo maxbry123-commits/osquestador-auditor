@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 4055426,
+  "bundle_sha256": "d5ff2b5dc59dbd69a9f57bbf30af797bd4818a1836a9b029c39b4a9a204a5168",
+  "extracted_tree": {
+    "bytes": 25058079,
+    "files": 184,
+    "sha256": "22e66e4a25fce3d2b3eed2f44068eea01add60206f24f4c92e4bc7cd5c41590c"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 4055426,
+      "name": "markitdown.bundle.zip.part-0001",
+      "sha256": "d5ff2b5dc59dbd69a9f57bbf30af797bd4818a1836a9b029c39b4a9a204a5168"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "markitdown",
+  "source_bytes": 25058079,
+  "source_commit": "9480644d9c3b7397b9bf0156f858fa3a5aad7d2c",
+  "source_files": 184,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/microsoft/markitdown",
+  "source_tree": {
+    "bytes": 25058079,
+    "files": 184,
+    "sha256": "22e66e4a25fce3d2b3eed2f44068eea01add60206f24f4c92e4bc7cd5c41590c"
+  }
+}
