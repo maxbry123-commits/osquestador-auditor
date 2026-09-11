@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M35 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M36 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -157,7 +157,16 @@ Estado: `VERIFIED_READ_ONLY / COVERAGE_GAP_IDENTIFIED / NO_PHYSICAL_MUTATION`.
 - No se ejercitaron en M25 los árboles completos de heritrix3/yacy/nutch/kythe/scira/continue/datasketch/smolagents/pyserini, los 4 missing `.idea/*` de OpenSearch, los otros 6 changed LICENSE/NOTICE ni modes 100755 donde correspondan.
 - GAP: `G-V2-STRATEGYDELTA-COVERAGE-12`.
 - Conclusión: M25 conserva su valor como PASS representativo, pero NO es cobertura suficiente para autorización de producción. Source-special/symlink permanece fuera por diseño.
-- PLAN rev12 sigue sincronizado sólo hasta M34; M35 es evidencia nueva pendiente de reconciliación posterior.
+
+## M36 — control-plane PLAN reconciliation de M35
+Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
+- `CHECKPOINT 022` declaraba `PLAN rev12` sincronizado sólo hasta M34 mientras M35 ya estaba en STATE/Handoff.
+- Los logs ASTRA/CLAUDE/GROK fueron releídos: continúan `READY_TO_JOIN`, sin claim/review/verdict verificable.
+- `PLAN rev13` incorpora M35 y M36 sin alterar adquisición, source/ref, motores, ownership locks ni gates.
+- `STATE rev25` registra `M36_CONTROL_PLANE_PLAN_RECONCILED_M35`.
+- Checkpoint de cierre: `CP-V2-CONTROL-PLANE-RECONCILED-023`.
+- Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+- Cero physical repair, source/ref redesign, motor mutation o integración Step3.
 
 ## Owner entry points actualizados
 ### ASTRA / M06
@@ -170,10 +179,10 @@ Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/1007
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido, M32/M33 como limitación de reproducibilidad histórica y M35 para impedir extrapolar el PASS M25 a clases no cubiertas. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev12 está sincronizado hasta M34; M35 queda pendiente de reconciliación PLAN sin falso PASS.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev13 está sincronizado hasta M36; no redocumentar el mismo estado sin evidencia nueva.
 
 ## Current checkpoint
-`CP-V2-STRATEGYDELTA-COVERAGE-022`
+`CP-V2-CONTROL-PLANE-RECONCILED-023`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_COVERAGE_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
