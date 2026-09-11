@@ -34,5 +34,14 @@
 - M11 READBACK_XRAY = VERIFIED_CLOSED_WITH_0_RECOVERED. Eso cierra la tarea de diagnóstico, no los 11 componentes.
 - M06 ASTRA, M07 CLAUDE y M08 GROK siguen READY_FOR_REVIEW; M10 sigue BLOCKED_BY_REVIEW_GATE.
 
+## 2026-09-10 — WATCHDOG READ-ONLY REVIEW-GATE PASS
+- Releídos desde `main`: Handoff, PLAN, STATE, CHECKPOINT, GAPS ledger, READBACK X-Ray, Recovery y los logs SOL/ASTRA/CLAUDE/GROK.
+- `CP-V2-POST-XRAY-006` sigue siendo el checkpoint vigente; no apareció checkpoint posterior.
+- ASTRA-LOG, CLAUDE-LOG y GROK-LOG continúan en `READY_TO_JOIN`; no existe evidencia nueva de claim, review o verdict M06/M07/M08.
+- Último commit observado bajo `➡️📂 sharck imput/` sigue siendo `9fc08bbaf311980550bacb1f4c11ccb918b0500e` (`docs(sharck-input): sync architecture runtime boundary after canonical readback xray`). No hay evidencia posterior de mutación física V2.
+- Se inspeccionó el run repo-wide `34538185469` (`Independent extraction audit`): terminó `success` pero su propio veredicto semántico fue `GAPS_PENDING`, con 40 archive groups y 10 gaps retryable (`ytmusicapi`, `zustand`, `aiomysql`, `Chart.js`, `qdrant`, `lucide`, `bm25s`, `asyncpg`, `docmost`, `starlette`). Ese auditor no corresponde al inventario B01/B02/B03 de Sharck Input V2 y **no se usa para reclasificar ninguno de los 20 GAP V2**.
+- No se ejecutó reparación física: sin review M06+M07+M08, preserve/quarantine/reacquisition sigue review-gated.
+- No se modificaron motores, componentes, fuentes, refs ni destinos; NO LFS / NO FORCE / NO SILENT OVERWRITE se mantienen.
+
 ## Regla de continuidad
 No reintentar ni mover los 11 partial a ciegas. El candidato de reparación es preservar/quarantine versionado con Motor4 y después reacquisition 1×1, pero es una mutación física y queda pendiente de review. Los 9 SOURCE_SPECIAL_FILE_GAP requieren revisión de source/ref/subproject/dependency/alternative sin debilitar el motor. Mientras reviews estén pendientes, SOL sólo ejecuta monitorización y evidencia read-only `parallel_safe`.
