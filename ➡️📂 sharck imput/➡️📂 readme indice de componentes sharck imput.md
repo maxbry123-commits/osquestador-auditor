@@ -152,7 +152,9 @@ Regla: `CATALOGADO ≠ DESCARGADO ≠ WIRED`. Para V2, un componente nuevo pasa 
 
 - OpenAI: web/file search + MCP + tracing/guardrails favorecen retrieval verificable con provenance, no contexto plano masivo.
 - Anthropic: contexto finito; recuperación just-in-time; referencias ligeras; sub-agentes devuelven síntesis compacta.
-- Hermes: MCP nativo, auto-discovery y filtrado; skills/context se cargan de forma progresiva.
+- Hermes: MCP nativo, auto-discovery y filtrado; Tool Search permite disclosure progresivo de schemas MCP/plugin.
+- Comunidad Hermes: issues abiertos muestran que `tool discovered` no debe convertirse por sí solo en `operationally available`; se requiere evidencia/read-back del tool path.
+- GitHub: agentes Explore/Task/general-purpose separan contexto; custom agents permiten tool/MCP allowlists.
 - OpenClaw: Skills allowlist es visibilidad, no frontera de autorización; aislamiento real requiere sandbox/OS-user/credenciales por agente.
 - Hugging Face bridge: separar `huggingface_hub` (discovery/pointers), `datasets` (dataset load/stream), `hf-mcp-server` (tool exposure MCP).
 - `CocoIndex` aporta actualización incremental Tree-sitter, evitando reindexar todo el repo.
@@ -167,4 +169,16 @@ Todos los componentes nuevos se adquieren únicamente dentro de:
 B01–B04 contienen exactamente 10 componentes por batch. Los motores canónicos permanecen externos e inmutables y reciben destino explícito.
 
 ## F. Validación watchdog 2026-09-10
-Índice reconciliado contra archivos físicos de estado. No se añadió ningún candidato nuevo en esta pasada porque los tres candidatos HF detectados por investigación ya estaban catalogados en B04. La actualización es de **estado/evidencia**, no una nueva adquisición.
+Índice reconciliado contra archivos físicos de estado. El catálogo de componentes permanece en **117**; no hubo adquisición nueva.
+
+## G. Candidatos de skill verificados — no instalados
+
+### HF-SKILL-001 — `huggingface-datasets`
+- Parent ya catalogado: **#40 Hugging Face Skills** — https://github.com/huggingface/skills
+- Skill oficial: https://github.com/huggingface/skills/tree/main/skills/huggingface-datasets
+- Fuente/organización oficial: `huggingface/skills`.
+- Mantenimiento: repo activo; push observado 2026-09-10.
+- Licencia: Apache-2.0 del repo `huggingface/skills`.
+- Utilidad Sharck Input: discovery/retrieval read-only de datasets mediante Dataset Viewer API: validación, subsets/splits, rows, search, filter, parquet, size y statistics.
+- Estado: `INDEXED_CANDIDATE_NO_INSTALL`.
+- Motivo de no adquisición: ya vive dentro del componente padre catalogado; cualquier instalación/activación queda detrás del gate y no altera el total de 117 componentes.
