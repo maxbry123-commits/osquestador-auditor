@@ -4,44 +4,67 @@
 - Reconstruido estado V1 desde GitHub: 47/77 VERIFIED_CLOSED, 30 GAP.
 - Creada V2 `➡️📂 sharck imput/` sin destruir V1 `➡️📂 Shack imput/`.
 - Publicado método multiagente con 5 refutaciones, 12 GOALS, Council12 y 6 simulaciones.
-- Investigados/catalogados 30 componentes adicionales; catálogo total V2=107.
-- Excluido `smallcloudai/refact` por archivado; sustituido por Continue.
+- Investigados/catalogados 30 componentes adicionales; catálogo inicial V2=107.
 - Creada arquitectura V2, PLAN, STATE, CHECKPOINT, Handoff, Recovery, Review Gate y memoria de búsqueda.
-- Creados logs separados SOL/ASTRA/GROK/CLAUDE; ASTRA tiene cinco tareas exclusivas.
-- Creadas tres colas de 10: B01 web/research, B02 IR/evidence, B03 code/runtime.
-- Ejecutado run inicial `34514168678` con motores canónicos inmutables; checkout NO LFS y motor-blob gate PASS 3/3.
-- Resultados físicos/read-back: B01=3 VERIFIED_CLOSED+7 FAILED; B02=5+5; B03=2+8.
-- Balance final run inicial: **10 VERIFIED_CLOSED / 20 FAILED / 0 pending**; semantic verdict=`GAPS_PENDING`.
-- Detectado false-green: GitHub UI marcó jobs success aunque Motor 2 dejó gaps. No se aceptó como PASS.
-- Corregido wrapper del workflow en `1bb43ca45bd548278cb2074cb563bd2ece0cab43`: futuras ejecuciones fallan si STATE no es 10/10; motores no tocados; auto-trigger por editar workflow eliminado.
-- Watchdog actualizado a `Sharck Input V2 Watchdog`, ENABLED HOURLY, America/Bogota.
+- Ejecutado run inicial `34514168678`: B01=3/7, B02=5/5, B03=2/8; total 10 VERIFIED_CLOSED / 20 FAILED.
+- Corregido false-green del wrapper sin editar motores canónicos.
 
 ## 2026-09-10 — LOOP GAP X-RAY / STRATEGYDELTA READ-ONLY
-- X-Ray exhaustivo de los 20 FAILED desde B01/B02/B03 state: 6 DESTINATION_EXISTS + 5 READBACK_TREE_HASH_GAP + 9 SOURCE_SPECIAL_FILE_GAP.
-- Creado verificador read-only `.github/workflows/sharck-input-v2-readback-recover.yml` en commit `15ad8f0e5d128d3095c6de537ef4537571ff2372`.
-- El workflow importa `sha256()` y `tree_hash()` directamente del motor canónico blob `91e6e4486692eab314be5c7130d8310d3c855397`; no reescribe esas funciones ni modifica destinos.
-- Run `34535896880`: re-auditados los seis DESTINATION_EXISTS. Resultado 0/6 recuperados; todos presentan tree hash/bytes mismatch.
-- Workflow ampliado en commit `33fb8f2d63fe91abd6d6c57d357bb8b8512fb850` para los cinco READBACK_TREE_HASH_GAP iniciales.
-- Run `34536177351`: los cinco también siguen tree hash/bytes mismatch. Resultado global del X-Ray de destinos = **0/11 recovered, 11/11 partial/incomplete**.
-- Evidence report publicado: `READBACK-XRAY-2026-09-10.md`, commit `703d9d2f6eb8b12f66b8a7d9445a334f2f714583`.
-- GAPS ledger actualizado: operacionalmente quedan 11 `PARTIAL_DESTINATION_READBACK_GAP` + 9 `SOURCE_SPECIAL_FILE_GAP`; se preserva provenance de causas originales.
-- No se borró, movió, reemplazó ni re-descargó ningún destino parcial.
-- No se modificó ningún motor canónico.
-- Recovery anti-colisión GROK publicado en commit `7befeee5ea92fe75f190802eb7a4a9c8e51eb1bf`.
-- Recovery multi-environment publicado en commit `d454aa43ffdf96d9aec0b12724897dcf5f1f82b1`.
-- STATE revision 7 publicado en commit `d189378ae87230170e584352a3fde94006efea15`.
-- CHECKPOINT avanzado a `CP-V2-POST-XRAY-006`, commit `086c35a9598699ae701bd8022f0fde02ff6d943c`.
-- M11 READBACK_XRAY = VERIFIED_CLOSED_WITH_0_RECOVERED. Eso cierra la tarea de diagnóstico, no los 11 componentes.
-- M06 ASTRA, M07 CLAUDE y M08 GROK siguen READY_FOR_REVIEW; M10 sigue BLOCKED_BY_REVIEW_GATE.
+- 20 FAILED B01–B03: 6 DESTINATION_EXISTS + 5 READBACK_TREE_HASH_GAP + 9 SOURCE_SPECIAL_FILE_GAP.
+- Runs `34535896880`, `34536177351`: 0/11 recovered; 11/11 partial/incomplete.
+- Operacional: 11 `PARTIAL_DESTINATION_READBACK_GAP` + 9 `SOURCE_SPECIAL_FILE_GAP`.
+- No se borró, movió, reemplazó ni redescargó ningún destino parcial. Motores no modificados.
+- Checkpoint: `CP-V2-POST-XRAY-006`; M06/M07/M08 pendientes.
 
 ## 2026-09-10 — WATCHDOG READ-ONLY REVIEW-GATE PASS
-- Releídos desde `main`: Handoff, PLAN, STATE, CHECKPOINT, GAPS ledger, READBACK X-Ray, Recovery y los logs SOL/ASTRA/CLAUDE/GROK.
-- `CP-V2-POST-XRAY-006` sigue siendo el checkpoint vigente; no apareció checkpoint posterior.
-- ASTRA-LOG, CLAUDE-LOG y GROK-LOG continúan en `READY_TO_JOIN`; no existe evidencia nueva de claim, review o verdict M06/M07/M08.
-- Último commit observado bajo `➡️📂 sharck imput/` sigue siendo `9fc08bbaf311980550bacb1f4c11ccb918b0500e` (`docs(sharck-input): sync architecture runtime boundary after canonical readback xray`). No hay evidencia posterior de mutación física V2.
-- Se inspeccionó el run repo-wide `34538185469` (`Independent extraction audit`): terminó `success` pero su propio veredicto semántico fue `GAPS_PENDING`, con 40 archive groups y 10 gaps retryable (`ytmusicapi`, `zustand`, `aiomysql`, `Chart.js`, `qdrant`, `lucide`, `bm25s`, `asyncpg`, `docmost`, `starlette`). Ese auditor no corresponde al inventario B01/B02/B03 de Sharck Input V2 y **no se usa para reclasificar ninguno de los 20 GAP V2**.
-- No se ejecutó reparación física: sin review M06+M07+M08, preserve/quarantine/reacquisition sigue review-gated.
-- No se modificaron motores, componentes, fuentes, refs ni destinos; NO LFS / NO FORCE / NO SILENT OVERWRITE se mantienen.
+- Releídos Handoff/PLAN/STATE/CHECKPOINT/GAPS/X-Ray/Recovery/logs.
+- No evidencia de claim/review/verdict M06/M07/M08.
+- Run repo-wide ajeno a inventario V2 no se usó para reclasificar B01–B03.
+
+## 2026-09-10 — M13 SIMULATION 01
+### Reconciliación previa
+- PLAN/STATE estaban desfasados en catálogo=107, pero el índice actual de `main` ya contenía **117 componentes** y B04.
+- `B04-INDEX.md` / `B04-state.json`: **7 VERIFIED_CLOSED / 3 FAILED / 0 pending**.
+- B04 VERIFIED_CLOSED: datasets, hf-mcp-server, LLMLingua, markitdown, chonkie, ragas, deepeval.
+- B04 FAILED: huggingface_hub=`SOURCE_SPECIAL_FILE_GAP:CLAUDE.md`; spaCy=`DESTINATION_EXISTS`; unstructured=`SOURCE_SPECIAL_FILE_GAP`.
+- No se ejecutó retry físico ni modificación de motor/destino/source/ref.
+
+### Simulación por etapas
+`SOURCE_AND_TOOL_DISCOVERY → WEB_CODE_SKILL_DATASET_RETRIEVAL → EVIDENCE_AND_CONTRADICTION → COVERAGE_AND_GAPS → CONTEXT_COMPRESSION → CONTEXT_PACKAGE`.
+
+### FACT
+1. OpenAI publica Responses/Agents con web search, file search, remote MCP, guardrails/tracing y sandbox/harness para traer contexto y operar de forma controlada.
+   - https://openai.com/index/new-tools-for-building-agents/
+   - https://openai.com/index/new-tools-and-features-in-the-responses-api/
+   - https://openai.com/index/the-next-evolution-of-the-agents-sdk/
+2. Anthropic recomienda tratar el contexto como recurso finito, usar retrieval just-in-time, referencias ligeras y sub-agentes que devuelven síntesis destiladas.
+   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+   - https://www.anthropic.com/engineering/multi-agent-research-system
+3. OpenClaw documenta que una allowlist de Skills sólo filtra visibilidad/carga; para aislamiento real recomienda sandbox/OS-user isolation, host-exec restringido y credenciales por agente.
+   - https://docs.openclaw.ai/tools/skills
+   - https://docs.openclaw.ai/skills-config
+4. Hermes Agent incorpora cliente MCP nativo con descubrimiento de tools y filtrado por servidor.
+   - https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/mcp.md
+5. Hugging Face mantiene tres primitivas oficiales útiles para el bridge: `huggingface_hub` (cliente/CLI, Apache-2.0), `datasets` (load/stream/preprocess, Apache-2.0) y `hf-mcp-server` (MCP oficial, MIT). Ya estaban catalogadas en B04.
+   - https://github.com/huggingface/huggingface_hub
+   - https://github.com/huggingface/datasets
+   - https://github.com/huggingface/hf-mcp-server
+
+### INFERENCE
+- El `CONTEXT_PACKAGE` de Sharck debe preferir un set mínimo de alta señal: `pointer + provenance + freshness + evidence_class + contradiction_state + deferred_retrieval_handle`, en lugar de precargar repos/datasets/tools completos.
+- El bridge HF debe permanecer desacoplado en tres adapters: Hub discovery/pointers, dataset load/stream y MCP tool exposure. Esto reduce acoplamiento y respeta el scope PRE-LLM.
+- Skills/tools deben aparecer por shortlist y cargar bajo demanda; el permiso de ejecución debe permanecer fuera de la simple capa de discovery.
+
+### UNKNOWN
+- Umbrales cuantitativos de cobertura, compresión y cuándo promover deferred retrieval requieren tests del carril M07/M10; no se fijan por intuición.
+- Los tres FAILED de B04 requieren revisión owner/gate antes de reparación física o cambio source/ref/design.
+
+### Control plane actualizado
+- PLAN rev6 → catálogo 117, B04 registrado, M13 simulation_01 verified.
+- STATE rev9 → 17 VERIFIED_CLOSED / 23 FAILED para B01–B04, sin alterar provenance B01–B03.
+- CHECKPOINT → `CP-V2-M13-SIM01-B04-007`.
+- Handoff e índice sincronizados.
+- Paso 3 sigue BLOCKED; M06/M07/M08 siguen pendientes.
 
 ## Regla de continuidad
-No reintentar ni mover los 11 partial a ciegas. El candidato de reparación es preservar/quarantine versionado con Motor4 y después reacquisition 1×1, pero es una mutación física y queda pendiente de review. Los 9 SOURCE_SPECIAL_FILE_GAP requieren revisión de source/ref/subproject/dependency/alternative sin debilitar el motor. Mientras reviews estén pendientes, SOL sólo ejecuta monitorización y evidencia read-only `parallel_safe`.
+No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física.
