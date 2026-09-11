@@ -1,0 +1,134 @@
+name: Sharck Input — FAST staging StrategyDelta sandbox
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-staging-strategydelta-lite.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  simulate-lite:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Motor 3 + destination root ignore
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q control
+          cd control
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /.gitignore
+          /➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/➡️📂motor de copiar archivos/motor_3_copy_batches.py
+          EOF
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+          MOTOR='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/➡️📂motor de copiar archivos/motor_3_copy_batches.py'
+          test "$(git hash-object "$MOTOR")" = '3689924361ce4a1a9fde4ae2b6f6009c37a6042d'
+
+      - name: Build exact real-source fixtures from pinned commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/src-spacy/spacy/matcher /tmp/src-spacy/website/.vscode
+          mkdir -p /tmp/src-opensearch/plugins/ingest-attachment/licenses
+          mkdir -p /tmp/src-sqry/sqry-core/src/graph/unified/build
+
+          git init -q /tmp/spacy-git
+          git -C /tmp/spacy-git remote add origin https://github.com/explosion/spaCy.git
+          git -C /tmp/spacy-git fetch --depth=1 --filter=blob:none origin 26b4d1dc04a812f426e4bef3e8a1b6f159d6f048
+          git -C /tmp/spacy-git show FETCH_HEAD:.gitignore > /tmp/src-spacy/.gitignore
+          git -C /tmp/spacy-git show FETCH_HEAD:spacy/matcher/polyleven.c > /tmp/src-spacy/spacy/matcher/polyleven.c
+          git -C /tmp/spacy-git show FETCH_HEAD:website/.vscode/extensions.json > /tmp/src-spacy/website/.vscode/extensions.json
+
+          git init -q /tmp/os-git
+          git -C /tmp/os-git remote add origin https://github.com/opensearch-project/OpenSearch.git
+          git -C /tmp/os-git fetch --depth=1 --filter=blob:none origin 0249cde03ef66b56ac61e8929c3ba7e10b062523
+          git -C /tmp/os-git show FETCH_HEAD:.gitattributes > /tmp/src-opensearch/.gitattributes
+          git -C /tmp/os-git show FETCH_HEAD:plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt > /tmp/src-opensearch/plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt
+
+          git init -q /tmp/sqry-git
+          git -C /tmp/sqry-git remote add origin https://github.com/verivus-oss/sqry.git
+          git -C /tmp/sqry-git fetch --depth=1 --filter=blob:none origin 631710ce145b6ef6adb527dda13ac60e20be16cf
+          git -C /tmp/sqry-git show FETCH_HEAD:sqry-core/src/graph/unified/build/entrypoint.rs > /tmp/src-sqry/sqry-core/src/graph/unified/build/entrypoint.rs
+
+      - name: Motor 3 exact copy into two sandbox repos
+        shell: bash
+        run: |
+          set -euo pipefail
+          MOTOR="$PWD/control/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/➡️📂motor de copiar archivos/motor_3_copy_batches.py"
+          for r in current candidate; do
+            mkdir -p "/tmp/$r"
+            cp control/.gitignore "/tmp/$r/.gitignore"
+            git init -q "/tmp/$r"
+            git -C "/tmp/$r" config user.name sharck-sandbox
+            git -C "/tmp/$r" config user.email sandbox@example.invalid
+            git -C "/tmp/$r" add .gitignore
+            git -C "/tmp/$r" commit -q -m base
+            SOURCE_DIR=/tmp/src-spacy DEST_DIR="/tmp/$r/vendor/spaCy" STATE_FILE="/tmp/$r-spacy.json" BATCH_SIZE=100 COLLISION_POLICY=fail python3 "$MOTOR"
+            SOURCE_DIR=/tmp/src-opensearch DEST_DIR="/tmp/$r/vendor/OpenSearch" STATE_FILE="/tmp/$r-os.json" BATCH_SIZE=100 COLLISION_POLICY=fail python3 "$MOTOR"
+            SOURCE_DIR=/tmp/src-sqry DEST_DIR="/tmp/$r/vendor/sqry" STATE_FILE="/tmp/$r-sqry.json" BATCH_SIZE=100 COLLISION_POLICY=fail python3 "$MOTOR"
+          done
+
+      - name: Prove current staging failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C /tmp/current add -- vendor || true
+          python3 - <<'PY'
+          import hashlib, pathlib, subprocess
+          repo='/tmp/current'
+          pairs=[
+            ('/tmp/src-spacy/spacy/matcher/polyleven.c','vendor/spaCy/spacy/matcher/polyleven.c'),
+            ('/tmp/src-spacy/website/.vscode/extensions.json','vendor/spaCy/website/.vscode/extensions.json'),
+            ('/tmp/src-sqry/sqry-core/src/graph/unified/build/entrypoint.rs','vendor/sqry/sqry-core/src/graph/unified/build/entrypoint.rs'),
+            ('/tmp/src-opensearch/plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt','vendor/OpenSearch/plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt'),
+          ]
+          for srcp,idxp in pairs:
+            src=pathlib.Path(srcp).read_bytes()
+            q=subprocess.run(['git','-C',repo,'show',':'+idxp],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            print('CURRENT path='+idxp+' indexed='+str(q.returncode==0)+' byte_equal='+str(q.returncode==0 and q.stdout==src))
+          PY
+
+      - name: Candidate staging without modifying motors
+        shell: bash
+        run: |
+          set -euo pipefail
+          ATTR=/tmp/candidate/vendor/OpenSearch/.gitattributes
+          cp "$ATTR" /tmp/os-attr.saved
+          rm "$ATTR"
+          git -C /tmp/candidate add -f -- vendor
+          cp /tmp/os-attr.saved "$ATTR"
+          git -C /tmp/candidate add -f -- vendor/OpenSearch/.gitattributes
+
+      - name: Verify candidate index bytes + modes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, pathlib, subprocess, sys
+          repo='/tmp/candidate'
+          pairs=[
+            ('/tmp/src-spacy/spacy/matcher/polyleven.c','vendor/spaCy/spacy/matcher/polyleven.c'),
+            ('/tmp/src-spacy/website/.vscode/extensions.json','vendor/spaCy/website/.vscode/extensions.json'),
+            ('/tmp/src-sqry/sqry-core/src/graph/unified/build/entrypoint.rs','vendor/sqry/sqry-core/src/graph/unified/build/entrypoint.rs'),
+            ('/tmp/src-opensearch/plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt','vendor/OpenSearch/plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt'),
+          ]
+          ok=True
+          for srcp,idxp in pairs:
+            src=pathlib.Path(srcp).read_bytes()
+            q=subprocess.run(['git','-C',repo,'show',':'+idxp],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+            same=q.returncode==0 and q.stdout==src
+            mode=subprocess.run(['git','-C',repo,'ls-files','-s','--',idxp],stdout=subprocess.PIPE,text=True).stdout.strip().split(' ',1)[0]
+            print(f'CANDIDATE path={idxp} byte_equal={same} mode={mode} source_sha={hashlib.sha256(src).hexdigest()} index_sha={hashlib.sha256(q.stdout).hexdigest() if q.returncode==0 else "MISSING"}')
+            ok &= same and mode in {'100644','100755'}
+          print('CANDIDATE_VERDICT=' + ('SANDBOX_PASS' if ok else 'SANDBOX_FAIL'))
+          sys.exit(0 if ok else 41)
+          PY
