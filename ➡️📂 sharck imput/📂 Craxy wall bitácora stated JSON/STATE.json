@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 7,
+  "revision": 8,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
@@ -26,7 +26,8 @@
     "M08":{"status":"READY_FOR_GROK_REVIEW"},
     "M09":{"status":"NOT_PERFORMED_NO_EVIDENCE"},
     "M10":{"status":"BLOCKED_BY_REVIEW_GATE"},
-    "M11":{"owner":"SOL","name":"READBACK_XRAY_11_PARTIAL_DESTINATIONS","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]}
+    "M11":{"owner":"SOL","name":"READBACK_XRAY_11_PARTIAL_DESTINATIONS","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]},
+    "M12":{"owner":"SOL","name":"REVIEW_GATE_MONITOR_READ_ONLY","status":"MONITORING_NO_NEW_OWNER_CLAIMS","last_monitor_evidence":{"astra_log":"READY_TO_JOIN","claude_log":"READY_TO_JOIN","grok_log":"READY_TO_JOIN","latest_sharck_commit_before_monitor":"9fc08bbaf311980550bacb1f4c11ccb918b0500e","repo_wide_audit_run":34538185469,"repo_wide_audit_semantic_verdict":"GAPS_PENDING_OUTSIDE_V2_NO_RECLASSIFICATION"}}
   },
   "acquisition_v2": {
     "workflow":".github/workflows/sharck-input-v2-components.yml",
@@ -59,5 +60,5 @@
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS"},
   "next_safe_actions":["ASTRA_M06_REVIEW","CLAUDE_M07_REVIEW","GROK_M08_REVIEW","SOL_MONITOR_ONLY_OR_READ_ONLY_GAP_EVIDENCE"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T17:15:00-05:00"
+  "updated_at":"2026-09-10T19:14:00-05:00"
 }
