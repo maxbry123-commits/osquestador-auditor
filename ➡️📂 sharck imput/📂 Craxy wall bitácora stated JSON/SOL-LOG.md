@@ -66,5 +66,67 @@
 - Handoff e índice sincronizados.
 - Paso 3 sigue BLOCKED; M06/M07/M08 siguen pendientes.
 
+## 2026-09-10 — M13 SIMULATION 02
+### Ownership/read-back previo
+- INPUT-DIRECTOR, PLAN, STATE, CHECKPOINT, Handoff, GAPS y este log fueron releídos desde `main` antes de operar.
+- ASTRA/CLAUDE/GROK logs siguen en `READY_TO_JOIN`; no existe evidencia nueva de claim/review/verdict M06/M07/M08.
+- No se duplicó M06/M07/M08 y Paso 3 permanece bloqueado.
+
+### Etapas simuladas
+`INPUT_RAW_LOCK → INTENT_AND_CONSTRAINTS → ENTITY_RESOLUTION → RESEARCH_DECISION → SOURCE_AND_TOOL_DISCOVERY`.
+
+### FACT
+1. OpenAI: para conocimiento actual/privado, Web Search y File Search recuperan información dinámicamente; el input no debe asumir suficiencia del conocimiento interno del modelo.
+   - https://help.openai.com/en/articles/6639781-do-the-openai-api-models-have-knowledge-of-current-events
+2. Anthropic: contexto es un recurso finito; recomienda el menor conjunto de tokens de alta señal y retrieval just-in-time.
+   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+3. GitHub: Copilot CLI separa Explore, Task y General-purpose en contextos distintos; custom agents permiten restringir tools y tools MCP.
+   - https://docs.github.com/en/copilot/how-tos/copilot-cli/use-copilot-cli/invoke-custom-agents
+   - https://docs.github.com/en/copilot/reference/custom-agents-configuration
+4. OpenClaw: una allowlist de Skills controla visibilidad/carga pero no constituye frontera de autorización del shell/host.
+   - https://docs.openclaw.ai/skills
+5. Hermes: Tool Search implementa progressive disclosure para MCP/plugin tools y evita cargar todos los schemas en cada turno.
+   - https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/tool-search.md
+6. Comunidad Hermes: existen issues abiertos sobre herramientas MCP descubiertas pero no disponibles por el dispatch principal y timeouts de herramientas largas con progress notifications; discovery no debe equivaler a operational PASS.
+   - https://github.com/NousResearch/hermes-agent/issues/84772
+   - https://github.com/NousResearch/hermes-agent/issues/94723
+7. Hugging Face: el repo oficial `huggingface/skills` está activo, es Apache-2.0 y publica Skills oficiales. `huggingface-datasets` usa Dataset Viewer API para operaciones read-only de availability, splits, rows, search/filter, parquet, size y statistics.
+   - https://huggingface.co/docs/hub/agents-skills
+   - https://github.com/huggingface/skills
+   - https://github.com/huggingface/skills/tree/main/skills/huggingface-datasets
+
+### INFERENCE
+- `INPUT_RAW_LOCK` debe conservar bytes/texto literal antes de cualquier limpieza, resumen o entity normalization.
+- `INTENT_AND_CONSTRAINTS` + `ENTITY_RESOLUTION` deben producir un contrato intermedio verificable antes de abrir búsqueda.
+- `RESEARCH_DECISION` debe ser un gate explícito: abrir retrieval por necesidad explícita, freshness, ambigüedad, missing evidence o contradiction; si no, continuar sin búsqueda externa.
+- `SOURCE_AND_TOOL_DISCOVERY` debe usar shortlist/progressive disclosure; exponer todos los schemas/tools por defecto aumenta ruido de contexto y decisiones ambiguas.
+- `tool_discovered` debe permanecer distinto de `tool_operationally_verified`; issues de Hermes respaldan un read-back/health check antes de confiar en la capacidad.
+
+### UNKNOWN
+- Threshold cuantitativo de `RESEARCH_DECISION`.
+- Threshold de confianza para entity resolution/alias matching.
+- Presupuesto máximo de schemas/tools por request.
+- Estos valores requieren tests M07/M10; SOL no los fijó por intuición.
+
+### Candidato detectado y gate aplicado
+- Candidato: `huggingface-datasets` Skill.
+- Ya existe el parent `Hugging Face Skills` como componente #40; no se creó componente duplicado ni cambió el total 117.
+- Fuente oficial verificada: `huggingface/skills`.
+- Mantenimiento: repo activo, push observado 2026-09-10.
+- Licencia: Apache-2.0.
+- Utilidad: retrieval read-only de datasets para discovery/evidence.
+- Estado: `INDEXED_CANDIDATE_NO_INSTALL`.
+- No se instaló, adquirió ni activó.
+
+### Mutaciones realizadas
+Sólo control plane/documentación: PLAN, STATE, CHECKPOINT, Handoff, índice y SOL log. Cero cambios en componentes, destinos parciales, source/ref o motores canónicos.
+
+### Balance preservado
+- B01–B03: 10 VERIFIED_CLOSED / 20 FAILED.
+- B04: 7 VERIFIED_CLOSED / 3 FAILED.
+- B01–B04: 17 VERIFIED_CLOSED / 23 FAILED / 0 pending.
+- M06/M07/M08: pendientes; Paso 3 bloqueado.
+- Checkpoint objetivo: `CP-V2-M13-SIM02-HFSKILL-008`.
+
 ## Regla de continuidad
-No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física.
+No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física. No instalar `huggingface-datasets` Skill hasta review/gate aplicable.
