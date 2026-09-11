@@ -128,5 +128,54 @@ Sólo control plane/documentación: PLAN, STATE, CHECKPOINT, Handoff, índice y 
 - M06/M07/M08: pendientes; Paso 3 bloqueado.
 - Checkpoint objetivo: `CP-V2-M13-SIM02-HFSKILL-008`.
 
+## 2026-09-10 — M13 SIMULATION 03
+### Read-back/ownership previo
+- Releídos `INPUT-DIRECTOR-2026-09-10T2024-05.json`, PLAN, STATE, CHECKPOINT, Handoff, GAPS, SOL-LOG y logs ASTRA/CLAUDE/GROK desde `main`.
+- ASTRA/CLAUDE/GROK siguen `READY_TO_JOIN`; no existe evidencia verificable de claim/review/verdict M06/M07/M08.
+- Paso 3 continúa bloqueado. No se tocó M06/M07/M08.
+
+### Etapas simuladas
+`WEB_CODE_SKILL_DATASET_RETRIEVAL → EVIDENCE_AND_CONTRADICTION → COVERAGE_AND_GAPS → CONTEXT_COMPRESSION → CONTEXT_PACKAGE`.
+
+### FACT
+1. OpenAI mantiene Web Search y File Search para recuperar contexto actual/privado dinámicamente; Web Search devuelve citas y puede combinarse con otras tools.
+   - https://help.openai.com/en/articles/6639781-do-the-openai-api-models-have-knowledge-of-current-events
+   - https://openai.com/index/new-tools-for-building-agents/
+2. Anthropic recomienda tratar contexto como recurso finito y seleccionar el menor conjunto de tokens de alta señal, con retrieval just-in-time.
+   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+3. Hugging Face MCP devuelve recursos con metadata, links y context; `hf_fs` es una herramienta primaria para navegar Hub. Skills y MCP permanecen superficies separables.
+   - https://huggingface.co/docs/hub/en/agents-mcp
+   - https://huggingface.co/docs/hub/en/agents-skills
+4. GitHub custom agents permiten restringir tools/MCP. En Copilot cloud, una vez configurado un MCP, sus tools pueden ejecutarse autónomamente; además hay diferencias de soporte por superficie/auth.
+   - https://docs.github.com/en/copilot/reference/custom-agents-configuration
+   - https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/configure-mcp-servers
+5. OpenClaw trata third-party skills como código no confiable, recomienda leerlos antes de habilitar y preferir sandbox para inputs/tools riesgosos.
+   - https://github.com/openclaw/openclaw/blob/main/docs/tools/skills.md
+6. Comunidad Hermes: issue #96247 reporta una sesión con 1,523 llamadas `tool_search` exitosas sobre 17 tools diferidas que llenó ~130k de contexto y terminó por context-length sin respuesta. Es evidencia comunitaria de que `search_success` no equivale a `coverage_sufficient` ni a ejecución operacional sana.
+   - https://github.com/NousResearch/hermes-agent/issues/96247
+
+### INFERENCE
+- Cada item del `CONTEXT_PACKAGE` debe incluir como mínimo `source_url/source_id`, `retrieved_at/freshness`, `evidence_class`, `contradiction_state` y `capability_state` además del pointer/contenido comprimido.
+- `capability_state` debe separar `DISCOVERED`, `CONFIGURED`, `HEALTHCHECKED` y `OPERATIONALLY_VERIFIED`. Un tool descubierto/configurado no debe promocionarse a PASS sin read-back/health/evidence de ejecución cuando sea relevante.
+- `COVERAGE_AND_GAPS` necesita un stop condition basado en suficiencia de evidencia y tratamiento de contradicciones. El éxito repetido de búsqueda no debe incrementar cobertura indefinidamente.
+- `CONTEXT_COMPRESSION` debe conservar referencias, provenance y contradicciones no resueltas; una síntesis que borre estas relaciones no es un package verificable.
+
+### UNKNOWN
+- Número máximo de search/tool-discovery calls por request.
+- Threshold cuantitativo de coverage sufficiency.
+- Freshness TTL por clase de fuente.
+- Compression ratio que conserva calidad downstream.
+- Todos quedan pendientes de tests M07/M10; SOL no asignó números por intuición.
+
+### Catálogo/gate
+- No apareció componente/skill/dataset nuevo con evidencia suficiente para ampliar el catálogo.
+- Índice permanece en **117** y sólo recibió anotación de la política de capability/coverage.
+- `huggingface-datasets` permanece `INDEXED_CANDIDATE_NO_INSTALL`; no se instaló.
+
+### Mutaciones
+- Sólo control plane/documentación: PLAN rev8, STATE rev11, CHECKPOINT `CP-V2-M13-SIM03-EVIDENCE-009`, Handoff, índice y este SOL log.
+- Cero adquisición, delete, move, overwrite de componentes, cambio source/ref o edición de motores canónicos.
+- Balance preservado: B01–B04 = **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+
 ## Regla de continuidad
 No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física. No instalar `huggingface-datasets` Skill hasta review/gate aplicable.
