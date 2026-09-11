@@ -10,7 +10,7 @@
     "index": "PASS_117",
     "plan": "REV11_SYNCED_M01_M31_INCLUDING_M30_CORRECTION",
     "state": "REV20_M31_RECONCILED",
-    "handoff": "TARGET_CP_V2_CONTROL_PLANE_RECONCILED_018_PENDING_SEQUENTIAL_WRITE",
+    "handoff": "READBACK_CONFIRMED_CP_V2_CONTROL_PLANE_RECONCILED_018",
     "recovery": "UNCHANGED",
     "review_gate": "BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -59,10 +59,10 @@
     "motor_integrity":"VERIFIED_READ_ONLY_NO_DRIFT"
   },
   "control_plane_reconciliation": {
-    "status":"PLAN_AND_STATE_RECONCILED_M31",
+    "status":"PLAN_STATE_CHECKPOINT_HANDOFF_RECONCILED_M31",
     "plan_revision":11,
     "state_revision":20,
-    "finding":"M30 corrected special ledger is now represented in PLAN; M31 is document-only reconciliation and changes no acquisition or gate state",
+    "finding":"M30 corrected special ledger is represented in PLAN and Handoff CP018 was read back; M31 is document-only and changes no acquisition or gate state",
     "physical_mutation":false
   },
   "open_gaps": [
