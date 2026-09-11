@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.plan.v2",
-  "revision": 5,
+  "revision": 6,
   "project": "Wanted Shark Web / Sharck Input V2",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -12,13 +12,13 @@
   "scope_lock": "INPUT_AND_CONTEXT_ONLY_NOT_FULL_WORKFLOW",
   "steps": [
     {"id":1,"name":"ANOTAR_ARQUITECTURA_INVENTARIO","status":"VERIFIED_DOCUMENTED"},
-    {"id":2,"name":"ADQUIRIR_COMPONENTES_GRUPOS_10","status":"INITIAL_RUN_COMPLETED_WITH_GAPS_XRAY_COMPLETE_PLUS_NEW_RESEARCH_ACTIVE"},
+    {"id":2,"name":"ADQUIRIR_COMPONENTES_GRUPOS_10","status":"B01_B03_GAPS_PLUS_B04_COMPLETED_WITH_GAPS"},
     {"id":3,"name":"WIRE_PRUNE_MIN_CODE_TEST","status":"BLOCKED_UNTIL_REVIEWS_AND_GAP_DECISIONS"}
   ],
   "tasks": [
     {"id":"M01","owner":"SOL","status":"VERIFIED_PUBLISHED","name":"método multiagente + refutaciones/goals/council/simulaciones"},
-    {"id":"M02","owner":"GROK","status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW","name":"catálogo 30 OSS nuevos"},
-    {"id":"M03","owner":"SOL","status":"COMPLETED_WITH_GAPS","name":"3 batches de 10 ejecutados con motores canónicos","evidence":{"run_id":34514168678,"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"}},
+    {"id":"M02","owner":"GROK","status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW","name":"catálogo OSS"},
+    {"id":"M03","owner":"SOL","status":"COMPLETED_WITH_GAPS","name":"B01-B03 ejecutados con motores canónicos","evidence":{"run_id":34514168678,"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"}},
     {"id":"M04","owner":"SOL","status":"VERIFIED_ENABLED","name":"watchdog horario V2"},
     {"id":"M05","owner":"SOL","status":"VERIFIED_CLOSED","name":"read-back control plane"},
     {"id":"M06","owner":"ASTRA","status":"READY_FOR_REVIEW","name":"XRAY + prior-work audit + versioned improvement + component gap + independent verify"},
@@ -28,20 +28,22 @@
     {"id":"M10","owner":"SOL+CLAUDE","status":"BLOCKED_BY_REVIEW_GATE","name":"integración 1x1 aprobada"},
     {"id":"M11","owner":"SOL","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","name":"read-only canonical readback X-Ray of 11 existing/partial destinations","evidence":{"workflow":".github/workflows/sharck-input-v2-readback-recover.yml","runs":[34535896880,34536177351],"audited":11,"recovered":0,"partial":11}},
     {"id":"M12","owner":"SOL","status":"MONITOR_ONLY_PENDING_REVIEWS","name":"monitor owner reviews and collect read-only GAP evidence; no physical mutation"},
-    {"id":"M13","owner":"SOL","status":"ACTIVE_RESEARCH","name":"simulations per INPUT stage + cross-research OpenAI/Anthropic/HF/OpenClaw/Hermes/GitHub/agent-builders/dev communities"},
-    {"id":"M14","owner":"SOL+GROK","status":"PENDING_EVIDENCE","name":"additional component candidates for each Sharck Input stage; no auto-install before catalog/evidence gate"},
-    {"id":"M15","owner":"CLAUDE+SOL","status":"PENDING_DESIGN","name":"Hugging Face skills/datasets bridge into mini INPUT workflow via separate adapters; no monolith"},
-    {"id":"M16","owner":"SOL","status":"PENDING_AFTER_RESEARCH","name":"group approved additional acquisitions in batches <=10 using canonical motors and explicit destinations"}
+    {"id":"M13","owner":"SOL","status":"SIMULATION_01_VERIFIED","name":"simulations per INPUT stage + cross-research OpenAI/Anthropic/HF/OpenClaw/Hermes/GitHub/agent-builders/dev communities","evidence":"SOL-LOG.md#2026-09-10--m13-simulation-01"},
+    {"id":"M14","owner":"SOL+GROK","status":"CATALOG_40_RESEARCHED_B04_PRESENT","name":"additional component candidates for each Sharck Input stage; no auto-install before evidence gate"},
+    {"id":"M15","owner":"CLAUDE+SOL","status":"HF_BRIDGE_CANDIDATES_VERIFIED_DESIGN_PENDING","name":"HF bridge candidates: huggingface_hub + datasets + hf-mcp-server; separate adapters, no monolith"},
+    {"id":"M16","owner":"SOL","status":"B04_ALREADY_EXECUTED_WITH_GAPS_NO_RETRY","name":"B04 context/HF batch observed in main; 7 VERIFIED_CLOSED + 3 FAILED; no blind retry"}
   ],
   "research_loop": {
     "stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY","WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],
     "method":"SIMULATE -> CROSS_RESEARCH -> FACT_INFERENCE_UNKNOWN -> GAP -> COMPONENT_CANDIDATE -> VERIFY_MAINTENANCE_LICENSE_SOURCE -> INDEX_PLAN -> ACQUIRE_IF_APPROVED -> CHECKPOINT",
     "sources":["project_files","Craxy_Wall","GitHub","Hugging_Face","OpenAI_public_guidance","Anthropic_public_guidance","OpenClaw_community","Hermes_community","developer_communities","agent_builder_communities"],
     "no_from_scratch":true,
-    "no_auto_install_unverified":true
+    "no_auto_install_unverified":true,
+    "simulation_01":{"status":"VERIFIED_READ_ONLY","finding":"prefer compact pointers + just-in-time retrieval + provenance + isolated MCP/skills exposure; B04 provides HF bridge/eval primitives"}
   },
-  "acquisition_summary":{"B01":{"verified":3,"failed":7},"B02":{"verified":5,"failed":5},"B03":{"verified":2,"failed":8},"total":{"verified":10,"failed":20,"pending":0}},
-  "gap_xray":{"initial":{"DESTINATION_EXISTS":6,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":9},"operational":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"evidence":"📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md"},
+  "catalog":{"legacy":77,"new":40,"total":117},
+  "acquisition_summary":{"B01":{"verified":3,"failed":7},"B02":{"verified":5,"failed":5},"B03":{"verified":2,"failed":8},"B04":{"verified":7,"failed":3,"pending":0},"total_new_batches":{"verified":17,"failed":23,"pending":0}},
+  "gap_xray":{"B01_B03_operational":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"B04_observed":{"SOURCE_SPECIAL_FILE_GAP":2,"DESTINATION_EXISTS":1},"evidence":["📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md","📂 input sharck code principal/📂 component acquisition/state/B04-state.json"]},
   "workflow_guard":{"original_run_ui":"SUCCESS","semantic":"GAPS_PENDING","fixed_wrapper_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43","future_policy":"job fails unless every state item VERIFIED_CLOSED"},
   "agent_contracts": {
     "SOL":{"exclusive":["state_control","integration","consolidation","motor_watch","research_orchestration_read_only"],"current_limit":"research_and_read_only_evidence_until_reviews","cannot":["llm_only_pass","duplicate_M06_M07_M08"]},
@@ -53,6 +55,6 @@
   "recovery_files":["RECOVERY-GROK-SHARCK-INPUT.md","RECOVERY-MULTI-ENV-SHARCK-INPUT.md"],
   "legacy_v1":{"catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "gates":["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
-  "checkpoint":"CP-V2-POST-XRAY-006",
-  "next_action":"M13_RESEARCH_AND_SIMULATIONS_PARALLEL_WITH_M06_M07_M08_REVIEWS"
+  "checkpoint":"CP-V2-M13-SIM01-B04-007",
+  "next_action":"M13_NEXT_READ_ONLY_SIMULATION_PARALLEL_WITH_M06_M07_M08_REVIEWS; DO_NOT_RETRY_B04_GAPS"
 }
