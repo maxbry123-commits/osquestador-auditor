@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 11360253,
+  "bundle_sha256": "0fcb93bf5d54eaf80c5db5ab06c70fdbefee09b59e3828505c466fc44e7cfd25",
+  "extracted_tree": {
+    "bytes": 20636010,
+    "files": 1776,
+    "sha256": "cad7a1cdfae8046e24df6735336a9dace6ceebc917fc18eb9b1d187c4d875c1e"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 11360253,
+      "name": "spaCy.bundle.zip.part-0001",
+      "sha256": "0fcb93bf5d54eaf80c5db5ab06c70fdbefee09b59e3828505c466fc44e7cfd25"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "spaCy",
+  "source_bytes": 20636010,
+  "source_commit": "26b4d1dc04a812f426e4bef3e8a1b6f159d6f048",
+  "source_files": 1776,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/explosion/spaCy",
+  "source_tree": {
+    "bytes": 20636010,
+    "files": 1776,
+    "sha256": "cad7a1cdfae8046e24df6735336a9dace6ceebc917fc18eb9b1d187c4d875c1e"
+  }
+}
