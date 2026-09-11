@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-PLAN-RECONCILED-016",
+  "checkpoint_id": "CP-V2-SPECIAL-LEDGER-AUDIT-017",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M29_CONTROL_PLANE_PLAN_RECONCILED",
-  "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA",
+  "last_verified_node": "M30_SPECIAL_LEDGER_CONTRADICTION_VERIFIED_READ_ONLY",
+  "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_AND_CORRECTED_SPECIAL_LEDGER",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
-    "plan": "PASS_REV10_SYNCED_M01_M29",
-    "state": "PASS_REV18",
-    "handoff": "PASS_SYNCED_CP_V2_PLAN_RECONCILED_016",
+    "plan": "REV10_SYNCED_M01_M29_M30_PENDING_NEXT_LEDGER_RECONCILIATION",
+    "state": "PASS_REV19",
+    "handoff": "PENDING_M30_SEQUENTIAL_UPDATE",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -37,9 +37,16 @@
       "priority": ["sqry","OpenSearch","heritrix3","yacy_search_server","nutch","kythe","scira","continue","datasketch","smolagents","pyserini"]
     },
     "source_special_9": {
-      "evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md",
+      "primary_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md",
+      "correction_evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md",
       "diagnosed":9,
-      "status":"MAPPED_READ_ONLY"
+      "status":"MAPPED_READ_ONLY_WITH_M30_LEDGER_CORRECTION",
+      "observed_special_entries_minimum":67,
+      "tika_observed_minimum":30,
+      "docling_observed":6,
+      "cocoindex_observed":7,
+      "contradiction":"M23 docling path detail was misattributed from cocoindex; canonical B01/B03 state errors are authoritative",
+      "exact_git_mode_all_paths":"UNKNOWN_NOT_INFERRED"
     }
   },
   "root_cause": {
@@ -91,28 +98,28 @@
     "physical_mutation":false
   },
   "control_plane_reconciliation": {
-    "status":"VERIFIED_DOCUMENT_ONLY",
+    "status":"STATE_CHECKPOINT_UPDATED_M30_HANDOFF_PENDING_SEQUENTIAL_WRITE",
     "plan_revision":10,
-    "state_revision":18,
-    "finding":"PLAN_REV9_WAS_STALE_BEYOND_M20; PLAN_REV10_NOW_RECORDS_M21_M29",
+    "state_revision":19,
+    "finding":"PLAN_REV10 remains authoritative through M29; M30 is new read-only evidence and must be added on next PLAN reconciliation rather than falsely marked synced",
     "physical_mutation":false
   },
   "open_gaps": [
-    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations remain partial and FAILED, but M28 now causally accounts for all 130 missing via concrete root/imported/nested ignore rules and M24 accounts for all 7 changed via attributes; repair remains review-gated"},
-    {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate; remain separate from staging StrategyDelta"},
+    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations remain partial and FAILED; M28 accounts for 130 missing and M24 for 7 changed; repair remains review-gated"},
+    {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate; M30 corrects the docling/cocoindex path ledger and proves >=67 observed special entries, but exact Git mode for every path remains UNKNOWN"},
     {"id":"G-B04-SPACY","detail":"spaCy partial exact 2 files missing; representative sandbox staging preserves both bytes but no physical repair authorized"},
     {"id":"G-B04-HF","detail":"huggingface_hub CLAUDE.md symlink confirmed"},
     {"id":"G-B04-UNSTRUCTURED","detail":"unstructured performance fixture symlinks confirmed"},
-    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta pending"},
-    {"id":"G-PRODUCTION-GATE","detail":"SANDBOX_PASS and complete causal diagnosis do not authorize production staging, git add -f, plumbing strategy, source/ref redesign, or physical repair"}
+    {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta + corrected special ledger pending"},
+    {"id":"G-PRODUCTION-GATE","detail":"SANDBOX_PASS and causal diagnosis do not authorize production staging, git add -f, plumbing strategy, source/ref redesign, or physical repair"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
   "next_safe_actions": [
-    "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta using M28 complete causal evidence",
+    "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta and M30 ledger correction",
     "CLAUDE M07 validate complete tracked-set + file modes + bytes and select staging implementation without semantic ignore/attribute loss",
-    "GROK M08 validate Git vendoring/package/subtree alternatives and special-source handling",
+    "GROK M08 validate Git vendoring/package/subtree alternatives and use corrected M30 source-special mapping",
     "SOL monitor reviews and add only genuinely new read-only evidence/control-plane reconciliation",
     "NO PHYSICAL REPAIR until reviews + director gate"
   ]
