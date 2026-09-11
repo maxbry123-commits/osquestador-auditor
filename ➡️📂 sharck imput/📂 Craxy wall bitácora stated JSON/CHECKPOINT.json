@@ -10,7 +10,7 @@
     "index": "PASS_117",
     "plan": "PASS_REV10_SYNCED_M01_M29",
     "state": "PASS_REV18",
-    "handoff": "PENDING_THIS_SEQUENCE_READBACK_AFTER_UPDATE",
+    "handoff": "PASS_SYNCED_CP_V2_PLAN_RECONCILED_016",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
