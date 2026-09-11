@@ -238,3 +238,16 @@ Todos permanecen para M07/M10/tests; SOL no fijó números por intuición.
 
 ## Regla de continuidad
 No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física. No instalar `huggingface-datasets` ni adquirir `MCP-Atlas` hasta review/gate aplicable.
+
+## 2026-09-11 — M28 NESTED IGNORE BLAST RADIUS
+- Releído checkpoint vivo `CP-V2-ROOT-IGNORE-BLAST-RADIUS-014`; M06/M07/M08 siguen `READY_TO_JOIN`, sin review/verdict verificable nuevo.
+- Tarea SOL `parallel_safe/read-only`: ampliar M27 sobre el residuo de missing sin repetir M21/M22/M23.
+- Evidencia nueva: los **130/130 missing** del run M22 `34567075204` quedan cubiertos por reglas `.gitignore` concretas presentes en el repo destino o dentro de los snapshots publicados.
+- Breakdown validado: heritrix3 57, sqry 21, scira 12, nutch 3, yacy 5, pyserini 3, OpenSearch 4, datasketch 5, smolagents 1, kythe 14, continue 5 = 130.
+- `yacyBuildProperties.java` quedó cerrado causalmente por `.gitignore` anidado que contiene literalmente ese filename.
+- Continue `webview/index.html` queda dentro de un parent `src/main/resources/webview` ignorado en `.gitignore` anidado; la negación del hijo no evita la colisión de re-staging cuando el parent está ignorado.
+- Kythe job `103161283044` se releyó para enumerar 14/14 missing; root `build/` explica 6, y reglas kythe `*.class`, `.vscode`, `third_party/libmemcached` explican 8.
+- Los 7 changed de OpenSearch permanecen separados y M24 ya los probó como `CRLF→LF` por attributes. Por tanto, **137/137 anomalías M22** (130 missing + 7 changed) están explicadas por staging Git `ignore rules + attributes`.
+- Evidencia persistida en `NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md`.
+- No hubo reparación física, source/ref redesign, edición de motores ni Step3.
+- Balance permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**; review gate continúa cerrado.
