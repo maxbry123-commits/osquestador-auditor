@@ -1,6 +1,6 @@
 {
   "schema": "sharck-input.plan.v2",
-  "revision": 7,
+  "revision": 8,
   "project": "Wanted Shark Web / Sharck Input V2",
   "repo": "maxbry123-commits/osquestador-auditor",
   "branch": "main",
@@ -28,12 +28,13 @@
     {"id":"M10","owner":"SOL+CLAUDE","status":"BLOCKED_BY_REVIEW_GATE","name":"integración 1x1 aprobada"},
     {"id":"M11","owner":"SOL","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","name":"read-only canonical readback X-Ray of 11 existing/partial destinations","evidence":{"workflow":".github/workflows/sharck-input-v2-readback-recover.yml","runs":[34535896880,34536177351],"audited":11,"recovered":0,"partial":11}},
     {"id":"M12","owner":"SOL","status":"MONITOR_ONLY_PENDING_REVIEWS","name":"monitor owner reviews and collect read-only GAP evidence; no physical mutation"},
-    {"id":"M13","owner":"SOL","status":"SIMULATION_02_VERIFIED_READ_ONLY","name":"simulations per INPUT stage + cross-research OpenAI/Anthropic/HF/OpenClaw/Hermes/GitHub/agent-builders/dev communities","evidence":"SOL-LOG.md#2026-09-10--m13-simulation-02"},
+    {"id":"M13","owner":"SOL","status":"SIMULATION_03_VERIFIED_READ_ONLY","name":"simulations per INPUT stage + cross-research OpenAI/Anthropic/HF/OpenClaw/Hermes/GitHub/agent-builders/dev communities","evidence":"SOL-LOG.md#2026-09-10--m13-simulation-03"},
     {"id":"M14","owner":"SOL+GROK","status":"CATALOG_40_RESEARCHED_B04_PRESENT","name":"additional component candidates for each Sharck Input stage; no auto-install before evidence gate"},
     {"id":"M15","owner":"CLAUDE+SOL","status":"HF_BRIDGE_CANDIDATES_VERIFIED_DESIGN_PENDING","name":"HF bridge candidates: huggingface_hub + datasets + hf-mcp-server; separate adapters, no monolith"},
     {"id":"M16","owner":"SOL","status":"B04_ALREADY_EXECUTED_WITH_GAPS_NO_RETRY","name":"B04 context/HF batch observed in main; 7 VERIFIED_CLOSED + 3 FAILED; no blind retry"},
     {"id":"M17","owner":"SOL","status":"RESEARCH_DECISION_GATE_PROPOSED_READ_ONLY","name":"simulation 02: preserve INPUT_RAW_LOCK, resolve intent/entities before deciding whether retrieval is needed; progressive disclosure for tools/skills"},
-    {"id":"M18","owner":"SOL+GROK","status":"HF_SUBSKILL_CANDIDATE_INDEXED_NO_INSTALL","name":"huggingface-datasets official sub-skill candidate under existing Hugging Face Skills component; verify only, no acquisition"}
+    {"id":"M18","owner":"SOL+GROK","status":"HF_SUBSKILL_CANDIDATE_INDEXED_NO_INSTALL","name":"huggingface-datasets official sub-skill candidate under existing Hugging Face Skills component; verify only, no acquisition"},
+    {"id":"M19","owner":"SOL","status":"CONTEXT_PACKAGE_EVIDENCE_POLICY_PROPOSED_READ_ONLY","name":"simulation 03: retrieval/evidence/contradiction/coverage/compression/context-package policy with provenance, freshness, capability-state and bounded tool-search"}
   ],
   "research_loop": {
     "stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY","WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],
@@ -42,7 +43,8 @@
     "no_from_scratch":true,
     "no_auto_install_unverified":true,
     "simulation_01":{"status":"VERIFIED_READ_ONLY","finding":"prefer compact pointers + just-in-time retrieval + provenance + isolated MCP/skills exposure; B04 provides HF bridge/eval primitives"},
-    "simulation_02":{"status":"VERIFIED_READ_ONLY","stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY"],"finding":"research must be a gated decision after literal-input preservation and deterministic intent/entity normalization; tool/skill schemas should be progressively disclosed only when selected","facts":["OpenAI recommends dynamic web/file retrieval for current or private information rather than assuming model knowledge","Anthropic treats context as finite and recommends minimal high-signal context plus just-in-time retrieval","GitHub exposes separate Explore/Task/general-purpose agent contexts and repository-scoped MCP/tool selection","OpenClaw skill allowlists control visibility but are not host authorization boundaries","Hermes Tool Search progressively loads MCP/plugin schemas instead of exposing all schemas every turn","Hugging Face publishes official Skills and MCP primitives; huggingface-datasets is an official read-only Dataset Viewer skill"],"unknowns":["quantitative research-decision threshold","entity-confidence threshold","tool-schema budget per request"]}
+    "simulation_02":{"status":"VERIFIED_READ_ONLY","stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY"],"finding":"research must be a gated decision after literal-input preservation and deterministic intent/entity normalization; tool/skill schemas should be progressively disclosed only when selected","unknowns":["quantitative research-decision threshold","entity-confidence threshold","tool-schema budget per request"]},
+    "simulation_03":{"status":"VERIFIED_READ_ONLY","stages":["WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],"facts":["OpenAI web/file tools dynamically retrieve current/private information and web search returns citations","Anthropic recommends the smallest high-signal context and just-in-time retrieval","Hugging Face MCP returns Hub results with metadata links and context; hf_fs is a primary Hub navigation tool","GitHub repository MCP tools can act autonomously once configured and capability support differs by transport/auth surface","OpenClaw treats third-party skills as untrusted code and recommends sandboxing; skill visibility is not equivalent to authorization","Hermes community has a current report where repeated successful tool_search calls saturated context, so successful discovery/search is not sufficient operational evidence"],"inferences":["every retrieved item in CONTEXT_PACKAGE should carry source_url/source_id, retrieved_at/freshness, evidence_class, contradiction_state and capability_state","tool capability states should distinguish DISCOVERED, CONFIGURED, HEALTHCHECKED and OPERATIONALLY_VERIFIED","coverage should stop on evidence sufficiency plus contradiction resolution rather than unlimited successful search","compression must preserve citations/provenance and unresolved contradictions rather than flattening them"],"unknowns":["numeric search-call budget","coverage sufficiency threshold","freshness TTL by source class","compression ratio that preserves downstream answer quality"]}
   },
   "skill_candidates": [
     {"name":"huggingface-datasets","parent_component":40,"source":"https://github.com/huggingface/skills/tree/main/skills/huggingface-datasets","official":true,"maintenance":"ACTIVE_2026-09-10","license":"Apache-2.0 via huggingface/skills repo","utility":"read-only dataset availability/splits/rows/search/filter/parquet/size/statistics for source discovery and retrieval","status":"INDEXED_CANDIDATE_NO_INSTALL"}
@@ -61,6 +63,6 @@
   "recovery_files":["RECOVERY-GROK-SHARCK-INPUT.md","RECOVERY-MULTI-ENV-SHARCK-INPUT.md"],
   "legacy_v1":{"catalog_total":77,"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "gates":["INPUT_LITERAL","COPY_FIRST","MOTOR_BLOB_LOCK","NO_LFS","NO_FORCE","NO_SILENT_OVERWRITE","READBACK","TESTS","CHECKPOINT","INDEPENDENT_REVIEW"],
-  "checkpoint":"CP-V2-M13-SIM02-HFSKILL-008",
-  "next_action":"M13_NEXT_READ_ONLY_SIMULATION_PARALLEL_WITH_M06_M07_M08_REVIEWS; VERIFY_RESEARCH_DECISION_THRESHOLDS_LATER_UNDER_M07_M10; DO_NOT_RETRY_B01_B04_GAPS"
+  "checkpoint":"CP-V2-M13-SIM03-EVIDENCE-009",
+  "next_action":"M13_CONTINUE_READ_ONLY_SIMULATIONS_PARALLEL_WITH_M06_M07_M08_REVIEWS; TEST_NUMERIC_BUDGETS_LATER_UNDER_M07_M10; DO_NOT_RETRY_B01_B04_GAPS"
 }
