@@ -4,7 +4,7 @@
   "status": "VALID_FOR_RESUME",
   "last_verified_node": "M13_SIMULATION_02_AND_HF_SUBSKILL_CANDIDATE_INDEXED",
   "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL",
-  "control_plane":{"method":"PASS","architecture":"PASS","index":"PENDING_THIS_SEQUENCE","plan":"PASS_REV7","state":"PASS_REV10","handoff":"PENDING_THIS_SEQUENCE","recovery":"PASS_UNCHANGED","sol_log":"PENDING_THIS_SEQUENCE","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
+  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117_PLUS_HF_SUBSKILL_CANDIDATE","plan":"PASS_REV7","state":"PASS_REV10","handoff":"PASS_SYNCED","recovery":"PASS_UNCHANGED","sol_log":"PASS_SYNCED","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
   "acquisition": {
     "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
     "B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING","failed":["huggingface_hub:SOURCE_SPECIAL_FILE_GAP","spaCy:DESTINATION_EXISTS","unstructured:SOURCE_SPECIAL_FILE_GAP"]},
@@ -39,5 +39,5 @@
   ],
   "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL"},
   "step3_allowed":false,
-  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis/tests","GROK M08 alternatives/refutation","SOL M13 next read-only simulation","finish sequential read-back of handoff/index/log","no physical repair or HF subskill installation until corresponding review/gate"]
+  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis/tests","GROK M08 alternatives/refutation","SOL M13 next read-only simulation","no physical repair or HF subskill installation until corresponding review/gate"]
 }
