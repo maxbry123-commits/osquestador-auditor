@@ -10,7 +10,7 @@
     "index": "PASS_117",
     "plan": "REV10_SYNCED_M01_M29_M30_PENDING_NEXT_LEDGER_RECONCILIATION",
     "state": "PASS_REV19",
-    "handoff": "PENDING_M30_SEQUENTIAL_UPDATE",
+    "handoff": "PASS_SYNCED_CP_V2_SPECIAL_LEDGER_AUDIT_017",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -98,10 +98,10 @@
     "physical_mutation":false
   },
   "control_plane_reconciliation": {
-    "status":"STATE_CHECKPOINT_UPDATED_M30_HANDOFF_PENDING_SEQUENTIAL_WRITE",
+    "status":"STATE_CHECKPOINT_HANDOFF_SYNCED_M30_PLAN_PENDING_NEXT_LEDGER_RECONCILIATION",
     "plan_revision":10,
     "state_revision":19,
-    "finding":"PLAN_REV10 remains authoritative through M29; M30 is new read-only evidence and must be added on next PLAN reconciliation rather than falsely marked synced",
+    "finding":"PLAN_REV10 remains authoritative through M29; M30 is new read-only evidence and is explicitly not falsely marked in-plan until next PLAN reconciliation",
     "physical_mutation":false
   },
   "open_gaps": [
