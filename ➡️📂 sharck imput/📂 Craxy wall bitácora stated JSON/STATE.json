@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 15,
+  "revision": 16,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
   "status": "ACTIVE_LOOP_REVIEW_GATE",
   "current_step": 2,
-  "current_node": "M26_MOTOR_INTEGRITY_WATCH_VERIFIED_READ_ONLY",
+  "current_node": "M27_ROOT_IGNORE_BLAST_RADIUS_VERIFIED_READ_ONLY",
   "catalog": {"legacy":77,"new":40,"total":117},
   "legacy_v1": {"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "agents": {
-    "SOL":{"status":"MONITORING_EVIDENCE_AND_MOTOR_WATCH","node":"GAP_WATCHDOG+M13+M21+M22+M23+M24+M25+M26","log":"SOL-LOG.md"},
+    "SOL":{"status":"MONITORING_EVIDENCE_AND_MOTOR_WATCH","node":"GAP_WATCHDOG+M13+M21+M22+M23+M24+M25+M26+M27","log":"SOL-LOG.md"},
     "ASTRA":{"status":"READY_TO_JOIN","node":"M06_INDEPENDENT_AUDIT","log":"ASTRA-LOG.md","dedicated_scope":["XRAY_ARQUITECTURA","EVALUACION_PREVIA","MEJORA_VERSIONADA","COMPONENT_GAP_RESEARCH","INDEPENDENT_VERIFY"]},
     "GROK":{"status":"READY_TO_JOIN","node":"M08_OSS_REFUTATION","log":"GROK-LOG.md"},
     "CLAUDE":{"status":"READY_TO_JOIN","node":"M07_CODE_PORTS_TEST_REVIEW","log":"CLAUDE-LOG.md"}
@@ -41,7 +41,8 @@
     "M23":{"owner":"SOL","status":"B01_B03_9_SOURCE_SPECIAL_MAPPED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-XRAY-9-2026-09-11.md","diagnosed":9},
     "M24":{"owner":"SOL","status":"ROOT_CAUSE_GITIGNORE_GITATTRIBUTES_CONFIRMED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/ROOT-CAUSE-GIT-IGNORE-XRAY-2026-09-11.md","runs":[34567757437,34567916375],"finding":"TRACKED_UPSTREAM_REIGNORED_ON_VENDOR_PUBLISH_PLUS_EOL_NORMALIZATION"},
     "M25":{"owner":"SOL","status":"STAGING_STRATEGYDELTA_SANDBOX_PASS_REVIEW_REQUIRED","evidence":"📂 Craxy wall bitácora stated JSON/STAGING-STRATEGYDELTA-SANDBOX-2026-09-11.md","run":34568249222,"verdict":"SANDBOX_PASS_NOT_PHYSICAL_REPAIR"},
-    "M26":{"owner":"SOL","status":"CANONICAL_MOTOR_INTEGRITY_VERIFIED_READ_ONLY","verdict":"NO_MOTOR_DRIFT","evidence":"direct main-branch blob read-back against canonical hashes in .github/workflows/sharck-input-v2-components.yml"}
+    "M26":{"owner":"SOL","status":"CANONICAL_MOTOR_INTEGRITY_VERIFIED_READ_ONLY","verdict":"NO_MOTOR_DRIFT","evidence":"direct main-branch blob read-back against canonical hashes in .github/workflows/sharck-input-v2-components.yml"},
+    "M27":{"owner":"SOL","status":"ROOT_IGNORE_BLAST_RADIUS_VERIFIED_READ_ONLY","evidence":"📂 Craxy wall bitácora stated JSON/ROOT-IGNORE-BLAST-RADIUS-2026-09-11.md","finding":"ROOT_GITIGNORE_DIRECTLY_EXPLAINS_AT_LEAST_79_OF_130_MISSING","physical_mutation":false}
   },
   "acquisition_v2": {
     "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"operational_gaps":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},"partial_exact_diff":{"run":34567075204,"diagnosed":11,"missing_files":130,"changed_files":7,"extra_files":0}},
@@ -58,6 +59,16 @@
     "ignored_tracked_files":"git add --sparse reapplies destination/imported .gitignore to upstream tracked files",
     "content_mutation":"OpenSearch 7 changed LICENSE/NOTICE are CRLF_TO_LF_ONLY via attributes",
     "canonical_readback":"WORKING_AS_DESIGNED_FAIL_CLOSED"
+  },
+  "root_ignore_blast_radius": {
+    "status":"VERIFIED_READ_ONLY_MINIMUM",
+    "evidence":"📂 Craxy wall bitácora stated JSON/ROOT-IGNORE-BLAST-RADIUS-2026-09-11.md",
+    "m22_missing_total":130,
+    "root_ignore_directly_explained_minimum":79,
+    "coverage_percent_minimum":60.77,
+    "breakdown":{"heritrix3_dist":57,"sqry_build":21,"yacy_dotenv":1},
+    "opensearch_changed_eol_confirmed":7,
+    "physical_mutation":false
   },
   "staging_strategydelta": {
     "status":"SANDBOX_PASS_REVIEW_REQUIRED",
@@ -84,8 +95,8 @@
   "skill_candidates":[{"name":"huggingface-datasets","parent_component":"Hugging Face Skills","status":"INDEXED_CANDIDATE_NO_INSTALL","official":true,"license":"Apache-2.0","maintenance":"ACTIVE"}],
   "dataset_candidates":[{"name":"MCP-Atlas","source":"https://huggingface.co/datasets/ScaleAI/MCP-Atlas","repo":"https://github.com/scaleapi/mcp-atlas","license":"CC-BY-4.0","maintenance":"UPDATED_2026-08-03","status":"INDEXED_CANDIDATE_NO_INSTALL"}],
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS","no_silent_overwrite":true},
-  "checkpoint":"CP-V2-MOTOR-INTEGRITY-WATCH-013",
+  "checkpoint":"CP-V2-ROOT-IGNORE-BLAST-RADIUS-014",
   "next_safe_actions":["ASTRA_M06_REVIEW_STAGING_GATES","CLAUDE_M07_REVIEW_TRACKED_SET_MODES_BYTES_AND_STAGING_METHOD","GROK_M08_REVIEW_VENDOR_PACKAGE_SUBTREE_ALTERNATIVES","SOL_MONITOR_AND_EVIDENCE_ONLY","NO_PHYSICAL_REPAIR_BEFORE_REVIEW_GATE"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-11T04:49:00-05:00"
+  "updated_at":"2026-09-11T05:58:00-05:00"
 }
