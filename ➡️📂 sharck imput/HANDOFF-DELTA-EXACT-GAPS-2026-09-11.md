@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M30 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M31 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -106,6 +106,16 @@ Estado: `VERIFIED_READ_ONLY_LEDGER_CORRECTION / NO_PHYSICAL_MUTATION`.
 - `special` NO se promueve automáticamente a `symlink`: Git mode exacto de cada path continúa UNKNOWN salvo donde ya exista evidencia individual.
 - Los 9 componentes siguen FAILED; ningún gate cambia.
 
+## M31 — control-plane reconciliation de M30
+Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
+- El checkpoint 017 declaraba explícitamente `PLAN rev10` sincronizado sólo hasta M29 y M30 pendiente del próximo ledger reconciliation.
+- SOL releyó los logs de ASTRA/CLAUDE/GROK: los tres continúan `READY_TO_JOIN`, sin claim ni verdict verificable.
+- `PLAN rev11` incorpora M30 con su corrección docling/cocoindex y registra M31 sin alterar adquisición ni ownership.
+- `STATE rev20` registra `M31_CONTROL_PLANE_PLAN_RECONCILED_M30`.
+- Nuevo checkpoint: `CP-V2-CONTROL-PLANE-RECONCILED-018`.
+- Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+- Cero physical repair, source/ref redesign, motor mutation o integración Step3.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
 Auditar M24/M25/M27/M28 y usar M30 como corrección del ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
@@ -117,10 +127,10 @@ Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/1007
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido de docling/cocoindex. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev10 permanece sincronizado sólo hasta M29; M30 deberá entrar en la próxima reconciliación de PLAN y no se declara falsamente sincronizado.
+Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 queda sincronizado hasta M31, incluyendo la corrección M30.
 
 ## Current checkpoint
-`CP-V2-SPECIAL-LEDGER-AUDIT-017`
+`CP-V2-CONTROL-PLANE-RECONCILED-018`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_AND_CORRECTED_SPECIAL_LEDGER`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
