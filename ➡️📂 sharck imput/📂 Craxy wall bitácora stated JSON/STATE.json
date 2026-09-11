@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 8,
+  "revision": 9,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
   "status": "ACTIVE_LOOP_REVIEW_GATE",
   "current_step": 2,
-  "current_node": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY",
-  "catalog": {"legacy":77,"new":30,"total":107},
+  "current_node": "M13_READ_ONLY_RESEARCH_PARALLEL_WITH_M06_M07_M08",
+  "catalog": {"legacy":77,"new":40,"total":117},
   "legacy_v1": {"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "agents": {
-    "SOL":{"status":"MONITORING","node":"GAP_WATCHDOG","log":"SOL-LOG.md"},
+    "SOL":{"status":"MONITORING_RESEARCH","node":"GAP_WATCHDOG+M13","log":"SOL-LOG.md"},
     "ASTRA":{"status":"READY_TO_JOIN","node":"M06_INDEPENDENT_AUDIT","log":"ASTRA-LOG.md","dedicated_scope":["XRAY_ARQUITECTURA","EVALUACION_PREVIA","MEJORA_VERSIONADA","COMPONENT_GAP_RESEARCH","INDEPENDENT_VERIFY"]},
     "GROK":{"status":"READY_TO_JOIN","node":"M08_OSS_REFUTATION","log":"GROK-LOG.md"},
     "CLAUDE":{"status":"READY_TO_JOIN","node":"M07_CODE_PORTS_TEST_REVIEW","log":"CLAUDE-LOG.md"}
@@ -18,7 +18,7 @@
   "tasks": {
     "M01":{"status":"VERIFIED_PUBLISHED"},
     "M02":{"status":"VERIFIED_PUBLISHED_PENDING_GROK_REVIEW"},
-    "M03":{"status":"MOTORS_COMPLETED_WITH_GAPS","initial_run_id":34514168678,"initial_run_ui_conclusion":"success","semantic_verdict":"GAPS_PENDING"},
+    "M03":{"status":"MOTORS_COMPLETED_WITH_GAPS","initial_run_id":34514168678,"semantic_verdict":"GAPS_PENDING"},
     "M04":{"status":"VERIFIED_ENABLED"},
     "M05":{"status":"VERIFIED_CLOSED"},
     "M06":{"status":"READY_FOR_ASTRA_REVIEW"},
@@ -26,39 +26,23 @@
     "M08":{"status":"READY_FOR_GROK_REVIEW"},
     "M09":{"status":"NOT_PERFORMED_NO_EVIDENCE"},
     "M10":{"status":"BLOCKED_BY_REVIEW_GATE"},
-    "M11":{"owner":"SOL","name":"READBACK_XRAY_11_PARTIAL_DESTINATIONS","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]},
-    "M12":{"owner":"SOL","name":"REVIEW_GATE_MONITOR_READ_ONLY","status":"MONITORING_NO_NEW_OWNER_CLAIMS","last_monitor_evidence":{"astra_log":"READY_TO_JOIN","claude_log":"READY_TO_JOIN","grok_log":"READY_TO_JOIN","latest_sharck_commit_before_monitor":"9fc08bbaf311980550bacb1f4c11ccb918b0500e","repo_wide_audit_run":34538185469,"repo_wide_audit_semantic_verdict":"GAPS_PENDING_OUTSIDE_V2_NO_RECLASSIFICATION"}}
+    "M11":{"owner":"SOL","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]},
+    "M12":{"owner":"SOL","status":"MONITORING_NO_NEW_OWNER_CLAIMS"},
+    "M13":{"owner":"SOL","status":"SIMULATION_01_VERIFIED_READ_ONLY","verdict":"CONTEXT_POINTERS_JIT_RETRIEVAL_PROVENANCE_ISOLATION"},
+    "M14":{"owner":"SOL+GROK","status":"CATALOG_RECONCILED_117"},
+    "M15":{"owner":"CLAUDE+SOL","status":"HF_BRIDGE_CANDIDATES_VERIFIED_DESIGN_PENDING"},
+    "M16":{"owner":"SOL","status":"B04_OBSERVED_COMPLETED_WITH_GAPS_NO_RETRY"}
   },
   "acquisition_v2": {
-    "workflow":".github/workflows/sharck-input-v2-components.yml",
-    "initial_workflow_commit":"c276f51a56f5c0bc433d2991240c72f14142d464",
-    "fail_closed_wrapper_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43",
-    "initial_run_id":34514168678,
-    "initial_run_status":"COMPLETED",
-    "initial_run_ui_conclusion":"SUCCESS_BUT_NOT_SEMANTIC_PASS",
-    "shared_gates":{"partial_sparse_checkout":"PASS_3_OF_3","canonical_motor_blob_sha":"PASS_3_OF_3","no_lfs_checkout":"PASS_3_OF_3"},
-    "batches": {
-      "B01":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":3,"failed":7,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B01-INDEX.md"},
-      "B02":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":5,"failed":5,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B02-INDEX.md"},
-      "B03":{"count":10,"status":"COMPLETED_WITH_GAPS","verified_closed":2,"failed":8,"pending":0,"index":"📂 input sharck code principal/📂 component acquisition/state/B03-INDEX.md"}
-    },
-    "verified_closed":10,
-    "failed":20,
-    "pending":0,
-    "semantic_verdict":"GAPS_PENDING"
+    "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"operational_gaps":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9}},
+    "B04":{"index":"📂 input sharck code principal/📂 component acquisition/state/B04-INDEX.md","state":"📂 input sharck code principal/📂 component acquisition/state/B04-state.json","verified_closed":7,"failed":3,"pending":0,"failed_observed":{"huggingface_hub":"SOURCE_SPECIAL_FILE_GAP:CLAUDE.md","spaCy":"DESTINATION_EXISTS","unstructured":"SOURCE_SPECIAL_FILE_GAP"},"semantic_verdict":"GAPS_PENDING"},
+    "all_new_batches":{"verified_closed":17,"failed":23,"pending":0}
   },
-  "xray_v2": {
-    "initial_failure_classes":{"DESTINATION_EXISTS":6,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":9},
-    "readback_recovery":{"workflow":".github/workflows/sharck-input-v2-readback-recover.yml","runs":[34535896880,34536177351],"destinations_audited":11,"recovered":0,"still_gap":11,"canonical_helper_blob":"91e6e4486692eab314be5c7130d8310d3c855397","result":"ALL_11_PARTIAL_DESTINATION_READBACK_GAP"},
-    "operational_gap_classes":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9},
-    "evidence":"📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md"
-  },
-  "gap_classes":["PARTIAL_DESTINATION_READBACK_GAP","SOURCE_SPECIAL_FILE_GAP","WORKFLOW_FALSE_GREEN_FIXED"],
-  "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
-  "review":{"review_packet":"REVIEW-GATE-ASTRA-ENGINEERING.md","astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
-  "watchdog":{"title":"Sharck Input V2 Watchdog","enabled":true,"frequency":"HOURLY","timezone":"America/Bogota","duty":"monitor gaps/reviews and resume from checkpoint"},
+  "review":{"astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
+  "research":{"simulation_01":{"status":"VERIFIED_READ_ONLY","facts":["OpenAI supports web/file search and remote MCP for context retrieval","Anthropic recommends finite-context management and just-in-time retrieval","OpenClaw skills require sandbox/OS isolation for authorization boundaries","Hermes exposes MCP tools as first-class tools and supports filtering","HF official MCP + huggingface_hub + datasets form a native bridge candidate"],"inferences":["Sharck context package should carry compact pointers, provenance and deferred retrieval metadata rather than bulk-loading all evidence","HF bridge should remain adapterized: hub discovery, dataset access, MCP exposure"],"unknowns":["best quantitative thresholds for context compression and coverage require project tests","B04 failed components require owner review before any physical repair"]}},
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS"},
-  "next_safe_actions":["ASTRA_M06_REVIEW","CLAUDE_M07_REVIEW","GROK_M08_REVIEW","SOL_MONITOR_ONLY_OR_READ_ONLY_GAP_EVIDENCE"],
+  "checkpoint":"CP-V2-M13-SIM01-B04-007",
+  "next_safe_actions":["ASTRA_M06_REVIEW","CLAUDE_M07_REVIEW","GROK_M08_REVIEW","SOL_M13_NEXT_READ_ONLY_SIMULATION","NO_BLIND_RETRY_B04"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T19:14:00-05:00"
+  "updated_at":"2026-09-10T21:31:20-05:00"
 }
