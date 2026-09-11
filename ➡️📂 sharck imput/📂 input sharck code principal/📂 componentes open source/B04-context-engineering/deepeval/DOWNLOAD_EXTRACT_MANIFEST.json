@@ -1,0 +1,38 @@
+{
+  "bundle_bytes": 23967269,
+  "bundle_sha256": "5963b46a3ca51734dfc5d990049c4fed16c6f85011f790fe06898be17700f448",
+  "extracted_tree": {
+    "bytes": 42417205,
+    "files": 2772,
+    "sha256": "eab82e4f59eeaeedf95f40b4a818b677a84844f958cd6bfc5ce5c5080bd8b35f"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "deepeval.bundle.zip.part-0001",
+      "sha256": "036051ff84e92c353aa1588bde005669ae11c87937756ff1e92935501718be9c"
+    },
+    {
+      "bytes": 11384357,
+      "name": "deepeval.bundle.zip.part-0002",
+      "sha256": "97f03afd317097dd65535eb7360bec045f3b37f0bf4d95f016567339f17152a8"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "deepeval",
+  "source_bytes": 42417205,
+  "source_commit": "f94d940c1e5afc4b280420fe73fe17d146274018",
+  "source_files": 2772,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/confident-ai/deepeval",
+  "source_tree": {
+    "bytes": 42417205,
+    "files": 2772,
+    "sha256": "eab82e4f59eeaeedf95f40b4a818b677a84844f958cd6bfc5ce5c5080bd8b35f"
+  }
+}
