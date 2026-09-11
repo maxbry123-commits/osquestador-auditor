@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M28 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M29 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -85,6 +85,15 @@ Read-only, sin repetir M21/M22/M23.
 - Con M24+M28, **137/137 anomalías M22 = 130 missing + 7 changed** tienen causa de staging Git identificada (`ignore rules + attributes`).
 - Esto NO reclasifica los 11 partials, NO prueba que los archivos sean prescindibles y NO autoriza reparación física.
 
+## M29 — control-plane PLAN reconciliation
+Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
+- `CHECKPOINT 015` marcaba explícitamente `PLAN rev9` como `STALE_TASK_LEDGER_BEYOND_M20` mientras STATE/Handoff ya registraban M21–M28.
+- SOL reconcili ó el ledger: `PLAN rev10` contiene ahora M21–M29 y mantiene los mismos ownership locks y gates.
+- `STATE rev18` registra M29 sin alterar adquisición, fuentes, motores ni destinos.
+- Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+- M06/M07/M08 siguen sin claim/review/verdict verificable en sus logs; no se infiere revisión externa.
+- Este nodo corrige coherencia documental; NO autoriza StrategyDelta de producción, repair físico ni Step3.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
 Auditar M24/M25/M27/M28: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
@@ -96,10 +105,10 @@ Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/1007
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only; no physical repair ni Step3 antes de reviews + gate director.
+Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director.
 
 ## Current checkpoint
-`CP-V2-NESTED-IGNORE-BLAST-RADIUS-015`
+`CP-V2-PLAN-RECONCILED-016`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
