@@ -1,0 +1,61 @@
+{
+  "schema": "sharck-input.watchdog-3step.v1",
+  "node": "M40_DIRECTOR_6TRACK_RESEARCH_SHORTLIST",
+  "owner": "SOL-0",
+  "claim_id": "SOL0-M40-20260911-RESEARCH-COT",
+  "source_base_sha": "55f039bcad34acd9ed19c2003d266caf8caa15fa",
+  "project_steps": {
+    "STEP_1": {
+      "name": "INVENTARIO_XRAY_ARQUITECTURA_CONTROL",
+      "status": "VERIFIED_CLOSED_CONTROL_SCOPE",
+      "evidence": [
+        "INPUT-DIRECTOR-2026-09-10T2024-05.json",
+        "XRAY-ADN-CROSSCHECK-2026-09-11.md",
+        "STATE-DELTA-028-M39-MULTISOL-PRESTAGED.json",
+        "CHECKPOINT-DELTA-026-M39-MULTISOL-PRESTAGED.json"
+      ],
+      "warning": "23 physical FAILED remain open; STEP_1 closure here means control/research inventory only, not physical acquisition closure"
+    },
+    "STEP_2": {
+      "name": "RESEARCH_SHORTLIST_DIRECTOR_REVIEW",
+      "status": "ACTIVE",
+      "tracks": ["I04", "I06", "I07", "I08", "I09", "I10"],
+      "minimum_findings_per_track": 10,
+      "target_findings_per_track": "10-20",
+      "classification": ["EXISTING_117", "EXISTING_20X", "NEW_CANDIDATE", "REFERENCE_ONLY", "DEFER", "REJECT"],
+      "acceptance": "enumerated shortlist delivered in chat + persisted research artifact + sources + Director review"
+    },
+    "STEP_3": {
+      "name": "ARCHITECTURE_ACQUIRE_READBACK_DSL_DAG",
+      "status": "WAITING_DIRECTOR_APPROVAL",
+      "after_approval_tasks": [
+        "publish versioned architecture update",
+        "prune overlaps and choose approved components only",
+        "verify license/default ref/immutable commit/special-file surface/size/destination",
+        "acquire approved components with canonical motor discipline",
+        "hash/full-tree readback and fail-closed verification",
+        "update component index and versioned STATE/PLAN/CHECKPOINT/Handoff",
+        "create or activate one-task-one-node DSL/DAG assignments for SOL-1/SOL-2/SOL-3",
+        "wire/prune/min-code/test only after acquisition and physical gates are satisfied"
+      ],
+      "forbidden_before_approval": [
+        "new component downloads",
+        "new component extraction into canonical destinations",
+        "architecture promotion as approved design",
+        "claiming future SOL worker nodes",
+        "declaring 23 existing physical failures resolved without readback"
+      ]
+    }
+  },
+  "existing_physical_state": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_researched_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "owner_locks_preserved": ["M06_ASTRA", "M07_CLAUDE", "M08_GROK"],
+  "verdict": "STEP1_CONTROL_CLOSED / STEP2_ACTIVE / STEP3_WAITING_DIRECTOR_APPROVAL / NO_NEW_DOWNLOADS"
+}
