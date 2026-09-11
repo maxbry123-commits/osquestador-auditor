@@ -1,0 +1,90 @@
+name: Sharck Input — FAST sparse ignore/attr X-Ray
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-ignore-attr-xray-fast.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  xray-fast:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Sparse checkout ignore/attribute control files only — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q .
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/scira/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/nutch/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/yacy_search_server/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/heritrix3/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/pyserini/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code/.gitattributes
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/datasketch/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/smolagents/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/kythe/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/sqry/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/continue/code/.gitignore
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B04-context-engineering/spaCy/code/.gitignore
+          EOF
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+
+      - name: Check ignore rules
+        shell: bash
+        run: |
+          set -u
+          ROOT='➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source'
+          check() {
+            p="$1"
+            echo "=== IGNORE $p ==="
+            git check-ignore -v --no-index -- "$p" || echo 'NOT_IGNORED'
+          }
+          check "$ROOT/B01-web-research/scira/code/create_indexes.sql"
+          check "$ROOT/B01-web-research/scira/code/drizzle/migrations/0000_foamy_nightcrawler.sql"
+          check "$ROOT/B01-web-research/nutch/code/conf/log4j2.xml"
+          check "$ROOT/B01-web-research/yacy_search_server/code/.env"
+          check "$ROOT/B01-web-research/yacy_search_server/code/source/net/yacy/peers/operation/yacyBuildProperties.java"
+          check "$ROOT/B01-web-research/heritrix3/code/dist/pom.xml"
+          check "$ROOT/B02-ir-evidence/pyserini/code/collections/.gitkeep"
+          check "$ROOT/B02-ir-evidence/OpenSearch/code/.idea/icon.svg"
+          check "$ROOT/B02-ir-evidence/datasketch/code/benchmark/indexes/jaccard/plots/jaccard_distances_at_k.png"
+          check "$ROOT/B03-code-runtime/smolagents/code/tests/data/000000039769.png"
+          check "$ROOT/B03-code-runtime/kythe/code/kythe/go/util/build/build.go"
+          check "$ROOT/B03-code-runtime/sqry/code/sqry-core/src/graph/unified/build/entrypoint.rs"
+          check "$ROOT/B03-code-runtime/continue/code/.idea/continue.iml"
+          check "$ROOT/B03-code-runtime/continue/code/extensions/intellij/src/main/resources/webview/index.html"
+          check "$ROOT/B04-context-engineering/spaCy/code/spacy/matcher/polyleven.c"
+          check "$ROOT/B04-context-engineering/spaCy/code/website/.vscode/extensions.json"
+
+      - name: Check OpenSearch attributes
+        shell: bash
+        run: |
+          set -u
+          ROOT='➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch/code'
+          for p in \
+            'plugins/ingest-attachment/licenses/commons-collections4-LICENSE.txt' \
+            'plugins/ingest-attachment/licenses/commons-collections4-NOTICE.txt' \
+            'plugins/ingest-attachment/licenses/xz-LICENSE.txt' \
+            'plugins/ingest-attachment/licenses/xz-NOTICE.txt' \
+            'plugins/repository-hdfs/licenses/commons-codec-LICENSE.txt' \
+            'plugins/repository-hdfs/licenses/commons-codec-NOTICE.txt' \
+            'server/licenses/joda-time-LICENSE.txt'; do
+              echo "=== ATTR $p ==="
+              git check-attr -a -- "$ROOT/$p" || true
+          done
