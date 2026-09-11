@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-MOTOR-INTEGRITY-WATCH-013",
+  "checkpoint_id": "CP-V2-ROOT-IGNORE-BLAST-RADIUS-014",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M26_MOTOR_INTEGRITY_WATCH_VERIFIED_READ_ONLY",
+  "last_verified_node": "M27_ROOT_IGNORE_BLAST_RADIUS_VERIFIED_READ_ONLY",
   "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
     "plan": "PASS_REV9_STALE_TASK_LEDGER_BEYOND_M20",
-    "state": "PASS_REV15",
-    "handoff": "PASS_SYNCED_CP_V2_MOTOR_INTEGRITY_WATCH_013",
+    "state": "PASS_REV16",
+    "handoff": "PENDING_SYNC_CP_V2_ROOT_IGNORE_BLAST_RADIUS_014",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -49,6 +49,16 @@
     "finding":"upstream tracked files are re-ignored during vendor staging; OpenSearch changed files are CRLF_TO_LF_ONLY normalization",
     "canonical_readback":"FAIL_CLOSED_WORKING_AS_DESIGNED"
   },
+  "root_ignore_blast_radius": {
+    "evidence":"📂 Craxy wall bitácora stated JSON/ROOT-IGNORE-BLAST-RADIUS-2026-09-11.md",
+    "status":"VERIFIED_READ_ONLY_MINIMUM",
+    "missing_total":130,
+    "root_ignore_directly_explained_minimum":79,
+    "coverage_percent_minimum":60.77,
+    "breakdown":{"heritrix3_dist":57,"sqry_build":21,"yacy_dotenv":1},
+    "opensearch_changed_eol_confirmed":7,
+    "physical_mutation":false
+  },
   "staging_strategydelta": {
     "evidence":"📂 Craxy wall bitácora stated JSON/STAGING-STRATEGYDELTA-SANDBOX-2026-09-11.md",
     "run":34568249222,
@@ -69,7 +79,7 @@
     "physical_mutation":false
   },
   "open_gaps": [
-    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations have exact source-vs-published diffs; root cause now confirmed as staging ignore/filter behavior for representative classes"},
+    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations have exact source-vs-published diffs; root cause staging ignore/filter confirmed; at least 79/130 missing are directly covered by destination root ignore rules"},
     {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate; remain separate from staging StrategyDelta"},
     {"id":"G-B04-SPACY","detail":"spaCy partial exact 2 files missing; representative sandbox staging preserves both bytes but no physical repair authorized"},
     {"id":"G-B04-HF","detail":"huggingface_hub CLAUDE.md symlink confirmed"},
@@ -77,7 +87,7 @@
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta pending"},
     {"id":"G-PRODUCTION-GATE","detail":"SANDBOX_PASS does not authorize production staging, git add -f, plumbing strategy, or physical repair"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
   "next_safe_actions": [
