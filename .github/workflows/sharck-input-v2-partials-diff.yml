@@ -1,0 +1,125 @@
+name: Sharck Input V2 — exact diff 11 partial destinations
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-v2-partials-diff.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diff-partials:
+    name: "${{ matrix.batch }} / ${{ matrix.slug }} — source vs published diff"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: B01
+            slug: scira
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/scira"
+          - batch: B01
+            slug: nutch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/nutch"
+          - batch: B01
+            slug: yacy_search_server
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/yacy_search_server"
+          - batch: B01
+            slug: heritrix3
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B01-web-research/heritrix3"
+          - batch: B02
+            slug: pyserini
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/pyserini"
+          - batch: B02
+            slug: OpenSearch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/OpenSearch"
+          - batch: B02
+            slug: datasketch
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B02-ir-evidence/datasketch"
+          - batch: B03
+            slug: smolagents
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/smolagents"
+          - batch: B03
+            slug: kythe
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/kythe"
+          - batch: B03
+            slug: sqry
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/sqry"
+          - batch: B03
+            slug: continue
+            target: "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B03-code-runtime/continue"
+    steps:
+      - name: Checkout published target + manifest — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q project
+          cd project
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<EOF
+          /${{ matrix.target }}/
+          EOF
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+
+      - name: Read manifest and fetch exact upstream commit read-only
+        shell: bash
+        env:
+          TARGET: "${{ matrix.target }}"
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' > /tmp/source.env
+          import json, os, pathlib, shlex
+          m=json.loads((pathlib.Path('project')/os.environ['TARGET']/'DOWNLOAD_EXTRACT_MANIFEST.json').read_text())
+          print('SOURCE_REPO='+shlex.quote(m['source_repo']))
+          print('SOURCE_COMMIT='+shlex.quote(m['source_commit']))
+          PY
+          source /tmp/source.env
+          git init -q upstream
+          cd upstream
+          git remote add origin "$SOURCE_REPO"
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin "$SOURCE_COMMIT"
+          git checkout -q --detach FETCH_HEAD
+
+      - name: Compare relative files and hashes
+        shell: bash
+        env:
+          TARGET: "${{ matrix.target }}"
+          SLUG: "${{ matrix.slug }}"
+          BATCH: "${{ matrix.batch }}"
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          src=pathlib.Path('upstream')
+          dst=pathlib.Path('project')/os.environ['TARGET']/'code'
+          def files(root):
+              out={}
+              for p in root.rglob('*'):
+                  if '.git' in p.parts or not p.is_file():
+                      continue
+                  rel=p.relative_to(root).as_posix()
+                  out[rel]={'sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'bytes':p.stat().st_size}
+              return out
+          s=files(src); d=files(dst)
+          missing=sorted(set(s)-set(d)); extra=sorted(set(d)-set(s)); changed=sorted(k for k in set(s)&set(d) if s[k]['sha256']!=d[k]['sha256'])
+          print(json.dumps({
+              'schema':'sharck-input.partial-diff.v1','batch':os.environ['BATCH'],'slug':os.environ['SLUG'],
+              'source_files':len(s),'published_files':len(d),
+              'missing_count':len(missing),'missing':[{'path':k,**s[k]} for k in missing],
+              'extra_count':len(extra),'extra':[{'path':k,**d[k]} for k in extra],
+              'changed_count':len(changed),'changed':[{'path':k,'source':s[k],'published':d[k]} for k in changed]
+          },ensure_ascii=False,sort_keys=True))
+          PY
