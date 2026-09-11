@@ -1,0 +1,43 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M38-DAG-RECONCILED-025",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-024-20X-MULTIENV.json",
+    "blob_sha": "37220bbbf143c6e3be257a833394b60a57bb2210",
+    "checkpoint_id": "CP-V2-M37-20X-MULTIENV-024"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_node": "M38_MULTIENV_DAG_STATE_RECONCILED",
+  "resume_from": "M06_ASTRA_M07_CLAUDE_M08_GROK_INDEPENDENT_CLAIMS_THEN_FANIN_DIRECTOR_GATE",
+  "control_plane": {
+    "canonical_state": "REV25_UNCHANGED",
+    "state_delta": "STATE-DELTA-027-M38-DAG-RECONCILED.json",
+    "canonical_plan": "REV13_UNCHANGED",
+    "dag_base": "MULTIENV-DAG-3STEP-v1.json",
+    "dag_delta": "MULTIENV-DAG-3STEP-v2-DELTA.json",
+    "m38_evidence": "MULTIENV-DAG-STATE-RECONCILIATION-M38-2026-09-11.md"
+  },
+  "current_counts": {
+    "canonical_components": 117,
+    "20x_candidates_noncanonical": 20,
+    "new_batches_verified_closed": 17,
+    "new_batches_failed": 23,
+    "new_batches_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139
+  },
+  "claims": {
+    "SOL_M38": "COMPLETE",
+    "ASTRA_M06": "OPEN_READY_TO_CLAIM",
+    "CLAUDE_M07": "OPEN_READY_TO_CLAIM",
+    "GROK_M08": "OPEN_READY_TO_CLAIM"
+  },
+  "gates": {
+    "step3_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "fan_in_requires": ["M06", "M07", "M08"],
+    "director_decision_required": true
+  },
+  "finding": "DAG v1 was stale for M37 lifecycle state; v2 delta reconciles M37 as COMPLETE/RELEASED and records M38 without altering physical acquisition or owner locks."
+}
