@@ -1,0 +1,52 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 27,
+  "base_state_delta": {
+    "file": "STATE-DELTA-026-20X-MULTIENV.json",
+    "blob_sha": "295a06b0809398149226ba7c2e9ff139e6bffce3",
+    "current_node": "M37_20X_CROSSCHECK_MULTIENVIROMENT_CONTROL_PUBLISHED"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M38_MULTIENV_DAG_STATE_RECONCILED",
+  "tasks_delta": {
+    "M38": {
+      "owner": "SOL",
+      "status": "VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION",
+      "claim_id": "SOL-M38-20260911-1640-COT",
+      "evidence": [
+        "MULTIENV-DAG-STATE-RECONCILIATION-M38-2026-09-11.md",
+        "MULTIENV-DAG-3STEP-v2-DELTA.json"
+      ],
+      "physical_mutation": false
+    }
+  },
+  "dag_state": {
+    "v1_status": "STALE_M37_CLAIMED_ACTIVE",
+    "v2_delta_status": "M37_COMPLETE_RELEASED_M38_COMPLETE",
+    "rule": "later verified state/checkpoint delta prevails over stale DAG node status"
+  },
+  "acquisition": {
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0}
+  },
+  "claims": {
+    "SOL_M38": "COMPLETE",
+    "ASTRA_M06": "OPEN_READY_TO_CLAIM",
+    "CLAUDE_M07": "OPEN_READY_TO_CLAIM",
+    "GROK_M08": "OPEN_READY_TO_CLAIM"
+  },
+  "locks": {
+    "step3_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next": [
+    "ASTRA claims M06 in ASTRA-LOG",
+    "CLAUDE claims M07 in CLAUDE-LOG",
+    "GROK claims M08 in GROK-LOG",
+    "SOL monitors fan-in without duplicating owner work",
+    "director gate remains required"
+  ]
+}
