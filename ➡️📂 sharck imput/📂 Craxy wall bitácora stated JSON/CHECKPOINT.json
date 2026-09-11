@@ -4,7 +4,7 @@
   "status": "VALID_FOR_RESUME",
   "last_verified_node": "M13_SIMULATION_01_AND_B04_CONTROL_PLANE_RECONCILE",
   "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL",
-  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117","plan":"PASS_REV6","state":"PASS_REV9","handoff":"PENDING_SYNC_THIS_RUN","recovery":"PASS","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
+  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117_SYNCED","plan":"PASS_REV6","state":"PASS_REV9","handoff":"PASS_SYNCED","recovery":"PASS","sol_log":"PASS_SYNCED","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
   "acquisition": {
     "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
     "B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING","failed":["huggingface_hub:SOURCE_SPECIAL_FILE_GAP","spaCy:DESTINATION_EXISTS","unstructured:SOURCE_SPECIAL_FILE_GAP"]},
