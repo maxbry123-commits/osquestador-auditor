@@ -1,0 +1,39 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M40-RESEARCH-REVIEW-027",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-026-M39-MULTISOL-PRESTAGED.json",
+    "checkpoint_id": "CP-V2-M39-MULTISOL-PRESTAGED-026"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M40_DIRECTOR_6TRACK_RESEARCH_REVIEW_READY",
+  "resume_rule": "Resume at Director review of M40 shortlist. Do not begin new component acquisition or architecture promotion before explicit approval.",
+  "control_plane": {
+    "state_delta": "STATE-DELTA-029-M40-RESEARCH-REVIEW.json",
+    "watchdog": "WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json",
+    "research_artifact": "RESEARCH-SHORTLIST-M40-6TRACK-2026-09-11.md",
+    "future_multisol_dag": "MULTISOL-DAG-3STEP-v1.json"
+  },
+  "research": {
+    "tracks": 6,
+    "entries": 65,
+    "minimum_per_track_satisfied": true,
+    "director_approval": "PENDING"
+  },
+  "current_counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "gates": {
+    "research_step2": "REVIEW_READY",
+    "research_step3": "WAITING_DIRECTOR_APPROVAL",
+    "new_downloads_allowed": false,
+    "physical_repair_allowed": false,
+    "existing_review_nodes": ["M06","M07","M08","M09"]
+  }
+}
