@@ -1,0 +1,86 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 26,
+  "base_state": {
+    "path": "📂 Craxy wall bitácora stated JSON/STATE.json",
+    "revision": 25,
+    "blob_sha": "bb20f03d01f4930a47eb971eae36e0234c502cf8",
+    "current_node": "M36_CONTROL_PLANE_PLAN_RECONCILED_M35"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "project": "Wanted Shark Web / Sharck Input V2.1",
+  "current_step": 2,
+  "current_node": "M37_20X_CROSSCHECK_MULTIENVIROMENT_CONTROL_PUBLISHED",
+  "catalog": {
+    "canonical_total": 117,
+    "research_candidates_20x": 20,
+    "candidate_total_if_all_approved": 137,
+    "rule": "20X candidates do not enter canonical total until gate+VERIFIED_CLOSED"
+  },
+  "acquisition": {
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0, "wired": 0, "tested": 0}
+  },
+  "tasks_delta": {
+    "M37": {
+      "owner": "SOL",
+      "status": "VERIFIED_DOCUMENTED_RESEARCH_CONTROL_DELTA",
+      "claim_id": "SOL-M37-20260911-1531-COT",
+      "outputs": [
+        "📁 readme arquitectura sharck imput V2.1.md",
+        "📂 Craxy wall bitácora stated JSON/20X-OSS-MEJORAS-2026-09-11.md",
+        "📂 Craxy wall bitácora stated JSON/MULTIENV-DAG-3STEP-v1.json",
+        "📂 Craxy wall bitácora stated JSON/XRAY-ADN-CROSSCHECK-2026-09-11.md",
+        "HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+      ],
+      "physical_mutation": false
+    }
+  },
+  "agent_nodes": {
+    "SOL": {"node": "M37", "status": "REPORTING_COMPLETE"},
+    "ASTRA": {"node": "M06", "status": "OPEN_READY_TO_CLAIM"},
+    "CLAUDE": {"node": "M07", "status": "OPEN_READY_TO_CLAIM"},
+    "GROK": {"node": "M08", "status": "OPEN_READY_TO_CLAIM"}
+  },
+  "open_core_tasks": ["M06", "M07", "M08", "M09", "M10"],
+  "open_gap_categories": [
+    "G-V2-PARTIAL-11",
+    "G-V2-SPECIAL-9",
+    "G-V2-SPECIAL-PROVENANCE-9",
+    "G-V2-STRATEGYDELTA-COVERAGE-12",
+    "G-B04-SPACY",
+    "G-B04-HF",
+    "G-B04-UNSTRUCTURED",
+    "G-REVIEW",
+    "G-PRODUCTION-GATE",
+    "G-20X-PRUNE-LICENSE-PIN"
+  ],
+  "physical_failed_components": 23,
+  "partial_exact_anomalies": 139,
+  "review_gate": {
+    "astra": "PENDING",
+    "claude": "PENDING",
+    "grok": "PENDING",
+    "external": "NOT_PERFORMED_NO_EVIDENCE",
+    "director": "REQUIRED_BEFORE_REPAIR_DOWNLOAD_OR_STEP3"
+  },
+  "locks": {
+    "step3_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "evidence_commits": {
+    "20x_plan": "54586519446a7fdc478ad0acfbf1d84f0ebea27b",
+    "architecture_v2_1": "1046054e49c8cdd4b2535c49ec780b8fb5e8a3c0",
+    "multienv_dag": "e87d9e0802374856020aa8d05a2f357cb05cd01a",
+    "xray_crosscheck": "d09deb24f8cbd8c8337e5f8b75f01ffbeeb50523"
+  },
+  "next": [
+    "ASTRA claims M06 and reports independent review",
+    "CLAUDE claims M07 and reports full coverage/contract review",
+    "GROK claims M08 and prunes/verifies 20X candidates",
+    "fan-in M06+M07+M08",
+    "director gate decides physical repair/B05-B06 acquisition/Step3"
+  ]
+}
