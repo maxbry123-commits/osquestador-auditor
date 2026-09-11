@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M32 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M33 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -127,22 +127,33 @@ Estado: `SPECIAL_SNAPSHOT_PROVENANCE_GAP_VERIFIED_READ_ONLY / NO_PHYSICAL_MUTATI
 - StrategyDelta candidata para review M06/M07, no implementada: persistir provenance fail-closed inmediatamente después de `acquire(work)` y antes de `scan_tree(src)`, incluyendo al menos repo/ref/commit y evidencia de modes/special entries.
 - No se editó el motor canónico, no se cambió source/ref y no se ejecutó reparación física.
 
+## M33 — special provenance recoverability audit
+Evidence: `📂 Craxy wall bitácora stated JSON/SPECIAL-PROVENANCE-RECOVERABILITY-AUDIT-2026-09-11.md`.
+Estado: `VERIFIED_READ_ONLY / NO_PHYSICAL_MUTATION / FAIL_CLOSED`.
+- Se inspeccionaron workflow canónico, Motor 2, HF engine, queues B01/B02/B03 y metadata del run inicial `34514168678`.
+- El engine obtiene el commit antes de `scan_tree()`, pero no lo emite ni persiste antes del `SOURCE_SPECIAL_FILE_GAP`.
+- Motor 2 sólo asigna `result` después de `VERIFIED_CLOSED`; ante fallo conserva texto de excepción, no el commit.
+- El workflow hace `tee Bxx-motor-output.jsonl`, pero persiste únicamente STATE e INDEX; no existe upload-artifact/commit del output temporal.
+- Los 9 special-source tienen `source_ref:"HEAD"`; queue no contiene SHA/tag inmutable para reconstrucción histórica.
+- Resultado: `G-V2-SPECIAL-PROVENANCE-9 = CONFIRMED_NONRECOVERABLE_FROM_CURRENT_CANONICAL_PERSISTENCE`.
+- No se usa HEAD actual como sustituto del snapshot histórico y no se modifica motor/source/ref.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25/M27/M28 y usar M30+M32 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si persistir provenance pre-scan mantiene el fail-closed sin convertir special-files en bypass. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27/M28 y usar M30+M32+M33 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si persistir provenance pre-scan mantiene el fail-closed sin convertir special-files en bypass. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. Para source-special, usar M30 y M32: el exact historical mode sigue UNKNOWN porque el early-failure state no persistió `source_commit`. Evaluar una mejora versionada que registre provenance pre-scan y luego seleccione staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; tests/read-back obligatorios antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. Para source-special, usar M30/M32/M33: el exact historical mode sigue UNKNOWN y M33 confirma que el source commit histórico no es recuperable desde la persistencia actual. Evaluar una mejora versionada que registre provenance pre-scan y luego seleccione staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; tests/read-back obligatorios antes de repair.
 
 ### GROK / M08
-Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido y M32 como limitación de reproducibilidad histórica; no asumir que HEAD actual equivale al snapshot del intento. Verificar licencia/mantenimiento/source refs; no auto-instalar.
+Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido y M32/M33 como limitación de reproducibilidad histórica; no asumir que HEAD actual equivale al snapshot del intento. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 permanece honestamente sincronizado hasta M31; M32 queda explícito como evidencia nueva pendiente de una futura reconciliación PLAN, no se declara falso PASS.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 permanece honestamente sincronizado hasta M31; M32/M33 quedan explícitos como evidencia nueva pendiente de una futura reconciliación PLAN, no se declara falso PASS.
 
 ## Current checkpoint
-`CP-V2-SPECIAL-PROVENANCE-GAP-019`
-Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_AND_PROVENANCE_GAP`.
+`CP-V2-SPECIAL-PROVENANCE-RECOVERABILITY-020`
+Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
 
