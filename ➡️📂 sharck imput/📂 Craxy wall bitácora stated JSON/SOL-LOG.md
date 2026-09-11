@@ -251,3 +251,10 @@ No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/rea
 - Evidencia persistida en `NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md`.
 - No hubo reparación física, source/ref redesign, edición de motores ni Step3.
 - Balance permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**; review gate continúa cerrado.
+
+## 2026-09-11 — M38 MULTIENV DAG STATE RECONCILIATION
+- Claim SOL: `SOL-M38-20260911-1640-COT` sobre base STATE canonical blob `bb20f03d01f4930a47eb971eae36e0234c502cf8` + STATE delta rev26 blob `295a06b0809398149226ba7c2e9ff139e6bffce3`.
+- Nodo SOL read-only/control: detectar y reconciliar contradicción entre `MULTIENV-DAG-3STEP-v1.json` (`M37=CLAIMED`, heartbeat ACTIVE) y `STATE-DELTA-026-20X-MULTIENV.json` + Handoff multientorno (`M37=COMPLETE`).
+- M06/M07/M08 siguen sin claim en sus logs; no se tocó ownership ajeno.
+- No physical repair, no B05/B06 download, no Step3, no cambio de motores/source/ref/destinos.
+- Veredicto M38: `CONTROL_PLANE_CONTRADICTION_CONFIRMED`; requiere delta/versionado de DAG, no overwrite silencioso del v1.
