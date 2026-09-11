@@ -137,26 +137,34 @@ Regla: `CATALOGADO ≠ DESCARGADO ≠ WIRED`. Para V2, un componente nuevo pasa 
 116. **Ragas** — https://github.com/vibrantlabsai/ragas — evaluación retrieval/context quality — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
 117. **DeepEval** — https://github.com/confident-ai/deepeval — eval framework para contexto/LLM — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
 
+### Estado físico B04 observado en main
+`7 VERIFIED_CLOSED / 3 FAILED / 0 pending` según `B04-INDEX.md` y `B04-state.json`.
+- VERIFIED_CLOSED: datasets, hf-mcp-server, LLMLingua, markitdown, chonkie, ragas, deepeval.
+- FAILED: huggingface_hub (`SOURCE_SPECIAL_FILE_GAP:CLAUDE.md`), spaCy (`DESTINATION_EXISTS`), unstructured (`SOURCE_SPECIAL_FILE_GAP`).
+- Regla: no retry físico a ciegas; revisión/gate antes de cambiar source/ref/design o manipular destino.
+
 ### Candidatos retenidos fuera de adquisición automática
-- **Duckling** — https://github.com/facebook/duckling — útil para fechas/cantidades, pero licencia reportada por GitHub como `NOASSERTION`; revisión manual requerida.
-- **Phoenix** — https://github.com/Arize-ai/phoenix — útil para observabilidad/evals, pero licencia reportada por GitHub como `NOASSERTION`; revisión manual requerida.
+- **Duckling** — https://github.com/facebook/duckling — útil para fechas/cantidades, pero licencia requiere revisión manual.
+- **Phoenix** — https://github.com/Arize-ai/phoenix — útil para observabilidad/evals, pero licencia requiere revisión manual.
 - **LLM Guard** — https://github.com/protectai/llm-guard — excluido: repo archivado.
 
 ## D. Hallazgos de investigación
 
-- OpenAI refuerza búsqueda web/file search con fuentes/citas y observabilidad; Shark debe entregar provenance y referencias, no texto suelto.
-- Anthropic recomienda tratar contexto como recurso finito, usar recuperación just-in-time e incorporar tool search/deferred loading cuando existen muchas tools.
-- Hermes usa progressive disclosure para skills y context compression; Shark adoptará metadata/pointers compactos + carga on-demand.
-- OpenClaw mantiene registry/plugin inventory y selección de Skills/Connectors; Shark debe mantener capability snapshot y shortlist por INPUT.
+- OpenAI: web/file search + MCP + tracing/guardrails favorecen retrieval verificable con provenance, no contexto plano masivo.
+- Anthropic: contexto finito; recuperación just-in-time; referencias ligeras; sub-agentes devuelven síntesis compacta.
+- Hermes: MCP nativo, auto-discovery y filtrado; skills/context se cargan de forma progresiva.
+- OpenClaw: Skills allowlist es visibilidad, no frontera de autorización; aislamiento real requiere sandbox/OS-user/credenciales por agente.
+- Hugging Face bridge: separar `huggingface_hub` (discovery/pointers), `datasets` (dataset load/stream), `hf-mcp-server` (tool exposure MCP).
 - `CocoIndex` aporta actualización incremental Tree-sitter, evitando reindexar todo el repo.
-- `sqry` y `open-codebase-index` aportan grafos de símbolos/callers/callees; se mantienen experimentales hasta tests propios.
-- `Refact` fue evaluado y excluido del batch porque su repo está archivado; se reemplazó por Continue.
-- Para tool/skill discovery se mantienen registries ya catalogados; Agentic Registry/MCP Registry/ToolHive siguen como capas de catálogo, no ejecución automática no verificada.
+- `sqry` y `open-codebase-index` se mantienen experimentales hasta tests propios.
+- `Refact` fue excluido por repo archivado; se reemplazó por Continue.
 
 ## E. Destino V2
 
 Todos los componentes nuevos se adquieren únicamente dentro de:
-
 `➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/<batch>/<slug>/`
 
-B01–B04 contienen exactamente 10 componentes por batch. B04 usa workflow aislado para no reejecutar los destinos parciales de B01–B03. Los motores canónicos permanecen externos e inmutables y reciben destino explícito.
+B01–B04 contienen exactamente 10 componentes por batch. Los motores canónicos permanecen externos e inmutables y reciben destino explícito.
+
+## F. Validación watchdog 2026-09-10
+Índice reconciliado contra archivos físicos de estado. No se añadió ningún candidato nuevo en esta pasada porque los tres candidatos HF detectados por investigación ya estaban catalogados en B04. La actualización es de **estado/evidencia**, no una nueva adquisición.
