@@ -1,0 +1,85 @@
+name: Sharck Input B04 spaCy — source vs published diff
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-input-b04-spacy-diff.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diff-spacy:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout published spaCy target only — NO LFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q project
+          cd project
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git config core.sparseCheckout true
+          git config core.sparseCheckoutCone false
+          mkdir -p .git/info
+          cat > .git/info/sparse-checkout <<'EOF'
+          /➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B04-context-engineering/spaCy/code/
+          EOF
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 --filter=blob:none origin main
+          git checkout -q -B main FETCH_HEAD
+
+      - name: Fetch exact upstream spaCy commit read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init -q upstream
+          cd upstream
+          git remote add origin https://github.com/explosion/spaCy.git
+          git config filter.lfs.smudge cat
+          git config filter.lfs.clean cat
+          git config filter.lfs.required false
+          git fetch --depth=1 origin 26b4d1dc04a812f426e4bef3e8a1b6f159d6f048
+          git checkout -q --detach FETCH_HEAD
+
+      - name: Compare relative files and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, pathlib
+
+          src = pathlib.Path('upstream')
+          dst = pathlib.Path('project/➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B04-context-engineering/spaCy/code')
+
+          def files(root):
+              out = {}
+              for p in root.rglob('*'):
+                  if '.git' in p.parts or not p.is_file():
+                      continue
+                  rel = p.relative_to(root).as_posix()
+                  h = hashlib.sha256(p.read_bytes()).hexdigest()
+                  out[rel] = {'sha256':h,'bytes':p.stat().st_size}
+              return out
+
+          s = files(src)
+          d = files(dst)
+          missing = sorted(set(s)-set(d))
+          extra = sorted(set(d)-set(s))
+          changed = sorted(k for k in set(s)&set(d) if s[k]['sha256'] != d[k]['sha256'])
+          result = {
+              'source_files':len(s),
+              'published_files':len(d),
+              'missing_count':len(missing),
+              'missing':[{'path':k, **s[k]} for k in missing],
+              'extra_count':len(extra),
+              'extra':[{'path':k, **d[k]} for k in extra],
+              'changed_count':len(changed),
+              'changed':[{'path':k,'source':s[k],'published':d[k]} for k in changed],
+          }
+          print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+          PY
