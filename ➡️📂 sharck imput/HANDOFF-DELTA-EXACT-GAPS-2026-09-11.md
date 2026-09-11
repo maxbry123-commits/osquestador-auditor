@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M27 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M28 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -75,21 +75,31 @@ Relectura read-only del run M22 `34567075204` + `.gitignore` raíz del repo dest
 - los 7/7 changed de OpenSearch permanecen separados y ya están probados como `CRLF → LF` por attributes.
 Esto cuantifica el blast-radius del problema de staging; NO autoriza reparación física ni debilitar gates.
 
+## M28 — root + imported/nested ignore blast radius completo
+Evidence: `📂 Craxy wall bitácora stated JSON/NESTED-IGNORE-BLAST-RADIUS-2026-09-11.md`.
+Read-only, sin repetir M21/M22/M23.
+- **130/130 missing** de M22 quedan asociados a una regla `.gitignore` concreta del destino raíz o del snapshot upstream publicado.
+- Breakdown exacto: heritrix3=57, sqry=21, scira=12, nutch=3, yacy_search_server=5, pyserini=3, OpenSearch=4, datasketch=5, smolagents=1, kythe=14, continue=5.
+- Casos de cierre causal adicionales: scira `*.sql`; nutch `conf/*.xml` + `ivy/dependency-check-ant/*`; pyserini `collections/*`, `indexes/*`, `logs/`; datasketch `benchmark/**/*.png`; smolagents `data/`; kythe `build/`, `*.class`, `.vscode`, `third_party/libmemcached`; yacy `.classpath`, `.project`, `/lib` y `.gitignore` anidado que nombra literalmente `yacyBuildProperties.java`; continue `*.iml` y parent `src/main/resources/webview` ignorado en `.gitignore` anidado.
+- OpenSearch: los 4 missing están bajo `.idea/`; el ignore parent y sus negaciones muestran la colisión de re-staging de tracked-upstream. Los 7 changed siguen separados y M24 ya los explicó como attributes `CRLF → LF`.
+- Con M24+M28, **137/137 anomalías M22 = 130 missing + 7 changed** tienen causa de staging Git identificada (`ignore rules + attributes`).
+- Esto NO reclasifica los 11 partials, NO prueba que los archivos sean prescindibles y NO autoriza reparación física.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25/M27: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27/M28: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos; decidir entre Git plumbing (`hash-object --no-filters`/index-tree) y neutralización temporal controlada de attributes. M27 muestra que el staging debe resolver como mínimo reglas root `dist/`, `build/`, `.env` sin perder tracked files. Definir tests/read-back antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. M28 elimina la incógnita causal de M22: los 130 missing provienen de semántica ignore durante re-staging y los 7 changed de attributes. Seleccionar una implementación de staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; comparar Git plumbing (`hash-object --no-filters`/index-tree) vs neutralización temporal controlada de attributes, con tests/read-back antes de repair.
 
 ### GROK / M08
-Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Verificar licencia/mantenimiento/source refs; no auto-instalar.
+Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
 Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only; no physical repair ni Step3 antes de reviews + gate director.
 
 ## Current checkpoint
-`CP-V2-ROOT-IGNORE-BLAST-RADIUS-014`
+`CP-V2-NESTED-IGNORE-BLAST-RADIUS-015`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
