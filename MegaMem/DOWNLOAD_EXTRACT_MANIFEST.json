@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2906074,
+  "bundle_sha256": "6c57d56ef8e1482fec66319144dba51ea6319279ca09cbdf68b02ef843676cdf",
+  "extracted_tree": {
+    "bytes": 5209815,
+    "files": 63,
+    "sha256": "c91837265718c5918b2066f1b3d3f0f30ea30b5d585a0f89e4e64f080f718770"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2906074,
+      "name": "MegaMem.bundle.zip.part-0001",
+      "sha256": "6c57d56ef8e1482fec66319144dba51ea6319279ca09cbdf68b02ef843676cdf"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "MegaMem",
+  "source_bytes": 5209815,
+  "source_commit": "ab45ac07de58ac65bf26dc145ef2e3fe6649965c",
+  "source_files": 63,
+  "source_ref": "HEAD",
+  "source_repo": "C-Bjorn/MegaMem",
+  "source_tree": {
+    "bytes": 5209815,
+    "files": 63,
+    "sha256": "c91837265718c5918b2066f1b3d3f0f30ea30b5d585a0f89e4e64f080f718770"
+  }
+}
