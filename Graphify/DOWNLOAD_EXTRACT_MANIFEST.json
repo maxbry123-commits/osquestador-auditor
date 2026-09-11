@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 4929190,
+  "bundle_sha256": "bf8bb49441ab26f34760175a5dab9d027c1d46d1b5dbaf4525714ec5e006e01d",
+  "extracted_tree": {
+    "bytes": 17053233,
+    "files": 883,
+    "sha256": "4a60d754251731ac16b30e6e87ff44347477d6c55e24ac622d5a47ec3eda3735"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 4929190,
+      "name": "Graphify.bundle.zip.part-0001",
+      "sha256": "bf8bb49441ab26f34760175a5dab9d027c1d46d1b5dbaf4525714ec5e006e01d"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "Graphify",
+  "source_bytes": 17053233,
+  "source_commit": "23f2ffaa43fd12f25d9eabe91e6d184b5d89b474",
+  "source_files": 883,
+  "source_ref": "HEAD",
+  "source_repo": "Graphify-Labs/graphify",
+  "source_tree": {
+    "bytes": 17053233,
+    "files": 883,
+    "sha256": "4a60d754251731ac16b30e6e87ff44347477d6c55e24ac622d5a47ec3eda3735"
+  }
+}
