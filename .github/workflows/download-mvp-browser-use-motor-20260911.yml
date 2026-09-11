@@ -1,0 +1,60 @@
+name: MVP Browser Use canonical motor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/download-mvp-browser-use-motor-20260911.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mvp-browser-use-canonical-motor
+  cancel-in-progress: true
+
+jobs:
+  download-extract-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Sparse checkout canonical motor root only
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: false
+          sparse-checkout: |
+            ➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor
+          sparse-checkout-cone-mode: false
+
+      - name: Execute immutable canonical Motor 2
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          QUEUE_FILE: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/queue.json
+          STATE_FILE: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/state.json
+          INDEX_PATH: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime/index.md
+          ENGINE_PATH: ${{ github.workspace }}/➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py
+          MAX_RETRIES: '3'
+        run: |
+          set -euo pipefail
+          RUNTIME_DIR='➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/.runtime'
+          mkdir -p "$RUNTIME_DIR"
+          cat > "$RUNTIME_DIR/queue.json" <<'JSON'
+          {
+            "queue": [
+              {
+                "id": "0001:browser-use",
+                "source_repo": "browser-use/browser-use",
+                "source_ref": "5c892e013a73e6622e6f50336e1eb0aa2c4405f2",
+                "slug": "BrowserUse",
+                "publish": true,
+                "dest_repo": "maxbry123-commits/osquestador-auditor",
+                "dest_branch": "main",
+                "dest_root": "."
+              }
+            ]
+          }
+          JSON
+          python3 '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py'
