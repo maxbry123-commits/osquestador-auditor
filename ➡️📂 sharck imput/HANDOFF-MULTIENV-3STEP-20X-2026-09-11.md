@@ -7,10 +7,10 @@ Repo: `maxbry123-commits/osquestador-auditor` · branch `main` · raíz `➡️�
 1. `README-METODO-TRABAJO-MULTIAGENTE.md`
 2. `📁 readme arquitectura sharck imput V2.1.md`
 3. `📂 Craxy wall bitácora stated JSON/XRAY-ADN-CROSSCHECK-2026-09-11.md`
-4. `📂 Craxy wall bitácora stated JSON/STATE.json` + `STATE-DELTA-026-20X-MULTIENV.json`
-5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + `CHECKPOINT-DELTA-024-20X-MULTIENV.json`
+4. `📂 Craxy wall bitácora stated JSON/STATE.json` + `STATE-DELTA-027-M38-DAG-RECONCILED.json`
+5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + `CHECKPOINT-DELTA-025-M38-DAG-RECONCILED.json`
 6. `📂 Craxy wall bitácora stated JSON/PLAN.json`
-7. `📂 Craxy wall bitácora stated JSON/MULTIENV-DAG-3STEP-v1.json`
+7. `📂 Craxy wall bitácora stated JSON/MULTIENV-DAG-3STEP-v1.json` + `MULTIENV-DAG-3STEP-v2-DELTA.json`
 8. log propio del agente
 9. evidencia específica del nodo reclamado
 
@@ -36,32 +36,33 @@ Una respuesta LLM nunca supera evidencia física.
 2. `ADQUISICIÓN/STRATEGYDELTA + READBACK`
 3. `WIRE/PRUNE/MIN-CODE/TEST`
 
-Cada **tarea** dentro de esos pasos es un nodo del DSL y puede tener como máximo **3 subpasos**.
+Cada tarea dentro de esos pasos es un nodo del DSL y puede tener como máximo 3 subpasos.
 
 ## Claims actuales
-### SOL — M37
+### SOL — M38
 `CLAIMED→COMPLETE`
-Objetivo: cross-check repo+adjuntos, 20X research, arquitectura V2.1, DSL multi-env, Handoff/control delta.
-Claim: `SOL-M37-20260911-1531-COT`.
-No ejecutó reparación física ni descargó B05/B06.
+Claim: `SOL-M38-20260911-1640-COT`.
+Hallazgo: `MULTIENV-DAG-3STEP-v1.json` conservaba M37 como `CLAIMED/ACTIVE` aunque STATE delta rev26 y este Handoff ya lo daban COMPLETE. Se publicó reconciliación versionada, sin sobrescribir DAG v1:
+- `📂 Craxy wall bitácora stated JSON/MULTIENV-DAG-STATE-RECONCILIATION-M38-2026-09-11.md`
+- `📂 Craxy wall bitácora stated JSON/MULTIENV-DAG-3STEP-v2-DELTA.json`
+- `📂 Craxy wall bitácora stated JSON/STATE-DELTA-027-M38-DAG-RECONCILED.json`
+- `📂 Craxy wall bitácora stated JSON/CHECKPOINT-DELTA-025-M38-DAG-RECONCILED.json`
+M37 queda `COMPLETE_RELEASED`; no debe re-ejecutarse por el estado stale del DAG v1.
 
 ### ASTRA — M06
 Estado: `OPEN_READY_TO_CLAIM`.
-3 pasos:
 1. Leer X-Ray + V2.1 + M24–M35.
 2. Revisar StrategyDelta, seguridad, rollback, fail-closed y 20X architecture fit.
 3. Escribir en `ASTRA-LOG.md` y emitir `REVIEW_PASS | REPAIR_REQUIRED` con evidencia.
 
 ### CLAUDE — M07
 Estado: `OPEN_READY_TO_CLAIM`.
-3 pasos:
 1. Verificar full-tree coverage/provenance design.
 2. Tests de ports/adapters/error/failure paths y contrato de adquisición.
 3. Escribir en `CLAUDE-LOG.md` y emitir review técnico con evidencia.
 
 ### GROK — M08
 Estado: `OPEN_READY_TO_CLAIM`.
-3 pasos:
 1. Verificar 20X repos/licencias/mantenimiento/ref exacto.
 2. Refutar solapamientos y marcar `KEEP/DEFER/REJECT`.
 3. Escribir en `GROK-LOG.md` y entregar set pinneable para B05/B06.
@@ -86,11 +87,11 @@ Logs de agentes son separados y sólo el propietario escribe su claim/reporte.
 
 ## Recovery
 Si un chat/entorno pierde contexto:
-- empezar por `CHECKPOINT-DELTA-024-20X-MULTIENV.json`;
+- empezar por `CHECKPOINT-DELTA-025-M38-DAG-RECONCILED.json`;
 - comprobar si existe delta/checkpoint posterior;
-- leer su nodo en `MULTIENV-DAG-3STEP-v1.json`;
+- aplicar `MULTIENV-DAG-3STEP-v2-DELTA.json` sobre DAG v1;
 - revisar propio log;
 - continuar sólo si el nodo está OPEN para él o CLAIMED por él.
 
 ## Veredicto del Handoff
-`M37_CONTROL_AND_RESEARCH_UPDATE_COMPLETE / M06_M07_M08_OPEN / M09_NO_EVIDENCE / M10_BLOCKED / 23_PHYSICAL_FAILURES_OPEN / 20X_RESEARCHED_NOT_DOWNLOADED / STEP3_BLOCKED`.
+`M38_DAG_STATE_RECONCILED / M37_COMPLETE_RELEASED / M06_M07_M08_OPEN / M09_NO_EVIDENCE / M10_BLOCKED / 23_PHYSICAL_FAILURES_OPEN / 20X_RESEARCHED_NOT_DOWNLOADED / STEP3_BLOCKED`.
