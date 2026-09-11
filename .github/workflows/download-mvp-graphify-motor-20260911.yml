@@ -58,3 +58,12 @@ jobs:
           }
           JSON
           python3 '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py'
+          python3 - <<'PY'
+          import json, os
+          p = os.environ['STATE_FILE']
+          d = json.load(open(p, encoding='utf-8'))
+          print('MOTOR_STATE=' + json.dumps(d, ensure_ascii=False, sort_keys=True))
+          rows = list(d.get('items', {}).values())
+          if not rows or any(r.get('status') != 'VERIFIED_CLOSED' for r in rows):
+              raise SystemExit('MOTOR_GAPS_PENDING')
+          PY
