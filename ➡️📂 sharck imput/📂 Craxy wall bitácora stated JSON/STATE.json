@@ -1,12 +1,12 @@
 {
   "schema": "sharck-input.state.v2",
-  "revision": 10,
+  "revision": 11,
   "project": "Wanted Shark Web / Sharck Input V2",
   "root": "➡️📂 sharck imput",
   "code_root": "➡️📂 sharck imput/📂 input sharck code principal",
   "status": "ACTIVE_LOOP_REVIEW_GATE",
   "current_step": 2,
-  "current_node": "M13_SIMULATION_02_VERIFIED_READ_ONLY_PARALLEL_WITH_M06_M07_M08",
+  "current_node": "M13_SIMULATION_03_VERIFIED_READ_ONLY_PARALLEL_WITH_M06_M07_M08",
   "catalog": {"legacy":77,"new":40,"total":117},
   "legacy_v1": {"verified_closed":47,"gaps":30,"policy":"READ_ONLY_REFERENCE"},
   "agents": {
@@ -28,12 +28,13 @@
     "M10":{"status":"BLOCKED_BY_REVIEW_GATE"},
     "M11":{"owner":"SOL","status":"VERIFIED_CLOSED_WITH_0_RECOVERED","evidence_runs":[34535896880,34536177351]},
     "M12":{"owner":"SOL","status":"MONITORING_NO_NEW_OWNER_CLAIMS"},
-    "M13":{"owner":"SOL","status":"SIMULATION_02_VERIFIED_READ_ONLY","verdict":"INPUT_LOCK_INTENT_ENTITY_RESEARCH_GATE_PROGRESSIVE_DISCLOSURE"},
+    "M13":{"owner":"SOL","status":"SIMULATION_03_VERIFIED_READ_ONLY","verdict":"PROVENANCE_FRESHNESS_CAPABILITY_STATE_BOUNDED_SEARCH_CONTEXT_PACKAGE"},
     "M14":{"owner":"SOL+GROK","status":"CATALOG_RECONCILED_117"},
     "M15":{"owner":"CLAUDE+SOL","status":"HF_BRIDGE_CANDIDATES_VERIFIED_DESIGN_PENDING"},
     "M16":{"owner":"SOL","status":"B04_OBSERVED_COMPLETED_WITH_GAPS_NO_RETRY"},
     "M17":{"owner":"SOL","status":"RESEARCH_DECISION_GATE_PROPOSED_READ_ONLY"},
-    "M18":{"owner":"SOL+GROK","status":"HF_SUBSKILL_CANDIDATE_INDEXED_NO_INSTALL"}
+    "M18":{"owner":"SOL+GROK","status":"HF_SUBSKILL_CANDIDATE_INDEXED_NO_INSTALL"},
+    "M19":{"owner":"SOL","status":"CONTEXT_PACKAGE_EVIDENCE_POLICY_PROPOSED_READ_ONLY"}
   },
   "acquisition_v2": {
     "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"operational_gaps":{"PARTIAL_DESTINATION_READBACK_GAP":11,"SOURCE_SPECIAL_FILE_GAP":9}},
@@ -42,13 +43,14 @@
   },
   "review":{"astra":"PENDING","claude":"PENDING","grok":"PENDING","external":"NOT_PERFORMED_NO_EVIDENCE","step3_allowed":false},
   "research":{
-    "simulation_01":{"status":"VERIFIED_READ_ONLY","facts":["OpenAI supports web/file search and remote MCP for context retrieval","Anthropic recommends finite-context management and just-in-time retrieval","OpenClaw skills require sandbox/OS isolation for authorization boundaries","Hermes exposes MCP tools as first-class tools and supports filtering","HF official MCP + huggingface_hub + datasets form a native bridge candidate"],"inferences":["Sharck context package should carry compact pointers, provenance and deferred retrieval metadata rather than bulk-loading all evidence","HF bridge should remain adapterized: hub discovery, dataset access, MCP exposure"],"unknowns":["best quantitative thresholds for context compression and coverage require project tests","B04 failed components require owner review before any physical repair"]},
-    "simulation_02":{"status":"VERIFIED_READ_ONLY","stages":["INPUT_RAW_LOCK","INTENT_AND_CONSTRAINTS","ENTITY_RESOLUTION","RESEARCH_DECISION","SOURCE_AND_TOOL_DISCOVERY"],"facts":["OpenAI current/private context can be dynamically retrieved with web/file tools","Anthropic recommends minimal high-signal context and just-in-time retrieval","GitHub agents can isolate exploration in separate context and restrict available tools/MCP tools","OpenClaw skill allowlists are visibility controls not host authorization","Hermes Tool Search progressively discloses MCP/plugin schemas","huggingface-datasets is an official read-only Dataset Viewer skill in active Apache-2.0 huggingface/skills"],"inferences":["Sharck should preserve literal input before normalization","intent/constraint extraction and deterministic entity resolution should precede research decisions","retrieval should be conditional on freshness, ambiguity, missing evidence or explicit research need","tool/skill schemas should be exposed only after source/tool selection"],"unknowns":["research trigger thresholds","entity confidence thresholds","per-request tool schema budget"]}
+    "simulation_01":{"status":"VERIFIED_READ_ONLY"},
+    "simulation_02":{"status":"VERIFIED_READ_ONLY","unknowns":["research trigger thresholds","entity confidence thresholds","per-request tool schema budget"]},
+    "simulation_03":{"status":"VERIFIED_READ_ONLY","stages":["WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],"facts":["OpenAI Web/File Search dynamically retrieve current/private context and Web Search exposes citations","Anthropic recommends minimal high-signal context plus just-in-time retrieval","Hugging Face MCP returns metadata links and context and provides hf_fs for Hub navigation","GitHub MCP capability and auth support varies by execution surface and configured tools may be used autonomously","OpenClaw treats third-party skills as untrusted and recommends sandboxing","Hermes community reports a successful tool_search loop that saturated context without producing an answer"],"inferences":["context items need provenance and freshness fields","capability state must distinguish discovery/configuration/healthcheck/operational verification","coverage stop conditions must not rely only on successful search calls","compression must preserve citations and unresolved contradictions"],"unknowns":["numeric search-call budget","coverage sufficiency threshold","freshness TTL per source class","safe compression ratio"]}
   },
   "skill_candidates":[{"name":"huggingface-datasets","parent_component":"Hugging Face Skills","status":"INDEXED_CANDIDATE_NO_INSTALL","official":true,"license":"Apache-2.0","maintenance":"ACTIVE"}],
   "locks":{"input_raw":"IMMUTABLE","motor_code":"CANONICAL_IMMUTABLE_COPY_ONLY","legacy_v1":"READ_ONLY","owner_lock":true,"no_lfs":true,"no_force":true,"step3":"BLOCKED_UNTIL_REVIEWS"},
-  "checkpoint":"CP-V2-M13-SIM02-HFSKILL-008",
+  "checkpoint":"CP-V2-M13-SIM03-EVIDENCE-009",
   "next_safe_actions":["ASTRA_M06_REVIEW","CLAUDE_M07_REVIEW","GROK_M08_REVIEW","SOL_M13_NEXT_READ_ONLY_SIMULATION","NO_BLIND_RETRY_B01_B04","NO_HF_SUBSKILL_INSTALL_WITHOUT_GATE"],
   "last_writer":"SOL",
-  "updated_at":"2026-09-10T22:32:10-05:00"
+  "updated_at":"2026-09-10T23:33:31-05:00"
 }
