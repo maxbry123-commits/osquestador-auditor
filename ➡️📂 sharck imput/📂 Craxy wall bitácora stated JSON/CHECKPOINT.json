@@ -1,41 +1,34 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-POST-XRAY-006",
+  "checkpoint_id": "CP-V2-M13-SIM01-B04-007",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M11_READBACK_XRAY_11_PARTIAL_DESTINATIONS",
-  "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY",
-  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS","plan":"PASS","state":"PASS","handoff":"PASS","recovery":"PASS","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
+  "last_verified_node": "M13_SIMULATION_01_AND_B04_CONTROL_PLANE_RECONCILE",
+  "resume_from": "M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL",
+  "control_plane":{"method":"PASS","architecture":"PASS","index":"PASS_117","plan":"PASS_REV6","state":"PASS_REV9","handoff":"PENDING_SYNC_THIS_RUN","recovery":"PASS","review_gate":"PASS","watchdog":"ENABLED_HOURLY"},
   "acquisition": {
-    "initial_run_id":34514168678,
-    "initial_run_status":"COMPLETED",
-    "initial_run_ui_conclusion":"SUCCESS_BUT_SEMANTIC_GAPS",
-    "batches": {
-      "B01":{"verified_closed":3,"failed":7,"pending":0},
-      "B02":{"verified_closed":5,"failed":5,"pending":0},
-      "B03":{"verified_closed":2,"failed":8,"pending":0}
-    },
-    "total":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
-    "future_fail_closed_workflow_commit":"1bb43ca45bd548278cb2074cb563bd2ece0cab43"
+    "B01_B03":{"verified_closed":10,"failed":20,"pending":0,"semantic_verdict":"GAPS_PENDING"},
+    "B04":{"verified_closed":7,"failed":3,"pending":0,"semantic_verdict":"GAPS_PENDING","failed":["huggingface_hub:SOURCE_SPECIAL_FILE_GAP","spaCy:DESTINATION_EXISTS","unstructured:SOURCE_SPECIAL_FILE_GAP"]},
+    "total_new_batches":{"verified_closed":17,"failed":23,"pending":0}
   },
   "xray": {
-    "initial_failure_classes":{"DESTINATION_EXISTS":6,"READBACK_TREE_HASH_GAP":5,"SOURCE_SPECIAL_FILE_GAP":9},
-    "readback_workflow":".github/workflows/sharck-input-v2-readback-recover.yml",
-    "readback_runs":[34535896880,34536177351],
-    "audited_existing_destinations":11,
-    "recovered":0,
-    "confirmed_partial":11,
-    "source_special_remaining":9,
-    "evidence":"📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md"
+    "B01_B03":{"readback_runs":[34535896880,34536177351],"recovered":0,"confirmed_partial":11,"source_special_remaining":9},
+    "B04":{"evidence":"📂 input sharck code principal/📂 component acquisition/state/B04-state.json","physical_repair_attempted_by_this_checkpoint":false}
   },
-  "gap_ledger":"📂 Craxy wall bitácora stated JSON/GAPS-ACQUISITION-V2.md",
+  "research_simulation_01": {
+    "status":"VERIFIED_READ_ONLY",
+    "stages_exercised":["SOURCE_AND_TOOL_DISCOVERY","WEB_CODE_SKILL_DATASET_RETRIEVAL","EVIDENCE_AND_CONTRADICTION","COVERAGE_AND_GAPS","CONTEXT_COMPRESSION","CONTEXT_PACKAGE"],
+    "facts":"official OpenAI/Anthropic/OpenClaw/Hermes/Hugging Face evidence collected; see SOL-LOG",
+    "inference":"context package should favor compact provenance-bearing pointers plus just-in-time retrieval and isolated tool/skill exposure",
+    "unknown":"quantitative compression/coverage thresholds await tests under M07/M10 gates"
+  },
   "open_gaps":[
-    {"id":"G-V1-30","detail":"legacy V1 has 30 unresolved acquisition gaps"},
-    {"id":"G-V2-PARTIAL-11","detail":"11 V2 destinations confirmed partial by canonical readback"},
-    {"id":"G-V2-SPECIAL-9","detail":"9 V2 sources rejected by special-file safety gate"},
+    {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations confirmed partial"},
+    {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate"},
+    {"id":"G-B04-3","detail":"B04 has 3 FAILED; no blind retry"},
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK independent reviews pending"},
     {"id":"G-EXTERNAL","detail":"external engineering review not performed/no evidence"}
   ],
-  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL"},
+  "owner_locks":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL"},
   "step3_allowed":false,
-  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis","GROK M08 alternatives/refutation","SOL monitor/read-only evidence","director review gate after agent evidence"]
+  "next_safe_actions":["ASTRA M06 review","CLAUDE M07 diagnosis","GROK M08 alternatives/refutation","SOL M13 read-only next simulation","no physical repair until corresponding review/gate"]
 }
