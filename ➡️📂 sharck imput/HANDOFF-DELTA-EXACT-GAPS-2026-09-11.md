@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M31 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M32 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -99,7 +99,7 @@ Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
 Evidence: `📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-STATE-LEDGER-AUDIT-2026-09-11.md`.
 Estado: `VERIFIED_READ_ONLY_LEDGER_CORRECTION / NO_PHYSICAL_MUTATION`.
 - Se releyeron los errores persistidos en `B01-state.json`, `B02-state.json` y `B03-state.json`; no se usó evidencia externa ni se ejecutó adquisición.
-- El detalle M23 de `docling` estaba mal atribuido: M23 le asignó 7 paths tipo cocoindex, pero el estado B01 registra 6 paths de skills `building-pydantic-ai-agents` / `dignified-python` distribuidos bajo `.claude`, `.codex` y `.opencode`.
+- El detalle M23 de `docling` estaba mal atribuido: M23 le asignó 7 paths tipo cocoindex, pero el estado B01 registra 6 paths de skills bajo `.claude`, `.codex` y `.opencode`.
 - Los 7 paths tipo cocoindex sí aparecen exactamente bajo `cocoindex` en B03.
 - Blast-radius mínimo observado por `scan_tree()`: **>=67 special entries** en los 9 componentes: stormcrawler=2, tika>=30, docling=6, vespa=3, networkx=1, cocoindex=7, pydantic-ai=15, litellm=1, fastmcp=2.
 - Tika permanece `>=30`, no `=30`, porque el motor persiste sólo `special[:30]` en el error.
@@ -112,26 +112,37 @@ Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
 - SOL releyó los logs de ASTRA/CLAUDE/GROK: los tres continúan `READY_TO_JOIN`, sin claim ni verdict verificable.
 - `PLAN rev11` incorpora M30 con su corrección docling/cocoindex y registra M31 sin alterar adquisición ni ownership.
 - `STATE rev20` registra `M31_CONTROL_PLANE_PLAN_RECONCILED_M30`.
-- Nuevo checkpoint: `CP-V2-CONTROL-PLANE-RECONCILED-018`.
+- Checkpoint de cierre M31: `CP-V2-CONTROL-PLANE-RECONCILED-018`.
 - Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 - Cero physical repair, source/ref redesign, motor mutation o integración Step3.
 
+## M32 — special snapshot provenance GAP
+Evidence: `📂 Craxy wall bitácora stated JSON/SPECIAL-FILES-PROVENANCE-GAP-2026-09-11.md`.
+Estado: `SPECIAL_SNAPSHOT_PROVENANCE_GAP_VERIFIED_READ_ONLY / NO_PHYSICAL_MUTATION`.
+- Los tracebacks canónicos de `SOURCE_SPECIAL_FILE_GAP` muestran que el motor ejecuta `src,commit=acquire(work)` y después entra en `scan_tree(src)`.
+- `scan_tree()` eleva el error special antes de construir/persistir el bloque final `result`.
+- Los state items FAILED conservan repo/slug/error/status, pero no `source_commit`; los VERIFIED_CLOSED sí conservan `source_commit`, `source_ref`, hashes y tree evidence.
+- Consecuencia: el Git mode exacto del snapshot histórico de los 9 special-source no puede certificarse retrospectivamente desde B01/B02/B03 state files. HEAD actual no se usa como sustituto del snapshot histórico.
+- GAP nuevo: `G-V2-SPECIAL-PROVENANCE-9`.
+- StrategyDelta candidata para review M06/M07, no implementada: persistir provenance fail-closed inmediatamente después de `acquire(work)` y antes de `scan_tree(src)`, incluyendo al menos repo/ref/commit y evidencia de modes/special entries.
+- No se editó el motor canónico, no se cambió source/ref y no se ejecutó reparación física.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
-Auditar M24/M25/M27/M28 y usar M30 como corrección del ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Verificar que la StrategyDelta preserve tracked-upstream sin convertir ignores/special-files en bypass global. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
+Auditar M24/M25/M27/M28 y usar M30+M32 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si persistir provenance pre-scan mantiene el fail-closed sin convertir special-files en bypass. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
 
 ### CLAUDE / M07
-Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. M28 elimina la incógnita causal de M22: los 130 missing provienen de semántica ignore durante re-staging y los 7 changed de attributes. Para source-special, usar el ledger M30 corregido y no asumir symlink sin mode evidence. Seleccionar una implementación de staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; comparar Git plumbing (`hash-object --no-filters`/index-tree) vs neutralización temporal controlada de attributes, con tests/read-back antes de repair.
+Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/100755 y bytes completos. Para source-special, usar M30 y M32: el exact historical mode sigue UNKNOWN porque el early-failure state no persistió `source_commit`. Evaluar una mejora versionada que registre provenance pre-scan y luego seleccione staging que preserve set/bytes/modes sin depender de `git add` semántico sujeto a ignores/filtros; tests/read-back obligatorios antes de repair.
 
 ### GROK / M08
-Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido de docling/cocoindex. M28 no resuelve esos special/symlink gaps. Verificar licencia/mantenimiento/source refs; no auto-instalar.
+Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido y M32 como limitación de reproducibilidad histórica; no asumir que HEAD actual equivale al snapshot del intento. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener PLAN/STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 queda sincronizado hasta M31, incluyendo la corrección M30.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 permanece honestamente sincronizado hasta M31; M32 queda explícito como evidencia nueva pendiente de una futura reconciliación PLAN, no se declara falso PASS.
 
 ## Current checkpoint
-`CP-V2-CONTROL-PLANE-RECONCILED-018`
-Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_AND_CORRECTED_SPECIAL_LEDGER`.
+`CP-V2-SPECIAL-PROVENANCE-GAP-019`
+Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_AND_PROVENANCE_GAP`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
 
