@@ -1,0 +1,17 @@
+{
+  "schema": "sharck-input.acquisition-queue.v2",
+  "batch": "B04",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B04-context-engineering",
+  "queue": [
+    {"id":"B04-01","source_repo":"https://github.com/huggingface/huggingface_hub","source_ref":"HEAD","slug":"huggingface_hub","publish":true},
+    {"id":"B04-02","source_repo":"https://github.com/huggingface/datasets","source_ref":"HEAD","slug":"datasets","publish":true},
+    {"id":"B04-03","source_repo":"https://github.com/huggingface/hf-mcp-server","source_ref":"HEAD","slug":"hf-mcp-server","publish":true},
+    {"id":"B04-04","source_repo":"https://github.com/microsoft/LLMLingua","source_ref":"HEAD","slug":"LLMLingua","publish":true},
+    {"id":"B04-05","source_repo":"https://github.com/explosion/spaCy","source_ref":"HEAD","slug":"spaCy","publish":true},
+    {"id":"B04-06","source_repo":"https://github.com/microsoft/markitdown","source_ref":"HEAD","slug":"markitdown","publish":true},
+    {"id":"B04-07","source_repo":"https://github.com/Unstructured-IO/unstructured","source_ref":"HEAD","slug":"unstructured","publish":true},
+    {"id":"B04-08","source_repo":"https://github.com/feyninc/chonkie","source_ref":"HEAD","slug":"chonkie","publish":true},
+    {"id":"B04-09","source_repo":"https://github.com/vibrantlabsai/ragas","source_ref":"HEAD","slug":"ragas","publish":true},
+    {"id":"B04-10","source_repo":"https://github.com/confident-ai/deepeval","source_ref":"HEAD","slug":"deepeval","publish":true}
+  ]
+}
