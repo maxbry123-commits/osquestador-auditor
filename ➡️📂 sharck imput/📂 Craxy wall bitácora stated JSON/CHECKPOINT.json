@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-STRATEGYDELTA-COVERAGE-022",
+  "checkpoint_id": "CP-V2-CONTROL-PLANE-RECONCILED-023",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M35_STRATEGYDELTA_COVERAGE_AUDIT_READ_ONLY",
+  "last_verified_node": "M36_CONTROL_PLANE_PLAN_RECONCILED_M35",
   "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_COVERAGE_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
-    "plan": "REV12_SYNCED_M01_M34_M35_PENDING_RECONCILIATION",
-    "state": "REV24_M35_STRATEGYDELTA_COVERAGE_AUDIT",
-    "handoff": "CP021_CURRENT_M35_SYNC_NEXT_IN_SEQUENCE",
+    "plan": "REV13_SYNCED_M01_M36",
+    "state": "REV25_M36_CONTROL_PLANE_PLAN_RECONCILED",
+    "handoff": "CP022_CURRENT_M36_SYNC_NEXT_IN_SEQUENCE",
     "recovery": "UNCHANGED",
     "review_gate": "BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -74,10 +74,10 @@
     "special_failure_historical_commit_recovery":"NOT_VERIFIABLY_RECOVERABLE_FROM_CURRENT_STATE_INDEX_QUEUE_OR_PERSISTED_WORKFLOW_OUTPUT"
   },
   "control_plane_reconciliation": {
-    "status":"STATE_CHECKPOINT_M35_SYNCED_PLAN_REV12_THROUGH_M34_HANDOFF_NEXT",
-    "plan_revision":12,
-    "state_revision":24,
-    "finding":"M35 adds read-only StrategyDelta coverage evidence; PLAN rev12 remains honestly synchronized only through M34 and requires later reconciliation; acquisition, gates, source refs, motors and physical destinations unchanged",
+    "status":"PLAN_STATE_CHECKPOINT_SYNCED_THROUGH_M36_HANDOFF_NEXT",
+    "plan_revision":13,
+    "state_revision":25,
+    "finding":"M36 reconciles PLAN with M35 coverage evidence; acquisition, gates, source refs, motors and physical destinations unchanged",
     "physical_mutation":false
   },
   "open_gaps": [
@@ -91,7 +91,7 @@
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta + M35 coverage + corrected special ledger + M32/M33 provenance findings pending"},
     {"id":"G-PRODUCTION-GATE","detail":"No production staging, source/ref redesign, physical repair or Step3 before reviews + director gate"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL","M33":"SOL","M34":"SOL","M35":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL","M33":"SOL","M34":"SOL","M35":"SOL","M36":"SOL"},
   "reviews": {"astra":"PENDING_READY_TO_JOIN","claude":"PENDING_READY_TO_JOIN","grok":"PENDING_READY_TO_JOIN","external":"NOT_PERFORMED_NO_EVIDENCE"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
@@ -99,7 +99,7 @@
     "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta plus M35 coverage and M30/M32/M33 special ledger/provenance findings",
     "CLAUDE M07 validate full-tree tracked-set + modes + bytes sandbox coverage and evaluate pre-scan provenance persistence without weakening special-file gate",
     "GROK M08 validate Git vendoring/package/subtree alternatives and ensure M25 PASS is not extrapolated to source-special/symlink classes",
-    "SOL reconcile PLAN with M35 or add only genuinely new read-only evidence",
+    "SOL add only genuinely new read-only evidence or monitor owner claims; do not redocument unchanged state",
     "NO PHYSICAL REPAIR until reviews + director gate"
   ]
 }
