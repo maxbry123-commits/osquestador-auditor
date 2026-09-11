@@ -2,7 +2,7 @@
 
 Fuente de verdad: `maxbry123-commits/osquestador-auditor` → `main` → `➡️📂 sharck imput/`.
 
-Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M33 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
+Este delta NO sustituye el Handoff maestro. Resume evidencia M21–M34 para que ASTRA/CLAUDE/GROK continúen sin pisarse.
 
 ## Estado base
 - Método único: 3 pasos.
@@ -138,6 +138,16 @@ Estado: `VERIFIED_READ_ONLY / NO_PHYSICAL_MUTATION / FAIL_CLOSED`.
 - Resultado: `G-V2-SPECIAL-PROVENANCE-9 = CONFIRMED_NONRECOVERABLE_FROM_CURRENT_CANONICAL_PERSISTENCE`.
 - No se usa HEAD actual como sustituto del snapshot histórico y no se modifica motor/source/ref.
 
+## M34 — control-plane PLAN reconciliation de M32/M33
+Estado: `VERIFIED_DOCUMENT_ONLY / NO_PHYSICAL_MUTATION`.
+- `CHECKPOINT 020` declaraba explícitamente `PLAN rev11` sincronizado sólo hasta M31 mientras STATE/Handoff ya contenían M32/M33.
+- Los logs ASTRA/CLAUDE/GROK fueron releídos y continúan `READY_TO_JOIN`, sin claim/review/verdict verificable.
+- `PLAN rev12` incorpora M32, M33 y M34 sin alterar adquisición, source/ref, motores, ownership locks ni gates.
+- `STATE rev23` registra `M34_CONTROL_PLANE_PLAN_RECONCILED_M32_M33`.
+- Checkpoint de cierre: `CP-V2-CONTROL-PLANE-RECONCILED-021`.
+- Balance físico permanece **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+- Cero physical repair, source/ref redesign, motor mutation o integración Step3.
+
 ## Owner entry points actualizados
 ### ASTRA / M06
 Auditar M24/M25/M27/M28 y usar M30+M32+M33 para el ledger source-special: PRE-LLM scope, fail-closed, NO_LFS, blob/special-file gates, no-force, no-overwrite, rollback/versionado y read-back. Revisar si persistir provenance pre-scan mantiene el fail-closed sin convertir special-files en bypass. Emitir `REVIEW_PASS` o `REPAIR_REQUIRED`; no PASS global.
@@ -149,10 +159,10 @@ Validar `tracked_upstream_set == staged_set == published_set`, modos 100644/1007
 Contrastar el patrón con vendoring/snapshot Git y alternativas package/subtree oficiales, especialmente para los 9 special-source + huggingface_hub/unstructured. Usar M30 como mapping corregido y M32/M33 como limitación de reproducibilidad histórica; no asumir que HEAD actual equivale al snapshot del intento. Verificar licencia/mantenimiento/source refs; no auto-instalar.
 
 ### SOL
-Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev11 permanece honestamente sincronizado hasta M31; M32/M33 quedan explícitos como evidencia nueva pendiente de una futura reconciliación PLAN, no se declara falso PASS.
+Mantener STATE/CHECKPOINT/Handoff y monitor de owners/motores. Sólo nueva evidencia read-only o reconciliación de control plane; no physical repair ni Step3 antes de reviews + gate director. PLAN rev12 está sincronizado hasta M34; no se declara review externo ni PASS de producción.
 
 ## Current checkpoint
-`CP-V2-SPECIAL-PROVENANCE-RECOVERABILITY-020`
+`CP-V2-CONTROL-PLANE-RECONCILED-021`
 Resume: `M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY`.
 Balance permanece: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 `step3_allowed=false`; `physical_repair_allowed=false`.
