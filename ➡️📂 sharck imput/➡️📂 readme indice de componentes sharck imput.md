@@ -1,6 +1,6 @@
 # 🦈 ÍNDICE DE COMPONENTES — SHARCK INPUT V2
 
-Estado del catálogo: **107 componentes** = 77 legado V1 + 30 adiciones V2 investigadas.
+Estado del catálogo: **117 componentes** = 77 legado V1 + 40 adiciones V2 investigadas.
 
 Regla: `CATALOGADO ≠ DESCARGADO ≠ WIRED`. Para V2, un componente nuevo pasa por `RESEARCHED → QUEUED → VERIFIED_CLOSED → WIRED → TESTED`.
 
@@ -124,18 +124,39 @@ Regla: `CATALOGADO ≠ DESCARGADO ≠ WIRED`. Para V2, un componente nuevo pasa 
 106. **LiteLLM** — https://github.com/BerriAI/litellm — gateway/router multi-modelo — `RESEARCHED_ACTIVE`.
 107. **FastMCP** — https://github.com/PrefectHQ/fastmcp — runtime MCP Python; repo actual redirigido desde jlowin — `RESEARCHED_ACTIVE`.
 
-## C. Hallazgos de investigación
+## C. Batch 04 — context engineering / Hugging Face bridge / eval
 
-- Comunidad self-hosted/LocalLLaMA sigue usando SearXNG, pero reporta variación de calidad; por eso Shark debe mantener federación multi-engine y scoring, no depender de una sola fuente.
+108. **huggingface_hub** — https://github.com/huggingface/huggingface_hub — cliente oficial Hub para discovery/pointers — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
+109. **Hugging Face Datasets** — https://github.com/huggingface/datasets — catálogo/load/streaming de datasets — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
+110. **Hugging Face MCP Server** — https://github.com/huggingface/hf-mcp-server — puente MCP oficial a recursos HF — MIT — `RESEARCHED_APPROVED_B04`.
+111. **LLMLingua** — https://github.com/microsoft/LLMLingua — compresión de contexto/prompt preservando señal — MIT — `RESEARCHED_APPROVED_B04`.
+112. **spaCy** — https://github.com/explosion/spaCy — tokenización, NER y reglas para facts/entities — MIT — `RESEARCHED_APPROVED_B04`.
+113. **MarkItDown** — https://github.com/microsoft/markitdown — documentos/Office/PDF a Markdown para contexto — MIT — `RESEARCHED_APPROVED_B04`.
+114. **Unstructured** — https://github.com/Unstructured-IO/unstructured — partition/parse de documentos complejos — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
+115. **Chonkie** — https://github.com/feyninc/chonkie — chunking ligero/semántico — MIT — `RESEARCHED_APPROVED_B04`.
+116. **Ragas** — https://github.com/vibrantlabsai/ragas — evaluación retrieval/context quality — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
+117. **DeepEval** — https://github.com/confident-ai/deepeval — eval framework para contexto/LLM — Apache-2.0 — `RESEARCHED_APPROVED_B04`.
+
+### Candidatos retenidos fuera de adquisición automática
+- **Duckling** — https://github.com/facebook/duckling — útil para fechas/cantidades, pero licencia reportada por GitHub como `NOASSERTION`; revisión manual requerida.
+- **Phoenix** — https://github.com/Arize-ai/phoenix — útil para observabilidad/evals, pero licencia reportada por GitHub como `NOASSERTION`; revisión manual requerida.
+- **LLM Guard** — https://github.com/protectai/llm-guard — excluido: repo archivado.
+
+## D. Hallazgos de investigación
+
+- OpenAI refuerza búsqueda web/file search con fuentes/citas y observabilidad; Shark debe entregar provenance y referencias, no texto suelto.
+- Anthropic recomienda tratar contexto como recurso finito, usar recuperación just-in-time e incorporar tool search/deferred loading cuando existen muchas tools.
+- Hermes usa progressive disclosure para skills y context compression; Shark adoptará metadata/pointers compactos + carga on-demand.
+- OpenClaw mantiene registry/plugin inventory y selección de Skills/Connectors; Shark debe mantener capability snapshot y shortlist por INPUT.
 - `CocoIndex` aporta actualización incremental Tree-sitter, evitando reindexar todo el repo.
 - `sqry` y `open-codebase-index` aportan grafos de símbolos/callers/callees; se mantienen experimentales hasta tests propios.
 - `Refact` fue evaluado y excluido del batch porque su repo está archivado; se reemplazó por Continue.
 - Para tool/skill discovery se mantienen registries ya catalogados; Agentic Registry/MCP Registry/ToolHive siguen como capas de catálogo, no ejecución automática no verificada.
 
-## D. Destino V2
+## E. Destino V2
 
-Todos los componentes nuevos se adquirirán únicamente dentro de:
+Todos los componentes nuevos se adquieren únicamente dentro de:
 
 `➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/<batch>/<slug>/`
 
-Los tres batches contienen exactamente 10 componentes. Los motores canónicos permanecen externos e inmutables y reciben destino explícito.
+B01–B04 contienen exactamente 10 componentes por batch. B04 usa workflow aislado para no reejecutar los destinos parciales de B01–B03. Los motores canónicos permanecen externos e inmutables y reciben destino explícito.
