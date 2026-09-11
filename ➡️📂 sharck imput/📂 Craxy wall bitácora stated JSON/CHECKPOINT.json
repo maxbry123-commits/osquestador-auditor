@@ -10,7 +10,7 @@
     "index": "PASS_117",
     "plan": "PASS_REV9_STALE_TASK_LEDGER_BEYOND_M20",
     "state": "PASS_REV14",
-    "handoff": "NEEDS_SYNC_TO_CP_V2_STAGING_STRATEGYDELTA_012",
+    "handoff": "PASS_SYNCED_CP_V2_STAGING_STRATEGYDELTA_012",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
