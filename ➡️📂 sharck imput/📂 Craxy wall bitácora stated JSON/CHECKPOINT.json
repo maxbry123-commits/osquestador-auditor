@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-SPECIAL-PROVENANCE-RECOVERABILITY-020",
+  "checkpoint_id": "CP-V2-CONTROL-PLANE-RECONCILED-021",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M33_SPECIAL_PROVENANCE_RECOVERABILITY_VERIFIED_READ_ONLY",
+  "last_verified_node": "M34_CONTROL_PLANE_PLAN_RECONCILED_M32_M33",
   "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_STAGING_CORRECTED_SPECIAL_LEDGER_PROVENANCE_GAP_AND_M33_NONRECOVERABILITY",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
-    "plan": "REV11_SYNCED_M01_M31_M32_M33_EVIDENCE_NOT_YET_PLAN_RECONCILED",
-    "state": "REV22_M33_PROVENANCE_RECOVERABILITY",
-    "handoff": "CP019_CURRENT_M33_SYNC_NEXT_IN_SEQUENCE",
+    "plan": "REV12_SYNCED_M01_M34",
+    "state": "REV23_M34_CONTROL_PLANE_RECONCILED",
+    "handoff": "CP020_CURRENT_M34_SYNC_NEXT_IN_SEQUENCE",
     "recovery": "UNCHANGED",
     "review_gate": "BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -67,10 +67,10 @@
     "special_failure_historical_commit_recovery":"NOT_VERIFIABLY_RECOVERABLE_FROM_CURRENT_STATE_INDEX_QUEUE_OR_PERSISTED_WORKFLOW_OUTPUT"
   },
   "control_plane_reconciliation": {
-    "status":"STATE_CHECKPOINT_M33_SYNCED_HANDOFF_NEXT",
-    "plan_revision":11,
-    "state_revision":22,
-    "finding":"M32 and M33 add read-only provenance/recoverability evidence without changing acquisition/gates; PLAN remains honestly synchronized only through M31 until a later reconciliation",
+    "status":"PLAN_STATE_CHECKPOINT_M34_SYNCED_HANDOFF_NEXT",
+    "plan_revision":12,
+    "state_revision":23,
+    "finding":"M32/M33 provenance and nonrecoverability evidence are now represented in PLAN rev12; M34 reconciles the task ledger without changing acquisition, gates, source refs, motors or physical destinations",
     "physical_mutation":false
   },
   "open_gaps": [
@@ -83,7 +83,7 @@
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta + corrected special ledger + M32/M33 provenance findings pending"},
     {"id":"G-PRODUCTION-GATE","detail":"No production staging, source/ref redesign, physical repair or Step3 before reviews + director gate"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL","M33":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL","M30":"SOL","M31":"SOL","M32":"SOL","M33":"SOL","M34":"SOL"},
   "reviews": {"astra":"PENDING_READY_TO_JOIN","claude":"PENDING_READY_TO_JOIN","grok":"PENDING_READY_TO_JOIN","external":"NOT_PERFORMED_NO_EVIDENCE"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
