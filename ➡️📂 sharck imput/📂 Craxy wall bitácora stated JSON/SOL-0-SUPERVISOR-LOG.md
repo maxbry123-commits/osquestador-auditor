@@ -25,8 +25,23 @@
 ### Veredicto
 `M39_CONTROL_ONLY_COMPLETE / MULTISOL_PRESTAGED_NOT_ACTIVATED / 23_PHYSICAL_FAILURES_REMAIN_OPEN / EXISTING_REVIEW_GATE_PRESERVED`.
 
-### Restricciones vigentes
-- M06/M07/M08 siguen bajo sus propietarios previos y no fueron reclamados por SOL-0.
-- No reparar físicamente los 23 FAILED mientras `physical_repair_allowed=false`.
-- No descargar B05/B06 mientras `b05_b06_download_allowed=false`.
-- Activar 4×SOL sólo cuando el acquisition_gate del DAG sea verdadero.
+## M40 — DIRECTOR 6-TRACK RESEARCH SHORTLIST
+- owner: `SOL-0`
+- status: `IN_PROGRESS`
+- claim_id: `SOL0-M40-20260911-RESEARCH-COT`
+- base_main_sha: `55f039bcad34acd9ed19c2003d266caf8caa15fa`
+- scope: ejecutar I04/I06/I07/I08/I09/I10 con mínimo 10 hallazgos de código/OSS por investigación; separar EXISTING/NEW/REFERENCE/DEFER/REJECT; presentar shortlist al Director antes de cualquier adquisición nueva.
+- physical_mutation: `false`
+- new_component_download: `false`
+- architecture_mutation: `false`
+
+### 3 pasos M40
+1. `SYNC_WATCHDOG_AND_RESEARCH_SCOPE` — COMPLETE
+2. `RUN_6TRACK_RESEARCH_10_TO_20_EACH` — IN_PROGRESS
+3. `PUBLISH_SHORTLIST_AND_WAIT_DIRECTOR_APPROVAL` — PENDING
+
+### Gates
+- Paso 1 proyecto: `VERIFIED_CLOSED` para inventario/X-Ray/control de investigación, sin afirmar cierre de los 23 fallos físicos.
+- Paso 2 proyecto: `ACTIVE_RESEARCH_REVIEW`.
+- Paso 3 proyecto: `WAITING_DIRECTOR_APPROVAL`; prohibido descargar candidatos nuevos antes de la aprobación de la shortlist.
+- M06/M07/M08 conservan sus owner locks previos.
