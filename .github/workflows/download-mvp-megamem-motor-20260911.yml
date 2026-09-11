@@ -12,18 +12,21 @@ permissions:
 
 concurrency:
   group: mvp-megamem-canonical-motor
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   download-extract-publish:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - name: Checkout main
+      - name: Sparse checkout canonical motor root only
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
           lfs: false
+          sparse-checkout: |
+            ➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor
+          sparse-checkout-cone-mode: false
 
       - name: Execute immutable canonical Motor 2
         shell: bash
