@@ -188,3 +188,24 @@ B01–B04 contienen exactamente 10 componentes por batch. Los motores canónicos
 - Nuevo hallazgo arquitectónico, no componente: separar `capability_state` en `DISCOVERED → CONFIGURED → HEALTHCHECKED → OPERATIONALLY_VERIFIED` y aplicar stop criteria de cobertura para evitar loops de discovery/retrieval.
 - Fuente comunitaria relevante: Hermes issue https://github.com/NousResearch/hermes-agent/issues/96247 reporta `tool_search` exitoso repetido hasta saturar contexto; se conserva como evidencia de comunidad, no como PASS/FAIL universal del producto.
 - No adquisición, no instalación, no cambio de source/ref, no motores tocados.
+
+## I. Dataset candidates verificados — no instalados
+
+### HF-DATASET-001 — `MCP-Atlas`
+- Dataset: https://huggingface.co/datasets/ScaleAI/MCP-Atlas
+- Repo fuente: https://github.com/scaleapi/mcp-atlas
+- Fuente/organización: ScaleAI / `scaleapi`.
+- Mantenimiento: dataset actualizado **2026-08-03**; repo público activo observado en la revisión 2026-09-11.
+- Licencia dataset: **CC-BY-4.0**.
+- Evidencia funcional: 500 tareas públicas de evaluación de tool-use sobre servidores MCP reales; incluye ground truth/diagnósticos de coverage según documentación del benchmark.
+- Utilidad Sharck Input propuesta: evaluar `SOURCE_AND_TOOL_DISCOVERY`, selección multi-tool, `COVERAGE_AND_GAPS`, loops de retrieval y política `ANSWERABLE | ANSWERABLE_WITH_CAVEATS | ABSTAIN_NEEDS_REVIEW` antes de cableado.
+- Estado: `INDEXED_CANDIDATE_NO_INSTALL`.
+- No aumenta el catálogo de componentes: permanece **117**; es un dataset candidato separado.
+- No adquisición/descarga automática; requiere review/gate y bridge HF separado con `trust_remote_code=false` por defecto.
+
+## J. Validación M13 Simulation 04 — 2026-09-11
+- Escenario read-only: entidad ambigua + evidencia fresca contradictoria + presión de discovery/tool-search.
+- FACT: OpenAI mantiene retrieval dinámico Web/File; Anthropic recomienda contexto mínimo/JIT; GitHub soporta selección explícita y tool-search bajo demanda; OpenClaw aclara que skill allowlists no son frontera de autorización de shell; Hermes aporta evidencia comunitaria de saturación por búsquedas exitosas repetidas.
+- INFERENCE: no resolver silenciosamente entidades ambiguas; preservar contradicciones y provenance tras compression; emitir `research_outcome` y `stop_reason` explícitos.
+- UNKNOWN: thresholds numéricos de ambigüedad, mínimo de fuentes, budgets de búsqueda/cobertura/freshness/compresión quedan para M07/M10.
+- No adquisición, no instalación, no cambio source/ref, no motores tocados.
