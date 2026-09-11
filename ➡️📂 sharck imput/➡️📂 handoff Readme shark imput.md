@@ -4,103 +4,54 @@
 Repo: `maxbry123-commits/osquestador-auditor` · Branch: `main`
 Raíz activa: `➡️📂 sharck imput/`
 Código principal: `➡️📂 sharck imput/📂 input sharck code principal/`
-V1 preservada: `➡️📂 Shack imput/` — último estado leído 47/77 VERIFIED_CLOSED + 30 GAP.
-
-## Orden de lectura
-1. `README-METODO-TRABAJO-MULTIAGENTE.md`
-2. `📁 readme arquitectura sharck imput.md`
-3. `➡️📂 readme indice de componentes sharck imput.md`
-4. `📂 Craxy wall bitácora stated JSON/PLAN.json`
-5. `STATE.json`
-6. `CHECKPOINT.json`
-7. log propio SOL/ASTRA/GROK/CLAUDE
-8. `GAPS-ACQUISITION-V2.md`
-9. `READBACK-XRAY-2026-09-10.md`
-10. `PARCHE-RECUPERACION-SHARK-IMPUT.md`
-11. `RECOVERY-GROK-SHARCK-INPUT.md` o `RECOVERY-MULTI-ENV-SHARCK-INPUT.md` según entorno
-12. `REVIEW-GATE-ASTRA-ENGINEERING.md`
-13. este Handoff
+V1 preservada: `➡️📂 Shack imput/` — 47/77 VERIFIED_CLOSED + 30 GAP como referencia read-only.
 
 ## Método — 3 pasos
 1. ANOTAR + ARQUITECTURA + INVENTARIO.
 2. ADQUIRIR sólo con motores canónicos, lotes máximo 10, destinos explícitos, NO LFS/force y read-back.
 3. CABLEAR + PODA MÍNIMA + CODE FALTANTE + TEST sólo después del review gate.
 
-## Plan y arquitectura listos
-- método multiagente publicado con 5 refutaciones, 12 GOALS, Council12 y 6 simulaciones;
-- arquitectura PRE-LLM/microkernel publicada;
-- catálogo 107 = 77 V1 + 30 nuevos investigados;
-- PLAN/STATE/CHECKPOINT + logs separados creados;
-- memoria de búsqueda creada;
-- recovery Grok y multi-environment anti-colisión creados;
-- review packet creado;
-- watchdog horario V2 habilitado.
+## Estado reconciliado
+- Catálogo actual: **117 = 77 V1 + 40 V2 investigados**.
+- B01–B03: **10 VERIFIED_CLOSED / 20 FAILED**.
+- X-Ray B01–B03: **11 PARTIAL_DESTINATION_READBACK_GAP + 9 SOURCE_SPECIAL_FILE_GAP**; runs `34535896880`, `34536177351`, recoveries `0/11`.
+- B04 context/HF/eval ya existe en `main`: **7 VERIFIED_CLOSED / 3 FAILED / 0 pending** según `B04-INDEX.md` y `B04-state.json`.
+- B04 FAILED observados: `huggingface_hub`=`SOURCE_SPECIAL_FILE_GAP:CLAUDE.md`; `spaCy`=`DESTINATION_EXISTS`; `unstructured`=`SOURCE_SPECIAL_FILE_GAP`. No reintentar a ciegas.
+- Total B01–B04: **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**. Esto no convierte Paso 2 en PASS global.
 
-## Adquisición inicial — evidencia final
-Workflow inicial: `.github/workflows/sharck-input-v2-components.yml`
-Run inicial: `34514168678`, GitHub UI `completed/success`.
+## M13 simulación read-only 01
+Se recorrieron discovery → retrieval → evidence/contradiction → coverage/gaps → compression → context package con fuentes actuales y oficiales.
 
-Estado individual por motor/read-back inicial:
-- B01 = 3 VERIFIED_CLOSED / 7 FAILED.
-- B02 = 5 VERIFIED_CLOSED / 5 FAILED.
-- B03 = 2 VERIFIED_CLOSED / 8 FAILED.
-- TOTAL = **10 VERIFIED_CLOSED / 20 FAILED / 0 pending**.
+### FACT
+- OpenAI Responses/Agents usan web search, file search, remote MCP, guardrails/tracing y sandbox/harness como primitivas para agentes y contexto: https://openai.com/index/new-tools-for-building-agents/ ; https://openai.com/index/new-tools-and-features-in-the-responses-api/ ; https://openai.com/index/the-next-evolution-of-the-agents-sdk/
+- Anthropic recomienda tratar el contexto como recurso finito, recuperación just-in-time, referencias ligeras y sub-agentes con resúmenes destilados: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents ; https://www.anthropic.com/engineering/multi-agent-research-system
+- OpenClaw advierte que allowlists de Skills no son frontera de autorización y recomienda sandbox/OS-user isolation y credenciales por agente: https://docs.openclaw.ai/tools/skills ; https://docs.openclaw.ai/skills-config
+- Hermes dispone de cliente MCP nativo, auto-discovery y filtros por servidor: https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/mcp.md
+- Hugging Face mantiene `huggingface_hub`, `datasets` y un MCP Server oficial; los tres ya estaban catalogados en B04. `hf-mcp-server` MIT; `huggingface_hub` y `datasets` Apache-2.0.
 
-Veredicto semántico del Paso 2: `GAPS_PENDING`, no PASS.
+### INFERENCE
+Sharck Input debe compilar un contexto mínimo de alta señal con `pointer + provenance + freshness + evidence class + deferred retrieval handle`, evitando cargar por adelantado repos/datasets/tools completos. El bridge HF debe quedar separado en tres adapters: Hub discovery/pointers, dataset load/stream, MCP tool exposure.
 
-## X-Ray posterior — SOL GAP_WATCHDOG
-Los 20 FAILED fueron clasificados de forma exhaustiva desde B01/B02/B03 state:
-- 6 `DESTINATION_EXISTS`;
-- 5 `READBACK_TREE_HASH_GAP`;
-- 9 `SOURCE_SPECIAL_FILE_GAP`.
-
-Se ejecutó una StrategyDelta read-only usando por import las funciones `sha256()` y `tree_hash()` del HF engine canónico; ningún motor ni componente fue editado.
-
-Workflow: `.github/workflows/sharck-input-v2-readback-recover.yml`
-Runs: `34535896880`, `34536177351`.
-Resultado: **0/11 destinos recuperados**. Los 11 destinos de las primeras dos clases tienen manifiesto/code pero tree hash + conteo/bytes remoto distinto al esperado.
-
-Estado operacional de GAP ahora:
-- **11 PARTIAL_DESTINATION_READBACK_GAP**
-- **9 SOURCE_SPECIAL_FILE_GAP**
-- total FAILED continúa = **20**.
-
-Evidencia detallada: `📂 Craxy wall bitácora stated JSON/READBACK-XRAY-2026-09-10.md`.
-
-## Fix de false-green
-Motor 2 no fue modificado. El wrapper de adquisición fue corregido en commit `1bb43ca45bd548278cb2074cb563bd2ece0cab43` para fallar si STATE no queda 10/10 VERIFIED_CLOSED.
-
-## Motores canónicos — NO EDITAR
-Raíz: `➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/`
-Blobs: motor1 `a52d5dc0e6ff26f75d753b848dcc1a40c5dd4500`; motor2 `84d566e2ee4e98e42eb3a864026d067d48caabd9`; HF engine `91e6e4486692eab314be5c7130d8310d3c855397`; motor3 `3689924361ce4a1a9fde4ae2b6f6009c37a6042d`; copy-root `8281211da76db3080fe1f1ea38b3eb0c45d655cb`; motor4 `9a21facfe11327cf60a2afca8f415ad52f0ecbe5`.
+### UNKNOWN
+Los umbrales cuantitativos de cobertura/compresión y la política exacta de deferred loading requieren tests M07/M10; no se fijan por intuición.
 
 ## Ownership anti-colisión
-- SOL: `GAP_WATCHDOG`, estado, consolidación, motor-watch. Mientras review esté pendiente sólo monitor/read-only evidence.
-- CLAUDE: M07 code/ports/adapters/typing/tests + diagnóstico técnico de GAPs.
+- SOL: state/control/consolidation/motor-watch + M13 research orchestration read-only.
+- CLAUDE: M07 code/ports/adapters/typing/tests + diagnóstico técnico.
 - GROK: M08 OSS/comunidad/HF/labs/alternativas/licencias/mantenimiento/contradicciones.
-- ASTRA: M06 XRAY_ARQUITECTURA, EVALUACION_PREVIA, MEJORA_VERSIONADA, COMPONENT_GAP_RESEARCH, INDEPENDENT_VERIFY.
-- Otro entorno: owner=NONE hasta recibir una tarea libre o asignación explícita.
-
-PLAN/STATE/CHECKPOINT/Handoff son shared-writes secuenciales: siempre fetch SHA fresco antes de actualizar. Cada agente escribe su log propio; no sobrescribe logs ajenos.
+- ASTRA: M06 auditoría independiente/arquitectura/mejora versionada/component gap/verify.
 
 ## Review gate
-M06 ASTRA = READY_FOR_REVIEW.
-M07 CLAUDE = READY_FOR_REVIEW.
-M08 GROK = READY_FOR_REVIEW.
-M09 external review = NOT_PERFORMED/NO_EVIDENCE.
-Paso 3 = BLOCKED.
+M06 ASTRA = READY_FOR_REVIEW. M07 CLAUDE = READY_FOR_REVIEW. M08 GROK = READY_FOR_REVIEW. M09 external = NOT_PERFORMED/NO_EVIDENCE. **Paso 3 = BLOCKED**.
 
-No existe evidencia de revisión/aprobación externa todavía; no declarar supervisión externa sin prueba.
-
-## Watchdog
-`Sharck Input V2 Watchdog` = ENABLED HOURLY, America/Bogota. Relee STATE/CHECKPOINT/Handoff/Recovery, vigila gaps/reviews y sólo ejecuta trabajo permitido por ownership/gates.
+## Motores canónicos — NO EDITAR
+Raíz: `➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/`.
+No LFS · no force · no silent overwrite · read-back obligatorio.
 
 ## Checkpoint vivo
-`CP-V2-POST-XRAY-006`
-`last_verified_node=M11_READBACK_XRAY_11_PARTIAL_DESTINATIONS`
-`resume_from=M06_M07_M08_REVIEW_AND_GAP_STRATEGY`.
+`CP-V2-M13-SIM01-B04-007`
+`last_verified_node=M13_SIMULATION_01_AND_B04_CONTROL_PLANE_RECONCILE`
+`resume_from=M06_M07_M08_REVIEW_AND_GAP_STRATEGY_WITH_M13_READ_ONLY_PARALLEL`.
 
-## Próximo nodo
-ASTRA M06 + CLAUDE M07 + GROK M08 en paralelo → escribir evidencia en logs propios → consolidar StrategyDelta → gate director/revisión adicional → sólo entonces reparación física autorizada y Paso 3 1×1.
-
-Candidatos aún NO ejecutados: para los 11 partial, preserve/quarantine versionado con Motor4 + reacquisition 1×1; para los 9 special-file, revisar source/ref/subproject/dependency/alternative. No promover ninguno sin reviews.
+## Próximo nodo permitido
+SOL: siguiente simulación read-only por etapas y monitor de reviews. ASTRA/CLAUDE/GROK conservan M06/M07/M08. No reparación física B01–B04 ni Paso 3 hasta evidencia/review/gate correspondiente.
