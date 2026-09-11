@@ -1,0 +1,23 @@
+{
+  "schema": "sharck-input.director-input.v1",
+  "timestamp": "2026-09-10T20:24:00-05:00",
+  "mode": "INPUT_LITERAL_TRACKED",
+  "instructions": [
+    {"id":"I01","text":"Trabajar siempre organizado y anotar todo."},
+    {"id":"I02","text":"Usar únicamente Craxy wall bitácora stated JSON y los archivos del proyecto como guías operativas para evitar alucinaciones y mantener planificación/organización."},
+    {"id":"I03","text":"Dejar el trabajo preparado para que otros chats de SOL y ASTRA puedan intervenir cuando los componentes estén listos."},
+    {"id":"I04","text":"Mientras la descarga/adquisición siga en curso, realizar varias simulaciones por cada punto del INPUT Sharck y usar investigación cruzada para detectar mejoras arquitectónicas, componentes faltantes y oportunidades 100x."},
+    {"id":"I05","text":"Mantener el alcance: Sharck Input maneja solamente el INPUT/contexto útil previo a la LLM; no construir el workflow completo."},
+    {"id":"I06","text":"Investigar Hugging Face: biblioteca de skills, datasets y recursos útiles; usar el mismo proceso controlado de adquisición y crear un puente con el mini-workflow de Sharck Input."},
+    {"id":"I07","text":"Investigar comunidad de desarrolladores de programación/código."},
+    {"id":"I08","text":"Investigar comunidades OpenClaw y Hermes, comunidad Hugging Face, comunidad GitHub y comunidad de creadores de agentes."},
+    {"id":"I09","text":"Crear una lista de puntos/tareas/componentes web adicionales necesarios para mejorar cada etapa de Sharck Input."},
+    {"id":"I10","text":"Investigar agentes de investigación y las recomendaciones públicas actuales de OpenAI y Anthropic sobre input, información de contexto y búsqueda web."},
+    {"id":"I11","text":"Actualizar continuamente PLAN/STATE/CHECKPOINT/Handoff/índice según evidencia; clasificar hallazgos antes de integrarlos y no asumir PASS."}
+  ],
+  "acceptance": {
+    "all_instructions_tracked": true,
+    "source_of_truth": "project files + Craxy Wall",
+    "step3_integration_gate_unchanged": true
+  }
+}
