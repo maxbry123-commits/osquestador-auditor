@@ -1,16 +1,16 @@
 {
   "schema": "sharck-input.checkpoint.v2",
-  "checkpoint_id": "CP-V2-NESTED-IGNORE-BLAST-RADIUS-015",
+  "checkpoint_id": "CP-V2-PLAN-RECONCILED-016",
   "status": "VALID_FOR_RESUME",
-  "last_verified_node": "M28_NESTED_IGNORE_BLAST_RADIUS_COMPLETE_READ_ONLY",
+  "last_verified_node": "M29_CONTROL_PLANE_PLAN_RECONCILED",
   "resume_from": "M06_M07_M08_REVIEW_OF_ROOT_CAUSE_AND_STAGING_STRATEGYDELTA",
   "control_plane": {
     "method": "PASS",
     "architecture": "PASS",
     "index": "PASS_117",
-    "plan": "PASS_REV9_STALE_TASK_LEDGER_BEYOND_M20",
-    "state": "PASS_REV17",
-    "handoff": "PASS_SYNCED_CP_V2_NESTED_IGNORE_BLAST_RADIUS_015",
+    "plan": "PASS_REV10_SYNCED_M01_M29",
+    "state": "PASS_REV18",
+    "handoff": "PENDING_THIS_SEQUENCE_READBACK_AFTER_UPDATE",
     "recovery": "PASS_UNCHANGED",
     "review_gate": "PASS_BLOCKING_PRODUCTION",
     "watchdog": "ENABLED_HOURLY"
@@ -90,6 +90,13 @@
     "motor_4_move_batches.py":"9a21facfe11327cf60a2afca8f415ad52f0ecbe5",
     "physical_mutation":false
   },
+  "control_plane_reconciliation": {
+    "status":"VERIFIED_DOCUMENT_ONLY",
+    "plan_revision":10,
+    "state_revision":18,
+    "finding":"PLAN_REV9_WAS_STALE_BEYOND_M20; PLAN_REV10_NOW_RECORDS_M21_M29",
+    "physical_mutation":false
+  },
   "open_gaps": [
     {"id":"G-V2-PARTIAL-11","detail":"11 B01-B03 destinations remain partial and FAILED, but M28 now causally accounts for all 130 missing via concrete root/imported/nested ignore rules and M24 accounts for all 7 changed via attributes; repair remains review-gated"},
     {"id":"G-V2-SPECIAL-9","detail":"9 B01-B03 sources rejected by special-file safety gate; remain separate from staging StrategyDelta"},
@@ -99,14 +106,14 @@
     {"id":"G-REVIEW","detail":"ASTRA/CLAUDE/GROK reviews of root cause + StrategyDelta pending"},
     {"id":"G-PRODUCTION-GATE","detail":"SANDBOX_PASS and complete causal diagnosis do not authorize production staging, git add -f, plumbing strategy, source/ref redesign, or physical repair"}
   ],
-  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL"},
+  "owner_locks": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK","GAP_WATCH":"SOL","M13":"SOL","M21":"SOL","M22":"SOL","M23":"SOL","M24":"SOL","M25":"SOL","M26":"SOL","M27":"SOL","M28":"SOL","M29":"SOL"},
   "step3_allowed": false,
   "physical_repair_allowed": false,
   "next_safe_actions": [
     "ASTRA M06 review security/rollback/fail-closed properties of staging StrategyDelta using M28 complete causal evidence",
     "CLAUDE M07 validate complete tracked-set + file modes + bytes and select staging implementation without semantic ignore/attribute loss",
     "GROK M08 validate Git vendoring/package/subtree alternatives and special-source handling",
-    "SOL monitor reviews and add only genuinely new read-only evidence",
+    "SOL monitor reviews and add only genuinely new read-only evidence/control-plane reconciliation",
     "NO PHYSICAL REPAIR until reviews + director gate"
   ]
 }
