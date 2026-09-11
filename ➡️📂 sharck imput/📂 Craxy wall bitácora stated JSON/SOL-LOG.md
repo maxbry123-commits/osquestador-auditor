@@ -177,5 +177,64 @@ Sólo control plane/documentación: PLAN, STATE, CHECKPOINT, Handoff, índice y 
 - Cero adquisición, delete, move, overwrite de componentes, cambio source/ref o edición de motores canónicos.
 - Balance preservado: B01–B04 = **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
 
+## 2026-09-11 — M13 SIMULATION 04
+### Read-back/ownership previo
+- Releídos desde `main` en orden operativo: `INPUT-DIRECTOR-2026-09-10T2024-05.json`, PLAN, STATE, CHECKPOINT, Handoff, GAPS, SOL-LOG y logs ASTRA/CLAUDE/GROK.
+- ASTRA/CLAUDE/GROK siguen `READY_TO_JOIN`; no se encontró claim/review/verdict verificable nuevo.
+- M06/M07/M08 no fueron tocados y Paso 3 continúa bloqueado.
+
+### Escenario y etapas
+Escenario read-only: entidad ambigua + evidencia actual contradictoria + presión de tool discovery.
+`INPUT_RAW_LOCK → INTENT_AND_CONSTRAINTS → ENTITY_RESOLUTION → RESEARCH_DECISION → SOURCE_AND_TOOL_DISCOVERY → WEB_CODE_SKILL_DATASET_RETRIEVAL → EVIDENCE_AND_CONTRADICTION → COVERAGE_AND_GAPS → CONTEXT_COMPRESSION → CONTEXT_PACKAGE`.
+
+### FACT
+1. OpenAI documenta Web Search/File Search para recuperar información actual/privada dinámicamente.
+   - https://help.openai.com/en/articles/6639781-do-the-openai-api-models-have-knowledge-of-current-events
+2. Anthropic recomienda el menor conjunto de tokens de alta señal y exploración/retrieval just-in-time.
+   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+3. GitHub permite seleccionar subconjuntos explícitos de tools en custom agents y dispone de tool search bajo demanda en Copilot CLI.
+   - https://docs.github.com/en/copilot/reference/custom-agents-configuration
+   - https://docs.github.com/en/copilot/concepts/agents/copilot-cli/tool-search
+4. OpenClaw documenta que las allowlists de skills son filtros de visibilidad/carga, no frontera de autorización shell-time; recomienda sandbox/OS-user/host-exec restringido/per-agent credentials.
+   - https://docs.openclaw.ai/skills
+   - https://docs.openclaw.ai/sandboxing
+5. Hermes comunidad: issue #96247 reporta 1,523 `tool_search` exitosos que agotaron contexto sin entregar respuesta; se conserva como evidencia comunitaria, no como afirmación universal del producto.
+   - https://github.com/NousResearch/hermes-agent/issues/96247
+6. Hugging Face/ScaleAI: `ScaleAI/MCP-Atlas` es un dataset público de benchmark con 500 tareas de tool-use sobre servidores MCP reales; metadata HF observada: actualizado 2026-08-03, licencia CC-BY-4.0.
+   - https://huggingface.co/datasets/ScaleAI/MCP-Atlas
+   - https://github.com/scaleapi/mcp-atlas
+
+### INFERENCE
+- `ENTITY_RESOLUTION` no debe resolver silenciosamente una entidad ambigua. Debe preservar candidatos/ambigüedad hasta que evidencia suficiente lo resuelva.
+- `research_outcome` propuesto: `ANSWERABLE | ANSWERABLE_WITH_CAVEATS | ABSTAIN_NEEDS_REVIEW`.
+- `stop_reason` debe ser explícito/machine-readable y sobrevivir a compression; ejemplos arquitectónicos: `SATURATED_NO_NEW_EVIDENCE`, `CONTRADICTION_UNRESOLVED`, `SOURCE_AUTHORITY_INSUFFICIENT`, `FRESHNESS_UNMET`.
+- Una contradicción no resuelta debe llegar al `CONTEXT_PACKAGE`; compression no puede convertir incertidumbre en FACT.
+- MCP-Atlas es útil como candidato de evaluación para probar si stop/abstention reduce loops y conserva gaps, pero no debe adquirirse/instalarse automáticamente.
+
+### UNKNOWN
+- Threshold cuantitativo de ambigüedad/entity confidence.
+- Número mínimo de fuentes independientes por tipo de claim.
+- Search/tool-discovery call budget.
+- Coverage sufficiency threshold.
+- Freshness TTL por clase de fuente.
+- Compression ratio seguro.
+Todos permanecen para M07/M10/tests; SOL no fijó números por intuición.
+
+### Candidato detectado y gate aplicado
+- `MCP-Atlas` no figuraba en el índice del proyecto.
+- Fuente HF: `ScaleAI/MCP-Atlas`; repo: `scaleapi/mcp-atlas`.
+- Mantenimiento observado: dataset actualizado 2026-08-03; repo público activo durante la revisión 2026-09-11.
+- Licencia: CC-BY-4.0.
+- Utilidad: benchmark para source/tool discovery, multi-tool selection, coverage diagnostics y policy stop/abstention.
+- Estado: `INDEXED_CANDIDATE_NO_INSTALL`.
+- No aumenta el catálogo de componentes: sigue **117**; es dataset candidato separado.
+- No adquisición, no descarga, no ejecución, no secreto HF asumido y `trust_remote_code=false` sigue siendo default de diseño.
+
+### Mutaciones y read-back
+- Sólo control-plane/documentación: PLAN rev9, STATE rev12, CHECKPOINT `CP-V2-M13-SIM04-ABSTAIN-010`, Handoff, índice y SOL log.
+- Cero cambios en componentes, destinos parciales, source/ref o motores canónicos.
+- Balance preservado: B01–B04 = **17 VERIFIED_CLOSED / 23 FAILED / 0 pending**.
+- Step3 permanece bloqueado por M06+M07+M08 + gate director.
+
 ## Regla de continuidad
-No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física. No instalar `huggingface-datasets` Skill hasta review/gate aplicable.
+No reintentar B01–B04 a ciegas. SOL continúa únicamente con simulaciones/read-only evidence y monitor de reviews hasta que el gate correspondiente habilite una mutación física. No instalar `huggingface-datasets` ni adquirir `MCP-Atlas` hasta review/gate aplicable.
