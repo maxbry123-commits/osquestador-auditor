@@ -1,0 +1,34 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M39-MULTISOL-PRESTAGED-026",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-025-M38-DAG-RECONCILED.json",
+    "blob_sha": "5862d3e6b24d1a11ef80ceafdc0a8935dfcf3483",
+    "checkpoint_id": "CP-V2-M38-DAG-RECONCILED-025"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M39_MULTISOL_SCHEMA_PRESTAGED",
+  "resume_rule": "Resolve existing review/repair/acquisition gates first; activate MULTISOL-DAG-3STEP-v1 only after its acquisition gate evaluates true.",
+  "control_plane": {
+    "state_delta": "STATE-DELTA-028-M39-MULTISOL-PRESTAGED.json",
+    "future_multisol_dag": "MULTISOL-DAG-3STEP-v1.json",
+    "supervisor_log": "SOL-0-SUPERVISOR-LOG.md",
+    "worker_logs": ["SOL-1-LOG.md", "SOL-2-LOG.md", "SOL-3-LOG.md"]
+  },
+  "current_counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "gates": {
+    "multisol_execution_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "existing_review_nodes": ["M06", "M07", "M08", "M09"],
+    "director_gate_required": true
+  }
+}
