@@ -1,0 +1,49 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 29,
+  "base_state_delta": {
+    "file": "STATE-DELTA-028-M39-MULTISOL-PRESTAGED.json",
+    "current_node": "M39_MULTISOL_SCHEMA_PRESTAGED"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M40_DIRECTOR_6TRACK_RESEARCH_REVIEW_READY",
+  "task": {
+    "owner": "SOL-0",
+    "claim_id": "SOL0-M40-20260911-RESEARCH-COT",
+    "status": "REVIEW_READY_WAITING_DIRECTOR_APPROVAL",
+    "research_tracks": ["I04", "I06", "I07", "I08", "I09", "I10"],
+    "track_entry_counts": {"I04":10,"I06":10,"I07":10,"I08":11,"I09":13,"I10":11},
+    "total_track_entries": 65,
+    "artifact": "RESEARCH-SHORTLIST-M40-6TRACK-2026-09-11.md",
+    "artifact_commit": "166f9efea6f6e4fe2e570b8490a3b510afdf5f60",
+    "physical_mutation": false,
+    "new_component_download": false
+  },
+  "watchdog": {
+    "file": "WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json",
+    "step1": "VERIFIED_CLOSED_CONTROL_SCOPE",
+    "step2": "REVIEW_READY_WAITING_DIRECTOR_APPROVAL",
+    "step3": "WAITING_DIRECTOR_APPROVAL"
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed":17,"failed":23,"pending":0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06": {"researched_candidates":20,"downloaded":0,"verified_closed":0}
+  },
+  "locks": {
+    "new_research_component_download_allowed": false,
+    "step3_research_promotion_allowed": false,
+    "physical_repair_allowed": false,
+    "existing_owner_locks_preserved": ["M06_ASTRA","M07_CLAUDE","M08_GROK"]
+  },
+  "next": [
+    "Director reviews the enumerated M40 shortlist",
+    "Director explicitly marks candidates APPROVE/DEFER/REJECT",
+    "only after approval: architecture version update and exact acquisition preflight",
+    "only KEEP candidates passing license/ref/pin/special-scan/destination gates may be downloaded",
+    "readback then DSL/DAG worker-node activation"
+  ]
+}
