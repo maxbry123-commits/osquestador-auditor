@@ -1,0 +1,53 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M37-20X-MULTIENV-024",
+  "base_checkpoint": {
+    "path": "📂 Craxy wall bitácora stated JSON/CHECKPOINT.json",
+    "checkpoint_id": "CP-V2-CONTROL-PLANE-RECONCILED-023",
+    "blob_sha": "1a0a4f2220d1b9a4388ad01de7373d9f0e3b99e8"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_node": "M37_20X_CROSSCHECK_MULTIENVIROMENT_CONTROL_PUBLISHED",
+  "resume_from": "M06_ASTRA_M07_CLAUDE_M08_GROK_INDEPENDENT_CLAIMS_THEN_FANIN_DIRECTOR_GATE",
+  "control_plane": {
+    "canonical_state": "REV25_UNCHANGED",
+    "state_delta": "STATE-DELTA-026-20X-MULTIENV.json",
+    "canonical_plan": "REV13_UNCHANGED",
+    "architecture": "V2.1_VERSIONED",
+    "multienv_dag": "MULTIENV-DAG-3STEP-v1.json",
+    "xray": "XRAY-ADN-CROSSCHECK-2026-09-11.md",
+    "20x": "20X-OSS-MEJORAS-2026-09-11.md",
+    "handoff": "HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+  },
+  "current_counts": {
+    "canonical_components": 117,
+    "20x_candidates_noncanonical": 20,
+    "new_batches_verified_closed": 17,
+    "new_batches_failed": 23,
+    "new_batches_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "open_core_task_nodes": 5,
+    "open_gap_categories_including_20x_gate": 10
+  },
+  "claims": {
+    "SOL_M37": "COMPLETE",
+    "ASTRA_M06": "OPEN_READY_TO_CLAIM",
+    "CLAUDE_M07": "OPEN_READY_TO_CLAIM",
+    "GROK_M08": "OPEN_READY_TO_CLAIM"
+  },
+  "gates": {
+    "step3_allowed": false,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "fan_in_requires": ["M06", "M07", "M08"],
+    "director_decision_required": true
+  },
+  "next_safe_actions": [
+    "ASTRA: claim M06 in ASTRA-LOG and review architecture/root-cause/StrategyDelta/rollback",
+    "CLAUDE: claim M07 in CLAUDE-LOG and validate full coverage/ports/tests/provenance",
+    "GROK: claim M08 in GROK-LOG and verify/prune 20X source/license/maintenance/overlap",
+    "SOL: monitor claims and consolidate only after evidence; no duplicate owner work",
+    "NO physical repair, B05/B06 acquisition or Step3 before fan-in + director gate"
+  ]
+}
