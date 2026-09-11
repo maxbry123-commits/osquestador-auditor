@@ -1,0 +1,46 @@
+{
+	"name": "@llmindset/hf-mcp",
+	"version": "0.4.19",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./network": {
+			"types": "./dist/network/index.d.ts",
+			"default": "./dist/network/index.js"
+		},
+		"./semantic": {
+			"types": "./dist/semantic-search.d.ts",
+			"default": "./dist/semantic-search.js"
+		}
+	},
+	"scripts": {
+		"build": "rimraf dist && tsc --declaration",
+		"test": "vitest run",
+		"dev": "tsc --watch",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint . --fix",
+		"lint:check": "eslint .",
+		"clean": "rimraf dist"
+	},
+	"dependencies": {
+		"@huggingface/hub": "^2.13.3",
+		"@modelcontextprotocol/client": "2.0.0",
+		"mime-types": "^3.0.2",
+		"picomatch": "^4.0.5",
+		"shell-quote": "^1.10.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/node": "^26.1.1",
+		"eslint": "^10.8.0",
+		"rimraf": "^6.1.3",
+		"typescript-eslint": "^8.65.0",
+		"vitest": "^4.1.10"
+	}
+}

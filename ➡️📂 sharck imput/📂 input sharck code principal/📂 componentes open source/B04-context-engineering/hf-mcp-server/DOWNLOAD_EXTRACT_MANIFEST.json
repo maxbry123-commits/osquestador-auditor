@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 735241,
+  "bundle_sha256": "fae6d5434706051cf552eca30ed3e35c88afcb06e184f06aadfebfb3b2f6ab3e",
+  "extracted_tree": {
+    "bytes": 2281649,
+    "files": 335,
+    "sha256": "b9875f05cc8d207c62ee969155772ac44e2cf2cb29e60901236171fd6aeab21d"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 735241,
+      "name": "hf-mcp-server.bundle.zip.part-0001",
+      "sha256": "fae6d5434706051cf552eca30ed3e35c88afcb06e184f06aadfebfb3b2f6ab3e"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "hf-mcp-server",
+  "source_bytes": 2281649,
+  "source_commit": "ea617e0b897e27af8cedd01203cd732e79c6e12e",
+  "source_files": 335,
+  "source_ref": "HEAD",
+  "source_repo": "https://github.com/huggingface/hf-mcp-server",
+  "source_tree": {
+    "bytes": 2281649,
+    "files": 335,
+    "sha256": "b9875f05cc8d207c62ee969155772ac44e2cf2cb29e60901236171fd6aeab21d"
+  }
+}
