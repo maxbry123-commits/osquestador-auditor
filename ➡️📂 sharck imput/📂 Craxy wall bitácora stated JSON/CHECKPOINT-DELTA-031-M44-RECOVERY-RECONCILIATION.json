@@ -1,0 +1,45 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M44-RECOVERY-RECONCILIATION-031",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-030-M43-WATCHDOG-SEMANTIC-RECONCILIATION.json",
+    "checkpoint_id": "CP-V2-M43-WATCHDOG-SEMANTIC-RECONCILIATION-030",
+    "blob_sha": "361963d41d23ce8e48a60eaa4f96b2de9523aac6"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M44_RECOVERY_MULTIENV_RECONCILED_TO_M43",
+  "state_delta": {
+    "file": "STATE-DELTA-033-M44-RECOVERY-RECONCILIATION.json",
+    "blob_sha": "4838db4e031bdde1346fa04c58e06665453d3b54"
+  },
+  "plan_delta": {
+    "file": "PLAN-DELTA-015-M44-RECOVERY-RECONCILIATION.json",
+    "blob_sha": "e262aabe0699c819b3f99005c64cbfa3c2eca8d9"
+  },
+  "recovery": {
+    "file": "RECOVERY-MULTI-ENV-SHARCK-INPUT.md",
+    "blob_sha": "d31e65c8eac9e592528479d3f7617d21c8accedc"
+  },
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "director_decision_required": true
+  },
+  "resume_rule": "Resume from M44. If M06/M07/M08 remain unclaimed, SOL may only add genuinely new read-only evidence or reconcile control drift; no physical repair, B05/B06 acquisition or Step3 before fan-in plus director gate."
+}
