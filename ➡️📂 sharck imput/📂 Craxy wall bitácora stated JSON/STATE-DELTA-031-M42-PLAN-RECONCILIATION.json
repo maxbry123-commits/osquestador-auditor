@@ -1,0 +1,43 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 31,
+  "base_state_delta": {
+    "file": "STATE-DELTA-030-M41-3STEP-SEMANTIC-DRIFT.json",
+    "blob_sha": "86cc03e9838f2e52f0418c79683a009170cb3d19",
+    "current_node": "M41_3STEP_SEMANTIC_DRIFT_VERIFIED_READ_ONLY"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M42_CONTROL_PLANE_PLAN_RECONCILED_M37_M41",
+  "task": {
+    "owner": "SOL",
+    "status": "VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION",
+    "plan_delta_file": "PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json",
+    "plan_delta_blob_sha": "a425b96a3bec35e60685c459d3204cdae4308a87",
+    "physical_mutation": false
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0}
+  },
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next": [
+    "Wait for owner claims M06/M07/M08",
+    "SOL monitor only or add genuinely new read-only evidence",
+    "No physical repair, B05/B06 acquisition, or Step3 before fan-in plus director gate"
+  ]
+}
