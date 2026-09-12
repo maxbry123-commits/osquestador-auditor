@@ -1,22 +1,22 @@
 # 🦈 HANDOFF MULTI-ENTORNO — 3 STEP + 20X — 2026-09-11
 
-Estado: `ACTIVE / FAIL_CLOSED / STEP2_REVIEW_READY / MULTIENV_READY / MULTISOL_PRESTAGED / M41_SEMANTICS_RECONCILED`
+Estado: `ACTIVE / FAIL_CLOSED / STEP2_REVIEW_READY / MULTIENV_READY / MULTISOL_PRESTAGED / M42_PLAN_RECONCILED`
 Repo: `maxbry123-commits/osquestador-auditor` · branch `main` · raíz `➡️📂 sharck imput/`.
 
 ## Orden obligatorio de lectura
 1. `README-METODO-TRABAJO-MULTIAGENTE.md`
 2. `📁 readme arquitectura sharck imput V2.1.md`
 3. `📂 Craxy wall bitácora stated JSON/XRAY-ADN-CROSSCHECK-2026-09-11.md`
-4. `📂 Craxy wall bitácora stated JSON/STATE.json` + último delta; actual `STATE-DELTA-030-M41-3STEP-SEMANTIC-DRIFT.json`
-5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + último delta; actual `CHECKPOINT-DELTA-028-M41-3STEP-SEMANTIC-DRIFT.json`
-6. `📂 Craxy wall bitácora stated JSON/PLAN.json`
+4. `📂 Craxy wall bitácora stated JSON/STATE.json` + último delta; actual `STATE-DELTA-031-M42-PLAN-RECONCILIATION.json`
+5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + último delta; actual `CHECKPOINT-DELTA-029-M42-PLAN-RECONCILIATION.json`
+6. `📂 Craxy wall bitácora stated JSON/PLAN.json` + `PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json`
 7. DAG operativo: `MULTIENV-DAG-3STEP-v1.json` + `MULTIENV-DAG-3STEP-v2-DELTA.json`
 8. Watchdog actual: `WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json`
 9. Shortlist: `RESEARCH-SHORTLIST-M40-6TRACK-2026-09-11.md`
 10. Evidencia SOL M41: `📂 Craxy wall bitácora stated JSON/SOL-LOG-M41-3STEP-SEMANTIC-DRIFT.md`
 11. DAG futuro 4×SOL: `MULTISOL-DAG-3STEP-v1.json` — PRESTAGED, no activar antes de los gates.
 
-Fuente de verdad: `GitHub physical tree + manifests/hashes/runs > STATE/deltas > CHECKPOINT/deltas > PLAN > Handoff > agent logs > chat`.
+Fuente de verdad: `GitHub physical tree + manifests/hashes/runs > STATE/deltas > CHECKPOINT/deltas > PLAN/deltas > Handoff > agent logs > chat`.
 
 ## Estado físico preservado
 - Catálogo canónico: 117.
@@ -37,8 +37,6 @@ Fuente: `INPUT-DIRECTOR-2026-09-10T2024-05.json`.
 - I10 agentes de investigación + recomendaciones públicas actuales OpenAI/Anthropic para input/context/web.
 
 ## Contrato global 3 pasos — corregido por M41
-M41 detectó y corrigió un drift semántico introducido por la redacción anterior de este Handoff. La fuente arquitectónica V2.1 define las fases globales así:
-
 ### Paso 1 — INVENTARIO/XRAY/ARQUITECTURA
 `VERIFIED_CLOSED_CONTROL_SCOPE`.
 Identifica estado físico, GAP causal, contratos y source-of-truth. No significa que los 23 fallos físicos estén reparados.
@@ -61,14 +59,22 @@ Sólo después del fan-in/gate: integración 1×1, pruning final, mínimo códig
 
 Prohibido antes del gate: descargar/extractar candidatos nuevos, reparar físicamente los 23 FAILED, promover nueva arquitectura como aprobada, reclamar nodos futuros por otros SOL o declarar cierres sin read-back/hash.
 
-## M41 — nuevo GAP de control verificado
+## M41 — GAP semántico cerrado en control
 `G-V2-3STEP-SEMANTIC-DRIFT-M40 = CONFIRMED_CONTROL_GAP`.
-La versión previa de este Handoff etiquetaba Paso2 como sólo investigación y movía arquitectura/adquisición a Paso3, contradiciendo `📁 readme arquitectura sharck imput V2.1.md`. Se corrigió únicamente semántica/control; no hubo mutación física, descarga, repair, source/ref redesign ni cambio de balance.
-Checkpoint actual: `CP-V2-M41-3STEP-SEMANTIC-DRIFT-028`.
-State delta actual: `STATE-DELTA-030-M41-3STEP-SEMANTIC-DRIFT.json`.
+M41 corrigió únicamente semántica/control del contrato global 3 pasos. No hubo mutación física, descarga, repair, source/ref redesign ni cambio de balance.
+
+## M42 — reconciliación PLAN M37–M41
+Se detectó que `PLAN.json` permanecía en rev13 y terminaba en M36, mientras STATE/CHECKPOINT/Handoff ya contenían M37–M41. M42 reconcilia ese drift mediante `PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json`, sin rewrite destructivo del PLAN base.
+
+Read-back verificado:
+- PLAN delta blob: `a425b96a3bec35e60685c459d3204cdae4308a87`.
+- STATE delta actual: `STATE-DELTA-031-M42-PLAN-RECONCILIATION.json` blob `edb058dd40b19807b319584bc39321daa8155675`.
+- Checkpoint actual: `CP-V2-M42-PLAN-RECONCILIATION-029` / blob `a7ce55647d7654028fccfb887d9546a898bb2cc3`.
+
+M06/M07/M08 siguen `OPEN_UNCLAIMED`; por tanto no cambia ningún gate ni estado físico.
 
 ## MultiSOL
 `SOL-0` supervisor/fan-in; `SOL-1` post-acquisition X-Ray/research; `SOL-2` wire/prune/min-code; `SOL-3` ports/tests/refutation. Cada nodo máximo 3 pasos: `SYNC+CLAIM → EXECUTE+VERIFY → REPORT+FAN-IN`. Shared writes secuenciales con SHA fresco.
 
 ## Veredicto
-`M41_CONTROL_SEMANTICS_RECONCILED / M40_RESEARCH_REVIEW_READY / 65_TRACK_ENTRIES / DIRECTOR_APPROVAL_PENDING / M06_M07_M08_UNCLAIMED / NO_NEW_DOWNLOADS / 23_PHYSICAL_FAILURES_PRESERVED / MULTISOL_PRESTAGED / STEP3_NOT_STARTED_PHYSICALLY`.
+`M42_PLAN_RECONCILED / M40_RESEARCH_REVIEW_READY / 65_TRACK_ENTRIES / DIRECTOR_APPROVAL_PENDING / M06_M07_M08_UNCLAIMED / NO_NEW_DOWNLOADS / 23_PHYSICAL_FAILURES_PRESERVED / MULTISOL_PRESTAGED / STEP3_NOT_STARTED_PHYSICALLY`.
