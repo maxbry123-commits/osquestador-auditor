@@ -1,0 +1,41 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M43-WATCHDOG-SEMANTIC-RECONCILIATION-030",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-029-M42-PLAN-RECONCILIATION.json",
+    "checkpoint_id": "CP-V2-M42-PLAN-RECONCILIATION-029",
+    "blob_sha": "a7ce55647d7654028fccfb887d9546a898bb2cc3"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M43_WATCHDOG_3STEP_SEMANTIC_RECONCILED",
+  "state_delta": {
+    "file": "STATE-DELTA-032-M43-WATCHDOG-SEMANTIC-RECONCILIATION.json",
+    "blob_sha": "c8df084bfd32d3dcf7c2880c166e1cb423f660bf"
+  },
+  "watchdog": {
+    "file": "WATCHDOG-3STEP-M43-SEMANTIC-RECONCILIATION-2026-09-12.json",
+    "blob_sha": "a9040c422b5fb8a73435b8a3a7a9828b3a30420e"
+  },
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "director_decision_required": true
+  },
+  "resume_rule": "Use M43 watchdog semantics: Step1 inventory/xray/architecture; Step2 research/preflight plus acquisition/StrategyDelta/readback only after required reviews/gate; Step3 wire/prune/min-code/test only after M06+M07+M08 fan-in and director gate."
+}
