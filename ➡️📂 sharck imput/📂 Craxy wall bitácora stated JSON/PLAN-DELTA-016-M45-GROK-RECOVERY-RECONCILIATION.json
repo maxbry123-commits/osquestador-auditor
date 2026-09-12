@@ -1,0 +1,33 @@
+{
+  "schema": "sharck-input.plan-delta.v1",
+  "revision": 16,
+  "base_plan_delta": {
+    "file": "PLAN-DELTA-015-M44-RECOVERY-RECONCILIATION.json",
+    "blob_sha": "e262aabe0699c819b3f99005c64cbfa3c2eca8d9"
+  },
+  "node": {
+    "id": "M45",
+    "owner": "SOL",
+    "status": "GROK_RECOVERY_RECONCILED_READBACK_VERIFIED",
+    "name": "reconcile stale GROK recovery patch to current V2.1 fail-closed frontier without claiming M08",
+    "evidence": {
+      "log": "SOL-LOG-M45-GROK-RECOVERY-RECONCILIATION.md",
+      "recovery": "RECOVERY-GROK-SHARCK-INPUT.md",
+      "recovery_blob_sha": "6156064018be3528cf3b46e471e29386455f3d8e",
+      "recovery_update_commit": "0c80a64c0cd47c946d866734e0562d87188fc41b"
+    },
+    "physical_mutation": false
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next_action": "WAIT_OWNER_REVIEWS; SOL_CONTINUE_ONLY_GENUINELY_NEW_PARALLEL_SAFE_READ_ONLY_EVIDENCE_OR_CONTROL_DRIFT"
+}
