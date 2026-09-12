@@ -1,0 +1,41 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M42-PLAN-RECONCILIATION-029",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-028-M41-3STEP-SEMANTIC-DRIFT.json",
+    "checkpoint_id": "CP-V2-M41-3STEP-SEMANTIC-DRIFT-028",
+    "blob_sha": "b32332397fe1a7d6cc1f4843059c16bf2707e309"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M42_CONTROL_PLANE_PLAN_RECONCILED_M37_M41",
+  "plan_delta": {
+    "file": "PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json",
+    "blob_sha": "a425b96a3bec35e60685c459d3204cdae4308a87"
+  },
+  "state_delta": {
+    "file": "STATE-DELTA-031-M42-PLAN-RECONCILIATION.json",
+    "blob_sha": "edb058dd40b19807b319584bc39321daa8155675"
+  },
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "director_decision_required": true
+  },
+  "resume_rule": "Use PLAN rev13 plus PLAN-DELTA-014 as reconciled ledger through M42. Continue FAIL_CLOSED; no physical repair, B05/B06 acquisition, or Step3 before M06+M07+M08 fan-in and director gate."
+}
