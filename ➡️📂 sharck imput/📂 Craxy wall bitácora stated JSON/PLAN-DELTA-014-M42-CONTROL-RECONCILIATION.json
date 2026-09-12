@@ -1,0 +1,43 @@
+{
+  "schema": "sharck-input.plan-delta.v1",
+  "revision": 14,
+  "base_plan": {
+    "file": "PLAN.json",
+    "revision": 13,
+    "blob_sha": "ac333bec6a4b5269394742d013c9c1f06481cc4f",
+    "last_task": "M36"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "tasks_delta": [
+    {"id":"M37","owner":"SOL","status":"VERIFIED_DOCUMENTED_RESEARCH_CONTROL_DELTA","name":"20X crosscheck + multienvironment control published; no physical mutation"},
+    {"id":"M38","owner":"SOL","status":"VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION","name":"reconcile stale MultiEnv DAG state; M37 released and M38 complete"},
+    {"id":"M39","owner":"SOL","status":"MULTISOL_PRESTAGED_NOT_ACTIVATED","name":"prestage 4xSOL DAG only; no activation before gates"},
+    {"id":"M40","owner":"SOL","status":"DIRECTOR_6TRACK_RESEARCH_REVIEW_READY","name":"65 research entries across I04/I06/I07/I08/I09/I10; review ready, no download"},
+    {"id":"M41","owner":"SOL","status":"3STEP_SEMANTIC_DRIFT_VERIFIED_READ_ONLY","name":"correct global 3-step semantic drift; no physical mutation"},
+    {"id":"M42","owner":"SOL","status":"CONTROL_PLANE_PLAN_RECONCILED_M37_M41","name":"reconcile stale PLAN rev13 ledger with verified M37-M41 evidence; document-only"}
+  ],
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "next_action": "WAIT_M06_M07_M08_OWNER_CLAIMS_AND_DIRECTOR_GATE; SOL_MONITOR_OR_ADD_ONLY_GENUINELY_NEW_READ_ONLY_EVIDENCE"
+}
