@@ -1,0 +1,26 @@
+{
+  "schema": "sharck-input.plan-delta.v1",
+  "revision": 17,
+  "base_plan_delta": "PLAN-DELTA-016-M45-GROK-RECOVERY-RECONCILIATION.json",
+  "node": "M46_ROOT_RECOVERY_PATCH_RECONCILIATION",
+  "owner": "SOL",
+  "status": "VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION",
+  "physical_mutation": false,
+  "evidence": {
+    "recovery_patch": "PARCHE-RECUPERACION-SHARK-IMPUT.md",
+    "readback_blob_sha": "f46ab49acbc9b32c18a2968f184919e23c83f3a2",
+    "log": "SOL-LOG-M46-ROOT-RECOVERY-RECONCILIATION.md"
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next_action": "WAIT_OWNER_CLAIMS_AND_DIRECTOR_GATE; SOL_ONLY_GENUINELY_NEW_READ_ONLY_EVIDENCE_OR_CONTROL_DRIFT"
+}
