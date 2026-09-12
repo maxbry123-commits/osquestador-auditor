@@ -1,0 +1,45 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 32,
+  "base_state_delta": {
+    "file": "STATE-DELTA-031-M42-PLAN-RECONCILIATION.json",
+    "blob_sha": "edb058dd40b19807b319584bc39321daa8155675",
+    "current_node": "M42_CONTROL_PLANE_PLAN_RECONCILED_M37_M41"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M43_WATCHDOG_3STEP_SEMANTIC_RECONCILED",
+  "task": {
+    "owner": "SOL",
+    "status": "VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION",
+    "evidence_file": "SOL-LOG-M43-WATCHDOG-SEMANTIC-RECONCILIATION.md",
+    "evidence_blob_sha": "fde197725e98660aaf231544e69ba68c1fe15163",
+    "watchdog_file": "WATCHDOG-3STEP-M43-SEMANTIC-RECONCILIATION-2026-09-12.json",
+    "watchdog_blob_sha": "a9040c422b5fb8a73435b8a3a7a9828b3a30420e",
+    "physical_mutation": false
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0}
+  },
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next": [
+    "Wait for owner claims M06/M07/M08",
+    "SOL monitor only or add genuinely new read-only evidence",
+    "No physical repair, B05/B06 acquisition, or Step3 before fan-in plus director gate"
+  ]
+}
