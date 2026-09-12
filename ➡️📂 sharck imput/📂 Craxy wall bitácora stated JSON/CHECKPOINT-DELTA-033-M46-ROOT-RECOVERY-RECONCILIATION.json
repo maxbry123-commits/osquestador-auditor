@@ -1,0 +1,12 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint_id":"CP-V2-M46-ROOT-RECOVERY-RECONCILIATION-033",
+  "base_checkpoint":"CP-V2-M45-GROK-RECOVERY-RECONCILIATION-032",
+  "status":"VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node":"M46_ROOT_RECOVERY_PATCH_RECONCILED_READBACK_VERIFIED",
+  "state_delta":{"file":"STATE-DELTA-035-M46-ROOT-RECOVERY-RECONCILIATION.json","blob_sha":"033c185af0133fd0ab4efe3676b4e16cfe694bcd"},
+  "plan_delta":{"file":"PLAN-DELTA-017-M46-ROOT-RECOVERY-RECONCILIATION.json","blob_sha":"59a0c5770fa7fb3cba2e7619fb76a9c25881a246"},
+  "evidence":{"recovery_patch":"PARCHE-RECUPERACION-SHARK-IMPUT.md","blob_sha":"f46ab49acbc9b32c18a2968f184919e23c83f3a2"},
+  "claims":{"M06_ASTRA":"OPEN_UNCLAIMED","M07_CLAUDE":"OPEN_UNCLAIMED","M08_GROK":"OPEN_UNCLAIMED"},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"director_decision_required":true}
+}
