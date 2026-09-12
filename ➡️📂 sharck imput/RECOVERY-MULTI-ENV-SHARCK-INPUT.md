@@ -1,76 +1,77 @@
-# 🦈 RECOVERY PATCH — MULTI-ENV — SHARCK INPUT V2
+# 🦈 RECOVERY PATCH — MULTI-ENV — SHARCK INPUT V2.1
 
-Schema: `sharck.recovery.multi-env.v1`  
+Schema: `sharck.recovery.multi-env.v2`  
 Mode: `OWNER_LOCK_FAIL_CLOSED`
 
 ## Fuente de verdad
 - Repo: `maxbry123-commits/osquestador-auditor`
 - Branch: `main`
-- Root única del proyecto: `➡️📂 sharck imput/`
-- Handoff: `➡️📂 sharck imput/➡️📂 handoff Readme shark imput.md`
+- Root única: `➡️📂 sharck imput/`
+- Handoff operativo: `HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md`
+- STATE base + último delta: `STATE.json` + `STATE-DELTA-032-M43-WATCHDOG-SEMANTIC-RECONCILIATION.json`
+- CHECKPOINT base + último delta: `CHECKPOINT.json` + `CHECKPOINT-DELTA-030-M43-WATCHDOG-SEMANTIC-RECONCILIATION.json`
+- PLAN base + último delta: `PLAN.json` + `PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json`
+- DAG: `MULTIENV-DAG-3STEP-v1.json` + `MULTIENV-DAG-3STEP-v2-DELTA.json`
+- Watchdog vigente: `WATCHDOG-3STEP-M43-SEMANTIC-RECONCILIATION-2026-09-12.json`
 
-Handoff URL visible:
-https://github.com/maxbry123-commits/osquestador-auditor/blob/main/%E2%9E%A1%EF%B8%8F%F0%9F%93%82%20sharck%20imput/%E2%9E%A1%EF%B8%8F%F0%9F%93%82%20handoff%20Readme%20shark%20imput.md
+Fuente de verdad relativa: `GitHub physical tree + manifests/hashes/runs > STATE/deltas > CHECKPOINT/deltas > PLAN/deltas > Handoff > agent logs > chat`.
 
 ## Boot sequence obligatorio
-`HANDOFF → PLAN.json → STATE.json → CHECKPOINT.json → LOG PROPIO → GAPS → REVIEW-GATE → owner check → claim → execute → evidence → checkpoint.after`.
+`HANDOFF MULTIENV → latest CHECKPOINT delta → latest STATE delta → PLAN + delta → DAG + delta → LOG PROPIO → owner check → claim propio → execute → evidence/read-back → checkpoint delta`.
+
+## Método único 3 pasos
+1. `INVENTORY_XRAY_ARCHITECTURE`
+2. `RESEARCH_PREFLIGHT_PLUS_ACQUISITION_STRATEGYDELTA_READBACK`
+3. `WIRE_PRUNE_MIN_CODE_TEST`
+
+Paso 3 sólo puede abrir después de `M06 ASTRA + M07 CLAUDE + M08 GROK + director gate`.
 
 ## Ownership
-### SOL
-`GAP_WATCHDOG + state_control + consolidation + motor_watch`.
-No duplicar M06/M07/M08.
+- SOL: `state/control/evidence/motor-watch`; no duplicar M06/M07/M08.
+- ASTRA: owner exclusivo `M06` — arquitectura/gates/StrategyDelta/rollback/independent review.
+- CLAUDE: owner exclusivo `M07` — code/ports/adapters/tests/criticidad/repairability.
+- GROK: owner exclusivo `M08` — OSS/package/subtree/API alternatives/license/maintenance/contradiction.
 
-### ASTRA
-Owner: `M06_INDEPENDENT_AUDIT`.
-Scope exclusivo: `XRAY_ARQUITECTURA`, `EVALUACION_PREVIA`, `MEJORA_VERSIONADA`, `COMPONENT_GAP_RESEARCH`, `INDEPENDENT_VERIFY`.
+Claim sólo por el propietario en su propio log usando SHA fresco.
 
-### CLAUDE
-Owner: `M07_CODE_PORTS_TEST_REVIEW`.
-Scope: code, contracts, ports, adapters, typing, unit/integration/failure tests y diagnóstico técnico de GAPs.
+## Protocolo anti-colisión
+1. Fetch fresh STATE/CHECKPOINT/Handoff.
+2. Verificar owner y estado del nodo.
+3. Claim únicamente en log propio.
+4. Ejecutar máximo 3 pasos por nodo.
+5. Shared writes secuenciales con SHA fresco.
+6. Ante 409: releer, mergear, nunca sobrescribir.
+7. Read-back obligatorio antes de cualquier VERIFIED_CLOSED.
 
-### GROK
-Owner: `M08_OSS_REFUTATION`.
-Scope: OSS, comunidad, Hugging Face, labs, alternativas, licencias, mantenimiento y contradicciones.
+## Locks actuales
+- `INPUT_RAW=IMMUTABLE`
+- `canonical_motors=IMMUTABLE`
+- `NO_LFS`
+- `NO_FORCE`
+- `NO_SILENT_OVERWRITE`
+- `physical_repair_allowed=false`
+- `b05_b06_download_allowed=false`
+- `step3_allowed=false`
 
-### OTRO ENTORNO
-Arranca con `owner=NONE`. Sólo puede tomar una tarea `PENDING/FREE` sin owner o una asignación explícita. Nunca apropiarse de M06/M07/M08/GAP_WATCHDOG.
+## Estado físico verificado para recovery
+- Catálogo canónico: `117`.
+- B01–B04: `17 VERIFIED_CLOSED / 23 FAILED / 0 pending`.
+- 23 FAILED = `12 partial + 11 source-special/symlink`.
+- Partial universe: `12 components / 139 exact anomalies`.
+- M25 sandbox coverage: `3/12 components` y `4/139 anomalies`; no autoriza producción.
+- B05/B06: `20 RESEARCHED_CANDIDATE_NO_DOWNLOAD`, `0 downloaded`.
+- M06/M07/M08: `OPEN_UNCLAIMED` al último read-back.
 
-## Protocolo anti-pisado
-1. READ latest STATE.
-2. READ latest CHECKPOINT.
-3. Verificar owner/lock.
-4. Escribir claim/RUNNING solamente en log propio.
-5. Releer STATE antes de tocar archivo compartido.
-6. Ejecutar exclusivamente scope propio.
-7. Adjuntar evidencia: ruta + SHA/diff + test/log + URL/read-back según aplique.
-8. Persistir resultado sin borrar entradas ajenas.
-9. Crear/actualizar checkpoint.after.
-10. Releer `main` antes de declarar cierre.
+## Frontier operativo
+- Último nodo verificado: `M43_WATCHDOG_3STEP_SEMANTIC_RECONCILED`.
+- Checkpoint vigente: `CP-V2-M43-WATCHDOG-SEMANTIC-RECONCILIATION-030`.
+- M42 reconcilió PLAN M37–M41 mediante `PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json`.
+- M43 corrigió el watchdog para que Step2 conserve adquisición/StrategyDelta/readback y Step3 sea sólo wire/prune/min-code/test.
 
-## Regla de conflicto
-Si dos agentes reclaman el mismo nodo, conserva ownership el primer claim verificable. El segundo no escribe en ese nodo y elige otra tarea `parallel_safe`; si no existe, queda WAIT/REVIEW sin inventar progreso.
+## Recovery rule
+Si M06/M07/M08 siguen sin claim, SOL sólo puede continuar tareas `parallel_safe/read-only` que conviertan GAP desconocido en evidencia nueva o reparen drift del control plane. No repetir X-Ray M21/M22/M23 ni redocumentar el mismo estado sin cambio.
 
-## Shared-write rule
-PLAN/STATE/CHECKPOINT/Handoff/Recovery = writers secuenciales. Logs = uno por agente. Antes de update de archivo compartido siempre fetch SHA fresco; nunca usar SHA viejo.
+Prohibido antes del fan-in + director gate: reparación física de los 23 FAILED, descarga B05/B06, source/ref redesign, activar MultiSOL futuro o ejecutar Step3.
 
-## Locks
-- INPUT_RAW = IMMUTABLE
-- MOTOR_CODE = CANONICAL_IMMUTABLE_COPY_ONLY
-- V1 = READ_ONLY_REFERENCE
-- NO_LFS
-- NO_FORCE
-- NO_SILENT_OVERWRITE
-- READBACK obligatorio
-- Step3 = BLOCKED hasta reviews y gate director
-
-## Estado base al crear este parche
-- Current node: `M06_M07_M08_REVIEW_AND_GAP_STRATEGY`.
-- V2 acquisition: 10 VERIFIED_CLOSED / 20 FAILED / 0 pending.
-- X-Ray exacto: 6 DESTINATION_EXISTS + 5 READBACK_TREE_HASH_GAP + 9 SOURCE_SPECIAL_FILE_GAP.
-- SOL inició StrategyDelta read-only sobre los 6 DESTINATION_EXISTS: workflow `sharck-input-v2-readback-recover.yml`, run `34535896880`.
-- ASTRA=M06 READY; CLAUDE=M07 READY; GROK=M08 READY.
-- External engineering review = NOT_PERFORMED/NO_EVIDENCE.
-- Paso 3 sigue bloqueado.
-
-## Contrato por cambio
-`INPUT literal → objetivo único → owner → dependencia → execute → verify/refute → evidence → PASS|GAP → checkpoint → next safe node`.
+## Nota histórica
+La versión anterior de este Recovery conservaba el estado inicial `10 VERIFIED_CLOSED / 20 FAILED` y el handoff histórico. Esa sección quedó obsoleta tras B04 y los deltas M37–M43; esta revisión actualiza sólo control/recovery, sin mutación física.
