@@ -1,0 +1,52 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 30,
+  "base_state_delta": {
+    "file": "STATE-DELTA-029-M40-RESEARCH-REVIEW.json",
+    "blob_sha": "31c167fdfff104168374971ec201dc5cab66f808",
+    "current_node": "M40_DIRECTOR_6TRACK_RESEARCH_REVIEW_READY"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M41_3STEP_SEMANTIC_DRIFT_VERIFIED_READ_ONLY",
+  "task": {
+    "owner": "SOL",
+    "claim_id": "SOL-M41-20260911-2043-COT",
+    "status": "VERIFIED_READ_ONLY_CONTROL_GAP",
+    "evidence": "SOL-LOG-M41-3STEP-SEMANTIC-DRIFT.md",
+    "evidence_blob_sha": "bec5bb5e8fc8deeb936c9b27a270bee0de4fbd6b",
+    "gap_id": "G-V2-3STEP-SEMANTIC-DRIFT-M40",
+    "physical_mutation": false
+  },
+  "three_step_contract": {
+    "step1": "INVENTORY_XRAY_ARCHITECTURE",
+    "step2": "RESEARCH_PREFLIGHT_PLUS_ACQUISITION_STRATEGYDELTA_READBACK",
+    "fan_in": "M06_M07_M08_PLUS_DIRECTOR_GATE",
+    "step3": "WIRE_PRUNE_MIN_CODE_TEST",
+    "note": "M40 Handoff semantic labels were contradictory; corrected interpretation is fail-closed to Architecture V2.1"
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0}
+  },
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next": [
+    "Correct Handoff 3-step labels without changing physical state",
+    "Wait for owner claims M06/M07/M08",
+    "No physical repair or B05/B06 acquisition before fan-in and director gate"
+  ]
+}
