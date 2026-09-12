@@ -1,0 +1,57 @@
+{
+  "schema": "sharck-input.watchdog-3step.v2",
+  "node": "M43_WATCHDOG_3STEP_SEMANTIC_RECONCILIATION",
+  "owner": "SOL",
+  "mode": "FAIL_CLOSED",
+  "base_watchdog": {
+    "file": "WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json",
+    "blob_sha": "a083d56ccc135a119ea2d669a9a19caa467bc1f4"
+  },
+  "evidence": {
+    "file": "SOL-LOG-M43-WATCHDOG-SEMANTIC-RECONCILIATION.md",
+    "blob_sha": "fde197725e98660aaf231544e69ba68c1fe15163"
+  },
+  "project_steps": {
+    "STEP_1": {
+      "name": "INVENTORY_XRAY_ARCHITECTURE",
+      "status": "VERIFIED_CLOSED_CONTROL_SCOPE"
+    },
+    "STEP_2": {
+      "name": "RESEARCH_PREFLIGHT_PLUS_ACQUISITION_STRATEGYDELTA_READBACK",
+      "status": "REVIEW_READY_WAITING_FANIN_AND_DIRECTOR_GATE",
+      "physical_action_allowed": false,
+      "reason": "M06 ASTRA, M07 CLAUDE, M08 GROK remain unclaimed and director gate is required"
+    },
+    "STEP_3": {
+      "name": "WIRE_PRUNE_MIN_CODE_TEST",
+      "status": "BLOCKED_UNTIL_M06_M07_M08_PLUS_DIRECTOR_GATE"
+    }
+  },
+  "physical_state": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_researched_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "no_lfs": true,
+    "no_force": true,
+    "no_silent_overwrite": true,
+    "readback_required": true
+  },
+  "verdict": "WATCHDOG_SEMANTICS_RECONCILED_FAIL_CLOSED_NO_PHYSICAL_MUTATION"
+}
