@@ -1,0 +1,42 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M41-3STEP-SEMANTIC-DRIFT-028",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-027-M40-RESEARCH-REVIEW.json",
+    "checkpoint_id": "CP-V2-M40-RESEARCH-REVIEW-027",
+    "blob_sha": "04ec9c2954b4ffd703306e91af3b1c1752d7e301"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M41_3STEP_SEMANTIC_DRIFT_VERIFIED_READ_ONLY",
+  "state_delta": {
+    "file": "STATE-DELTA-030-M41-3STEP-SEMANTIC-DRIFT.json",
+    "blob_sha": "86cc03e9838f2e52f0418c79683a009170cb3d19"
+  },
+  "evidence": {
+    "file": "SOL-LOG-M41-3STEP-SEMANTIC-DRIFT.md",
+    "blob_sha": "bec5bb5e8fc8deeb936c9b27a270bee0de4fbd6b",
+    "gap": "G-V2-3STEP-SEMANTIC-DRIFT-M40"
+  },
+  "resume_rule": "Use Architecture V2.1 global semantics: Step1 inventory/xray/architecture; Step2 research/preflight plus acquisition/StrategyDelta/readback; Step3 wire/prune/min-code/test only after M06+M07+M08 and director gate. M40 Handoff labels require correction/readback.",
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "director_decision_required": true
+  }
+}
