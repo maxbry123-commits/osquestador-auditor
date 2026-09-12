@@ -1,0 +1,42 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 33,
+  "base_state_delta": {
+    "file": "STATE-DELTA-032-M43-WATCHDOG-SEMANTIC-RECONCILIATION.json",
+    "blob_sha": "c8df084bfd32d3dcf7c2880c166e1cb423f660bf",
+    "current_node": "M43_WATCHDOG_3STEP_SEMANTIC_RECONCILED"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M44_RECOVERY_MULTIENV_RECONCILED_TO_M43",
+  "task": {
+    "owner": "SOL",
+    "status": "VERIFIED_DOCUMENTED_CONTROL_RECONCILIATION",
+    "physical_mutation": false,
+    "evidence": {
+      "recovery_file": "RECOVERY-MULTI-ENV-SHARCK-INPUT.md",
+      "recovery_blob_sha": "d31e65c8eac9e592528479d3f7617d21c8accedc",
+      "plan_delta": "PLAN-DELTA-015-M44-RECOVERY-RECONCILIATION.json",
+      "plan_delta_blob_sha": "e262aabe0699c819b3f99005c64cbfa3c2eca8d9"
+    }
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed": 17, "failed": 23, "pending": 0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06": {"researched_candidates": 20, "downloaded": 0, "verified_closed": 0}
+  },
+  "claims": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "finding": "RECOVERY_MULTI_ENV_WAS_STALE_AT_PRE_B04_COUNTS_AND_HISTORICAL_HANDOFF; NOW_RECONCILED_TO_M43_WITHOUT_PHYSICAL_CHANGE"
+}
