@@ -1,0 +1,41 @@
+{
+  "schema": "sharck-input.plan-delta.v1",
+  "revision": 15,
+  "base_plan_delta": {
+    "file": "PLAN-DELTA-014-M42-CONTROL-RECONCILIATION.json",
+    "blob_sha": "a425b96a3bec35e60685c459d3204cdae4308a87"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "tasks_delta": [
+    {"id":"M43","owner":"SOL","status":"WATCHDOG_3STEP_SEMANTIC_RECONCILED","name":"version watchdog semantics to V2.1 contract; no physical mutation"},
+    {"id":"M44","owner":"SOL","status":"RECOVERY_MULTIENV_RECONCILED_TO_M43","name":"replace stale recovery frontier/counts with M43 fail-closed control state; documentation/control only"}
+  ],
+  "evidence": {
+    "recovery_file": "RECOVERY-MULTI-ENV-SHARCK-INPUT.md",
+    "recovery_blob_sha": "d31e65c8eac9e592528479d3f7617d21c8accedc"
+  },
+  "review_gate": {
+    "M06_ASTRA": "OPEN_UNCLAIMED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED",
+    "M08_GROK": "OPEN_UNCLAIMED",
+    "director": "REQUIRED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "counts": {
+    "canonical_components": 117,
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "B01_B04_pending": 0,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_candidates": 20,
+    "B05_B06_downloaded": 0
+  },
+  "next_action": "WAIT_M06_M07_M08_OWNER_CLAIMS_AND_DIRECTOR_GATE; SOL_ONLY_NEW_READ_ONLY_EVIDENCE_OR_CONTROL_RECONCILIATION"
+}
