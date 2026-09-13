@@ -1,0 +1,40 @@
+{
+  "schema": "sharck-input.crazy-wall-swarm-queue.v1",
+  "node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "status": "ACTIVE",
+  "dag": "SWARM-DAG-8SOL-M47-v1.json",
+  "watchdog": "WATCHDOG-SWARM-8SOL-M47-2026-09-12.json",
+  "claim_lock_rule": "A worker owns a node only after atomically creating its exact claim_file on fresh main and reading it back. If create fails because file exists, node is occupied and worker must rescan.",
+  "claim_payload_required": ["chat_id","agent_name","node_id","fresh_main_sha","base_sha","write_scope","paths","claimed_at","state"],
+  "workers": {
+    "SOL-1-GPT":"SOL-SWARM-01-LOG.md",
+    "SOL-2-GPT":"SOL-SWARM-02-LOG.md",
+    "SOL-3-GPT":"SOL-SWARM-03-LOG.md",
+    "SOL-4-GPT":"SOL-SWARM-04-LOG.md",
+    "SOL-5-GPT":"SOL-SWARM-05-LOG.md",
+    "SOL-6-GPT":"SOL-SWARM-06-LOG.md",
+    "SOL-7-GPT":"SOL-SWARM-07-LOG.md",
+    "SOL-8-GPT":"SOL-SWARM-08-LOG.md"
+  },
+  "queue": [
+    {"node_id":"SW-N01","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N01.json","evidence_file":"SW-N01-EVIDENCE.md","write_group":"RESEARCH_DEDUP"},
+    {"node_id":"SW-N02","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N02.json","evidence_file":"SW-N02-EVIDENCE.md","write_group":"SOURCE_PROVENANCE"},
+    {"node_id":"SW-N03","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N03.json","evidence_file":"SW-N03-EVIDENCE.md","write_group":"ANOMALY_FORENSICS"},
+    {"node_id":"SW-N04","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N04.json","evidence_file":"SW-N04-EVIDENCE.md","write_group":"SANDBOX_COVERAGE"},
+    {"node_id":"SW-N05","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N05.json","evidence_file":"SW-N05-EVIDENCE.md","write_group":"HF_BRIDGE"},
+    {"node_id":"SW-N06","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N06.json","evidence_file":"SW-N06-EVIDENCE.md","write_group":"RUNTIME_RISK"},
+    {"node_id":"SW-N07","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N07.json","evidence_file":"SW-N07-EVIDENCE.md","write_group":"PORT_ADAPTER_MATRIX"},
+    {"node_id":"SW-N08","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N08.json","evidence_file":"SW-N08-EVIDENCE.md","write_group":"CONTROL_DRIFT"},
+    {"node_id":"SW-N09","state":"BLOCKED_GATE","claim_file":"swarm-claims/CLAIM-SW-N09.json","dependency":"M06+M07+M08+director+physical_repair_allowed"},
+    {"node_id":"SW-N10","state":"BLOCKED_GATE","claim_file":"swarm-claims/CLAIM-SW-N10.json","dependency":"director+b05_b06_download_allowed+acquisition preflight"},
+    {"node_id":"SW-N11","state":"BLOCKED_GATE","claim_file":"swarm-claims/CLAIM-SW-N11.json","dependency":"verified acquisitions+step3_allowed"},
+    {"node_id":"SW-N12","state":"BLOCKED_GATE","claim_file":"swarm-claims/CLAIM-SW-N12.json","dependency":"SW-N11 complete+exact candidate SHA"}
+  ],
+  "reserved": [
+    {"node_id":"M06","owner":"ASTRA","state":"OPEN_UNCLAIMED_RESERVED"},
+    {"node_id":"M07","owner":"CLAUDE","state":"OPEN_UNCLAIMED_RESERVED"},
+    {"node_id":"M08","owner":"GROK","state":"OPEN_UNCLAIMED_RESERVED"}
+  ],
+  "shared_write_rule": "Workers never update this queue directly after execution. They publish own log/evidence; SOL-0 supervisor reconciles queue/state/plan/checkpoint/handoff after fresh readback.",
+  "verdict": "EIGHT_READY_ATOMIC_CLAIMS / FOUR_BLOCKED / THREE_RESERVED_EXTERNAL_OWNER_NODES"
+}
