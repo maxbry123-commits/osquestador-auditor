@@ -1,0 +1,151 @@
+{
+  "schema": "sharck-input.task1.concurrent-intelligence-agency.v1",
+  "task": "TASK_1_OUTPUT_1_ARCHITECTURE_RECONCILIATION",
+  "date": "2026-09-13",
+  "status": "ARCHITECTURE_ACCEPTED_AS_CANDIDATE / IMPLEMENTATION_PARTIAL / FAIL_CLOSED",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "root": "➡️📂 sharck imput/",
+  "supersedes_nothing": true,
+  "base_architecture": "📁 readme arquitectura sharck imput V2.1.md",
+  "base_candidate_runtime": "📂 input sharck code principal/📂 sharck-v3-parallel-candidate/STRICT-ENTRYPOINT-M59.md",
+  "intent": "SHARCK Input is the intelligence director PRE-LLM. It does not execute the user's tactical task. It continuously builds, validates, refutes, refreshes and packages actionable context for the downstream YAIWES tactical agent team.",
+  "non_sequential_rule": "User numbered steps are capability/process references, NOT a blocking sequence. After deterministic INPUT_RAW->INPUT_LOCK->literal decomposition, eligible capabilities run concurrently, event-driven or continuously and may reactivate one another.",
+  "organization_model": {
+    "director": "SHARCK_DIRECTOR",
+    "downstream_tactical_team": "YAIWES_AGENTS",
+    "metaphor": "intelligence agency -> tactical SWAT/Navy-SEAL execution handoff",
+    "coordination": "event-driven blackboard + evidence ledger + context-delta bus + artifact pointers",
+    "fan_in_authority": "SHARCK_DIRECTOR + deterministic final sheriff/verdict gate",
+    "microagent_target": "dynamic 10..100+ independent specialists; never spawn merely to hit a number",
+    "global_runtime_ceiling_target": 128,
+    "recursive_spawn_default": false,
+    "reason": "bound token/API cost and prevent runaway swarm while retaining >100 specialist capability"
+  },
+  "bootstrap_only": [
+    "INPUT_RAW immutable capture",
+    "INPUT_SHA256 lock",
+    "literal grammatical/lexical/entity/goal/constraint decomposition",
+    "ambiguity detector -> structured user questions or candidate requirement hypotheses",
+    "InputSpec publication"
+  ],
+  "process_bureaus": [
+    {"id":"BUREAU_RESEARCH","mode":"FAN_OUT_POOL+REACTIVATABLE","purpose":"advanced official/community/web/GitHub/HuggingFace research; query lattice; 10..100 searches per round"},
+    {"id":"BUREAU_SKILLS","mode":"EVENT_DRIVEN+REACTIVATABLE","purpose":">=3 libraries, >=20 full skill reads in strict gate, select/activate max 3, keep >=5 standby; progressive disclosure"},
+    {"id":"BUREAU_DATASETS","mode":"EVENT_DRIVEN+CONTINUOUS_WHEN_RELEVANT","purpose":">=3 active datasets + >=5 standby candidates; dataset cards/license/freshness/provenance; stream/sample before full acquisition"},
+    {"id":"BUREAU_ADAPTERS","mode":"EVENT_DRIVEN+REACTIVATABLE","purpose":"discover >=3 compatible adapters/couplers + >=5 standby; contract/schema/auth/version compatibility"},
+    {"id":"BUREAU_TOOLS_PLUGINS","mode":"EVENT_DRIVEN","purpose":"detect required capability/connection; prefer MCP/API; inspect schema/auth/permissions; prepare usage instructions; read-only smoke before mutation"},
+    {"id":"BUREAU_PERSISTENCE_CONTEXT","mode":"CONTINUOUS","purpose":"12 goals input/output + Council12 + 3 refutations + debate + 4 simulations; compare new evidence with memory and emit context deltas while work continues"},
+    {"id":"BUREAU_EVIDENCE_SHERIFF","mode":"CONTINUOUS+REACTIVATABLE","purpose":"sentinel/sheriff/validator/judge/guardian; corroborate method and claims with official + independent developer/community evidence; rank 10 alternative routes by zero friction, time, simplicity, evidence"},
+    {"id":"BUREAU_ERROR_LENS","mode":"CONTINUOUS_WHEN_RISKY","purpose":"actively seek negative reports, regressions, breaking changes, failure modes, social/community complaints and contra-evidence before execution"},
+    {"id":"BUREAU_SOLUTION_GUIDES","mode":"EVENT_DRIVEN+REACTIVATABLE","purpose":"manuals, official install guides, runbooks, troubleshooting and community implementation evidence; derive exact low-friction route"},
+    {"id":"BUREAU_MULTI_SHARCK","mode":"PARALLEL_DEBATE","purpose":"independent counter-routes; newer/older version comparison; 12 goals + Council12 + refutations; oppose primary context with evidence and propose better routes/questions"},
+    {"id":"BUREAU_LITERAL_ALIGNMENT","mode":"FAN_IN_GATE","purpose":"anti-hallucination INPUT BLOCK sheriff; every literal requirement must map to evidence/context/output; noisy or unrelated context blocked"},
+    {"id":"BUREAU_NEWS_REPORTER","mode":"EVENT_DRIVEN+WATCHDOG","purpose":"when news/current events matter: local->state/region->country->international media plus social traces; source thread graph; refresh cadence from 1 minute upward according to priority"},
+    {"id":"BUREAU_ACADEMIC_STUDY","mode":"EVENT_DRIVEN+CONTINUOUS_WHEN_RELEVANT","purpose":"papers, datasets, benchmarks, citations, methods and study-oriented context; source/paper/dataset cross-links"},
+    {"id":"BUREAU_CONTINUOUS_WORK","mode":"CONTINUOUS","purpose":"research and learn while YAIWES task execution is in progress; enqueue context deltas without interrupting current work"},
+    {"id":"BUREAU_WATCHDOG","mode":"CONTINUOUS_SCHEDULER","purpose":"per-process or global condition/time watchers; refresh, stale-source detection, pending-result checks, no physical mutation without gate"},
+    {"id":"BUREAU_MEMORY_HANDOFF","mode":"CONTINUOUS_PERSISTENCE","purpose":"per-job memory.md, profile.json, HANDOFF.md, executable handoff index and source pointers so resumed work reuses prior evidence instead of restarting research"}
+  ],
+  "cross_cutting_services": [
+    "ParallelRouter local+web API",
+    "priority task queue",
+    "persistent worker pool",
+    "SmartBatcher/API batching",
+    "Dedup/in-flight future sharing",
+    "LRU/mmap cache",
+    "streaming/backpressure",
+    "idempotency keys",
+    "timeouts/retries/circuit breakers",
+    "rate-limit and API-key pool",
+    "resource/token/cost governor",
+    "artifact store",
+    "append-only evidence ledger",
+    "context-delta bus",
+    "source freshness/version monitor",
+    "three-hypothesis simulation cells",
+    "observability/tracing/evals"
+  ],
+  "microagent_contract": {
+    "required_fields": ["job_id","bureau","objective","input_pointer","evidence_scope","budget","deadline","output_schema","artifact_path","status"],
+    "states": ["CREATED","QUEUED","RUNNING","WAITING_EXTERNAL","VERIFYING","PASS","GAP","FAILED","CANCELLED"],
+    "rules": [
+      "one microagent writes only its own artifact path",
+      "shared control writes are supervisor-only",
+      "large results stay in artifacts; coordinator receives pointer + digest + compact finding",
+      "no microagent may recursively spawn by default",
+      "duplicates collapse through dedup/idempotency",
+      "a slow specialist must not block unrelated bureaus",
+      "insufficient evidence creates GAP and reactivation event, never fabricated PASS"
+    ]
+  },
+  "parallelism_policy": {
+    "design_goal": "minimize critical path, not maximize agent count",
+    "spawn_when": ["independent search direction","isolated context improves quality","different source class","parallel simulation/refutation","large breadth query","freshness monitor"],
+    "do_not_spawn_when": ["single cheap lookup","strong shared-state dependency","same source/query already in-flight","sequential physical write","coordination cost exceeds expected latency saving"],
+    "adaptive_concurrency": "1..128 microagents target; provider/tool fan-out individually bounded; backpressure always enabled",
+    "budget_dimensions": ["tokens","wall_clock","requests","provider_rate_limit","memory","artifact_bytes"],
+    "fan_in": "incremental; context deltas may be consumed before all unrelated work finishes; final CONTEXT_READY still requires deterministic alignment/evidence gate"
+  },
+  "context_outputs_per_job": [
+    "INPUT_RAW.txt + SHA256",
+    "input_spec.json",
+    "memory.md",
+    "profile.json",
+    "evidence-ledger.jsonl",
+    "source-graph.json",
+    "context-deltas.jsonl",
+    "lane/bureau artifacts",
+    "HANDOFF.md",
+    "handoff-index.json",
+    "CONTEXT_PACKAGE.json",
+    "validation-checklist.json",
+    "gaps-and-counterevidence.json"
+  ],
+  "handoff_contract": {
+    "to": "YAIWES tactical agents / MAIN_LLM",
+    "must_include": ["literal objective","constraints","recommended route","alternative routes","evidence pointers","known gaps","risk/error warnings","available skills/datasets/adapters/tools","how-to-use pointers","freshness timestamps","rollback/fallback","remaining questions"],
+    "must_not_include": ["unverified factual claims presented as fact","secrets/API keys","full duplicated corpora when a pointer is enough","stale result without freshness flag"]
+  },
+  "research_signals": {
+    "OpenAI": "Agents SDK/Responses emphasize tools, handoffs, guardrails, tracing/evals, remote MCP and controlled sandboxes; adopt as contracts/adapters, not as sole orchestrator.",
+    "Anthropic": "multi-agent research validates orchestrator-worker, independent parallel search, artifact outputs and external memory; also warns multi-agent is expensive and poor for tightly coupled work, requiring adaptive spawn/budgets.",
+    "MiniMax": "Agent Teams and long-running persistent agents support parallel roles, memory/context/triggers and continuous operation; use as design signal for durable bureaus.",
+    "Kimi": "Agent Swarm and Kimi Code demonstrate dynamic large fan-out, background tasks/goals, rate-limit-aware retries and skill discovery; adopt critical-path parallelism with hard resource governor.",
+    "HuggingFace": "Hub exposes datasets, dataset cards, streaming, tools/Spaces, MCP and agent libraries; inspect remote code and provenance before activation.",
+    "developer_community": "runaway subagents and context duplication cause quota/token explosions; therefore recursion off by default, tiered workers, shared-prefix/artifact pointers, budget telemetry and spawn caps are mandatory."
+  },
+  "current_implementation_crosscheck": {
+    "M59_present": true,
+    "implemented_now": [
+      "11 independent LaneKernel tasks + continuous research",
+      "10..100 search jobs with semaphore and dedup",
+      "local/web provider adapters + up to 100 API key environment slots",
+      "skills strict gate with 3 libraries / 20 full reads / 3 selected / 5 standby",
+      "dataset/adapter/tool discovery contracts",
+      "evidence ledger, memory/profile/HANDOFF/context package",
+      "executable handoff index",
+      "canonical Motor 2 acquisition bridge as request-only",
+      "tests/CI candidate"
+    ],
+    "architecture_gaps_for_later_tasks": [
+      "dynamic 100+ microagent bureau runtime is not yet implemented; current router caps search jobs at 100",
+      "explicit News Reporter bureau/watchdog not implemented",
+      "explicit Academic Study bureau not implemented",
+      "durable persistent job queue/runtime across process restarts not proven",
+      "continuous context-delta bus to downstream YAIWES not proven",
+      "per-process/global watchdog runtime not proven",
+      "resource/token/cost governor not proven",
+      "simulation cells are structurally present but provider-backed 3-hypothesis executions are not proven",
+      "live provider/network smoke remains a GAP",
+      "production wiring remains closed"
+    ]
+  },
+  "physical_gates_preserved": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors_immutable": true
+  },
+  "task1_verdict": "ARCHITECTURE_RECONCILED / M59_REUSED_NOT_DUPLICATED / M60_RECORDS_FULL_AGENCY_TARGET / NO_PRODUCTION_PROMOTION / NEXT_TASK_MUST_RESEARCH_AND_BENCHMARK_IMPROVEMENTS_BEFORE_EXPANDING_CODE"
+}
