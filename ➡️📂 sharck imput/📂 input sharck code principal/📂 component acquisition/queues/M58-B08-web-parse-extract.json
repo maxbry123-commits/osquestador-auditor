@@ -1,0 +1,30 @@
+{
+  "schema": "sharck-input.acquisition-queue.m58.v1",
+  "batch": "M58-B08",
+  "capability": "WEB_PARSE_EXTRACT",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B08-web-parse-extract",
+  "queue": [
+    {
+      "id": "M58-B08-01",
+      "source_repo": "rushter/selectolax",
+      "source_ref": "54c4818d34a9e899aef64cd48bab325fac6c1b90",
+      "slug": "selectolax",
+      "license": "MIT",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B08-web-parse-extract",
+      "publish": true
+    },
+    {
+      "id": "M58-B08-02",
+      "source_repo": "chatnoir-eu/chatnoir-resiliparse",
+      "source_ref": "d54c54c445a58cf94f1f01808492b561ca7c61c0",
+      "slug": "chatnoir-resiliparse",
+      "license": "Apache-2.0",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B08-web-parse-extract",
+      "publish": true
+    }
+  ]
+}
