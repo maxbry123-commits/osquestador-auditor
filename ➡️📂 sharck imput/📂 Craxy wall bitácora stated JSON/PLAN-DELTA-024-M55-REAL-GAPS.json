@@ -1,0 +1,12 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":24,
+  "base_plan_delta":"PLAN-DELTA-023-M54-CONTINUATION.json",
+  "node":"M55_REOPEN_REAL_GAPS_NO_OVERENGINEERING",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "dispatch":"CRAZY-WALL-SWARM-QUEUE-M55.json",
+  "new_nodes":["SW-N43","SW-N44","SW-N45","SW-N46"],
+  "order":"Idle SOL reads M55 and atomically claims first free N43-N46. No artificial filler nodes.",
+  "next_action":"execute N43-N46; fan-in only terminal evidence; derive another node only from explicit remaining GAP"
+}
