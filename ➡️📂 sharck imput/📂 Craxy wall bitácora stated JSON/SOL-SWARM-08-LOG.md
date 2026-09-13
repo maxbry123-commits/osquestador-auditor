@@ -2,9 +2,9 @@
 
 - agent_name: `SOL-8-GPT`
 - chat_id: `chat-sol8-20260912T2313-0500`
-- state: `SW-N23_PASS_PENDING_RELEASE`
-- active_node: `SW-N23`
-- current_worker_control: `M50_ADD_TWO_GAP_DERIVED_SAFE_NODES`
+- state: `READY_NO_ACTIVE_CLAIM_NO_SAFE_FREE_NODE`
+- active_node: `null`
+- current_worker_control: `M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE`
 - rule: dynamic first-safe-free claim only after fresh read; one active node; write only this log + node-unique evidence + own atomic claim; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG.
 - reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
 - physical mutation: forbidden while latest gates remain false.
@@ -31,12 +31,13 @@
 - tests: `7/7`; simulations `3/3`; refutations `3/3`; Council12 `12/12`.
 - key boundary: historical B04-01 exact source commit remains unrecoverable; current upstream symlink topology is preflight evidence only.
 
-## SW-N23 — SPACY_VSCODE_EXTENSIONS_MISSING_FORENSIC
+## SW-N23 — SPACY_VSCODE_EXTENSIONS_MISSING_FORENSIC — RELEASED
 
 - claim_commit: `5cce3a6b6e11b026c9939d72b807f59d50c7fdd1`
-- claim_blob: `f45dd493c66f266ee97663a0a66a63b9ac9c1abc`
 - evidence_commit: `9ed99bd7e89349e658b6225110f1075922dc60bb`
 - evidence_blob_readback: `ec83af67c9f6fc289ce9ab1d9a0e01c473122407`
+- release_commit: `5a394727629c728928a3c3b16ee04c80219ab9b8`
+- release_blob: `dd5c0b1848eb44fe746d62a0b77f6e3817e4a7b2`
 - pinned_source_commit: `26b4d1dc04a812f426e4bef3e8a1b6f159d6f048`
 - exact_path: `website/.vscode/extensions.json`
 - source_git_blob: `4b533827a909bc135ca82fcb122587645508b302`
@@ -55,4 +56,17 @@
 - shared_control_writes: `0`
 - worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
 - repair_prerequisite: `future authorized staging must preserve exact upstream tracked set/bytes/modes and full-tree readback; broad unsafe ignore bypass rejected.`
-- release_action: `release N23 after fresh-head/readback, then rescan latest queue.`
+
+## M52 LIVE-SAFE QUEUE — POST-N23 RESCAN
+
+- authoritative_queue: `CRAZY-WALL-SWARM-QUEUE-M52.json`
+- queue_rule: `claim state + worker log/evidence fresh overrides stale queue snapshot; terminal nodes are never reclaimed.`
+- N25: `CLAIMED by SOL-1-GPT`.
+- N26: `CLAIMED by SOL-10-GPT`.
+- N27: `CLAIMED by SOL-6-GPT`.
+- N28: `CLAIMED by SOL-7-GPT` after SOL-8 fresh preclaim scan; collision correctly abandoned before write.
+- latest_confirmed_control_head_before_this_log_update: `88e479890d3eaf90a9a8d0e8079a95f430f77fb5` (`M52 publish recovery`).
+- gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`.
+- action: `NO NEW CLAIM CREATED`.
+- verdict: `NO_SAFE_FREE_EXECUTABLE_NODE_AT_FRESH_M52_SCAN`.
+- next: `READ CRAZY WALL FRESH; if M53/N29+ or another genuinely new FREE non-overlapping node is published, atomically claim it; otherwise remain fail-closed and do not invent or reclaim terminal work.`
