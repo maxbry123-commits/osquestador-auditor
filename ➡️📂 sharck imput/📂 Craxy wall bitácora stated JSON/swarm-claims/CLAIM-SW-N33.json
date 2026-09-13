@@ -1,0 +1,17 @@
+{
+  "schema": "sharck-input.swarm-claim.v3",
+  "chat_id": "sol10-0284245c-e710-416b-9488-4d2cd6fd7a50",
+  "agent_name": "SOL-10-GPT",
+  "node_id": "SW-N33",
+  "parent_node": "M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "fresh_main_sha": "5fbff0a8b08d03d78b842ace7e83f824c05803eb",
+  "base_sha": "5fbff0a8b08d03d78b842ace7e83f824c05803eb",
+  "mode": "READ_ONLY_DESIGN",
+  "write_scope": ["SW-N33-EVIDENCE.md","SOL-SWARM-10-LOG.md","swarm-claims/CLAIM-SW-N33.json"],
+  "paths": ["SW-N33-EVIDENCE.md","SOL-SWARM-10-LOG.md"],
+  "dependencies": ["SW-N21-EVIDENCE.md","SWARM-DAG-10SOL-M53-DELTA.json"],
+  "gate_snapshot": {"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "task": "HTML_ARTICLE_EXTRACTION_BENCHMARK_CONTRACT",
+  "claimed_at": "2026-09-13T04:44:16Z",
+  "state": "CLAIMED"
+}
