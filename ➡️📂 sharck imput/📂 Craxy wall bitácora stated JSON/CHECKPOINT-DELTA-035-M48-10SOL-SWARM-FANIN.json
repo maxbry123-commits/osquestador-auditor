@@ -1,0 +1,13 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M48-10SOL-SWARM-FANIN-035",
+  "base_checkpoint":"CHECKPOINT-DELTA-034-M47-8SOL-SWARM-CONTROL.json",
+  "node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "status":"ACTIVE",
+  "resume_order":["READ main fresh","READ STATE-DELTA-037-M48-10SOL-SWARM-FANIN.json","READ PLAN-DELTA-019-M48-10SOL-SWARM-FANIN.json","READ CRAZY-WALL-SWARM-QUEUE-M48.json","READ SWARM-DAG-10SOL-M48-v1.json","READ WATCHDOG-SWARM-10SOL-M48-2026-09-12.json","READ swarm-claims and SOL-SWARM-01..10 logs","separate retained lock state from current worker state","dispatch first safe READY node only"],
+  "m47_wave":{"worker_nodes_released":8,"worker_verdict":"PASS_PENDING_SUPERVISOR_FANIN","global_verified_closed":false},
+  "m48_wave":{"worker_capacity":10,"ready_nodes":["SW-N13","SW-N14","SW-N15","SW-N16","SW-N17","SW-N18","SW-N19","SW-N20","SW-N21","SW-N22"],"blocked_nodes":["SW-N09","SW-N10","SW-N11","SW-N12"]},
+  "gates":{"M06":"ASTRA_REQUIRED","M07":"CLAUDE_REQUIRED","M08":"GROK_REQUIRED","director":"REQUIRED_FOR_PHYSICAL_PROMOTION","physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "physical_snapshot":{"canonical":117,"verified_closed":17,"failed":23,"partials":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "resume_rule":"Do not infer active chats from registered capacity. A worker is active only when a fresh claim file plus compatible log/evidence prove it. Never reopen N01-N08 as new work; retain them as fan-in history."
+}
