@@ -214,11 +214,11 @@
 - G05 gates/dependencies: `PASS`
 - G06 non-overlapping scope: `PASS`
 - G07 existing provenance reused/deduped: `PASS`
-- G08 minimal allowed delta: `PASS`
-- G09 capture/replay tests: `PASS 8/8 + 5/5`
-- G10 simulations/refutations: `PASS 3/3 + 3/3`
-- G11 evidence/commit/blob/readback: `PASS`
-- G12 RELEASED/readback: `PASS`
+- G08 minimal permitted delta only: `PASS`
+- G09 capture/replay contract tests: `PASS 8/8 + 5/5`
+- G10 three simulations + three refutations: `PASS`
+- G11 evidence SHA/readback: `PASS`
+- G12 release/rescan: `PASS`
 
 ### Final
 - node_execution_score: `12/12 GOALS PASS`
@@ -232,12 +232,15 @@
 ## SW-N35 — FULL_BYTE_REPLAY_EXECUTOR_PREFLIGHT
 
 - chat_id: `chat-sol6-20260912T2329-0500`
-- state: `PASS_PENDING_REVIEW_READY_EXECUTOR`
-- active_node: `SW-N35` until release readback
+- state: `RELEASED_PASS_PENDING_REVIEW_READY_EXECUTOR`
+- active_node: `null`
+- completed_node: `SW-N35`
 - claim_commit: `074e275820204cadef04d364b39b4e9955ee5b54`
 - claim_blob: `411760aca04861f6d4a0b6a0228b029950b021ae`
 - evidence_commit: `7d15604545e469ba534a07bc242e02a1756aa24b`
 - evidence_blob: `10e58eba1b90d2fb5fc5dd7cdd3575f6a0d259cc`
+- release_commit: `8060c24735595efda62985edeb6e8d02f7451421`
+- released_claim_blob: `89dac4f524f12184c5c68032bcd53462014cf4b2`
 - mode: `READ_ONLY_PLUS_SANDBOX_DESIGN`
 - canonical_mutation: `NO`
 - workflow_mutation: `NO`
@@ -263,4 +266,41 @@
 - producer_verdict: `PASS_PENDING_REVIEW / READY_EXECUTOR`
 - N26_real_byte_replay_closed: `NO`
 - remaining_gap: `later authorized node must materialize/run the contract on real pinned RapidFuzz bytes`
-- next_action: `RELEASE SW-N35 → readback → READ CRAZY WALL FRESH`
+- next_action: `READ CRAZY WALL FRESH → first safe READY free node`
+
+---
+
+## SW-N41 — WARC_RECORD_TYPE_NORMALIZATION_POLICY
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `PASS_PENDING_REVIEW`
+- active_node: `SW-N41` until release readback
+- claim_commit: `18ebab93beccc005a08adfcb84fac57ad31753e3`
+- claim_blob: `ed2ae6ede5fa533368014a53a7a8af4517786aac`
+- evidence_commit: `2e07c6c5b174f9064c330cc08f478b958db7897a`
+- evidence_blob: `2a273099381931d9ff82c1ada01dc55950e4eafc`
+- mode: `READ_ONLY_DESIGN`
+- canonical_mutation: `NO`
+- downloads: `0`
+- installs: `0`
+
+### Exactly 3 steps — completed
+1. Audited WARC record types and stable/volatile fields from N34 + pinned warcio source examples.
+2. Defined normalization/digest/replay/multiplicity rules for response/resource/metadata/revisit; unsupported types fail closed.
+3. Executed synthetic record-ledger drift matrix and 3 refutations; evidence persisted/read back.
+
+### Tests
+- `RECORD_LEDGER_MATRIX = 9/9 PASS`
+- `SIMULATIONS = 3/3 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- volatile UUID/date-only changes do not cause semantic drift.
+- JSON metadata key order/whitespace canonicalizes without false drift.
+- revisit/resource/metadata payload/profile/multiplicity drift detected.
+
+### Final
+- node_scope_score: `3/3 STEPS PASS`
+- evidence_readback: `PASS`
+- producer_verdict: `PASS_PENDING_REVIEW`
+- runtime_baseline_executed: `NO`
+- remaining_gap: `first real Browsertrix/warcio baseline may reveal additional record types/profile-specific fields`
+- next_action: `RELEASE SW-N41 → readback → READ CRAZY WALL FRESH`
