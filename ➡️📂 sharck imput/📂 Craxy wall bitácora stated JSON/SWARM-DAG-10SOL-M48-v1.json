@@ -1,0 +1,37 @@
+{
+  "schema": "sharck-input.swarm-dag.v2",
+  "node": "M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "mode": "FAIL_CLOSED_LOOP",
+  "source_base_sha": "26b06814d3be2a4901c645a8029c741ba5f52fe7",
+  "supersedes_live_dispatch": "SWARM-DAG-8SOL-M47-v1.json",
+  "project": "Sharck Input V2.1",
+  "supervisor": {"owner":"SOL-0","role":"SUPERVISOR_FANIN_AND_SHARED_WRITER","shared_paths":["STATE*","PLAN*","CHECKPOINT*","HANDOFF*","WATCHDOG*","SWARM-DAG*","CRAZY-WALL-SWARM-QUEUE*"]},
+  "workers": ["SOL-1-GPT","SOL-2-GPT","SOL-3-GPT","SOL-4-GPT","SOL-5-GPT","SOL-6-GPT","SOL-7-GPT","SOL-8-GPT","SOL-9-GPT","SOL-10-GPT"],
+  "invariants": {"one_chat_one_active_node":true,"one_node_one_task":true,"one_path_one_writer":true,"exactly_three_steps":true,"atomic_claim":true,"fresh_head_before_write":true,"shared_writes_supervisor_only":true,"no_force":true,"no_lfs":true,"no_silent_overwrite":true,"no_self_verified_closed":true},
+  "m47_fanin": {"SW-N01":"PASS_PENDING_SUPERVISOR_FANIN","SW-N02":"PASS_PENDING_SUPERVISOR_FANIN","SW-N03":"PASS_PENDING_SUPERVISOR_FANIN","SW-N04":"PASS_PENDING_SUPERVISOR_FANIN","SW-N05":"PASS_PENDING_SUPERVISOR_FANIN","SW-N06":"PASS_PENDING_SUPERVISOR_FANIN","SW-N07":"PASS_PENDING_SUPERVISOR_FANIN","SW-N08":"PASS_PENDING_SUPERVISOR_FANIN"},
+  "m47_control_findings": ["claim_file state may remain CLAIMED after worker release; worker log/evidence is required for execution state","static READY snapshots are not live ownership telemetry","all physical/download/step3 gates remain closed"],
+  "reserved_owner_nodes": {"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "gate_snapshot": {"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","B01_B04_verified_closed":17,"B01_B04_failed":23,"partial_components":12,"partial_exact_anomalies":139,"B05_B06_researched":20,"B05_B06_downloaded":0},
+  "claim_protocol": ["READ_FRESH_ALL_CONTROL_AND_CLAIMS","SELECT_FIRST_READY_FREE_WITH_NO_PATH_OVERLAP","CREATE_UNIQUE_CLAIM_FILE_AND_READBACK","IF_COLLISION_OR_STALE_HEAD_ABORT_RESCAN"],
+  "three_step_contract": ["STEP_1_SYNC_VERIFY_CLAIM","STEP_2_EXECUTE_VERIFY_WITHIN_SCOPE","STEP_3_TEST_REFUTE_REPORT_RELEASE"],
+  "ready_nodes": [
+    {"node_id":"SW-N13","task":"SPACY_TWO_ANOMALIES_ROOT_CAUSE_FORENSIC","mode":"READ_ONLY_FORENSIC","write_scope":["SW-N13-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N03: 2/139 spaCy CAUSE_UNPROVEN","steps":["reconstruct exact two spaCy missing paths and historical/source evidence","compare upstream tracked status/ref/build-generation semantics without physical repair","publish causal verdict + repair prerequisites + 3 refutations"]},
+    {"node_id":"SW-N14","task":"SPECIAL_FILE_SCAN_PROVENANCE_CONTRACT","mode":"READ_ONLY_DESIGN","write_scope":["SW-N14-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N02 historical source-special provenance unresolved","steps":["define immutable source pin + special-file/symlink/submodule/LFS scan contract","validate contract against 11 historical failure classes","publish acceptance schema and fail-closed replay prerequisites"]},
+    {"node_id":"SW-N15","task":"STRATEGYDELTA_SANDBOX_EXECUTION_BATCH_A","mode":"SANDBOX_ONLY","write_scope":["SW-N15-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N04 G-SW-N04-EXECUTION/FULLSET","steps":["select uncovered representative ignore-heavy classes","execute isolated full-set parity fixture without canonical destination mutation","report component/anomaly coverage delta + 3 refutations"]},
+    {"node_id":"SW-N16","task":"MODE_AND_EOL_PRESERVATION_SANDBOX","mode":"SANDBOX_ONLY","write_scope":["SW-N16-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N04 G-SW-N04-MODES + OpenSearch EOL anomalies","steps":["build mode/EOL preservation fixtures from known anomaly classes","run byte+mode+EOL comparison in isolated sandbox","publish validator result and remaining failure classes"]},
+    {"node_id":"SW-N17","task":"PLUMBING_FULLTREE_COMPARE_VALIDATOR","mode":"READ_ONLY_PLUS_SANDBOX","write_scope":["SW-N17-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N04 G-SW-N04-PLUMBING-COMPARE","steps":["audit current full-tree comparison plumbing and manifests","test missing/changed/extra/mode detection on synthetic isolated fixture","publish reusable validator contract without changing canonical motors"]},
+    {"node_id":"SW-N18","task":"HF108_HUGGINGFACE_HUB_FAILURE_PREFLIGHT","mode":"READ_ONLY_FORENSIC","write_scope":["SW-N18-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N05: canonical #108 remains FAILED","steps":["read #108 acquisition/source-special evidence","verify current official upstream special-file topology and immutable refs without substituting history","publish exact repair preflight and non-repairable historical gaps"]},
+    {"node_id":"SW-N19","task":"RUNTIME_CANDIDATE_SPECIAL_SURFACE_SCAN","mode":"READ_ONLY_RESEARCH","write_scope":["SW-N19-EVIDENCE.md","worker-own-log"],"origin_gap":"SW-N06: special-file/symlink/submodule/LFS surface unproven for NEW candidates","steps":["take N06 KEEP/REFERENCE candidate set","scan official upstream topology/license/ref/symlink/submodule/LFS risk","publish acquisition-risk matrix; no download"]},
+    {"node_id":"SW-N20","task":"M40_PRIORITY_PREFLIGHT_LICENSE_REF_PIN_SIZE","mode":"READ_ONLY_RESEARCH","write_scope":["SW-N20-EVIDENCE.md","worker-own-log"],"origin_gap":"M40 shortlist requires preflight before approval/acquisition","steps":["dedup accepted/high-priority M40 candidates against 117+20X","verify official license/default-ref/immutable-pin/maintenance/size/destination","publish KEEP/DEFER/REJECT preflight; no download"]},
+    {"node_id":"SW-N21","task":"WEB_CAPTURE_EXTRACTION_I09_PREFLIGHT","mode":"READ_ONLY_RESEARCH","write_scope":["SW-N21-EVIDENCE.md","worker-own-log"],"origin_gap":"I09 web capture/extraction candidates need current safety/overlap preflight","steps":["audit Browsertrix/warcio/ArchiveBox/Newspaper4k/selectolax/Browserless and allowed peers","verify overlap/license/maintenance/policy/security/ref","publish port+test+acquisition recommendation; no download"]},
+    {"node_id":"SW-N22","task":"EVAL_HARNESS_I04_I10_PREFLIGHT","mode":"READ_ONLY_RESEARCH","write_scope":["SW-N22-EVIDENCE.md","worker-own-log"],"origin_gap":"I04/I10 eval harness shortlist not yet acquisition-preflighted","steps":["audit Inspect AI/Promptfoo/BrowserGym/AgentLab/MCPMark and specialized benchmarks","verify license/maintenance/ref/overlap/execution model","publish minimal eval-stack recommendation + test contract; no download"]}
+  ],
+  "blocked_nodes": [
+    {"node_id":"SW-N09","state":"BLOCKED_GATE","task":"REPAIR_23_PHYSICAL_FAILURES","dependency":"M06+M07+M08+director+physical_repair_allowed"},
+    {"node_id":"SW-N10","state":"BLOCKED_GATE","task":"ACQUIRE_APPROVED_COMPONENTS","dependency":"director+b05_b06_download_allowed+full preflight"},
+    {"node_id":"SW-N11","state":"BLOCKED_GATE","task":"WIRE_PRUNE_MIN_CODE","dependency":"required acquisitions VERIFIED_CLOSED+step3_allowed"},
+    {"node_id":"SW-N12","state":"BLOCKED_GATE","task":"SYSTEM_TEST_REFUTATION_FANIN","dependency":"SW-N11 complete+exact candidate SHA"}
+  ],
+  "fan_in_rule": "M47 worker PASS becomes supervisor-accepted evidence only after readback; it does not open physical gates or imply VERIFIED_CLOSED",
+  "current_verdict": "M47_8_WORKER_NODES_RELEASED_TO_FANIN / M48_10_SAFE_NODES_READY / 4_PHYSICAL_NODES_BLOCKED / 3_RESERVED_OWNER_NODES / NO_GATE_BYPASS"
+}
