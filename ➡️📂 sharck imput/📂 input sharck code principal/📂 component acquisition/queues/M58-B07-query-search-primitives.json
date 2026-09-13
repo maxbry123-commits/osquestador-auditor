@@ -1,0 +1,30 @@
+{
+  "schema": "sharck-input.acquisition-queue.m58.v1",
+  "batch": "M58-B07",
+  "capability": "QUERY_SEARCH_PRIMITIVES",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B07-query-search-primitives",
+  "queue": [
+    {
+      "id": "M58-B07-01",
+      "source_repo": "xhluca/bm25s",
+      "source_ref": "a213158181d4b3781ba06bc88840f89871f1c775",
+      "slug": "bm25s",
+      "license": "MIT",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B07-query-search-primitives",
+      "publish": true
+    },
+    {
+      "id": "M58-B07-02",
+      "source_repo": "qdrant/fastembed",
+      "source_ref": "0dab99c23e659e630f642b42c5888af87befb6e2",
+      "slug": "fastembed",
+      "license": "Apache-2.0",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B07-query-search-primitives",
+      "publish": true
+    }
+  ]
+}
