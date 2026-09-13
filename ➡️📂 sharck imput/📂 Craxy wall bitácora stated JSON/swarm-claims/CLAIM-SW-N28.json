@@ -1,0 +1,18 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"sol7-5f38c044-03f6-4c32-a681-663c0e16b94f",
+  "agent_name":"SOL-7-GPT",
+  "node_id":"SW-N28",
+  "parent_node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "fresh_main_sha":"2628ad610edea64569c323ec95cb836f9792429e",
+  "base_sha":"2628ad610edea64569c323ec95cb836f9792429e",
+  "mode":"READ_ONLY_PLUS_SANDBOX",
+  "write_scope":["SW-N28-EVIDENCE.md","SOL-SWARM-07-LOG.md","swarm-claims/CLAIM-SW-N28.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N28-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-07-LOG.md"],
+  "dependencies":["CRAZY-WALL-SWARM-QUEUE-M52 ACTIVE","SWARM-DAG-10SOL-M52-DELTA N28 schema","SW-N16 claim/log/commit chronology"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"EVIDENCE_PERSISTENCE_WRITEPATH_DIAGNOSTIC",
+  "steps":["reconstruct N16 evidence-write failure from claim/log/commit chronology without modifying N16 scope","test isolated evidence create/update/readback paths under concurrent unrelated commits and classify API/path/SHA/stale-head causes","publish deterministic evidence-persistence fallback contract + 3 refutations"],
+  "claimed_at":"2026-09-13T04:37:20Z",
+  "state":"CLAIMED"
+}
