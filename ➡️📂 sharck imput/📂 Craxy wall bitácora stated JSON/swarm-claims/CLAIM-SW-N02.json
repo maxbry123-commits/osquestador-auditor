@@ -1,0 +1,34 @@
+{
+  "schema": "sharck-input.swarm-claim.v1",
+  "chat_id": "chat-sol2-20260912T2306-0500",
+  "agent_name": "SOL-2-GPT",
+  "node_id": "SW-N02",
+  "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "fresh_main_sha": "77e544c2d29bbb47b38573ce3fd7811d14cd63a2",
+  "base_sha": "77e544c2d29bbb47b38573ce3fd7811d14cd63a2",
+  "mode": "READ_ONLY_FORENSIC",
+  "write_scope": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N02-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N02.json"
+  ],
+  "paths": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N02-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md"
+  ],
+  "dependencies": [
+    "M47_8SOL_SWARM_CONTROL_ACTIVE",
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N02=READY_TO_CLAIM",
+    "CLAIM-SW-N01 occupied by SOL-1-GPT; SW-N02 next safe free node"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY"
+  },
+  "assertion_to_validate": "11 source-special/symlink failures can be separated into recoverable provenance versus irrecoverable historical-ref gaps without fabricating source commits.",
+  "claimed_at": "2026-09-12T23:06:45-05:00",
+  "state": "CLAIMED"
+}
