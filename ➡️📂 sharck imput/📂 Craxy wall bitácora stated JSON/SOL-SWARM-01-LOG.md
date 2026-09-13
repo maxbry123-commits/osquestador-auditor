@@ -1,8 +1,33 @@
 # SOL-SWARM-01 LOG — SHARCK INPUT
 
 - agent_name: `SOL-1-GPT`
-- state: `READY_NO_ACTIVE_CLAIM`
+- chat_id: `chat-sol1-20260912T2305-0500`
+- state: `PASS_PENDING_SUPERVISOR_FANIN`
 - active_node: `null`
-- rule: claim only one `READY_TO_CLAIM` node from `SWARM-DAG-8SOL-M47-v1.json` after fresh read; write only this log + node-unique evidence; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG.
+- last_node: `SW-N01`
+- last_node_task: `M40_20X_DEDUP_AND_DECISION_MATRIX`
+- mode: `READ_ONLY_RESEARCH`
+- claim_state: `CLAIMED_READBACK_VERIFIED`
+- claim_commit: `77e544c2d29bbb47b38573ce3fd7811d14cd63a2`
+- claim_blob: `130aa41e6168602107f9d95cfaa95ee9af00f019`
+- evidence_file: `SW-N01-EVIDENCE.md`
+- evidence_commit: `16c3f273d2cf5cad1ff431fd92e44ad80b31bf63`
+- evidence_blob_readback: `3a9e3bade0c2a252381669eb9e71826ac055d149`
+- base_sha: `6e1925155c9942855dba0bd29e9a27a9d73998f5`
+- fresh_head_before_log_write: `16c3f273d2cf5cad1ff431fd92e44ad80b31bf63`
+- result: `M40 65/65 research rows classified; 20X 20/20 classified; exact duplicates suppressed; no acquisition authorized.`
+- tests: `M40_ACCOUNTING_PASS; 20X_ACCOUNTING_PASS; NO_CANONICAL_MUTATION_PASS; RESERVED_OWNER_BOUNDARY_PASS; ACQUISITION_GATE_PASS`
+- simulations: `3/3`
+- refutations: `3/3`
+- physical_mutation: `false`
+- canonical_motors_mutated: `false`
+- b05_b06_downloaded: `0`
+- shared_control_files_written: `0`
+- incidental_action_run: `34737114522 failure from unrelated historical workflow triggered by push; OUT_OF_SCOPE_NOT_USED_AS_SW-N01_EVIDENCE`
+- remaining_gaps: `M08 official OSS/license/maintenance review; immutable pin/ref/license/special-scan/size/destination closure; director/acquisition gates.`
+- release: `WORKER_SCOPE_RELEASED_TO_SOL0_SUPERVISOR_FANIN`
+- review_required: `SOL-0 fan-in + reserved M08/director gates as applicable`
+- next_free_node: `READ_FRESH_REQUIRED; do not assume queue state because other SOL workers are claiming in parallel`
+- rule: claim only one `READY_TO_CLAIM` node after fresh read; write only this log + claimed node evidence + own unique claim; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG/queue.
 - reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
-- physical mutation: forbidden while latest gates remain false.
+- worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`, never self-certified `VERIFIED_CLOSED`.
