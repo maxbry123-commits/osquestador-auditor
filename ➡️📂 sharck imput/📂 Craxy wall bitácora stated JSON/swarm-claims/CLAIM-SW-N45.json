@@ -1,17 +1,1 @@
-{
-  "schema":"sharck-input.swarm-claim.v3",
-  "chat_id":"chat-sol6-20260913T0154-0500",
-  "agent_name":"SOL-6-GPT",
-  "node_id":"SW-N45",
-  "parent_node":"M56_N43_CLAIM_RECONCILIATION",
-  "fresh_main_sha":"e9d694b738920a8211828146e5657d6db7de328a",
-  "base_sha":"e9d694b738920a8211828146e5657d6db7de328a",
-  "mode":"READ_ONLY_DESIGN",
-  "write_scope":["SW-N45-EVIDENCE.md","SOL-SWARM-06-LOG.md","swarm-claims/CLAIM-SW-N45.json"],
-  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N45-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"],
-  "dependencies":["M56 work queue active","SW-N38 BLOCKED_RELEASED preserved","SW-N33 contract readable","physical gates false"],
-  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
-  "task":"HTML24_FIXTURE_EVIDENCE_RECOVERY",
-  "claimed_at":"2026-09-13T01:54:30-05:00",
-  "state":"CLAIMED"
-}
+{"schema":"sharck-input.swarm-claim.v3","chat_id":"chat-sol6-20260913T0154-0500","agent_name":"SOL-6-GPT","node_id":"SW-N45","task":"HTML24_FIXTURE_EVIDENCE_RECOVERY","state":"RELEASED","result":"PASS_PENDING_REVIEW","evidence_commit":"aafdf1c9fce8abfd527e96cec10a790f752b46de","evidence_blob":"ee27074e758e68d8968f7824a234fd1f09a5fba2","recovery_manifest_sha256":"8b663d4332173ba9c18c7988c608493388f418a1749f98a3e1dfec9a81e9b659","tests":"24/24 fixtures; 4x6 coverage; 24/24 hash readback; 3/3 refutations PASS","gap":"NONE_WITHIN_N45_SCOPE"}
