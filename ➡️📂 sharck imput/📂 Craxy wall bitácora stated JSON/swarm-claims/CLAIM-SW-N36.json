@@ -13,5 +13,15 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"MODEL_SNAPSHOT_PROVENANCE_MATRIX",
   "claimed_at":"2026-09-13T00:20:00-05:00",
-  "state":"CLAIMED"
+  "state":"RELEASED",
+  "result":"PASS_PENDING_REVIEW",
+  "evidence_commit":"86d28a7f6d0e5672aa41e3d19efdd941cd7694a0",
+  "evidence_blob":"8c38d2b1f0e244d79acbb0dae604e88f3bc7557b",
+  "tests":"9/9 PASS",
+  "refutations":"3/3 PASS",
+  "verified_closed":false,
+  "physical_mutation":false,
+  "downloads":0,
+  "canonical_motor_mutations":0,
+  "shared_control_writes":0
 }
