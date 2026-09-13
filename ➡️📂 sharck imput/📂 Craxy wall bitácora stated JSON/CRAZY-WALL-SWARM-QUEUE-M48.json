@@ -1,0 +1,40 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v2",
+  "node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "status":"ACTIVE",
+  "dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "claim_rule":"node ownership exists only after unique claim file creation on fresh main plus readback; retained old claim files are history locks and must be interpreted with worker_state",
+  "workers":["SOL-1-GPT","SOL-2-GPT","SOL-3-GPT","SOL-4-GPT","SOL-5-GPT","SOL-6-GPT","SOL-7-GPT","SOL-8-GPT","SOL-9-GPT","SOL-10-GPT"],
+  "completed_worker_wave_M47":[
+    {"node_id":"SW-N01","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N02","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N03","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N04","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N05","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N06","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N07","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N08","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"}
+  ],
+  "ready":[
+    {"node_id":"SW-N13","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N13.json","evidence_file":"SW-N13-EVIDENCE.md","write_group":"SPACY_FORENSIC"},
+    {"node_id":"SW-N14","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N14.json","evidence_file":"SW-N14-EVIDENCE.md","write_group":"PROVENANCE_CONTRACT"},
+    {"node_id":"SW-N15","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N15.json","evidence_file":"SW-N15-EVIDENCE.md","write_group":"SANDBOX_FULLSET_A"},
+    {"node_id":"SW-N16","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N16.json","evidence_file":"SW-N16-EVIDENCE.md","write_group":"MODE_EOL_SANDBOX"},
+    {"node_id":"SW-N17","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N17.json","evidence_file":"SW-N17-EVIDENCE.md","write_group":"FULLTREE_VALIDATOR"},
+    {"node_id":"SW-N18","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N18.json","evidence_file":"SW-N18-EVIDENCE.md","write_group":"HF108_FORENSIC"},
+    {"node_id":"SW-N19","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N19.json","evidence_file":"SW-N19-EVIDENCE.md","write_group":"RUNTIME_SPECIAL_SCAN"},
+    {"node_id":"SW-N20","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N20.json","evidence_file":"SW-N20-EVIDENCE.md","write_group":"M40_PREFLIGHT"},
+    {"node_id":"SW-N21","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N21.json","evidence_file":"SW-N21-EVIDENCE.md","write_group":"WEB_CAPTURE_PREFLIGHT"},
+    {"node_id":"SW-N22","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N22.json","evidence_file":"SW-N22-EVIDENCE.md","write_group":"EVAL_PREFLIGHT"}
+  ],
+  "blocked":[
+    {"node_id":"SW-N09","state":"BLOCKED_GATE","dependency":"M06+M07+M08+director+physical_repair_allowed"},
+    {"node_id":"SW-N10","state":"BLOCKED_GATE","dependency":"director+b05_b06_download_allowed+preflight"},
+    {"node_id":"SW-N11","state":"BLOCKED_GATE","dependency":"verified acquisitions+step3_allowed"},
+    {"node_id":"SW-N12","state":"BLOCKED_GATE","dependency":"SW-N11+exact candidate SHA"}
+  ],
+  "reserved":[{"node_id":"M06","owner":"ASTRA"},{"node_id":"M07","owner":"CLAUDE"},{"node_id":"M08","owner":"GROK"}],
+  "orders":"SOL1-10: read fresh queue and claims; claim first READY free node dynamically; exactly one active node; never touch blocked/reserved nodes; after release rescan",
+  "shared_write_rule":"workers never modify queue/state/plan/checkpoint/handoff; SOL-0 fan-in only",
+  "verdict":"M47_RECONCILED_TO_WORKER_RELEASE / TEN_SAFE_READY / FOUR_BLOCKED / THREE_RESERVED"
+}
