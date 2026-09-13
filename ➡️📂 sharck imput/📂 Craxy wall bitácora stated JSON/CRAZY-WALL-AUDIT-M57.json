@@ -1,0 +1,39 @@
+{
+  "schema":"sharck-input.audit-queue.v1",
+  "node":"M57_TRIPLE_INDEPENDENT_AUDIT",
+  "status":"READY",
+  "parallel_to_worker_plane":"M56",
+  "worker_plane_rule":"Do not alter N43-N46 ownership/dispatch. M57 audits are independent review only.",
+  "common_packet":"M57-TRIPLE-AUDIT-PACKET.md",
+  "audits":[
+    {
+      "node_id":"M06",
+      "owner":"ASTRA_ONLY",
+      "task":"ARCHITECTURE_GATES_SIMPLICITY_CROSSCHECK",
+      "state":"READY_TO_CLAIM_BY_ASTRA",
+      "output":"M06-M57-ASTRA-AUDIT-EVIDENCE.md",
+      "shared_writes":false
+    },
+    {
+      "node_id":"M07",
+      "owner":"CLAUDE_ONLY",
+      "task":"CODE_PORTS_TESTS_COVERAGE_CROSSCHECK",
+      "state":"READY_TO_CLAIM_BY_CLAUDE",
+      "output":"M07-M57-CLAUDE-AUDIT-EVIDENCE.md",
+      "shared_writes":false
+    },
+    {
+      "node_id":"M08",
+      "owner":"GROK_ONLY",
+      "task":"OSS_LICENSE_SECURITY_OVERLAP_CROSSCHECK",
+      "state":"READY_TO_CLAIM_BY_GROK",
+      "output":"M08-M57-GROK-AUDIT-EVIDENCE.md",
+      "shared_writes":false
+    }
+  ],
+  "mandatory_sections":["12_GOALS_INPUT","12_GOALS_OUTPUT","COUNCIL12","3_REFUTATIONS","DEBATE","4_SIMULATIONS","10X_VALIDATION","TOP_FIXES_MAX5","DO_NOT_BUILD","NEXT_EXACT_NODE"],
+  "fan_in_owner":"SOL-0",
+  "fan_in_gate":"Wait for all available audit evidence; preserve disagreements; evidence wins over majority.",
+  "no_overengineering":"No new component/service is recommended without explicit real GAP, non-duplication, measurable benefit, test, rollback and simpler-alternative review.",
+  "gates_preserved":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"}
+}
