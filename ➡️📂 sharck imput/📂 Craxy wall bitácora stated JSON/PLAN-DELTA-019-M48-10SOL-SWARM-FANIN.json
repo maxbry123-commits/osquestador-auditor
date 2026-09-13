@@ -1,0 +1,12 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":19,
+  "base_plan_delta":"PLAN-DELTA-018-M47-8SOL-SWARM-CONTROL.json",
+  "node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "findings":["M47 SW-N01..SW-N08 worker scopes released with PASS_PENDING_SUPERVISOR_FANIN","M47 queue/DAG READY labels became stale live telemetry after claims","claim-file state and worker execution state must be modeled separately"],
+  "orders":["SOL1-10 read CRAZY-WALL-SWARM-QUEUE-M48 and claim first safe free SW-N13..SW-N22","exactly one active node per chat","workers only own claim/evidence/log paths","SOL-0 alone writes shared control plane","after release worker must fresh-rescan"],
+  "locks":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY","physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "next_action":"DISPATCH_DYNAMIC_SW_N13_TO_SW_N22; SUPERVISE_ATOMIC_CLAIMS; FANIN_RESULTS; DO_NOT_TOUCH_SW_N09_TO_SW_N12_UNTIL_GATES_OPEN"
+}
