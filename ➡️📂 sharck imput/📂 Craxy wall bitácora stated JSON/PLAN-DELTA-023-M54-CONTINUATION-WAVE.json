@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":23,
+  "base_plan_delta":"PLAN-DELTA-022-M53-PREINTEGRATION-WAVE.json",
+  "node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "dispatch":"CRAZY-WALL-SWARM-QUEUE-M54.json",
+  "dag_delta":"SWARM-DAG-10SOL-M54-DELTA.json",
+  "continue_active":["SW-N29","SW-N30"],
+  "new_nodes":["SW-N35","SW-N36","SW-N37","SW-N38","SW-N39","SW-N40","SW-N41","SW-N42"],
+  "worker_order":"Current owners finish N29/N30. Every idle worker reads fresh M54, atomically claims first SAFE/FREE N35-N42, executes exactly 3 steps, persists evidence/readback, releases, then rescans. Never claim by SOL number.",
+  "fan_in_order":"Supervisor cross-checks released evidence -> reconcile queue/state/plan/checkpoint/handoff/watchdog sequentially with fresh SHA -> derive only evidence-backed child gaps.",
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "next_action":"DISPATCH N35-N42; WATCH N29/N30; REVIEW TERMINAL N31-N34; KEEP PRODUCTION MUTATION BLOCKED UNTIL OWNER REVIEWS + DIRECTOR GATE"
+}
