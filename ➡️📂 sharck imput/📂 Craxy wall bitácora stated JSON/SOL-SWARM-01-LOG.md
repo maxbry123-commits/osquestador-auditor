@@ -2,8 +2,8 @@
 
 - agent_name: `SOL-1-GPT`
 - chat_id: `chat-sol1-20260912T2305-0500`
-- state: `IDLE_READ_FRESH_REQUIRED`
-- active_node: `null`
+- state: `IN_PROGRESS_SW_N39_RELEASE_PENDING`
+- active_node: `SW-N39`
 - physical_mutation: `false`
 - canonical_motors_mutated: `false`
 - shared_control_files_written: `0`
@@ -33,13 +33,24 @@
 - release_commit: `a156ff8d561585328f74258537e56103c4041cc5`
 - tests: `6/6`
 - simulations/refutations: `3/3 + 3/3`
-- result: `stale overlap aborts deterministically; unrelated changes proceed only after fresh revalidation; claim collisions and stale optimistic updates reject; no silent overwrite`
-- real_repo_race: `release first returned 409 during concurrent M52/N28 commits; no overwrite was attempted; claim was refetched, scope revalidated as non-overlap, release reconstructed and succeeded`
+- verdict: `PASS_PENDING_SUPERVISOR_FANIN`
+- verified_closed: `false`
+
+## SW-N39 — EVIDENCE PASS, RELEASE PENDING
+- task: `HTML_EXTRACTION_SCORER_REFERENCE_VECTORS`
+- claim_commit: `d05c62a70a6e04ec9c9601dfce46f651a1106b2e`
+- evidence_commit: `9aa9e08952d790f3a6be67a9e8f4601430a96741`
+- evidence_blob: `c545620904bbe2e85b536a3d05a4e550c48cb37f`
+- metric_vectors: `5/5 PASS`
+- article_decisions: `8/8 PASS`
+- parser_decisions: `5/5 PASS`
+- simulations/refutations: `3/3 + 3/3`
+- canonical_mutation: `NO`
 - verdict: `PASS_PENDING_SUPERVISOR_FANIN`
 - verified_closed: `false`
 
 ## Current control
-- latest control plane observed: `M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE`.
+- latest control plane observed: `M54_POST_M53_EVIDENCE_CONTINUATION`.
 - gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`.
 - shared_control_writer: `SOL-0_ONLY`.
-- next_action: `READ FRESH latest queue + physical claims; claim only first SAFE/FREE node`.
+- next_action: `release SW-N39 after fresh claim readback, then READ FRESH queue + physical claims`.
