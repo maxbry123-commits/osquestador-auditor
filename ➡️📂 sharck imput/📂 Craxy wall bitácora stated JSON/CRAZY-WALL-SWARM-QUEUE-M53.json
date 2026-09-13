@@ -1,0 +1,25 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v5",
+  "node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "status":"ACTIVE",
+  "base_queue":"CRAZY-WALL-SWARM-QUEUE-M52.json",
+  "dag_chain":["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json","SWARM-DAG-10SOL-M53-DELTA.json"],
+  "source_snapshot_sha":"7d4a0ceea21506ef81e71d52e2226481fee918fc",
+  "live_truth":"Always read physical CLAIM-SW-Nxx.json + worker log/evidence fresh. This queue is dispatch metadata only.",
+  "known_terminal_through_last_reads":["SW-N13","SW-N14","SW-N15","SW-N16:BLOCKED_RELEASED","SW-N17","SW-N18","SW-N19","SW-N20","SW-N21","SW-N22","SW-N23","SW-N25"],
+  "check_claim_fresh":["SW-N24","SW-N26","SW-N27","SW-N28"],
+  "ready_to_claim":[
+    {"node_id":"SW-N29","task":"M40_KEEP_DESTINATION_PORT_MAP","mode":"READ_ONLY_ARCHITECTURE","claim_file":"swarm-claims/CLAIM-SW-N29.json","evidence_file":"SW-N29-EVIDENCE.md"},
+    {"node_id":"SW-N30","task":"OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_MANIFEST","mode":"READ_ONLY_FORENSIC","claim_file":"swarm-claims/CLAIM-SW-N30.json","evidence_file":"SW-N30-EVIDENCE.md"},
+    {"node_id":"SW-N31","task":"EVAL_REPRODUCIBILITY_PIN_CONTRACT","mode":"READ_ONLY_DESIGN","claim_file":"swarm-claims/CLAIM-SW-N31.json","evidence_file":"SW-N31-EVIDENCE.md"},
+    {"node_id":"SW-N32","task":"SPACY_EXACT_REPAIR_MANIFEST_DRYRUN","mode":"READ_ONLY_PLUS_SANDBOX","claim_file":"swarm-claims/CLAIM-SW-N32.json","evidence_file":"SW-N32-EVIDENCE.md"},
+    {"node_id":"SW-N33","task":"HTML_ARTICLE_EXTRACTION_BENCHMARK_CONTRACT","mode":"READ_ONLY_DESIGN","claim_file":"swarm-claims/CLAIM-SW-N33.json","evidence_file":"SW-N33-EVIDENCE.md"},
+    {"node_id":"SW-N34","task":"WARC_CAPTURE_FAILURE_READBACK_CONTRACT","mode":"READ_ONLY_DESIGN","claim_file":"swarm-claims/CLAIM-SW-N34.json","evidence_file":"SW-N34-EVIDENCE.md"}
+  ],
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "orders":"Current active workers continue only current claim. Terminal/idle workers rescan and atomically claim first SAFE/FREE node from latest queue. Never claim by SOL number. Never reclaim terminal IDs.",
+  "shared_control_writer":"SOL-0",
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "verdict":"M53_QUEUE_ACTIVE / SIX_NEW_REAL_GAP_NODES_READY / CLAIM_FILES_ARE_LIVE_TRUTH / NO_GATE_BYPASS"
+}
