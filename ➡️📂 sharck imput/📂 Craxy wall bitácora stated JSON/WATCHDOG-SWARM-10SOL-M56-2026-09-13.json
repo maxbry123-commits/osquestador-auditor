@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.swarm-watchdog.v6",
+  "node":"M56_N43_CLAIM_RECONCILIATION",
+  "status":"ACTIVE_CONTROL_WATCH",
+  "queue":"CRAZY-WALL-SWARM-QUEUE-M56.json",
+  "state":"STATE-DELTA-043-M56-N43-CLAIM.json",
+  "plan":"PLAN-DELTA-025-M56-N43-CLAIM.json",
+  "checkpoint":"CHECKPOINT-DELTA-041-M56-N43-CLAIM.json",
+  "active":{"SW-N43":"SOL-5-GPT"},
+  "ready":["SW-N44","SW-N45","SW-N46"],
+  "loop":"READ_FRESH -> verify live N43 evidence/release -> verify N44-N46 claims -> idle worker claims first free -> terminal evidence only -> derive successor from explicit remaining GAP",
+  "stale_rule":"N29/N30/N38 are historical superseded locks and cannot block M56 dispatch.",
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"}
+}
