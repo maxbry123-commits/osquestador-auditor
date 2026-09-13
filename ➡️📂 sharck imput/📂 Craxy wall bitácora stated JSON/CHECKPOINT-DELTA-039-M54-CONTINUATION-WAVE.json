@@ -1,0 +1,12 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M54-CONTINUATION-WAVE-039",
+  "base_checkpoint":"CHECKPOINT-DELTA-038-M53-PREINTEGRATION-WAVE.json",
+  "node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "status":"ACTIVE",
+  "resume_order":["READ main fresh","READ STATE-DELTA-041-M54-CONTINUATION-WAVE.json","READ PLAN-DELTA-023-M54-CONTINUATION-WAVE.json","READ CRAZY-WALL-SWARM-QUEUE-M54.json","READ SWARM-DAG-10SOL-M54-DELTA.json plus base DAG chain","READ WATCHDOG-SWARM-10SOL-M54-2026-09-13.json or successor","READ swarm-claims and SOL-SWARM-01..10 logs fresh","CONTINUE N29/N30 only by current owners","IDLE worker claims first SAFE/FREE N35-N42 atomically","Supervisor fan-in only after evidence readback"],
+  "activity_snapshot":{"active_verified":["SW-N29:SOL-9-GPT","SW-N30:SOL-3-GPT"],"ready":["SW-N35","SW-N36","SW-N37","SW-N38","SW-N39","SW-N40","SW-N41","SW-N42"],"terminal_recent":["SW-N26:GAP_RELEASED","SW-N31:RELEASED","SW-N32:RELEASED","SW-N33:RELEASED","SW-N34:RELEASED"]},
+  "physical_snapshot":{"canonical_components":117,"verified_closed":17,"failed":23,"partial_components":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "gates":{"M06":"ASTRA_REQUIRED","M07":"CLAUDE_REQUIRED","M08":"GROK_REQUIRED","director":"REQUIRED_FOR_PHYSICAL_PROMOTION","physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "resume_rule":"Never infer activity from this checkpoint. Fresh claim/log/evidence wins. No canonical repair/download/wiring until gates explicitly change."
+}
