@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":42,
+  "base_state_delta":"STATE-DELTA-041-M54-POST-M53-CONTINUATION.json",
+  "current_node":"M55_REOPEN_REAL_GAPS_NO_OVERENGINEERING",
+  "status":"ACTIVE_FAIL_CLOSED",
+  "queue":"CRAZY-WALL-SWARM-QUEUE-M55.json",
+  "dag_delta":"SWARM-DAG-10SOL-M55-DELTA.json",
+  "reconciliation":{"SW-N29":"STALE_SUPERSEDED_BY_N43","SW-N30":"STALE_SUPERSEDED_BY_N44","SW-N38":"BLOCKED_SUPERSEDED_BY_N45","G-SW-N26-FULL-BYTE-REPLAY":"CONTINUE_AS_N46"},
+  "ready":["SW-N43","SW-N44","SW-N45","SW-N46"],
+  "physical_state":{"canonical_components":117,"verified_closed":17,"failed":23,"B05_B06_downloaded":0},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "truth_rule":"Fresh M55 claims override dispatch metadata. Old N29/N30/N38 lock files are historical and must not block replacements."
+}
