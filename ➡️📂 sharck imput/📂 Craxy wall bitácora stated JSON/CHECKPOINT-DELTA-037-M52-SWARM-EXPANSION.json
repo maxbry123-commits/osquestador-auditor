@@ -1,0 +1,24 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M52-SWARM-EXPANSION-037",
+  "base_checkpoint":"CHECKPOINT-DELTA-036-M49-N13-FANIN.json",
+  "node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "status":"ACTIVE",
+  "resume_order":[
+    "READ main fresh",
+    "READ STATE-DELTA-039-M52-SWARM-EXPANSION.json",
+    "READ PLAN-DELTA-021-M52-SWARM-EXPANSION.json",
+    "READ CRAZY-WALL-SWARM-QUEUE-M52.json",
+    "READ SWARM-DAG-10SOL-M48-v1.json + M50/M51/M52 deltas",
+    "READ swarm-claims and SOL-SWARM-01..10 logs fresh",
+    "READ worker evidence for every RELEASED/BLOCKED_RELEASED node before fan-in",
+    "claim/dispatch only SAFE/FREE node after atomic readback"
+  ],
+  "terminal_known":["SW-N13","SW-N14","SW-N15","SW-N16","SW-N17","SW-N18"],
+  "new_wave":["SW-N23","SW-N24","SW-N25","SW-N26","SW-N27","SW-N28"],
+  "known_blocker":"SW-N16 evidence persistence failure; no PASS promotion",
+  "latest_observed_activity":"SW-N26 claimed by SOL-10; all other node activity must be read from fresh physical claims",
+  "physical_snapshot":{"canonical_components":117,"verified_closed":17,"failed":23,"partial_components":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "gates":{"M06":"ASTRA_REQUIRED","M07":"CLAUDE_REQUIRED","M08":"GROK_REQUIRED","director":"REQUIRED_FOR_PHYSICAL_PROMOTION","physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "resume_rule":"Do not use registered capacity or queue metadata as proof of activity. Claims/logs/evidence on fresh HEAD are live truth. Preserve all worker failures/blockers fail-closed."
+}
