@@ -2,9 +2,9 @@
 
 - agent_name: `SOL-8-GPT`
 - chat_id: `chat-sol8-20260912T2313-0500`
-- state: `READY_NO_ACTIVE_CLAIM_NO_SAFE_FREE_NODE`
-- active_node: `null`
-- current_worker_control: `M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE`
+- state: `SW-N32_PASS_PENDING_RELEASE`
+- active_node: `SW-N32`
+- current_worker_control: `M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES`
 - rule: dynamic first-safe-free claim only after fresh read; one active node; write only this log + node-unique evidence + own atomic claim; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG.
 - reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
 - physical mutation: forbidden while latest gates remain false.
@@ -44,29 +44,45 @@
 - source_bytes: `165`
 - source_sha256: `515b1ef75f9d7e9b2e63f7009ffe9b9cf4a809b27d7a96265f72f48127767fdf`
 - causal_verdict: `IMPORTED_GITIGNORE_RESTAGING_CONFIRMED`
-- evidence_chain: `immutable source path/hash exists → source .gitignore matches .vscode → canonical publish uses non-forced git add --sparse → isolated microtest omits file → canonical path absent`.
-- rejected_causes: `SOURCE_ABSENT / PATH_DRIFT / GENERATED_ONLY / SPECIAL_FILE / DOWNLOAD_INCOMPLETE`.
 - tests: `8/8 PASS`
 - simulations: `3/3 PASS`
 - refutations: `3/3 PASS`
 - council12: `12/12 PASS`
-- downloads: `0`
 - physical_repairs: `0`
-- canonical_motor_mutations: `0`
 - shared_control_writes: `0`
 - worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
-- repair_prerequisite: `future authorized staging must preserve exact upstream tracked set/bytes/modes and full-tree readback; broad unsafe ignore bypass rejected.`
 
 ## M52 LIVE-SAFE QUEUE — POST-N23 RESCAN
 
 - authoritative_queue: `CRAZY-WALL-SWARM-QUEUE-M52.json`
 - queue_rule: `claim state + worker log/evidence fresh overrides stale queue snapshot; terminal nodes are never reclaimed.`
-- N25: `CLAIMED by SOL-1-GPT`.
-- N26: `CLAIMED by SOL-10-GPT`.
-- N27: `CLAIMED by SOL-6-GPT`.
-- N28: `CLAIMED by SOL-7-GPT` after SOL-8 fresh preclaim scan; collision correctly abandoned before write.
-- latest_confirmed_control_head_before_this_log_update: `88e479890d3eaf90a9a8d0e8079a95f430f77fb5` (`M52 publish recovery`).
-- gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`.
-- action: `NO NEW CLAIM CREATED`.
-- verdict: `NO_SAFE_FREE_EXECUTABLE_NODE_AT_FRESH_M52_SCAN`.
-- next: `READ CRAZY WALL FRESH; if M53/N29+ or another genuinely new FREE non-overlapping node is published, atomically claim it; otherwise remain fail-closed and do not invent or reclaim terminal work.`
+- N25/N26/N27/N28 were owned by other workers; no collision overwrite.
+- gates remained closed.
+
+## M53 / SW-N32 — SPACY_EXACT_REPAIR_MANIFEST_DRYRUN
+
+- claim_commit: `a8576c3c40662958f0e121e182108c88676d8706`
+- claim_blob: `a0bc3c57400abc8bdf913b19707861d1c5056d16`
+- base_sha: `3e14f4bde24a5c10a4aba2ade1c98d426a5ce13d`
+- evidence_commit: `7e01cb081ac9f3b888ee15edd683a19cd5096c6c`
+- evidence_blob_readback: `50a57349113766ca33790dc13874771145bd8e4c`
+- evidence_readback: `PASS`
+- pinned_source_commit: `26b4d1dc04a812f426e4bef3e8a1b6f159d6f048`
+- exact_paths: `spacy/matcher/polyleven.c` + `website/.vscode/extensions.json`
+- source_git_modes: `100644` + `100644`
+- source_git_blobs: `2f2b8826c50754f496e0ef09c9367173679f41de` + `4b533827a909bc135ca82fcb122587645508b302`
+- expected_missing_bytes: `9736`
+- target_tree: `1776 files / 20636010 bytes / cad7a1cdfae8046e24df6735336a9dace6ceebc917fc18eb9b1d187c4d875c1e`
+- validator_positive: `PASS`
+- negative_bad_hash: `PATH_MANIFEST_MISMATCH`
+- negative_bad_mode: `PATH_MANIFEST_MISMATCH`
+- negative_bad_tree_count: `TREE_FILES_MISMATCH`
+- simulations: `3/3 PASS`
+- refutations: `3/3 PASS`
+- council12: `12/12 PASS`
+- physical_mutation: `false`
+- downloads: `0`
+- canonical_motor_mutations: `0`
+- shared_control_writes: `0`
+- worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
+- release_action: `fresh HEAD then update CLAIM-SW-N32.json to RELEASED; readback; rescan queue.`
