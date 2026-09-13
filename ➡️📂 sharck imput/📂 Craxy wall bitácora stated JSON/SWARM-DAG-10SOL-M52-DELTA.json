@@ -1,0 +1,25 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M52_ADD_EVIDENCE_PERSISTENCE_DIAGNOSTIC",
+  "base_dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "prior_deltas":["SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json"],
+  "mode":"FAIL_CLOSED_LOOP",
+  "source_base_sha":"9ed99bd7e89349e658b6225110f1075922dc60bb",
+  "new_nodes":[
+    {
+      "node_id":"SW-N28",
+      "task":"EVIDENCE_PERSISTENCE_WRITEPATH_DIAGNOSTIC",
+      "mode":"READ_ONLY_PLUS_SANDBOX",
+      "origin_gap":"SW-N16 completed simulations/refutations but could not persist its evidence file through the available normal write path and correctly released BLOCKED",
+      "write_scope":["SW-N28-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N28.json"],
+      "steps":[
+        "reconstruct N16 evidence-write failure from claim/log/commit chronology without modifying N16 scope",
+        "test isolated evidence create/update/readback paths under concurrent unrelated commits and classify API/path/SHA/stale-head causes",
+        "publish deterministic evidence-persistence fallback contract + 3 refutations"
+      ],
+      "acceptance":"root cause or bounded INCONCLUSIVE; safe create/update/readback contract; no shared-file overwrite and no retroactive PASS for N16"
+    }
+  ],
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "verdict":"N28_REAL_BLOCKER_DIAGNOSTIC_ADDED / NO_GATE_BYPASS"
+}
