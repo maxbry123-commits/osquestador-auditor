@@ -1,0 +1,77 @@
+name: Sharck M58 B07 Query Search Acquisition
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/queues/M58-B07-query-search-primitives.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sharck-m58-acquisition
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      QUEUE_FILE: '➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/queues/M58-B07-query-search-primitives.json'
+      STATE_FILE: '➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/state/M58-B07-state.json'
+      INDEX_PATH: '➡️📂 sharck imput/📂 input sharck code principal/📂 component acquisition/state/M58-B07-index.md'
+      ENGINE_PATH: '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py'
+      MOTOR_PATH: '➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py'
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAX_RETRIES: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate pinned queue
+        run: |
+          python - <<'PY'
+          import json, pathlib, re
+          p=pathlib.Path('${{ env.QUEUE_FILE }}')
+          d=json.loads(p.read_text())
+          q=d.get('queue',[])
+          assert q, 'EMPTY_QUEUE'
+          for x in q:
+              assert re.fullmatch(r'[0-9a-f]{40}', x.get('source_ref','')), f"UNPINNED:{x.get('slug')}"
+              assert x.get('publish') is True, f"NOT_PUBLISH:{x.get('slug')}"
+          print(f'PIN_GATE_PASS items={len(q)}')
+          PY
+      - name: Run immutable canonical Motor 2
+        id: motor
+        shell: bash
+        run: |
+          set -o pipefail
+          python "$MOTOR_PATH" | tee /tmp/m58-result.jsonl
+      - name: Persist motor state and index after component pushes
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'sharck-m58-motor'
+          git config user.email 'sharck-m58-motor@users.noreply.github.com'
+          git fetch origin main
+          git rebase origin/main
+          git add -- "$STATE_FILE" "$INDEX_PATH" 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m 'sharck M58 B07 persist acquisition state'
+            git push origin HEAD:main
+          fi
+      - name: Enforce verified-close verdict
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          lines=[x for x in pathlib.Path('/tmp/m58-result.jsonl').read_text().splitlines() if x.strip()]
+          obj=json.loads(lines[-1])
+          print(json.dumps(obj, indent=2))
+          if obj.get('verdict') != 'VERIFIED_CLOSED':
+              raise SystemExit('M58_B07_GAPS_PENDING')
+          PY
