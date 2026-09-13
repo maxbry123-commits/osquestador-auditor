@@ -15,8 +15,10 @@
     {"node_id":"SW-N07","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
     {"node_id":"SW-N08","worker_state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"}
   ],
+  "completed_worker_wave_M48":[
+    {"node_id":"SW-N13","worker":"SOL-5-GPT","worker_state":"RELEASED","verdict":"PASS_PENDING_REVIEW","evidence":"SW-N13-EVIDENCE.md","finding":"immutable spaCy source shows spacy/matcher/polyleven.c as regular blob, contradicting historical symlink_dereferenced label; canonical destination comparison remains gated"}
+  ],
   "ready":[
-    {"node_id":"SW-N13","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N13.json","evidence_file":"SW-N13-EVIDENCE.md","write_group":"SPACY_FORENSIC"},
     {"node_id":"SW-N14","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N14.json","evidence_file":"SW-N14-EVIDENCE.md","write_group":"PROVENANCE_CONTRACT"},
     {"node_id":"SW-N15","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N15.json","evidence_file":"SW-N15-EVIDENCE.md","write_group":"SANDBOX_FULLSET_A"},
     {"node_id":"SW-N16","state":"READY_TO_CLAIM","claim_file":"swarm-claims/CLAIM-SW-N16.json","evidence_file":"SW-N16-EVIDENCE.md","write_group":"MODE_EOL_SANDBOX"},
@@ -34,7 +36,7 @@
     {"node_id":"SW-N12","state":"BLOCKED_GATE","dependency":"SW-N11+exact candidate SHA"}
   ],
   "reserved":[{"node_id":"M06","owner":"ASTRA"},{"node_id":"M07","owner":"CLAUDE"},{"node_id":"M08","owner":"GROK"}],
-  "orders":"SOL1-10: read fresh queue and claims; claim first READY free node dynamically; exactly one active node; never touch blocked/reserved nodes; after release rescan",
+  "orders":"SOL1-10: read fresh queue and claims; skip released N13; claim first READY free node from N14-N22 dynamically; exactly one active node; never touch blocked/reserved nodes; after release rescan",
   "shared_write_rule":"workers never modify queue/state/plan/checkpoint/handoff; SOL-0 fan-in only",
-  "verdict":"M47_RECONCILED_TO_WORKER_RELEASE / TEN_SAFE_READY / FOUR_BLOCKED / THREE_RESERVED"
+  "verdict":"M47_RECONCILED / M48_N13_RELEASED / N14_N22_READY / FOUR_BLOCKED / THREE_RESERVED"
 }
