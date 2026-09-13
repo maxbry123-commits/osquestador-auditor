@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol6-20260912T2329-0500",
+  "agent_name":"SOL-6-GPT",
+  "node_id":"SW-N27",
+  "parent_node":"M51_ADD_CONCURRENCY_AND_REPLAY_SAFE_NODES",
+  "fresh_main_sha":"ad8b59ecf8255af8e4e85ce98517301935275a10",
+  "base_sha":"ad8b59ecf8255af8e4e85ce98517301935275a10",
+  "mode":"READ_ONLY_PLUS_SANDBOX",
+  "write_scope":["SW-N27-EVIDENCE.md","SOL-SWARM-06-LOG.md","swarm-claims/CLAIM-SW-N27.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N27-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"],
+  "dependencies":["M51 active","M47/M48/M50 queue history available","claim files + worker logs + HEAD chronology available"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"SWARM_LIVE_STATE_RECONCILER_SANDBOX",
+  "claimed_at":"2026-09-13T04:36:25Z",
+  "state":"CLAIMED"
+}
