@@ -2,20 +2,23 @@
 
 - agent_name: `SOL-7-GPT`
 - chat_id: `sol7-5f38c044-03f6-4c32-a681-663c0e16b94f`
-- control_plane: `M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE`
-- state: `READY_NO_ACTIVE_CLAIM / NO_SAFE_FREE_NODE_AT_LAST_FRESH_READ`
+- control_plane: `M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES`
+- state: `READY_NO_ACTIVE_CLAIM / NO_SAFE_FREE_NODE_AT_FRESH_M53_READ`
 - active_node: `null`
 - last_completed_node: `SW-N28`
 - last_node_result: `PASS_PENDING_SUPERVISOR_FANIN`
 - last_release_commit: `5208f32cdfeb4b096b0b0dac39d14cdbcf91d3e8`
 - last_evidence_commit: `2bb93912c67cd49b20e15929d59b67ce497b87ee`
 - last_evidence_blob: `801588caf2d0f3371a26f6cfc3a01c8d3d99238d`
-- M52_dispatch_scan: `SW-N25=RELEASED; SW-N26=CLAIMED_SOL-10; SW-N27=RELEASED; SW-N28=RELEASED_SOL-7`
-- terminal_nodes_not_reclaimable: `SW-N25, SW-N27, SW-N28`
-- active_collision: `SW-N26 owner SOL-10-GPT`
+- authoritative_queue: `CRAZY-WALL-SWARM-QUEUE-M53.json`
+- M53_live_scan: `SW-N29=CLAIMED_SOL-9; SW-N30=CLAIMED_SOL-3; SW-N31=RELEASED; SW-N32=RELEASED; SW-N33=RELEASED; SW-N34=RELEASED`
+- terminal_nodes_not_reclaimable: `SW-N31, SW-N32, SW-N33, SW-N34`
+- active_collisions: `SW-N29 owner SOL-9-GPT; SW-N30 owner SOL-3-GPT`
+- latest_head_seen_before_log_write: `247f9c93c30d9c71d7002afec52c9fe62df3623f`
+- head_frontier_verdict: `NO_SAFE_FREE_EXECUTABLE_NODE_AT_FRESH_M53_SCAN; M54/N35 not published at that scan`
 - blocked_preserved: `SW-N16=BLOCKED_RELEASED; SW-N09..SW-N12=BLOCKED_GATE`
 - reserved_forbidden: `M06_ASTRA, M07_CLAUDE, M08_GROK`
 - gates: `physical_repair_allowed=false; b05_b06_download_allowed=false; step3_allowed=false; canonical_motors=IMMUTABLE`
-- rule: `never reclaim terminal node; never overwrite another claim; queue snapshot never overrides fresher claim state`
+- rule: `never reclaim terminal node; never overwrite another claim; physical claim state overrides queue snapshot`
 - worker_history: `SW-N14 PASS_PENDING_SUPERVISOR_FANIN; SW-N22 PASS_PENDING_SUPERVISOR_FANIN; SW-N28 PASS_PENDING_SUPERVISOR_FANIN`
-- next_action: `READ_FRESH -> if newer ACTIVE queue materializes, claim first SAFE/FREE node atomically; otherwise remain idle without inventing work`
+- next_action: `READ_FRESH -> if newer ACTIVE queue/delta materializes, atomically claim first SAFE/FREE non-overlapping node; otherwise remain idle without inventing work`
