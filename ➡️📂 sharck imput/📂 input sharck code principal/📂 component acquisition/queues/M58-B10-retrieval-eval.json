@@ -1,0 +1,30 @@
+{
+  "schema": "sharck-input.acquisition-queue.m58.v1",
+  "batch": "M58-B10",
+  "capability": "RETRIEVAL_EVAL",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B10-retrieval-eval",
+  "queue": [
+    {
+      "id": "M58-B10-01",
+      "source_repo": "AmenRa/ranx",
+      "source_ref": "7363db0c35e92e90d6fa6fe73907b760678f765e",
+      "slug": "ranx",
+      "license": "MIT",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B10-retrieval-eval",
+      "publish": true
+    },
+    {
+      "id": "M58-B10-02",
+      "source_repo": "terrierteam/ir_measures",
+      "source_ref": "64b5afd5cd14f7d8323f9b24a1bfd12afdd1e776",
+      "slug": "ir_measures",
+      "license": "Apache-2.0",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B10-retrieval-eval",
+      "publish": true
+    }
+  ]
+}
