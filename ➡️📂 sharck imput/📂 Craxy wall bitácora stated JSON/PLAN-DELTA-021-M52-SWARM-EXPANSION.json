@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":21,
+  "base_plan_delta":"PLAN-DELTA-020-M49-N13-FANIN.json",
+  "node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "control_chain":["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json","CRAZY-WALL-SWARM-QUEUE-M52.json"],
+  "new_gap_nodes":{"SW-N23":"spaCy second anomaly forensic","SW-N24":"historical source commit recovery feasibility","SW-N25":"stale-head concurrency protocol sandbox","SW-N26":"fresh tracked-tree replay sandbox","SW-N27":"swarm live-state reconciler sandbox","SW-N28":"evidence persistence writepath diagnostic"},
+  "known_results":{"SW-N16":"BLOCKED_RELEASED evidence-persistence failure","SW-N17":"RELEASED PASS_PENDING_REVIEW","SW-N18":"RELEASED PASS_PENDING_SUPERVISOR_FANIN"},
+  "dispatch_rule":"Free workers claim first SAFE/FREE node dynamically after fresh claim readback; never abandon an active claim; never infer free/active from queue snapshot alone.",
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "next_action":"SUPERVISE N19-N28 CLAIMS/RELEASES; FANIN VERIFIED EVIDENCE; MATERIALIZE ONLY REAL NEW GAPS; KEEP PHYSICAL GATES CLOSED"
+}
