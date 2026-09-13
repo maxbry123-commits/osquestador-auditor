@@ -1,0 +1,20 @@
+{
+  "schema": "sharck-input.task1.literal-input-state.v1",
+  "task": "Tarea 1 📌",
+  "status": "LITERAL_INPUT_REGISTERED / NO_REWRITE / NO_REINTERPRETATION",
+  "authoritative_input_blocks": [
+    {
+      "path": "➡️📂 sharck imput/INPUT-BLOCK-LITERAL-01-PROPUESTA-SHARCK.txt",
+      "blob_sha": "68fb0b7f06864ce449b1c3525b5c802d1f4e7caf",
+      "mode": "READ_LITERAL_1_TO_1_IMMUTABLE"
+    },
+    {
+      "path": "➡️📂 sharck imput/INPUT-BLOCK-LITERAL-02-ACLARACION-PARALELO.txt",
+      "blob_sha": "bedf4f8277b58ac743c794e6967fc5c337e6de53",
+      "mode": "READ_LITERAL_1_TO_1_IMMUTABLE"
+    }
+  ],
+  "supersedes_for_task1": "M60-TASK1-SHARCK-AGENCY-ARCHITECTURE.json",
+  "supersession_reason": "M60 normalized/interpreted the user input; Task 1 requires literal 1:1 preservation.",
+  "rule": "Do not rewrite, summarize, correct, normalize, reorder, renumber or reinterpret either authoritative input block."
+}
