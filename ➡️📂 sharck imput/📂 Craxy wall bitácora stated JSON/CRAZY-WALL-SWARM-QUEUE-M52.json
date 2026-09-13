@@ -1,0 +1,32 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v4",
+  "node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "status":"ACTIVE",
+  "base_queue":"CRAZY-WALL-SWARM-QUEUE-M50.json",
+  "dag_chain":["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json"],
+  "source_snapshot_sha":"80dd4db004ae52b9d7319e2aa755da32e8630c56",
+  "live_truth":"For every SW-Nxx, read swarm-claims/CLAIM-SW-Nxx.json plus matching worker log/evidence fresh. Queue snapshots never override fresher claim state.",
+  "terminal_known":[
+    {"node_id":"SW-N13","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"},
+    {"node_id":"SW-N14","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N15","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N16","state":"BLOCKED_RELEASED","verdict":"BLOCKED","gap":"evidence file persistence failed"},
+    {"node_id":"SW-N17","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"},
+    {"node_id":"SW-N18","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"}
+  ],
+  "existing_nodes_check_claim_fresh":["SW-N19","SW-N20","SW-N21","SW-N22","SW-N23","SW-N24"],
+  "ready_to_claim":[
+    {"node_id":"SW-N25","mode":"SANDBOX_ONLY","task":"STALE_HEAD_CONCURRENCY_PROTOCOL_SANDBOX","claim_file":"swarm-claims/CLAIM-SW-N25.json","evidence_file":"SW-N25-EVIDENCE.md"},
+    {"node_id":"SW-N26","mode":"SANDBOX_ONLY","task":"FRESH_TRACKED_TREE_REPLAY_SANDBOX","claim_file":"swarm-claims/CLAIM-SW-N26.json","evidence_file":"SW-N26-EVIDENCE.md"},
+    {"node_id":"SW-N27","mode":"READ_ONLY_PLUS_SANDBOX","task":"SWARM_LIVE_STATE_RECONCILER_SANDBOX","claim_file":"swarm-claims/CLAIM-SW-N27.json","evidence_file":"SW-N27-EVIDENCE.md"},
+    {"node_id":"SW-N28","mode":"READ_ONLY_PLUS_SANDBOX","task":"EVIDENCE_PERSISTENCE_WRITEPATH_DIAGNOSTIC","claim_file":"swarm-claims/CLAIM-SW-N28.json","evidence_file":"SW-N28-EVIDENCE.md"}
+  ],
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "orders":"If current node is still CLAIMED, continue only it. If RELEASED/BLOCKED_RELEASED/idle, read fresh claims then claim first SAFE/FREE among current queue. Never reclaim terminal node. Claim create must be followed by readback.",
+  "one_chat_one_active_node":true,
+  "one_path_one_writer":true,
+  "shared_control_writer":"SOL-0",
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "verdict":"M52_QUEUE_ACTIVE / N25_N28_DISPATCHABLE_IF_FREE / N16_BLOCK_PRESERVED / NO_GATE_BYPASS"
+}
