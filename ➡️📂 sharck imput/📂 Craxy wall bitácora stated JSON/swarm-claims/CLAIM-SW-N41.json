@@ -13,5 +13,17 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"WARC_RECORD_TYPE_NORMALIZATION_POLICY",
   "claimed_at":"2026-09-13T00:25:00-05:00",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T00:28:00-05:00",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW",
+  "evidence_file":"SW-N41-EVIDENCE.md",
+  "evidence_commit":"2e07c6c5b174f9064c330cc08f478b958db7897a",
+  "evidence_blob":"2a273099381931d9ff82c1ada01dc55950e4eafc",
+  "log_commit":"30de99ecf1fb47c5e1f2e256f29911931d6e5a43",
+  "tests":["RECORD_LEDGER_MATRIX=9/9_PASS","REFUTATIONS=3/3_PASS","NO_CANONICAL_MUTATION=PASS"],
+  "simulations":["VOLATILE_HEADER_CHANGE=PASS","REVISIT_DEDUPE=PASS","DUPLICATE_INJECTION=PASS_FAIL_CLOSED"],
+  "refutations":["NONRESPONSE_CAN_BE_DROPPED=REFUTED","REVISIT_ZERO_BYTES_MEANS_EMPTY_BODY=REFUTED","RECORD_ID_DATE_IN_CROSSRUN_DIGEST=REFUTED"],
+  "remaining_gaps":["first real Browsertrix/warcio baseline not executed","additional record types/profile-specific fields may require later policy extension"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
