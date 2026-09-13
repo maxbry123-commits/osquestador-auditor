@@ -7,27 +7,22 @@
   "fresh_main_sha": "80dd4db004ae52b9d7319e2aa755da32e8630c56",
   "base_sha": "80dd4db004ae52b9d7319e2aa755da32e8630c56",
   "mode": "SANDBOX_ONLY",
-  "write_scope": [
-    "SW-N26-EVIDENCE.md",
-    "SOL-SWARM-10-LOG.md",
-    "swarm-claims/CLAIM-SW-N26.json"
-  ],
-  "paths": [
-    "SW-N26-EVIDENCE.md",
-    "SOL-SWARM-10-LOG.md"
-  ],
-  "dependencies": [
-    "SWARM-DAG-10SOL-M48-v1.json",
-    "SWARM-DAG-10SOL-M50-DELTA.json",
-    "SWARM-DAG-10SOL-M51-DELTA.json"
-  ],
-  "gate_snapshot": {
-    "physical_repair_allowed": false,
-    "b05_b06_download_allowed": false,
-    "step3_allowed": false,
-    "canonical_motors": "IMMUTABLE"
-  },
+  "write_scope": ["SW-N26-EVIDENCE.md","SOL-SWARM-10-LOG.md","swarm-claims/CLAIM-SW-N26.json"],
+  "paths": ["SW-N26-EVIDENCE.md","SOL-SWARM-10-LOG.md"],
+  "dependencies": ["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json"],
+  "gate_snapshot": {"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
   "task": "FRESH_TRACKED_TREE_REPLAY_SANDBOX",
   "claimed_at": "2026-09-13T04:35:58Z",
-  "state": "CLAIMED"
+  "state": "RELEASED",
+  "result": "GAP",
+  "classification": "INFRA_FAILURE",
+  "source_repo": "rapidfuzz/RapidFuzz",
+  "source_commit": "db6e504539a9c895180b266a06b36a32cb6029ee",
+  "source_tree": "80b6ab641d0000bd5e6ed1706f6a8ba2c9478e0c",
+  "evidence_path": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N26-EVIDENCE.md",
+  "evidence_commit_sha": "3e14f4bde24a5c10a4aba2ade1c98d426a5ce13d",
+  "evidence_blob_sha": "09a4082945e7e27c7f09455b7b887476125dff12",
+  "tests": {"simulations_passed":3,"refutations_passed":3,"full_byte_replay":"NOT_EXECUTED_INFRA_BLOCKED"},
+  "remaining_gap": "G-SW-N26-FULL-BYTE-REPLAY: full tracked-tree byte copy/readback and actual missing/changed/extra/mode parity require sandbox GitHub network access",
+  "promotion": "NOT_DONE_NOT_100_PASS_NOT_VERIFIED_CLOSED"
 }
