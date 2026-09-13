@@ -1,0 +1,34 @@
+{
+  "schema": "sharck-input.swarm-claim.v1",
+  "chat_id": "chat-sol6-20260912T2310-0500",
+  "agent_name": "SOL-6-GPT",
+  "node_id": "SW-N06",
+  "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "fresh_main_sha": "985f6312cfe850a27c26a87b54373fe456d5eba2",
+  "base_sha": "985f6312cfe850a27c26a87b54373fe456d5eba2",
+  "mode": "READ_ONLY_RESEARCH",
+  "write_scope": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N06-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N06.json"
+  ],
+  "paths": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N06-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"
+  ],
+  "dependencies": [
+    "M47_8SOL_SWARM_CONTROL_ACTIVE",
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N06=READY_TO_CLAIM",
+    "SW-N05 collision observed and skipped"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY"
+  },
+  "assertion_to_validate": "agent/runtime candidates can be ranked by maintenance/upstream/license/overlap before any acquisition.",
+  "claimed_at": "2026-09-12T23:13:29-05:00",
+  "state": "CLAIMED"
+}
