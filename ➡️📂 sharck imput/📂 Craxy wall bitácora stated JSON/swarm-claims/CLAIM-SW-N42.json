@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol8-20260912T2313-0500",
+  "agent_name":"SOL-8-GPT",
+  "node_id":"SW-N42",
+  "parent_node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "fresh_main_sha":"83740cbcc0b432820c3b86d30f921fdc69c7524d",
+  "base_sha":"83740cbcc0b432820c3b86d30f921fdc69c7524d",
+  "mode":"READ_ONLY_PLUS_SANDBOX",
+  "write_scope":["SW-N42-EVIDENCE.md","SOL-SWARM-08-LOG.md","swarm-claims/CLAIM-SW-N42.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N42-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-08-LOG.md"],
+  "dependencies":["M54 active","SW-N32 evidence available","physical gates false","no canonical mutation"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"SPACY_PRE_REPAIR_DRIFT_AND_STAGING_PREFLIGHT",
+  "claimed_at":"2026-09-13T00:25:00-05:00",
+  "state":"CLAIMED"
+}
