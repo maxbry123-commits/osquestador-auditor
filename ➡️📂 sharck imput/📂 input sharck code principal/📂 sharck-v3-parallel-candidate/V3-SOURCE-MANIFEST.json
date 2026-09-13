@@ -1,0 +1,66 @@
+{
+  "schema": "sharck-input.v3-source-manifest.candidate.v1",
+  "status": "SANDBOX_CANDIDATE_NOT_PRODUCTION_WIRED",
+  "generated_date": "2026-09-13",
+  "policy": {
+    "skill_libraries_min": 3,
+    "skill_metadata_read_min": 20,
+    "skill_full_activate_max": 3,
+    "dataset_active": 3,
+    "dataset_standby": 5,
+    "adapters_active": 3,
+    "adapters_standby": 5,
+    "tools_active": 3,
+    "tools_standby": 5,
+    "search_fanout_min": 10,
+    "search_fanout_max": 100,
+    "progressive_disclosure": true,
+    "secrets_in_env_only": true,
+    "canonical_download_motor_reuse": true,
+    "production_publish": false
+  },
+  "skill_sources": [
+    {"library": "huggingface/skills", "source_ref": "f3186efbbc322121eb5d0f31e8a1d669ee961159", "license": "Apache-2.0", "verified": true},
+    {"library": "anthropics/skills", "source_ref": "34040c9c568585f6929bedeaad110ad08f079624", "license": "per-skill; selected mcp-builder=Apache-2.0", "verified": true},
+    {"library": "microsoft/skills", "source_ref": "903dc62b1e4c833235b54db918a9a51cb6d3cc8f", "license": "MIT", "verified": true},
+    {"library": "openai/plugins", "source_ref": "1dc195897af4161d039b80d8471ec0a10c9bbc89", "license": "NO_ROOT_LICENSE_OBSERVED", "verified": true, "acquisition_policy": "REFERENCE_ONLY_UNTIL_LICENSE_GATE"}
+  ],
+  "skills_metadata_reviewed": [
+    {"library": "huggingface/skills", "name": "hf-cli", "path": "skills/hf-cli/SKILL.md", "selected": true, "full_read": true, "purpose": "Hub CLI; datasets/repos/papers/jobs/downloads"},
+    {"library": "huggingface/skills", "name": "huggingface-datasets", "path": "skills/huggingface-datasets/SKILL.md", "selected": false},
+    {"library": "huggingface/skills", "name": "huggingface-community-evals", "path": "skills/huggingface-community-evals/SKILL.md", "selected": false},
+    {"library": "huggingface/skills", "name": "huggingface-best", "path": "skills/huggingface-best/SKILL.md", "selected": false},
+    {"library": "huggingface/skills", "name": "hf-mem", "path": "skills/hf-mem/SKILL.md", "selected": false},
+    {"library": "huggingface/skills", "name": "hf-cloud-aws-context-discovery", "path": "skills/hf-cloud-aws-context-discovery/SKILL.md", "selected": false},
+    {"library": "huggingface/skills", "name": "hf-cloud-python-env-setup", "path": "skills/hf-cloud-python-env-setup/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "mcp-builder", "path": "skills/mcp-builder/SKILL.md", "selected": true, "full_read": true, "purpose": "MCP/API connector design, schemas, tests, evals"},
+    {"library": "anthropics/skills", "name": "skill-creator", "path": "skills/skill-creator/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "claude-api", "path": "skills/claude-api/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "discernment-nudge", "path": "skills/discernment-nudge/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "academy-guide", "path": "skills/academy-guide/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "doc-coauthoring", "path": "skills/doc-coauthoring/SKILL.md", "selected": false},
+    {"library": "anthropics/skills", "name": "frontend-design", "path": "skills/frontend-design/SKILL.md", "selected": false},
+    {"library": "microsoft/skills", "name": "skill-creator", "path": ".github/skills/skill-creator/SKILL.md", "selected": true, "full_read": true, "purpose": "progressive disclosure, fresh docs, compact skill design"},
+    {"library": "microsoft/skills", "name": "mcp-builder", "path": ".github/skills/mcp-builder/SKILL.md", "selected": false},
+    {"library": "microsoft/skills", "name": "agent-framework-azure-ai-py", "path": ".github/skills/agent-framework-azure-ai-py", "selected": false},
+    {"library": "microsoft/skills", "name": "azure-ai-contentunderstanding-py", "path": ".github/skills/azure-ai-contentunderstanding-py", "selected": false},
+    {"library": "microsoft/skills", "name": "azure-ai-projects-py", "path": ".github/skills/azure-ai-projects-py", "selected": false},
+    {"library": "openai/plugins", "name": "agents-sdk", "path": "plugins/openai-developers/skills/agents-sdk/SKILL.md", "selected": false, "full_read": true, "purpose": "reference only; useful agent/tool/eval contract", "acquisition_blocker": "license gate"}
+  ],
+  "selected_for_acquisition": [
+    {"library": "huggingface/skills", "name": "hf-cli", "source_repo": "huggingface/skills", "source_ref": "f3186efbbc322121eb5d0f31e8a1d669ee961159", "path": "skills/hf-cli", "license": "Apache-2.0", "status": "READY_FOR_CANONICAL_MOTOR_REQUEST"},
+    {"library": "anthropics/skills", "name": "mcp-builder", "source_repo": "anthropics/skills", "source_ref": "34040c9c568585f6929bedeaad110ad08f079624", "path": "skills/mcp-builder", "license": "Apache-2.0", "status": "READY_FOR_CANONICAL_MOTOR_REQUEST"},
+    {"library": "microsoft/skills", "name": "skill-creator", "source_repo": "microsoft/skills", "source_ref": "903dc62b1e4c833235b54db918a9a51cb6d3cc8f", "path": ".github/skills/skill-creator", "license": "MIT", "status": "READY_FOR_CANONICAL_MOTOR_REQUEST"}
+  ],
+  "catalog_providers": {
+    "datasets": ["Hugging Face Datasets API", "Zenodo Records API", "Data.gov CKAN API"],
+    "adapters_tools": ["Official MCP Registry GET /v0.1/servers", "local registry", "configured GitHub/plugin catalog"],
+    "search": ["local router via SHARCK_LOCAL_SEARCH_URL", "web API router via SHARCK_WEB_SEARCH_URL + up to 100 SHARCK_WEB_API_KEY_XX"]
+  },
+  "known_gaps": [
+    "sandbox runtime DNS blocks live provider smoke; parser fixtures PASS but public HTTP smoke is URLError",
+    "production semantic truth judge still needs provider/evidence calibration beyond literal alignment overlap",
+    "selected skill acquisition requests are staged by QueueDownloadEngine; no physical download is claimed until canonical motor + readback runs",
+    "OpenAI plugins repo has no root LICENSE in observed tree; agents-sdk remains reference-only for acquisition"
+  ]
+}
