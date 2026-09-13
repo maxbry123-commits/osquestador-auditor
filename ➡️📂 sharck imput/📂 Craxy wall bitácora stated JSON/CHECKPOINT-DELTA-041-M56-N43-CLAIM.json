@@ -1,0 +1,12 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M56-N43-CLAIM-041",
+  "base_checkpoint":"CHECKPOINT-DELTA-040-M55-REAL-GAPS.json",
+  "node":"M56_N43_CLAIM_RECONCILIATION",
+  "status":"ACTIVE",
+  "resume_order":["READ main fresh","READ CRAZY-WALL-SWARM-QUEUE-M56.json","READ STATE-DELTA-043-M56-N43-CLAIM.json","READ PLAN-DELTA-025-M56-N43-CLAIM.json","READ N43 claim/evidence","READ N44-N46 claims","do not duplicate live N43","dispatch first physically free N44-N46 only to an idle worker"],
+  "active":{"SW-N43":"SOL-5-GPT / CLAIMED / EVIDENCE_PENDING"},
+  "ready":["SW-N44","SW-N45","SW-N46"],
+  "do_not_reclaim":["SW-N29","SW-N30","SW-N38"],
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false}
+}
