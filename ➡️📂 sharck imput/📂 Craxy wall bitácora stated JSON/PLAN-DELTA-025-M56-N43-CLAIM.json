@@ -1,0 +1,13 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":25,
+  "base_plan_delta":"PLAN-DELTA-024-M55-REAL-GAPS.json",
+  "node":"M56_N43_CLAIM_RECONCILIATION",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "dispatch":"CRAZY-WALL-SWARM-QUEUE-M56.json",
+  "active":[{"node_id":"SW-N43","owner":"SOL-5-GPT","terminal_evidence":false}],
+  "ready":["SW-N44","SW-N45","SW-N46"],
+  "order":"Do not disturb N43 owner. Idle worker rereads HEAD and claims first free N44-N46 atomically. Exactly 3 steps, evidence, 3 refutations, release, rescan.",
+  "next_action":"fan-in only terminal evidence; derive successor only from explicit remaining GAP; no filler"
+}
