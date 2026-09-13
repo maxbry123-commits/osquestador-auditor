@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol1-20260913T0023-0500",
+  "agent_name":"SOL-1-GPT",
+  "node_id":"SW-N39",
+  "parent_node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "fresh_main_sha":"615dfb32ad5dd5886b1705410112db42830361fc",
+  "base_sha":"615dfb32ad5dd5886b1705410112db42830361fc",
+  "mode":"READ_ONLY_PLUS_SANDBOX_DESIGN",
+  "write_scope":["SW-N39-EVIDENCE.md","SOL-SWARM-01-LOG.md","swarm-claims/CLAIM-SW-N39.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N39-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-01-LOG.md"],
+  "dependencies":["M54 active","SW-N33 evidence available","physical gates false","no canonical mutation","no production wiring"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"HTML_EXTRACTION_SCORER_REFERENCE_VECTORS",
+  "claimed_at":"2026-09-13T00:23:00-05:00",
+  "state":"CLAIMED"
+}
