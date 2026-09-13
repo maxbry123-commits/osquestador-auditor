@@ -13,5 +13,18 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writes":"SOL-0_ONLY"},
   "task":"PLUMBING_FULLTREE_COMPARE_VALIDATOR",
   "claimed_at":"2026-09-13T04:29:30Z",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T04:32:15Z",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW",
+  "evidence_file":"SW-N17-EVIDENCE.md",
+  "evidence_commit":"86f6e2f14721f4dc604b4525265c7ba3260dbcab",
+  "evidence_blob":"ad6a559ddfde9b3c7e20ea49d403c1a0cbf4568c",
+  "final_sha_before_release":"fa062b9cf33e387b5a25d43145e6f3b26d86ee32",
+  "tests":["FULLTREE_FIXTURE_MATRIX=7/7_PASS","ADVERSARIAL_FALSE_PASS=3/3_PASS","NO_CANONICAL_MUTATION=PASS"],
+  "simulations":["SIM-EXACT=PASS","SIM-MIXED-FAULT=PASS","SIM-REPAIR-RETEST=PASS"],
+  "refutations":["REFUTE-SAMPLING=PASS","REFUTE-MODE-ALLOWLIST=PASS","REFUTE-NO-EXTRA=PASS"],
+  "stale_head_reconciliation":{"evidence_prewrite_head":"e39a3933b03c4944382e7deb925c043f6d17c85a","actual_evidence_parent":"41650f979dcdc70f0738445c4b1d7cd60c991181","overlap":false,"classification":"STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_LOG_WRITE"},
+  "remaining_gaps":["validator not wired into canonical workflow due closed gates","12-component production-like fullset not executed by N17","special-file modes remain provenance lane","SOL-0/reviewer fan-in required"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
