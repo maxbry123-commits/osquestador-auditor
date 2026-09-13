@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 2142981,
+  "bundle_sha256": "eba66bcea68d3625952dd47800f1b354323743e60ad55a79796742128d3f1c70",
+  "extracted_tree": {
+    "bytes": 6384163,
+    "files": 90,
+    "sha256": "33350d01ded7c189a64e1b9728f7534f76c85283edde705919021bdcbf8a0a3a"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 2142981,
+      "name": "bm25s.bundle.zip.part-0001",
+      "sha256": "eba66bcea68d3625952dd47800f1b354323743e60ad55a79796742128d3f1c70"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "bm25s",
+  "source_bytes": 6384163,
+  "source_commit": "a213158181d4b3781ba06bc88840f89871f1c775",
+  "source_files": 90,
+  "source_ref": "a213158181d4b3781ba06bc88840f89871f1c775",
+  "source_repo": "xhluca/bm25s",
+  "source_tree": {
+    "bytes": 6384163,
+    "files": 90,
+    "sha256": "33350d01ded7c189a64e1b9728f7534f76c85283edde705919021bdcbf8a0a3a"
+  }
+}
