@@ -22,64 +22,75 @@
 - run_id: `null`
 - job_id: `null`
 
-## Exactly 3 steps — completed
-1. `STEP_1_SYNC_VERIFY_CLAIM` — fresh control surfaces/catalog/M40 read; owner/gates/scope verified; N05 collision skipped; N06 atomically claimed and read back.
-2. `STEP_2_EXECUTE_VERIFY` — official upstream/maintenance/license/ref/immutable commit/overlap audited for 11 runtime/agent candidates; no acquisition.
-3. `STEP_3_TEST_REFUTE_REPORT_RELEASE` — KEEP/REFERENCE/DEFER/REJECT matrix, 5 specific tests, 3 simulations, 3 refutations, evidence readback, claim release and final rescan.
-
-## Result
+## SW-N06 result
 - producer_verdict: `PASS_PENDING_REVIEW`
 - tests: `5/5 PASS`
 - simulations: `3/3 PASS`
 - refutations: `3/3 PASS`
 - findings: `11 candidate/current-upstream findings`
-- control_drift_found:
-  - `block/goose` historical pointer transferred to `aaif-goose/goose`.
-  - `sst/opencode` historical pointer transferred to `anomalyco/opencode`.
-  - Continue historical `read-only/unmaintained` label refuted by fresh active upstream plus exact physical manifest/current-HEAD match.
-  - OpenClaw GitHub metadata `NOASSERTION` license classifier refuted by canonical MIT `LICENSE` readback.
-- shortlist_result:
-  - `KEEP`: OpenHands Software Agent SDK, mini-SWE-agent; Continue remains KEEP_EXISTING/no duplicate acquisition.
-  - `REFERENCE`: OpenClaw, Agent Skills, OpenAI Agents SDK.
-  - `DEFER`: Hermes Agent, Cline, goose, OpenCode.
-  - `REJECT`: Roo Code.
-
-## STALE_LOCK_GAP reconciliation
-- Release write pre-read main: `83342a9b7a2d25c379705a7afb74414b6d951ab4`; release commit `285e1e57390a17d6f834666941744e42ea721e5b` actually landed after unrelated concurrent advance `859d59d7a01ddea28593990d7d1ab28d9525f137`.
-- First final-log write pre-read main: `2456f1c132e4090a7bcb1e917e3e501e93661a08`; commit `ded796d6061bf45b378ce5f4b56b80372bc89ef1` actually landed after unrelated concurrent advance `e836d884467178b76fb5c153520e8a7502b2c6b1`.
-- Classification: `STALE_LOCK_GAP_RECOVERED_AFTER_UNRELATED_HEAD_ADVANCE` for both events.
-- Recovery: neither concurrent commit wrote the SW-N06 evidence/claim/log path. Claim, evidence and own log were read back after writes; released claim blob remains `5b61cffee4e7b054fe2666109599dbb57c71b690`; evidence blob remains `d769b91efdeceae4a5ab09ee81420bf60824ad8a`.
-- This final reconciliation write is based on fresh HEAD `ded796d6061bf45b378ce5f4b56b80372bc89ef1` and records both races explicitly; no silent overwrite/last-write-wins is accepted.
-
-## GOALS12_OUTPUT
-- G01 literal requirement preserved: `PASS`
-- G02 fresh HEAD read: `PASS`
-- G03 Handoff/STATE/CHECKPOINT/PLAN/Watchdog/DAG read: `PASS`
-- G04 owner free / atomic claim verified: `PASS`
-- G05 dependencies/gates valid: `PASS`
-- G06 write_scope non-overlapping: `PASS`
-- G07 existing code/components deduplicated: `PASS`
-- G08 minimal permitted delta only: `PASS`
-- G09 node-specific verification executed: `PASS`
-- G10 three simulations + three refutations: `PASS`
-- G11 evidence + SHA + readback persisted: `PASS`
-- G12 state/node-next reconciled: `PASS — NO_SAFE_FREE_NODE`
-
-## Next-node rescan
-- `SW-N01..SW-N08`: claim files materialized; do not reinterpret original static `READY_TO_CLAIM` entries as free.
-- `SW-N09..SW-N12`: remain `BLOCKED_GATE` under M47 queue.
-- `M06/M07/M08`: reserved to ASTRA/CLAUDE/GROK.
-- Fresh swarm activity also independently reports/reconciles a `no-free state`.
-- next_free_node: `NONE_SAFE_FREE`
-- next_action_authority: `SOL-0 supervisor fan-in / new authoritative queue or explicit gate change required`.
-
-## Remaining gaps
-- Special-file/symlink/submodule/LFS surface is not proven for NEW candidates; later acquisition preflight required.
-- No runtime integration/sandbox production execution was authorized or performed.
-- `KEEP` means shortlist retention only, not acquisition approval.
-- Shared source-pointer and maintenance-drift corrections require supervisor fan-in.
-
-## Final
-- state: `RELEASED`
+- GOALS12: `12/12 PASS`
 - review_required: `SOL-0 supervisor / director gate`
-- self_certified_verified_closed: `NO`
+
+---
+
+## SW-N17 — PLUMBING_FULLTREE_COMPARE_VALIDATOR
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `RELEASED_PASS_PENDING_REVIEW`
+- active_node: `null`
+- completed_node: `SW-N17`
+- claim_commit: `2d87a1db1f1b28e838fad4e7590601954602a917`
+- claim_blob: `d30d4c914aff1ee40673f7c000a3ddad83800f47`
+- evidence_commit: `86f6e2f14721f4dc604b4525265c7ba3260dbcab`
+- evidence_blob: `ad6a559ddfde9b3c7e20ea49d403c1a0cbf4568c`
+- release_commit: `ef27664a7070301ec4ee60fab1d74565d7527821`
+- released_claim_blob: `29cce12cf0d66f78cd98c3c69ac51c58635e5f7b`
+- mode: `READ_ONLY_PLUS_SANDBOX`
+- canonical_mutation: `NO`
+- downloads: `0`
+
+### Exactly 3 steps — completed
+1. `SYNC_VERIFY_CLAIM`: M48/M49 read; N14/N15/N16 occupied and skipped; N17 atomically claimed/read back.
+2. `EXECUTE_VERIFY`: current staging workflow + sqry manifest audited; isolated Git full-tree validator fixture executed.
+3. `TEST_REFUTE_REPORT_RELEASE`: base matrix + adversarial false-PASS attacks + simulations/refutations; evidence/readback; claim release/readback.
+
+### Tests
+- `FULLTREE_FIXTURE_MATRIX = 7/7 PASS`
+- `ADVERSARIAL_FALSE_PASS_TESTS = 3/3 PASS`
+- `SIMULATIONS = 3/3 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- exact detector covers `missing / extra / changed / mode_mismatch`.
+- repaired mixed-fault fixture returns to PASS.
+- first harness attempt failed on a no-change control commit; harness fixed and whole matrix rerun. No product logic was weakened.
+
+### Causal GAP proven
+- current workflow compares only four sampled paths;
+- current mode condition accepts `{100644,100755}` rather than exact source-mode equality;
+- unselected changes/extras and executable-mode loss can false-PASS representative checks;
+- current acquisition manifest aggregate hashes are not a path-level final-staging ledger.
+
+### STALE_HEAD reconciliation
+- evidence pre-read `e39a3933b03c4944382e7deb925c043f6d17c85a`; actual evidence parent `41650f979dcdc70f0738445c4b1d7cd60c991181` changed only `SOL-SWARM-09-LOG.md`: no overlap.
+- release pre-read `fa062b9cf33e387b5a25d43145e6f3b26d86ee32`; actual release parent `c4c1c0a64091af5e723e0029cddf067914383d41` changed only `CLAIM-SW-N16.json`: no overlap.
+- classification: `STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE`; no silent overwrite.
+
+### GOALS12_OUTPUT
+- G01 requirement preserved: `PASS`
+- G02 fresh HEAD: `PASS`
+- G03 M48/M49 + SW-N04 evidence: `PASS`
+- G04 atomic owner/readback: `PASS`
+- G05 gates/dependencies: `PASS`
+- G06 non-overlapping scope: `PASS`
+- G07 current plumbing/manifests reused: `PASS`
+- G08 minimal allowed delta: `PASS`
+- G09 sandbox tests executed: `PASS`
+- G10 3 simulations + 3 refutations: `PASS`
+- G11 evidence/commit/blob/readback: `PASS`
+- G12 RELEASED/readback: `PASS`
+
+### Final
+- node_execution_score: `12/12 GOALS PASS`
+- producer_verdict: `PASS_PENDING_REVIEW`
+- verified_closed: `NO`
+- review_required: `SOL-0 / independent reviewer`
+- next_action: `READ CRAZY WALL FRESH → first safe READY free node`
