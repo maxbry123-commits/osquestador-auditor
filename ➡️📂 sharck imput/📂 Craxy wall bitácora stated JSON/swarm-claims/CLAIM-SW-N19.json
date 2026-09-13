@@ -1,1 +1,35 @@
-{"schema":"sharck-input.swarm-claim.v2","chat_id":"chat-sol4-20260912T2308-0500","agent_name":"SOL-4-GPT","node_id":"SW-N19","parent_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE","fresh_main_sha":"ac038d8c4d9763ac579c6ba6a9c9001f9169e955","base_sha":"ac038d8c4d9763ac579c6ba6a9c9001f9169e955","mode":"READ_ONLY_RESEARCH","write_scope":["SW-N19-EVIDENCE.md","SOL-SWARM-04-LOG.md","swarm-claims/CLAIM-SW-N19.json"],"paths":["SW-N19-EVIDENCE.md","SOL-SWARM-04-LOG.md"],"dependencies":["M48 active","SW-N06 evidence available","physical gates false"],"gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},"task":"RUNTIME_CANDIDATE_SPECIAL_SURFACE_SCAN","steps":["take N06 KEEP/REFERENCE candidate set","scan official upstream topology/license/ref/symlink/submodule/LFS risk","publish acquisition-risk matrix; no download"],"claimed_at":"2026-09-12T23:30:20-05:00","state":"CLAIMED"}
+{
+  "schema":"sharck-input.swarm-claim.v2",
+  "chat_id":"chat-sol4-20260912T2308-0500",
+  "agent_name":"SOL-4-GPT",
+  "node_id":"SW-N19",
+  "parent_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "fresh_main_sha":"ac038d8c4d9763ac579c6ba6a9c9001f9169e955",
+  "base_sha":"ac038d8c4d9763ac579c6ba6a9c9001f9169e955",
+  "mode":"READ_ONLY_RESEARCH",
+  "write_scope":["SW-N19-EVIDENCE.md","SOL-SWARM-04-LOG.md","swarm-claims/CLAIM-SW-N19.json"],
+  "paths":["SW-N19-EVIDENCE.md","SOL-SWARM-04-LOG.md"],
+  "dependencies":["M48 active at claim","M50 revalidation preserves SW-N19 ownership","SW-N06 evidence available","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"RUNTIME_CANDIDATE_SPECIAL_SURFACE_SCAN",
+  "steps":["take N06 KEEP/REFERENCE candidate set","scan official upstream topology/license/ref/symlink/submodule/LFS risk","publish acquisition-risk matrix; no download"],
+  "claimed_at":"2026-09-12T23:30:20-05:00",
+  "released_at":"2026-09-12T23:35:51-05:00",
+  "completion":{
+    "verdict":"PASS_PENDING_SUPERVISOR_FANIN",
+    "evidence_path":"SW-N19-EVIDENCE.md",
+    "evidence_commit":"5622020669cc3221abc50024816266e8186cf111",
+    "evidence_blob":"67b20280b0acfccb6c4b7a10927f60532c11b7cd",
+    "candidate_count":6,
+    "tests_passed":11,
+    "simulations":3,
+    "refutations":3,
+    "confirmed_special_surface":["OpenClaw:symlink_120000","Agent Skills:symlink_120000"],
+    "upstream_drift":["OpenClaw:N06_f369c90e95afb636531157e6fc4e8faa1bdff726_to_current_9ef7fb4ccc8f9f09dd2bd6c5331b7c0918e48da9:5_commits_ahead"],
+    "acquisition_performed":false,
+    "physical_mutation":false,
+    "gate_recommendation":"KEEP_PHYSICAL_GATES_CLOSED",
+    "review_required":"SOL-0 supervisor fan-in"
+  },
+  "state":"RELEASED"
+}
