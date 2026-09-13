@@ -1,97 +1,96 @@
 # 🦈 HANDOFF MULTI-ENTORNO — SHARCK INPUT V2.1
 
-Estado: `ACTIVE / FAIL_CLOSED / STEP2_REVIEW_READY / M49_N13_FANIN / M48_10SOL_SWARM_ACTIVE / PHYSICAL_GATES_CLOSED`
+Estado: `ACTIVE / FAIL_CLOSED / STEP2 / M52_10SOL_SWARM_ACTIVE / PHYSICAL_GATES_CLOSED`
 Repo: `maxbry123-commits/osquestador-auditor` · branch `main` · raíz operativa `➡️📂 sharck imput/`.
 
 ## Orden obligatorio de lectura
 1. `README-METODO-TRABAJO-MULTIAGENTE.md`
 2. `📁 readme arquitectura sharck imput V2.1.md`
 3. `📂 Craxy wall bitácora stated JSON/XRAY-ADN-CROSSCHECK-2026-09-11.md`
-4. `📂 Craxy wall bitácora stated JSON/STATE.json` + `STATE-DELTA-038-M49-N13-FANIN.json` o posterior verificado.
-5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + `CHECKPOINT-DELTA-036-M49-N13-FANIN.json` o posterior.
-6. `📂 Craxy wall bitácora stated JSON/PLAN.json` + `PLAN-DELTA-020-M49-N13-FANIN.json` o posterior.
-7. `RECOVERY-M48-10SOL-SWARM.md` + recoveries históricos sólo como antecedentes.
-8. `📂 Craxy wall bitácora stated JSON/SWARM-DAG-10SOL-M48-v1.json`.
-9. `📂 Craxy wall bitácora stated JSON/CRAZY-WALL-SWARM-QUEUE-M48.json`.
-10. `📂 Craxy wall bitácora stated JSON/WATCHDOG-SWARM-10SOL-M48-2026-09-12.json`.
-11. `📂 Craxy wall bitácora stated JSON/SUPERVISOR-ORDERS-M48-SWARM-10SOL.md`.
+4. `📂 Craxy wall bitácora stated JSON/STATE.json` + `STATE-DELTA-039-M52-SWARM-EXPANSION.json` o posterior.
+5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT.json` + `CHECKPOINT-DELTA-037-M52-SWARM-EXPANSION.json` o posterior.
+6. `📂 Craxy wall bitácora stated JSON/PLAN.json` + `PLAN-DELTA-021-M52-SWARM-EXPANSION.json` o posterior.
+7. `RECOVERY-M52-10SOL-SWARM.md`.
+8. DAG: `SWARM-DAG-10SOL-M48-v1.json` + `SWARM-DAG-10SOL-M50-DELTA.json` + `SWARM-DAG-10SOL-M51-DELTA.json` + `SWARM-DAG-10SOL-M52-DELTA.json`.
+9. Queue viva: `CRAZY-WALL-SWARM-QUEUE-M52.json`.
+10. Watchdog: `WATCHDOG-SWARM-10SOL-M52-2026-09-12.json`.
+11. Orders: `SUPERVISOR-ORDERS-M52-SWARM-10SOL.md`.
 12. `📂 Craxy wall bitácora stated JSON/swarm-claims/`.
 13. `SOL-0-SUPERVISOR-LOG.md` + `SOL-SWARM-01-LOG.md` … `SOL-SWARM-10-LOG.md`.
+14. Evidence `SW-Nxx-EVIDENCE.md` del nodo relevante.
 
-Si existe evidencia/delta posterior, prevalece por autoridad.
+Si existe delta/evidence posterior verificado, prevalece.
 
 ## Fuente de verdad
 `GitHub physical tree + manifests/hashes/runs/readback > STATE/deltas > CHECKPOINT/deltas > PLAN/deltas > Handoff > Recovery > owner/worker logs > chat`.
+Para actividad viva: `claim file + worker log/evidence + HEAD chronology > static queue snapshot > registered capacity`.
 
 ## Estado físico preservado
 - catálogo canónico: `117`.
 - B01–B04: `17 VERIFIED_CLOSED / 23 FAILED / 0 pending`.
 - `23 FAILED = 12 partial + 11 source-special/symlink`.
-- universo partial: `12 components / 139 anomalies`.
-- B05/B06: `20 RESEARCHED_CANDIDATE_NO_DOWNLOAD / 0 downloaded`.
+- partial universe: `12 components / 139 anomalies`.
+- B05/B06: `20 researched / 0 downloaded`.
 
-## Gates actuales
+## Gates
 `physical_repair_allowed=false`
 `b05_b06_download_allowed=false`
 `step3_allowed=false`
 `canonical_motors=IMMUTABLE`
 
-Owners reservados: `M06 → ASTRA`, `M07 → CLAUDE`, `M08 → GROK`.
+Reservados: `M06→ASTRA`, `M07→CLAUDE`, `M08→GROK`.
+Bloqueados: `SW-N09..SW-N12`.
 
-# M47 — FAN-IN PRESERVADO
-`SW-N01..SW-N08` fueron liberados por workers con resultados de productor `PASS_PENDING_SUPERVISOR_FANIN`; cero promoción automática a `VERIFIED_CLOSED`.
+# Swarm history
+## M47
+`SW-N01..SW-N08` fueron worker-complete/released; resultados quedaron para fan-in/review, sin promoción automática a `VERIFIED_CLOSED`.
 
-# M48/M49 — ENJAMBRE SOL GPT 1–10
-Control operativo:
-- DAG: `SWARM-DAG-10SOL-M48-v1.json`.
-- Queue viva: `CRAZY-WALL-SWARM-QUEUE-M48.json`.
-- Watchdog: `WATCHDOG-SWARM-10SOL-M48-2026-09-12.json`.
-- Orders: `SUPERVISOR-ORDERS-M48-SWARM-10SOL.md`.
-- Watchdog externo horario: `Sharck Swarm Supervisor`.
+## M49
+`SW-N13` spaCy polyleven forensic: upstream pinned muestra `spacy/matcher/polyleven.c` como blob regular, no symlink. No demuestra destino canónico correcto; no cierra spaCy.
 
-Capacidad registrada: `SOL-1-GPT ... SOL-10-GPT`. Actividad real sólo se afirma con claim atómico + readback + log/evidence compatibles.
+## Terminales conocidos M48–M52
+- `SW-N13`: RELEASED / PASS_PENDING_REVIEW.
+- `SW-N14`: RELEASED / PASS_PENDING_SUPERVISOR_FANIN.
+- `SW-N15`: RELEASED / PASS_PENDING_SUPERVISOR_FANIN; 87/87 sandbox fixture pass; fresh tracked-tree replay quedó pendiente.
+- `SW-N16`: `BLOCKED_RELEASED`; simulaciones/refutaciones ejecutadas pero evidence file no pudo persistirse por write path normal. No PASS.
+- `SW-N17`: RELEASED / PASS_PENDING_REVIEW; 7/7 full-tree fixture matrix + 3 refutations; detectó stale-head recuperado tras commit no solapado.
+- `SW-N18`: RELEASED / PASS_PENDING_SUPERVISOR_FANIN; #108 historical source commit sigue no recuperable; current upstream confirma special symlink independently, sin sustituir historia.
 
-## SW-N13 — FAN-IN M49
-- worker: `SOL-5-GPT`.
-- estado worker: `RELEASED`.
-- verdict worker: `PASS_PENDING_REVIEW`.
-- evidencia: `SW-N13-EVIDENCE.md`.
-- hallazgo: en el commit inmutable de spaCy, `spacy/matcher/polyleven.c` aparece como blob regular, no como symlink; por eso la clasificación histórica `symlink_dereferenced` no queda soportada por el source tree.
-- NO cierre físico: comparación de destino canónico y reconciliación final siguen bloqueadas por gates.
-- `SW-N13` NO se puede reclamar de nuevo.
+Para `SW-N19..SW-N28`, NO usar esta lista como estado vivo: leer claims/logs frescos.
 
-## READY dinámico actual
-`SW-N14` special-file/provenance replay contract.
-`SW-N15` StrategyDelta sandbox execution/full-set batch.
-`SW-N16` mode/EOL preservation sandbox.
-`SW-N17` full-tree/plumbing compare validator.
-`SW-N18` HF #108 failure preflight.
-`SW-N19` runtime candidate special-surface scan.
-`SW-N20` M40 priority license/ref/pin/size preflight.
-`SW-N21` I09 web capture/extraction preflight.
-`SW-N22` I04/I10 eval harness preflight.
+# Ola gap-derived M50–M52
+- `SW-N23`: spaCy `website/.vscode/extensions.json` forensic.
+- `SW-N24`: historical source-commit recovery feasibility 11/11.
+- `SW-N25`: stale-head/concurrency protocol sandbox.
+- `SW-N26`: fresh pinned tracked-tree replay sandbox.
+- `SW-N27`: live-state reconciler queue/claims/logs sandbox.
+- `SW-N28`: evidence persistence write-path diagnostic derivado del BLOCKED N16.
 
-Número de SOL NO fija nodo. Cada chat toma el primer READY seguro/libre sobre HEAD fresco.
+Estos nodos nacen de GAPs evidenciados; no se crearon sólo para ocupar workers.
 
-## BLOCKED
-`SW-N09` reparación física — bloqueado.
-`SW-N10` adquisición — bloqueado.
-`SW-N11` wire/prune/min-code — bloqueado.
-`SW-N12` system tests/refutation — bloqueado.
+## Anti-colisión
+`1 CHAT = 1 ACTIVE NODE`
+`1 NODE = 1 OWNER`
+`1 PATH = 1 ACTIVE WRITER`
+`EXACTLY 3 STEPS PER NODE`
 
-## Atomic claim
-`READ FRESH → verify READY+FREE → create swarm-claims/CLAIM-<NODE>.json → READBACK`.
-Si existe: `CLAIM_COLLISION → NO OVERWRITE → RESCAN`.
+Atomic claim:
+`READ HEAD FRESH → READ latest queue/claims → verify SAFE/FREE → CREATE CLAIM → READBACK`.
+Si ya existe: `COLLISION → NO OVERWRITE → RESCAN`.
+Si HEAD cambió: `STALE_HEAD → ABORT WRITE → READ FRESH → REVALIDATE → RETRY`.
 
-`1 CHAT = 1 ACTIVE NODE` · `1 NODE = 1 OWNER` · `1 PATH = 1 ACTIVE WRITER`.
-Workers sólo escriben claim/evidence/log propios; `SOL-0` es único writer de shared control plane.
+Workers sólo escriben claim/evidence/log propios. `SOL-0` es único writer de shared control plane.
 
-## Contrato por nodo
-`STEP_1 SYNC_VERIFY_CLAIM → STEP_2 EXECUTE_VERIFY → STEP_3 TEST_REFUTE_REPORT_RELEASE`.
-Worker verdict: `PASS_PENDING_SUPERVISOR_FANIN | PASS_PENDING_REVIEW | GAP | BLOCKED | INCONCLUSIVE`.
+## Watchdog
+External automation activo: `Sharck Swarm Supervisor`, frecuencia horaria.
+Watchdog documental vigente: `WATCHDOG-SWARM-10SOL-M52-2026-09-12.json`.
+Loop: `READ FRESH → reconcile claim/log/evidence → detect stale/double-active/path-overlap → issue safe orders → verify terminal evidence → SOL-0 fan-in → readback → report`.
+
+Capacidad registrada: 10 workers. **No afirmar 10 activos sin 10 claims vivos compatibles.**
 
 ## Recovery
-Reanudar desde `CP-V2-M49-N13-FANIN-036`, buscar uno posterior, releer queue/claims/logs y sólo entonces decidir claim/orden.
+Checkpoint: `CP-V2-M52-SWARM-EXPANSION-037`.
+Reanudar siempre leyendo primero HEAD + M52 state/plan/checkpoint + queue + claims; luego actuar.
 
 ## Veredicto
-`M49_N13_FANIN_RECONCILED / M48_10SOL_SWARM_CONTROL_ACTIVE / N14_N22_READY_AT_LAST_RECONCILIATION / 4_PHYSICAL_NODES_BLOCKED / M06_M07_M08_RESERVED / 23_PHYSICAL_FAILURES_PRESERVED / NO_NEW_CANONICAL_DOWNLOADS / STEP3_NOT_STARTED_PHYSICALLY`.
+`M52_10SOL_SWARM_CONTROL_ACTIVE / GAP_DERIVED_WORK_EXPANDED / N16_BLOCK_PRESERVED / PHYSICAL_STATE_17_VERIFIED_23_FAILED / NO_NEW_CANONICAL_DOWNLOADS / M06_M07_M08_RESERVED / STEP3_NOT_STARTED_PHYSICALLY / WATCHDOG_HOURLY_ACTIVE`.
