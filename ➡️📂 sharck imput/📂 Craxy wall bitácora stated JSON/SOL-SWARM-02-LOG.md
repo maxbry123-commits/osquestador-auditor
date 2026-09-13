@@ -4,57 +4,70 @@
 - agent_name: `SOL-2-GPT`
 - chat_id: `chat-sol2-20260912T2306-0500`
 - state: `PASS_PENDING_SUPERVISOR_FANIN`
-- active_node: `SW-N02`
+- active_node: `SW-N07`
 - parent_node: `M47_8SOL_SWARM_CONTROL_PLANE`
-- mode: `READ_ONLY_FORENSIC`
+- mode: `READ_ONLY_ARCHITECTURE`
 - claim_state: `CLAIMED_RELEASE_PENDING`
-- claim_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N02.json`
-- claim_commit: `00ef425add4d258e65b1b3a932b235720bb298b0`
-- claim_blob: `513c8cf4cb48ebf734a7dab06d2c0d3fb0ef5d0d`
-- base_sha: `77e544c2d29bbb47b38573ce3fd7811d14cd63a2`
-- evidence_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N02-EVIDENCE.md`
-- evidence_commit: `985f6312cfe850a27c26a87b54373fe456d5eba2`
-- evidence_blob: `79ca3de35673f8d17cbe8d5b805cd59e1d1b703c`
-- evidence_readback: `PASS`
+- current_claim_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N07.json`
+- current_claim_commit: `002cfa814ce23bb14777615673b30664ae9c3638`
+- current_claim_blob: `e3b10fac1bdcb0728a0b2f4fe66aefd202b8947d`
+- current_base_sha: `8fa359c9684e01dd37134e66d1379df66265ed14`
+- current_evidence_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md`
+- current_evidence_commit: `c6927518f8de2d9795754ea2b7862502443b2947`
+- current_evidence_blob: `0fd6fec0e19aa627afbfd0d9632efdbe20c4aec0`
+- current_evidence_readback: `PASS`
 - node_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
 - review_required: `true`
 - verified_closed: `false`
 
-## SW-N02 result
+## Completed node history
 
-The exact 11 source-special/symlink failure components were classified without inventing historical dependency commits:
+### SW-N02 — RELEASED
 
-`stormcrawler`, `tika`, `docling`, `vespa`, `networkx`, `cocoindex`, `pydantic-ai`, `litellm`, `fastmcp`, `huggingface_hub`, `unstructured`.
+- result: `PASS_PENDING_SUPERVISOR_FANIN`
+- release_commit: `8fa359c9684e01dd37134e66d1379df66265ed14`
+- release_claim_blob: `f1e2eb2849a656717dcbd707a4041dd608c83dce`
+- evidence_commit: `985f6312cfe850a27c26a87b54373fe456d5eba2`
+- evidence_blob: `79ca3de35673f8d17cbe8d5b805cd59e1d1b703c`
+- result: 11/11 source-special failures classified; historical dependency commit not fabricated; physical repair remained blocked.
 
-Primary cause: `SOURCE_PROVENANCE_FAILURE`.
-Secondary cause: `EVIDENCE_FAILURE`.
+## SW-N07 result
 
-All 11 failed acquisition queue entries used mutable `source_ref: HEAD`, and their early source-special failure states do not durably persist the acquired dependency `source_commit`. Therefore the historical source commit cannot be certified from canonical persisted failed-state evidence. Modern official upstream evidence may corroborate current topology but is not substituted for historical provenance.
+Mapped the V2.1 integration surface without wiring production:
 
-## Test / refute
+- `17/17` acquisition-`VERIFIED_CLOSED` components mapped to capability → port/microkernel → adapter → typed failure → test contract.
+- `20/20` 20X candidates mapped as architecture contracts only; authoritative status remains `RESEARCHED_CANDIDATE_NO_DOWNLOAD / REVIEW_GATE_REQUIRED`.
+- overlapping providers marked `ROUTE`, `SELECT_ONE`, `PRUNE`, or `DEFER` rather than blindly multi-wired.
+- no component was promoted to `APPROVED_FOR_WIRE`, `WIRED`, `RUNTIME_ACTIVE`, `TESTED`, or `SYSTEM_VERIFIED`.
 
-- causal tests: `4/4` executed
+### N07 test/refute
+
+- static architecture checks: `5/5`
 - simulations: `3/3`
 - refutations: `3/3`
-- fabricated source commits: `0`
-- production mutation: `0`
-- B05/B06 download: `0`
+- production wiring: `0`
+- component downloads: `0`
+- physical repairs: `0`
 - canonical motor mutation: `0`
 
-## Gates at execution
+### Important architecture correction
+
+`VERIFIED_CLOSED` acquisition is not wiring approval. The code-root contract requires separate `APPROVED_FOR_WIRE → WIRED → TESTED → PROMOTED` states. The 20X candidate set is research-only and cannot be downloaded while the B05/B06 gate is false.
+
+## Gates
 
 - `physical_repair_allowed=false`
 - `b05_b06_download_allowed=false`
 - `step3_allowed=false`
 - `canonical_motors=IMMUTABLE`
-- M06/M07/M08 reserved to ASTRA/CLAUDE/GROK
+- M06/M07/M08 remain reserved to ASTRA/CLAUDE/GROK
 
 ## GOALS12
 
-G01 PASS; G02 PASS; G03 PASS; G04 PASS; G05 PASS; G06 PASS; G07 PASS; G08 PASS; G09 PASS; G10 PASS; G11 PASS after evidence commit/blob readback; G12 requires atomic claim release + supervisor fan-in.
+G01 PASS; G02 PASS; G03 PASS; G04 PASS; G05 PASS; G06 PASS; G07 PASS; G08 PASS; G09 PASS; G10 PASS; G11 PASS after N07 evidence commit/blob readback; G12 requires N07 atomic release + supervisor fan-in.
 
 ## Next atomic operation
 
-Fetch fresh HEAD and current claim blob; if ownership and scope remain unchanged, update `CLAIM-SW-N02.json` to `RELEASED` with the evidence commit/blob and `PASS_PENDING_SUPERVISOR_FANIN`, read it back, then rescan Crazy Wall for the next safe free independent node.
+Fetch fresh HEAD and N07 claim blob; if ownership/scope remain intact, release `CLAIM-SW-N07.json` with N07 evidence hashes and `PASS_PENDING_SUPERVISOR_FANIN`. Then rescan the M47 queue. If N01-N08 are all materialized/finished-or-active, do not invent a ninth safe task: N09-N12 remain gate-blocked.
 
-Rules retained: one active node only; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG; never claim M06/M07/M08; never perform physical mutation while gates remain false.
+Rules retained: one active node only; shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG are supervisor-only; no M06/M07/M08 claim; no physical mutation while gates remain false.
