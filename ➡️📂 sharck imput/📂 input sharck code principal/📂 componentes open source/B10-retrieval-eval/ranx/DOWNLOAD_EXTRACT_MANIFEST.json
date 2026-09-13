@@ -1,0 +1,43 @@
+{
+  "bundle_bytes": 35937195,
+  "bundle_sha256": "f699ad53f9763ea3cbd5656175af8968cb5b3e491240d57e4f7d70432fa0d921",
+  "extracted_tree": {
+    "bytes": 156680539,
+    "files": 188,
+    "sha256": "53eab5bd03f8784df512ed06b058439df3d21e4680f997984fa14fcba4db2898"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 12582912,
+      "name": "ranx.bundle.zip.part-0001",
+      "sha256": "df417549bc8470a63ec6d27dd449a9454711162f5849d22d41f7968171652d5a"
+    },
+    {
+      "bytes": 12582912,
+      "name": "ranx.bundle.zip.part-0002",
+      "sha256": "06f5256f60132353ab0ed5101dda9b1befbe733c89f7d039fe90fd0d8d0b0456"
+    },
+    {
+      "bytes": 10771371,
+      "name": "ranx.bundle.zip.part-0003",
+      "sha256": "f01bf2c911d5cff4f276590b8d2db82b54fa5f25a4ed4748b885d12ca393c344"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ranx",
+  "source_bytes": 156680539,
+  "source_commit": "7363db0c35e92e90d6fa6fe73907b760678f765e",
+  "source_files": 188,
+  "source_ref": "7363db0c35e92e90d6fa6fe73907b760678f765e",
+  "source_repo": "AmenRa/ranx",
+  "source_tree": {
+    "bytes": 156680539,
+    "files": 188,
+    "sha256": "53eab5bd03f8784df512ed06b058439df3d21e4680f997984fa14fcba4db2898"
+  }
+}

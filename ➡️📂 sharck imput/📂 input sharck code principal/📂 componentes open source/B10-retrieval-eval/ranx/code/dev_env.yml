@@ -1,0 +1,29 @@
+name: ranx
+dependencies:
+  - black
+  - ipykernel
+  - ipywidgets
+  - conda-forge::mkdocs-material
+  - conda-forge::mkdocs-autorefs
+  - conda-forge::mkdocstrings 
+  - conda-forge::mkdocstrings-python 
+  - pygments>=2.12
+  - notebook
+  - numba=0.54.1
+  - numpy
+  - pandas
+  - pip
+  - pytest
+  - python>=3.8
+  - scipy>=1.8
+  - seaborn
+  - orjson
+  - lz4
+  - tabulate
+  - tqdm
+  - rich
+  - conda-forge::fastparquet
+  - pip:
+    - twine
+    - ir_datasets
+    - cbor2
