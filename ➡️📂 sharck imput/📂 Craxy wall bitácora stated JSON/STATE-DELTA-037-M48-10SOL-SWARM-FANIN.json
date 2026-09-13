@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":37,
+  "base_state_delta":"STATE-DELTA-036-M47-8SOL-SWARM-CONTROL.json",
+  "current_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "current_step":2,
+  "status":"ACTIVE_FAIL_CLOSED",
+  "m47_worker_fanin":{"released_pass_pending_supervisor_fanin":8,"verified_closed_promotions":0,"nodes":["SW-N01","SW-N02","SW-N03","SW-N04","SW-N05","SW-N06","SW-N07","SW-N08"]},
+  "live_queue":{"ready_nodes":["SW-N13","SW-N14","SW-N15","SW-N16","SW-N17","SW-N18","SW-N19","SW-N20","SW-N21","SW-N22"],"blocked_nodes":["SW-N09","SW-N10","SW-N11","SW-N12"],"worker_capacity":10,"active_claim_count":"READ_PHYSICAL_CLAIMS_FRESH; DO_NOT_INFER_FROM_CAPACITY"},
+  "physical_state":{"canonical_components":117,"B01_B04":{"verified_closed":17,"failed":23,"pending":0},"partial_components":12,"partial_exact_anomalies":139,"B05_B06":{"researched_candidates":20,"downloaded":0,"verified_closed":0}},
+  "new_evidence_from_M47":{"SW-N03":"139/139 accounted; 137 causally explained; 2 spaCy unproven","SW-N04":"sandbox design gaps execution/fullset/modes/plumbing/reviews remain","SW-N05":"HF bridge contract mapped; #108 remains FAILED","SW-N06":"runtime candidate special surface scan remains","SW-N08":"live-state drift required lock_state vs worker_state separation"},
+  "reserved":{"M06_ASTRA":"OPEN_UNCLAIMED_RESERVED","M07_CLAUDE":"OPEN_UNCLAIMED_RESERVED","M08_GROK":"OPEN_UNCLAIMED_RESERVED"},
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "control_files":{"dag":"SWARM-DAG-10SOL-M48-v1.json","queue":"CRAZY-WALL-SWARM-QUEUE-M48.json","watchdog":"WATCHDOG-SWARM-10SOL-M48-2026-09-12.json","orders":"SUPERVISOR-ORDERS-M48-SWARM-10SOL.md"},
+  "finding":"M47 worker wave completed read-only/sandbox evidence, but no production gate has opened; M48 dispatches ten new non-overlapping safe nodes derived from real gaps."
+}
