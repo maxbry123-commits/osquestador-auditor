@@ -1,0 +1,33 @@
+{
+  "schema": "sharck-input.swarm-claim.v3",
+  "chat_id": "sol10-0284245c-e710-416b-9488-4d2cd6fd7a50",
+  "agent_name": "SOL-10-GPT",
+  "node_id": "SW-N26",
+  "parent_node": "M51_ADD_CONCURRENCY_AND_REPLAY_SAFE_NODES",
+  "fresh_main_sha": "80dd4db004ae52b9d7319e2aa755da32e8630c56",
+  "base_sha": "80dd4db004ae52b9d7319e2aa755da32e8630c56",
+  "mode": "SANDBOX_ONLY",
+  "write_scope": [
+    "SW-N26-EVIDENCE.md",
+    "SOL-SWARM-10-LOG.md",
+    "swarm-claims/CLAIM-SW-N26.json"
+  ],
+  "paths": [
+    "SW-N26-EVIDENCE.md",
+    "SOL-SWARM-10-LOG.md"
+  ],
+  "dependencies": [
+    "SWARM-DAG-10SOL-M48-v1.json",
+    "SWARM-DAG-10SOL-M50-DELTA.json",
+    "SWARM-DAG-10SOL-M51-DELTA.json"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "task": "FRESH_TRACKED_TREE_REPLAY_SANDBOX",
+  "claimed_at": "2026-09-13T04:35:58Z",
+  "state": "CLAIMED"
+}
