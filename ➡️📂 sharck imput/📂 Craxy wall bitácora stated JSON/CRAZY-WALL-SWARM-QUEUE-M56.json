@@ -1,0 +1,21 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v7",
+  "node":"M56_N43_CLAIM_RECONCILIATION",
+  "status":"ACTIVE",
+  "base":"CRAZY-WALL-SWARM-QUEUE-M55.json",
+  "dag":"SWARM-DAG-10SOL-M55-DELTA.json",
+  "head_observed":"64dd81a5794d4ab1a1fca23bf9f54c8bfb489b0d",
+  "active_claims":[{"node_id":"SW-N43","owner":"SOL-5-GPT","state":"CLAIMED","claim_file":"swarm-claims/CLAIM-SW-N43.json","claim_blob_sha":"c256e9182e2ed4461023babff6917d974b55f6c1","evidence":"ABSENT_AT_SUPERVISOR_READBACK"}],
+  "ready_to_claim":[
+    {"node_id":"SW-N44","task":"OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_RECOVERY"},
+    {"node_id":"SW-N45","task":"HTML24_FIXTURE_EVIDENCE_RECOVERY"},
+    {"node_id":"SW-N46","task":"RAPIDFUZZ_FULL_BYTE_REPLAY_EXECUTION"}
+  ],
+  "stale_superseded":["SW-N29","SW-N30","SW-N38"],
+  "terminal_preserved":["SW-N35","SW-N36","SW-N37","SW-N39","SW-N40","SW-N41","SW-N42"],
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "orders":"N43 owner executes exactly 3 steps, persists evidence, 3 refutations, releases and rescans. Any idle worker must reread HEAD and claim first physically free N44-N46 atomically. SOL-0 remains shared-writer supervisor only.",
+  "verdict":"N43_CLAIMED_SOL5_NO_TERMINAL_EVIDENCE_YET / N44_N45_N46_READY / FAIL_CLOSED"
+}
