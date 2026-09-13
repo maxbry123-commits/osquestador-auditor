@@ -1,0 +1,27 @@
+{
+  "schema": "sharck-input.plan-delta.v1",
+  "revision": 18,
+  "base_plan_delta": "PLAN-DELTA-017-M46-ROOT-RECOVERY-RECONCILIATION.json",
+  "node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "owner": "SOL-0",
+  "status": "ACTIVE_SWARM_SUPERVISION",
+  "physical_mutation": false,
+  "artifacts": {
+    "dag": "SWARM-DAG-8SOL-M47-v1.json",
+    "queue": "CRAZY-WALL-SWARM-QUEUE-M47.json",
+    "watchdog": "WATCHDOG-SWARM-8SOL-M47-2026-09-12.json",
+    "claims_dir": "swarm-claims/"
+  },
+  "ready_nodes": ["SW-N01","SW-N02","SW-N03","SW-N04","SW-N05","SW-N06","SW-N07","SW-N08"],
+  "blocked_nodes": ["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved_owner_nodes": {"M06":"ASTRA","M07":"CLAUDE","M08":"GROK"},
+  "worker_rule": "dynamic first-safe-free node; no fixed task by SOL number; atomic claim file required",
+  "supervisor_rule": "SOL-0 is exclusive shared control-plane writer and fan-in verifier",
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE"
+  },
+  "next_action": "SOL-1..SOL-8 READ FRESH AND ATOMICALLY CLAIM DISTINCT READY SW-N01..SW-N08; SOL-0 SUPERVISES AND RECONCILES RESULTS"
+}
