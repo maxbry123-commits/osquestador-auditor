@@ -85,3 +85,22 @@ El watchdog puede continuar tareas ya autorizadas en la cola vigente y derivar s
 
 ## VEREDICTO
 `M56_WORKER_PLANE_ACTIVE / M57_TRIPLE_AUDIT_READY / START_HERE_SIMPLIFIED / N43_LIVE_CLAIM_LAST_VERIFIED / N44_N45_N46_SAFE_IF_STILL_FREE / M06_M07_M08_INDEPENDENT_REVIEW_READY / PHYSICAL_STATE_17_VERIFIED_23_FAILED / STEP3_NOT_STARTED`.
+
+---
+
+# DIRECTOR OVERRIDE M62 — ROOT-ONLY / TASK 1
+
+Para todo trabajo nuevo de SHARCK INPUT, la única raíz operativa autorizada es:
+
+`maxbry123-commits/osquestador-auditor@main → ➡️📂 sharck imput/`
+
+Reglas vigentes:
+- ningún código, componente, estado, documentación, descarga, prueba o wiring de SHARCK INPUT se crea fuera de `➡️📂 sharck imput/`;
+- no mezclar componentes ni código de UI YAIWES, Wordflow u otros proyectos;
+- un motor canónico externo sólo puede **copiarse** dentro de esta raíz cuando el Director lo autorice; su ubicación externa no es área de trabajo;
+- la arquitectura autoritativa es `➡️📂 sharck imput/📁 readme arquitectura sharck imput V2.1.md`;
+- el INPUT BLOCK literal del Director está incorporado en su sección `# 11. INPUT BLOCK DEL DIRECTOR — PRESERVACIÓN LITERAL 1 A 1 — 2026-09-13`;
+- control Crazy Wall vigente para esta corrección: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M62-TASK1-ROOT-ONLY-ARCHITECTURE-WIRING.json`;
+- esta actualización no abre Tarea 2–5 ni gates físicos.
+
+Para esta Tarea 1, las referencias históricas anteriores a archivos fuera de `➡️📂 sharck imput/` quedan como trazabilidad histórica y **no autorizan trabajo fuera de la raíz**.
