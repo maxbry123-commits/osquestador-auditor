@@ -2,8 +2,8 @@
 
 - agent_name: `SOL-4-GPT`
 - chat_id: `chat-sol4-20260912T2308-0500`
-- state: `REPORT_READY_RELEASE_PENDING`
-- active_node: `SW-N04`
+- state: `RELEASED_NO_SAFE_FREE_NODE`
+- active_node: `null`
 - rule: claim only one `READY_TO_CLAIM` node from `SWARM-DAG-8SOL-M47-v1.json` after fresh read; write only this log + node-unique evidence + own claim; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG/queue.
 - reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
 - physical mutation: `false`.
@@ -83,10 +83,10 @@
 - G06 write scope non-overlap: `PASS`
 - G07 dedup/reuse existing evidence: `PASS`
 - G08 minimal allowed delta: `PASS`
-- G09 specific evidence/coverage tests: `PASS`
+- G09 specific evidence/coverage tests: `PASS_DESIGN_EVIDENCE_ONLY`
 - G10 3 simulations + 3 refutations: `PASS`
 - G11 evidence SHA + readback persisted: `PASS`
-- G12 release/next-node reconciliation: `PENDING_CLAIM_RELEASE`
+- G12 release/next-node reconciliation: `PASS_NO_SAFE_FREE_NODE_AT_RESCAN`
 
 ## COUNCIL12 verdict
 
@@ -94,7 +94,7 @@
 2. literal scope: sandbox-only — preserved.
 3. authority: physical run/workflow/readbacks used.
 4. state: 12/139 universe, 4 sampled.
-5. owner: SOL-4 valid claim.
+5. owner: SOL-4 valid claim, now released.
 6. gates: remain false.
 7. collision: N03 avoided; N04 unique.
 8. causal GAP: evidence coverage insufficiency.
@@ -111,4 +111,43 @@
 - `G-SW-N04-PLUMBING-COMPARE`: no-filter plumbing alternative is design-only.
 - `G-SW-N04-REVIEWS`: M06 ASTRA + M07 CLAUDE + M08 GROK + director gate still required.
 
-release_action: update own claim to `RELEASED` after fresh claim SHA read and readback; then rescan next FREE node without claiming overlapping work.
+## Release / next-free rescan — 2026-09-12T23:16-05:00
+
+- claim release commit: `8b4e8397e7e6277e77d2d08718a5f813cec8e51e`.
+- released claim blob/readback: `6769564e35157d6ce5ed17bca5c143b30a289c37`.
+- claim state readback: `RELEASED`.
+- fresh main after release/rescan: `24e4cdea4b2a001fd60e41f3117dc1bd5f9b1bc0`.
+- claim directory now materializes `SW-N01` through `SW-N08`.
+- `SW-N07` is physically `CLAIMED` by `SOL-2-GPT`.
+- `SW-N08` is physically `CLAIMED` by `SOL-1-GPT`.
+- nodes with persistent released claim files are not reinterpreted as FREE without an explicit control-plane transition.
+- `SW-N09..SW-N12` remain `BLOCKED_GATE` under M47.
+- `M06/M07/M08` remain reserved for ASTRA/CLAUDE/GROK.
+- `next_free_node`: `NONE_SAFE_FREE_AT_RESCAN`.
+- final worker state: `RELEASED_NO_SAFE_FREE_NODE`.
+
+## Crazy Wall report fields
+
+- node_id: `SW-N04`
+- chat_id: `chat-sol4-20260912T2308-0500`
+- agent_name: `SOL-4-GPT`
+- state: `RELEASED` with result `PASS_PENDING_SUPERVISOR_FANIN`
+- base_sha: `8be890dce641d42d4b1fb447f838b4e143b86667`
+- final_sha_observed: `24e4cdea4b2a001fd60e41f3117dc1bd5f9b1bc0`
+- write_scope: own claim + `SW-N04-EVIDENCE.md` + `SOL-SWARM-04-LOG.md`
+- paths_changed: exactly those three allowed paths
+- claim_commit: `de5f22df1e3c34fc33ebd3d2560f9dfd489890b2`
+- evidence_commit: `954507ee91eb6dfa143b7d3d6434caa62521fb69`
+- report_commit: `f6faea6e4d2e602795b96d60669748796ca8aa0b`
+- release_commit: `8b4e8397e7e6277e77d2d08718a5f813cec8e51e`
+- evidence_blob: `2d8131a67a32396e1a7441db2fde330e5bf62492`
+- released_claim_blob: `6769564e35157d6ce5ed17bca5c143b30a289c37`
+- tests: `8 PASS` within design/evidence scope
+- run_id: `34568249222` historical M25 supporting evidence only; no new production/sandbox expansion run asserted
+- job_id: `103164691377` historical supporting evidence only
+- simulations: `3`
+- refutations: `3`
+- remaining_gaps: `5`, explicitly listed above
+- gate_snapshot: physical repair=false; B05/B06=false; Step3=false; canonical motors immutable
+- review_required: `SOL-0 supervisor fan-in`; production remains dependent on M06+M07+M08+director
+- next_free_node: `NONE_SAFE_FREE_AT_RESCAN`
