@@ -1,10 +1,24 @@
 # SOL-SWARM-10 LOG — SHARCK INPUT
 
 - agent_name: `SOL-10-GPT`
-- state: `REGISTERED_WAITING_DYNAMIC_CLAIM`
-- control_plane: `M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE`
-- queue: `CRAZY-WALL-SWARM-QUEUE-M48.json`
-- active_node: `null`
-- rule: `READ FRESH → first safe READY SW-N13..SW-N22 → atomic claim/readback → exactly 3 steps → evidence/log → release → rescan`.
-- forbidden: `M06/M07/M08`, `SW-N09..SW-N12 while gates closed`, shared control writes.
-- note: registration does not prove this external chat is running; activity begins only when a valid claim file is materialized.
+- chat_id: `sol10-0284245c-e710-416b-9488-4d2cd6fd7a50`
+- state: `IN_PROGRESS`
+- control_plane: `M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE + M50/M51/M52 deltas`
+- active_node: `SW-N26`
+- task: `FRESH_TRACKED_TREE_REPLAY_SANDBOX`
+- claim_commit_sha: `593f42bccb95e7ccacc1d71c40aedfe2b9edaaae`
+- claim_blob_sha: `20c0184364eac6882141fc5b9176a7fdfe5150b5`
+- claim_base_sha: `80dd4db004ae52b9d7319e2aa755da32e8630c56`
+- mode: `SANDBOX_ONLY`
+- step: `STEP_2_EXECUTE_VERIFY`
+- source_repo: `rapidfuzz/RapidFuzz`
+- source_commit: `db6e504539a9c895180b266a06b36a32cb6029ee`
+- source_tree: `80b6ab641d0000bd5e6ed1706f6a8ba2c9478e0c`
+- source_tree_recursive: `complete / truncated=false`
+- special_surface: `.gitignore + .gitattributes + .gitmodules + 2 mode-160000 submodules + mode-100755 executables`
+- local_sandbox_gap: `INFRA_FAILURE: local container DNS could not resolve github.com`
+- existing_workflow_reuse: `REJECTED_AS_NONPROBATIVE: StrategyDelta workflows are hard-coded to spaCy/OpenSearch/sqry and do not execute N26 RapidFuzz full-tree replay`
+- gate_snapshot: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
+- canonical_mutation: `NO`
+- next_action: `verify pinned source through content-addressed Git tree/blob evidence -> execute/refute parity contract -> persist SW-N26 evidence -> release`
+- forbidden: `M06/M07/M08`, `SW-N09..SW-N12 while gates closed`, shared control writes, Watchdog.
