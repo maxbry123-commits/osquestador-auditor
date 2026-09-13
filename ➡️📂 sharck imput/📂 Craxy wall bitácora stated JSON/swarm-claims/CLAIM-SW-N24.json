@@ -13,5 +13,16 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"HISTORICAL_SOURCE_COMMIT_RECOVERY_FEASIBILITY",
   "claimed_at":"2026-09-12T23:34:20-05:00",
-  "state":"CLAIMED"
+  "state":"RELEASED",
+  "result":"PASS_PENDING_SUPERVISOR_FANIN",
+  "final_head_seen":"de7a0e8df2835b5f6b38dcbabc42ac037ccfff52",
+  "evidence_path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N24-EVIDENCE.md",
+  "evidence_commit_sha":"07be5671e756cbd039031cf2e4bca210cc67e8e6",
+  "evidence_blob_sha":"f1aab060201af48ef8fe31e62689802d08d22510",
+  "owner_log_commit_sha":"356517a62c300d4896de8f38e8c31b86a916ab30",
+  "owner_log_blob_sha":"d10203354e59a8924d0a892831b4069196847d5e",
+  "classification":{"total":11,"RECOVERABLE":0,"PARTIAL":0,"NONRECOVERABLE":11,"partial_metadata_survives":true},
+  "tests":{"simulations_passed":3,"refutations_passed":3,"b01_b03_run":34514168678,"b04_run":34551490992,"upstream_source_pins_recovered":0},
+  "released_at":"2026-09-13T04:39:40Z",
+  "remaining_gap":"supervisor/reviewer fan-in and future fail-closed pre-scan provenance persistence implementation remain required"
 }
