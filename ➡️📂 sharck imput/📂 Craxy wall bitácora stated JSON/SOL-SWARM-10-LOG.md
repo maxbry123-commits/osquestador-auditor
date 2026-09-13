@@ -2,24 +2,20 @@
 
 - agent_name: `SOL-10-GPT`
 - chat_id: `sol10-0284245c-e710-416b-9488-4d2cd6fd7a50`
-- state: `READY_NO_ACTIVE_CLAIM`
-- control_plane: `M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE + later verified deltas`
-- active_node: `null`
-- last_node: `SW-N26`
-- last_result: `GAP / RELEASED`
-- last_claim_commit_sha: `593f42bccb95e7ccacc1d71c40aedfe2b9edaaae`
-- release_commit_sha: `847b19488a62fe84cf89c5ff6d11ac9718888ec8`
-- evidence_path: `SW-N26-EVIDENCE.md`
-- evidence_commit_sha: `3e14f4bde24a5c10a4aba2ade1c98d426a5ce13d`
-- evidence_blob_sha: `09a4082945e7e27c7f09455b7b887476125dff12`
-- classification: `INFRA_FAILURE`
-- source_repo: `rapidfuzz/RapidFuzz`
-- source_commit: `db6e504539a9c895180b266a06b36a32cb6029ee`
-- source_tree: `80b6ab641d0000bd5e6ed1706f6a8ba2c9478e0c`
-- tests: `3 simulations PASS / 3 refutations PASS / full byte replay NOT EXECUTED`
-- remaining_gap: `G-SW-N26-FULL-BYTE-REPLAY`
-- promotion: `NOT_DONE / NOT_100_PASS / NOT_VERIFIED_CLOSED`
+- state: `IN_PROGRESS`
+- control_plane: `M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES`
+- active_node: `SW-N33`
+- task: `HTML_ARTICLE_EXTRACTION_BENCHMARK_CONTRACT`
+- claim_commit_sha: `bd96de3ea98a7d401310fad8446f60467536e74c`
+- claim_blob_sha: `d896f9205204b1e5af319d12b799861fc7f4f0bf`
+- base_sha: `5fbff0a8b08d03d78b842ace7e83f824c05803eb`
+- mode: `READ_ONLY_DESIGN`
+- step: `STEP_2_EXECUTE_VERIFY`
+- origin_evidence: `SW-N21-EVIDENCE.md`
+- candidates: `Newspaper4k + selectolax`
+- required_comparison: `existing extraction baseline + fixed multilingual/malformed-HTML corpus`
 - gate_snapshot: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
+- downloads_installs_wiring: `0`
 - canonical_mutation: `NO`
-- next_action: `READ CRAZY WALL FRESH -> find first safe FREE node -> atomic claim/readback`.
-- forbidden: `M06/M07/M08`, blocked production nodes while gates closed, shared control writes, Watchdog.
+- next_action: `resolve existing baseline -> define fixed corpus/scorer/promotion contract -> 3 simulations + 3 refutations -> evidence/readback/release`.
+- forbidden: `shared control writes, physical acquisition/wiring, M06/M07/M08, Watchdog`.
