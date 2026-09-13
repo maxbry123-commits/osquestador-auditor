@@ -2,25 +2,30 @@
 
 - agent_name: `SOL-7-GPT`
 - chat_id: `sol7-5f38c044-03f6-4c32-a681-663c0e16b94f`
-- state: `READY_NO_ACTIVE_CLAIM / NO_SAFE_FREE_NODE / ALL_M47_SAFE_WORK_CONSUMED_OR_RELEASED_PENDING_FANIN`
-- active_node: `null`
-- last_fresh_head_seen: `f258b58ee21cc2b5c58a87d6785c5bff06e82f9e`
-- loop: `READ_FRESH -> VERIFY_QUEUE -> VERIFY_LOCKS -> REFUTE_FREE_NODE -> REPORT`
-- claim_scan_initial: `SW-N05 collision -> SW-N06 collision -> SW-N07 collision -> SW-N08 collision`
-- latest_release_scan: `SW-N04=RELEASED; SW-N06=RELEASED; SW-N07=RELEASED/PASS_PENDING_SUPERVISOR_FANIN; SW-N08=RELEASED_PASS_PENDING_SUPERVISOR_FANIN`
-- previously_completed_released: `SW-N01, SW-N02, SW-N03, SW-N05`
-- consumed_safe_nodes: `SW-N01..SW-N08`
-- blocked_gate_nodes: `SW-N09, SW-N10, SW-N11, SW-N12`
+- control_plane: `M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE`
+- state: `SW-N14_COMPLETE / PASS_PENDING_SUPERVISOR_FANIN`
+- active_node: `SW-N14`
+- task: `SPECIAL_FILE_SCAN_PROVENANCE_CONTRACT`
+- mode: `READ_ONLY_DESIGN`
+- claim_commit: `8b3e2f5668b571fa68d19ec68e9d3f3183b86faa`
+- evidence_commit: `c462ef0891f4e0e734a6bf3bc407e98caed1fd62`
+- evidence_blob: `8785a708502f2d7379a9ef41c73ede4f70e11a10`
+- evidence_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N14-EVIDENCE.md`
+- evidence_readback: `PASS`
+- schema_steps: `3/3 PASS`
+- contract_checks: `12/12 PASS`
+- historical_cases: `11/11 CONTRACT_APPLICABLE; 0 fabricated commits`
+- tests: `6/6 PASS`
+- simulations: `3/3 PASS`
+- refutations: `3/3 PASS`
+- physical_mutations: `0`
+- downloads: `0`
+- git_lfs_operations: `0`
+- canonical_motor_mutations: `0`
 - gate_snapshot: `physical_repair_allowed=false; b05_b06_download_allowed=false; step3_allowed=false; canonical_motors=IMMUTABLE`
-- reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
-- contradiction: `CRAZY-WALL-SWARM-QUEUE-M47.json still advertises SW-N01..SW-N08 READY_TO_CLAIM while physical claim records/commits show consumed/released work; physical locks/readback prevail.`
-- refutation_1: `Evidence publication does not release ownership; claim state/readback is required.`
-- refutation_2: `SW-N09..SW-N12 cannot be claimed while required gates remain false.`
-- refutation_3: `Reclaiming/repeating SW-N01..SW-N08 would violate no-repeat/no-invent rules and duplicate completed worker scopes.`
-- result: `NO_LEGAL_EXECUTABLE_FREE_NODE_FOR_SOL_7_AT_FRESH_HEAD`
-- pass_scope: `READ/ANTI_COLLISION/QUEUE_RECONCILIATION=100%; NODE_EXECUTION=NOT_APPLICABLE_NO_CLAIM`
-- rule: no execution without successful atomic claim + readback; do not repeat completed nodes; do not invent work.
-- write_scope: this worker log only until a new safe/free node is explicitly materialized or a gate changes.
-- shared control writes: forbidden; SOL-0 only.
-- physical mutation: forbidden while latest gates remain false.
-- next_action: `READ_FRESH -> WAIT_FOR_SOL0_FANIN_OR_NEW_EXPLICIT_FREE_NODE -> ATOMIC CLAIM -> READBACK -> EXECUTE`.
+- remaining_gap: `historical dependency source commits for the 11 old failed runs remain nonrecoverable from persisted canonical evidence; future replay requires immutable pin + pre-scan provenance persistence + exact special-surface ledger + independent authorization gates`
+- worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
+- self_verified_closed: `false`
+- shared_control_writes: `SOL-0_ONLY`
+- previous_loop: `M47 no-safe-free-node reconciliation was completed before M48 became active`
+- next_action_after_release: `READ_FRESH -> FIND FIRST READY FREE M48 NODE -> ATOMIC CLAIM -> READBACK -> EXECUTE`
