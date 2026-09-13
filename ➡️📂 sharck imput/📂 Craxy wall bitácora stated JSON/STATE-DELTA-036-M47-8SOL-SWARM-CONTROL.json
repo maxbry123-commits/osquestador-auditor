@@ -1,0 +1,49 @@
+{
+  "schema": "sharck-input.state-delta.v1",
+  "delta_revision": 36,
+  "base_state_delta": {
+    "file": "STATE-DELTA-035-M46-ROOT-RECOVERY-RECONCILIATION.json",
+    "current_node": "M46_ROOT_RECOVERY_PATCH_RECONCILED_READBACK_VERIFIED"
+  },
+  "status": "APPLIED_AS_VERSIONED_DELTA_NOT_DESTRUCTIVE_REWRITE",
+  "current_step": 2,
+  "current_node": "M47_8SOL_SWARM_CONTROL_ACTIVE",
+  "task": {
+    "owner": "SOL-0",
+    "status": "ACTIVE_SUPERVISOR",
+    "physical_mutation": false,
+    "swarm_workers_ready": 8,
+    "ready_nodes": 8,
+    "blocked_nodes": 4,
+    "active_claims_at_creation": 0,
+    "claim_mechanism": "atomic create of swarm-claims/CLAIM-<NODE_ID>.json + readback"
+  },
+  "control_plane": {
+    "dag": "SWARM-DAG-8SOL-M47-v1.json",
+    "queue": "CRAZY-WALL-SWARM-QUEUE-M47.json",
+    "watchdog": "WATCHDOG-SWARM-8SOL-M47-2026-09-12.json",
+    "plan_delta": "PLAN-DELTA-018-M47-8SOL-SWARM-CONTROL.json"
+  },
+  "acquisition_snapshot": {
+    "canonical_components": 117,
+    "B01_B04": {"verified_closed":17,"failed":23,"pending":0},
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "M25_sandbox_coverage": {"components":"3/12","anomalies":"4/139"},
+    "B05_B06": {"researched_candidates":20,"downloaded":0,"verified_closed":0}
+  },
+  "claims_reserved": {
+    "M06_ASTRA": "OPEN_UNCLAIMED_RESERVED",
+    "M07_CLAUDE": "OPEN_UNCLAIMED_RESERVED",
+    "M08_GROK": "OPEN_UNCLAIMED_RESERVED"
+  },
+  "locks": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY",
+    "worker_shared_write": false
+  },
+  "finding": "SWARM_CONTROL_PLANE_ACTIVE_WITH_EIGHT_NONOVERLAPPING_SAFE_NODES_AND_ATOMIC_NODE_LOCKS"
+}
