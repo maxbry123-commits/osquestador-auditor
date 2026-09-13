@@ -12,5 +12,13 @@
   "dependencies":["M48 active","SW-N04 evidence available"],
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
   "claimed_at":"2026-09-13T04:29:00Z",
-  "state":"CLAIMED"
+  "state":"RELEASED",
+  "result":"PASS_PENDING_SUPERVISOR_FANIN",
+  "evidence_path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N15-EVIDENCE.md",
+  "evidence_blob_sha":"2270dad10f4ef46d25b26f3166f980f49561d548",
+  "evidence_commit_sha":"b783d128666622a3ca9ba2e8acd4aa5fe5d10d05",
+  "owner_log_blob_sha":"1118bad49b721b6d3d5ed42d8bb27c08fecc4c33",
+  "tests":{"fixture_cases":87,"candidate_passed":87,"missing":0,"changed":0,"mode_mismatch":0,"extra":0,"refutations_passed":3},
+  "released_at":"2026-09-13T04:31:00Z",
+  "remaining_gap":"fresh full upstream tracked-tree replay and independent supervisor/reviewer fan-in remain required"
 }
