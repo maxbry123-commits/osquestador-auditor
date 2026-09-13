@@ -1,0 +1,41 @@
+{
+  "schema": "sharck-input.m58-acquisition-control.v1",
+  "node": "M58_FOUR_SCOPED_DOWNLOAD_EXTRACT_LANES",
+  "status": "AUTHORIZED_BY_DIRECTOR_REQUEST / ACQUISITION_ONLY / STEP3_CLOSED",
+  "objective": "Reuse the immutable canonical Motor 2 + download/extract engine in four serialized lanes to acquire only small, measurable search/input primitives into explicit Sharck destinations.",
+  "motor": {
+    "queue_runner": "➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/motor_2_queue_download_extract.py",
+    "queue_runner_sha": "84d566e2ee4e98e42eb3a864026d067d48caabd9",
+    "engine": "➡️📂motores de descarga extracción copiado movimiento archivos osquestador-auditor/📂Motor descarga de componentes y extracción de zip/hf_download_extract_engine.py",
+    "engine_sha": "91e6e4486692eab314be5c7130d8310d3c855397",
+    "immutable": true
+  },
+  "lanes": [
+    {"id":"M58-B07","capability":"QUERY_SEARCH_PRIMITIVES","workflow":".github/workflows/sharck-m58-b07-query-search.yml","queue":"M58-B07-query-search-primitives.json","destination":"➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B07-query-search-primitives","selected":["bm25s","fastembed"]},
+    {"id":"M58-B08","capability":"WEB_PARSE_EXTRACT","workflow":".github/workflows/sharck-m58-b08-web-parse.yml","queue":"M58-B08-web-parse-extract.json","destination":"➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B08-web-parse-extract","selected":["selectolax","chatnoir-resiliparse"]},
+    {"id":"M58-B09","capability":"RETRIEVAL_RERANK","workflow":".github/workflows/sharck-m58-b09-retrieval-rerank.yml","queue":"M58-B09-retrieval-rerank.json","destination":"➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B09-retrieval-rerank","selected":["FlagEmbedding","rerankers"]},
+    {"id":"M58-B10","capability":"RETRIEVAL_EVAL","workflow":".github/workflows/sharck-m58-b10-retrieval-eval.yml","queue":"M58-B10-retrieval-eval.json","destination":"➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B10-retrieval-eval","selected":["ranx","ir_measures"]}
+  ],
+  "authorization": {
+    "m58_b07_b10_acquisition_requested_by_director": true,
+    "scope": "exact eight source repos at exact immutable SHAs only",
+    "does_not_modify_legacy_b05_b06_gate": true,
+    "does_not_authorize_step3_wiring": true,
+    "does_not_authorize_canonical_failed_component_repair": true,
+    "does_not_authorize_model_weight_downloads": true
+  },
+  "gates": {
+    "exact_source_sha_required": true,
+    "license_verified_for_selected_code_repos": true,
+    "no_lfs": true,
+    "readback_required": true,
+    "destination_must_not_preexist": true,
+    "one_lane_writer_at_a_time": true,
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false
+  },
+  "promotion_rule": "ACQUIRED/READBACK_VERIFIED is not WIRED/TESTED/PROMOTED. No selected component becomes runtime-active until later benchmark + adapter/wiring gate.",
+  "failure_rule": "Any engine gap remains explicit; no HEAD substitution, no silent retry past MAX_RETRIES=1, no forced overwrite.",
+  "research_matrix": "M58-SEARCH-INPUT-CANDIDATES-18.md"
+}
