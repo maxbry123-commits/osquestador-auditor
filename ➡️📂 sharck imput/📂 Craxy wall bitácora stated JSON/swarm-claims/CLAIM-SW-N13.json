@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.swarm-claim.v2",
+  "chat_id":"chat-sol5-automation",
+  "agent_name":"SOL-5-GPT",
+  "node_id":"SW-N13",
+  "parent_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "fresh_main_sha":"8642b80870f113a09b3effa16d7026eec301c789",
+  "base_sha":"8642b80870f113a09b3effa16d7026eec301c789",
+  "mode":"READ_ONLY_FORENSIC",
+  "write_scope":["SW-N13-EVIDENCE.md","SOL-SWARM-05-LOG.md","swarm-claims/CLAIM-SW-N13.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N13-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-05-LOG.md"],
+  "dependencies":["M48 active","SW-N03 evidence available"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "claimed_at":"2026-09-13T04:25:20Z",
+  "state":"CLAIMED"
+}
