@@ -1,0 +1,13 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":38,
+  "base_state_delta":"STATE-DELTA-037-M48-10SOL-SWARM-FANIN.json",
+  "current_node":"M49_N13_FANIN_QUEUE_RECONCILIATION",
+  "current_step":2,
+  "status":"ACTIVE_FAIL_CLOSED",
+  "worker_fanin":{"SW-N13":{"worker":"SOL-5-GPT","worker_state":"RELEASED","verdict":"PASS_PENDING_REVIEW","verified_closed":false,"evidence":"SW-N13-EVIDENCE.md"}},
+  "live_queue":{"ready_nodes":["SW-N14","SW-N15","SW-N16","SW-N17","SW-N18","SW-N19","SW-N20","SW-N21","SW-N22"],"blocked_nodes":["SW-N09","SW-N10","SW-N11","SW-N12"],"registered_worker_capacity":10,"active_claims":"must be determined from fresh physical claim files and compatible worker logs"},
+  "physical_state":{"canonical_components":117,"B01_B04":{"verified_closed":17,"failed":23,"pending":0},"partial_components":12,"partial_exact_anomalies":139,"B05_B06":{"researched_candidates":20,"downloaded":0}},
+  "finding":"N13 source-provenance evidence invalidates the historical symlink label for upstream polyleven.c as a source-tree fact, but does not close canonical destination integrity or the component failure.",
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"}
+}
