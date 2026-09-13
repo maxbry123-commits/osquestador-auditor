@@ -94,3 +94,75 @@
 - verified_closed: `NO`
 - review_required: `SOL-0 / independent reviewer`
 - next_action: `READ CRAZY WALL FRESH → first safe READY free node`
+
+---
+
+## SW-N27 — SWARM_LIVE_STATE_RECONCILER_SANDBOX
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `RELEASED_PASS_PENDING_REVIEW`
+- active_node: `null`
+- completed_node: `SW-N27`
+- claim_commit: `a72b82afd2f5a49d52c7f17101fb143a13a0dd1f`
+- initial_claim_blob: `edf151915b37a69532cfebb0cb45e67f5952ad3c`
+- evidence_commit: `2ec3a242246da08f4739c45b6a3ad8ab2c4a0cff`
+- evidence_blob: `bcade49ab0b5ef1a6d9e79cccf6b635017d8aaa0`
+- release_commit: `461a9e4dd905319857a6cfd1899a4cd04abee05a`
+- released_claim_blob: `76d35495e3ad6cc0ff52bbc1188326a85c3b038b`
+- mode: `READ_ONLY_PLUS_SANDBOX`
+- canonical_mutation: `NO`
+- shared_control_mutation: `NO`
+
+### Exactly 3 steps — completed
+1. `DEFINE_INPUTS_REPRODUCE_DRIFT`: M47/M50/M51 metadata, durable claims, worker logs and HEAD chronology compared; real stale READY/CLAIMED states reproduced.
+2. `EXECUTE_SYNTHETIC_MATRIX`: deterministic live-state reconciliation exercised with 10 per-node cases + 3 global invariant cases.
+3. `TEST_REFUTE_REPORT_RELEASE`: 3 simulations + 3 refutations + readback + release completed.
+
+### Tests
+- `BASE_STATE_MATRIX = 10/10 PASS`
+- `GLOBAL_INVARIANT_MATRIX = 3/3 PASS`
+- `SIMULATIONS = 3/3 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- detects stale active locks, active-without-claim, double-active-chat, path overlap and terminal retained claims.
+- unrelated disjoint active claims remain parallel-safe.
+
+### Real drift proven
+- M47 static queue still says SW-N01..SW-N08 READY after historical execution/release.
+- M50 snapshot listed N16 claimed while its fresh durable claim became `BLOCKED_RELEASED`.
+- retained N17 claim file exists but state is `RELEASED`; lock existence alone != ACTIVE.
+- older idle worker log cannot override a newer durable active claim; chronology is mandatory.
+
+### Deterministic rules
+- registration never establishes ACTIVE;
+- queue READY is dispatch metadata, not live ownership;
+- durable claim state + chronology controls per-node state;
+- RELEASED/BLOCKED_RELEASED means terminal no-reclaim unless a newer explicit supervisor requeue generation exists;
+- stale active claim vs newer worker release fails closed;
+- global one-chat-one-active and normalized path-overlap checks run before writes;
+- atomic create + exact readback remains mandatory after reconciliation.
+
+### STALE_HEAD reconciliation
+- evidence pre-read `a156ff8d561585328f74258537e56103c4041cc5`; evidence commit actual parent `07be5671e756cbd039031cf2e4bca210cc67e8e6` modified only `SW-N24-EVIDENCE.md`: overlap 0.
+- release pre-read `ccde70ff1cfe918ddafe15ac92ffba33d16da429`; release commit actual parent `5208f32cdfeb4b096b0b0dac39d14cdbcf91d3e8` modified only `CLAIM-SW-N28.json`: overlap 0.
+- both classified `STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE`; no silent overwrite.
+
+### GOALS12_OUTPUT
+- G01 requirement preserved: `PASS`
+- G02 fresh HEAD: `PASS`
+- G03 current queues/deltas/claims/log chronology: `PASS`
+- G04 atomic owner/readback: `PASS`
+- G05 gates/dependencies: `PASS`
+- G06 non-overlapping scope: `PASS`
+- G07 existing control evidence reused: `PASS`
+- G08 minimal allowed delta: `PASS`
+- G09 node-specific tests: `PASS 10/10 + 3/3`
+- G10 simulations/refutations: `PASS 3/3 + 3/3`
+- G11 evidence/commit/blob/readback: `PASS`
+- G12 RELEASED/readback: `PASS`
+
+### Final
+- node_execution_score: `12/12 GOALS PASS`
+- producer_verdict: `PASS_PENDING_REVIEW`
+- verified_closed: `NO`
+- review_required: `SOL-0 supervisor / independent reviewer`
+- next_action: `READ CRAZY WALL FRESH → first safe READY free node`
