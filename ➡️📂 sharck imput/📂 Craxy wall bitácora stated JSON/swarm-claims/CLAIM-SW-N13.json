@@ -12,5 +12,11 @@
   "dependencies":["M48 active","SW-N03 evidence available"],
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
   "claimed_at":"2026-09-13T04:25:20Z",
-  "state":"CLAIMED"
+  "state":"RELEASED",
+  "result":"PASS_PENDING_REVIEW",
+  "evidence_path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N13-EVIDENCE.md",
+  "evidence_blob_sha":"042418e175f19e13876b101098c50c8a74e75009",
+  "evidence_commit_sha":"5a19c1000084a2e2fad3b92d088a020855e818bb",
+  "released_at":"2026-09-13T04:27:00Z",
+  "remaining_gap":"canonical destination byte/hash comparison remains gated; SOL-0/reviewer must reconcile historical symlink classification"
 }
