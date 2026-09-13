@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":39,
+  "base_state_delta":"STATE-DELTA-038-M49-N13-FANIN.json",
+  "current_node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "current_step":2,
+  "status":"ACTIVE_FAIL_CLOSED",
+  "control_plane":{"queue":"CRAZY-WALL-SWARM-QUEUE-M52.json","dag_base":"SWARM-DAG-10SOL-M48-v1.json","dag_deltas":["SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json"],"plan":"PLAN-DELTA-021-M52-SWARM-EXPANSION.json"},
+  "known_terminal_worker_results":{"SW-N13":"RELEASED_PASS_PENDING_REVIEW","SW-N14":"RELEASED_PASS_PENDING_SUPERVISOR_FANIN","SW-N15":"RELEASED_PASS_PENDING_SUPERVISOR_FANIN","SW-N16":"BLOCKED_RELEASED_EVIDENCE_PERSISTENCE_GAP","SW-N17":"RELEASED_PASS_PENDING_REVIEW","SW-N18":"RELEASED_PASS_PENDING_SUPERVISOR_FANIN"},
+  "new_gap_nodes":["SW-N23","SW-N24","SW-N25","SW-N26","SW-N27","SW-N28"],
+  "observed_activity":{"SW-N26":"CLAIMED_BY_SOL-10_AT_LAST_HEAD_READ","others":"READ_PHYSICAL_CLAIMS_FRESH; DO_NOT_INFER_FROM_THIS_DELTA"},
+  "physical_state":{"canonical_components":117,"B01_B04":{"verified_closed":17,"failed":23,"pending":0},"partial_components":12,"partial_exact_anomalies":139,"B05_B06":{"researched_candidates":20,"downloaded":0}},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "truth_rule":"Registered capacity and queue labels never prove active execution. Active/released/blocked state comes from fresh claim file + compatible worker log/evidence + HEAD chronology.",
+  "finding":"Swarm is producing concurrent worker evidence; control plane now has explicit work for stale-head races, tracked-tree replay, live-state reconciliation and evidence-write failures without opening physical gates."
+}
