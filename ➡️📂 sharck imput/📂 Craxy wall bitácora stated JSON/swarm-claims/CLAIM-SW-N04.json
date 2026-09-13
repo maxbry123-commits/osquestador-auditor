@@ -1,0 +1,54 @@
+{
+  "schema": "sharck-input.swarm-claim.v1",
+  "chat_id": "chat-sol4-20260912T2308-0500",
+  "agent_name": "SOL-4-GPT",
+  "node_id": "SW-N04",
+  "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "fresh_main_sha": "8be890dce641d42d4b1fb447f838b4e143b86667",
+  "base_sha": "8be890dce641d42d4b1fb447f838b4e143b86667",
+  "mode": "SANDBOX_ONLY",
+  "write_scope": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N04-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-04-LOG.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N04.json"
+  ],
+  "paths": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N04-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-04-LOG.md"
+  ],
+  "dependencies": [
+    "M47_8SOL_SWARM_CONTROL_ACTIVE",
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N04=READY_TO_CLAIM",
+    "SW-N03 occupied by SOL-1-GPT after collision rescan",
+    "CLAIM-SW-N04 absent at fresh read"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY"
+  },
+  "assertion_to_validate": "M25 representative coverage 3/12 components and 4/139 anomalies can be expanded safely through isolated sandbox design/tests before production authorization.",
+  "steps": [
+    "STEP_1_SYNC_VERIFY_CLAIM",
+    "STEP_2_EXECUTE_VERIFY",
+    "STEP_3_TEST_REFUTE_REPORT_RELEASE"
+  ],
+  "GOALS12_INPUT": {
+    "G01": "PASS_LITERAL_REQUIREMENT_PRESERVED",
+    "G02": "PASS_FRESH_HEAD_8be890d",
+    "G03": "PASS_M47_CONTROL_SURFACES_READ",
+    "G04": "PASS_SW_N04_OWNER_FREE_AT_PREFLIGHT",
+    "G05": "PASS_SANDBOX_ONLY_GATE_VALID",
+    "G06": "PASS_WRITE_SCOPE_NONOVERLAPPING",
+    "G07": "PASS_REUSE_M25_M35_EXISTING_EVIDENCE",
+    "G08": "PENDING_MINIMAL_EVIDENCE_DELTA_ONLY",
+    "G09": "PENDING_SANDBOX_COVERAGE_TEST_CONTRACT",
+    "G10": "PENDING_3_SIMULATIONS_3_REFUTATIONS",
+    "G11": "PENDING_EVIDENCE_SHA_READBACK",
+    "G12": "PENDING_RELEASE_AND_NEXT_NODE_RECONCILIATION"
+  },
+  "claimed_at": "2026-09-12T23:12:00-05:00",
+  "state": "CLAIMED"
+}
