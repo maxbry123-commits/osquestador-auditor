@@ -1,0 +1,20 @@
+{
+  "schema":"sharck-input.watchdog-swarm.v4",
+  "node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "status":"ACTIVE_CONTROL_WATCH",
+  "mode":"FAIL_CLOSED_LOOP",
+  "frequency":"HOURLY",
+  "external_automation_title":"Sharck Swarm Supervisor",
+  "worker_capacity":10,
+  "authoritative_dispatch":"CRAZY-WALL-SWARM-QUEUE-M53.json",
+  "dag_chain":["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json","SWARM-DAG-10SOL-M53-DELTA.json"],
+  "state":"STATE-DELTA-040-M53-PREINTEGRATION-WAVE.json",
+  "plan":"PLAN-DELTA-022-M53-PREINTEGRATION-WAVE.json",
+  "checkpoint":"CHECKPOINT-DELTA-038-M53-PREINTEGRATION-WAVE.json",
+  "watch_loop":["READ_HEAD_FRESH","READ_LATEST_CONTROL_FRONTIER","READ_RELEVANT_CLAIMS_LOGS_EVIDENCE","DERIVE_LIVE_STATE_FROM_CLAIM_PLUS_LOG_PLUS_HEAD","DETECT_MULTI_ACTIVE_PATH_OVERLAP_STALE_HEAD_409_EVIDENCE_WRITE_FAILURE","VERIFY_RELEASED_AND_GAP_RESULTS_FAIL_CLOSED","ISSUE_NEXT_SAFE_DYNAMIC_ORDERS","MATERIALIZE_ONLY_REAL_DEDUPED_NONOVERLAP_GAPS","SOL0_FANIN_SHARED_DELTAS_SEQUENTIALLY","READBACK","REPORT"],
+  "known_gap_to_preserve":{"SW-N16":"BLOCKED_RELEASED evidence create capability block","SW-N26":"GAP INFRA_FAILURE; full tracked-tree byte replay not executed because sandbox GitHub network access required"},
+  "orders":{"one_chat_one_active_node":true,"one_path_one_writer":true,"exactly_three_steps":true,"workers_write_own_scope_only":true,"shared_control_writer":"SOL-0","after_terminal":"RESCAN_FRESH","queue_snapshot_is_not_live_truth":true},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "forbidden":["infer active count from capacity","promote producer verdict to VERIFIED_CLOSED","reclaim terminal node","overwrite claim/evidence path","repair canonical destinations while gate false","download candidates while gate false","substitute modern HEAD for missing historical source commit"],
+  "verdict":"WATCHDOG_M53_ACTIVE / EXTERNAL_HOURLY_AUTOMATION_ENABLED / FRESH_CLAIMS_ARE_LIVE_TRUTH / PHYSICAL_GATES_CLOSED"
+}
