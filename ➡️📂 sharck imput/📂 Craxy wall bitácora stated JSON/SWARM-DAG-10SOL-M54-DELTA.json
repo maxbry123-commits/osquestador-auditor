@@ -1,0 +1,105 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "mode":"FAIL_CLOSED_LOOP",
+  "base_dag":"SWARM-DAG-10SOL-M53-DELTA.json",
+  "source_head":"9466aa4fc97bbd79e4d05709393cd4e4092e7508",
+  "truth_rule":"Fresh physical claim + compatible worker log/evidence + HEAD chronology overrides queue snapshots.",
+  "active_preserved":[
+    {"node_id":"SW-N29","owner":"SOL-9-GPT","state":"CLAIMED","task":"M40_KEEP_DESTINATION_PORT_MAP"},
+    {"node_id":"SW-N30","owner":"SOL-3-GPT","state":"CLAIMED","task":"OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_MANIFEST"}
+  ],
+  "terminal_updates":[
+    {"node_id":"SW-N26","state":"GAP_RELEASED","classification":"INFRA_FAILURE","evidence":"SW-N26-EVIDENCE.md"},
+    {"node_id":"SW-N31","state":"RELEASED","verdict":"PASS_PENDING_REVIEW","evidence":"SW-N31-EVIDENCE.md"},
+    {"node_id":"SW-N32","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN","evidence":"SW-N32-EVIDENCE.md"},
+    {"node_id":"SW-N33","state":"RELEASED","verdict":"PASS_PENDING_REVIEW","evidence":"SW-N33-EVIDENCE.md"},
+    {"node_id":"SW-N34","state":"RELEASED","verdict":"PASS_PENDING_REVIEW","evidence":"SW-N34-EVIDENCE.md"}
+  ],
+  "new_nodes":[
+    {
+      "node_id":"SW-N35",
+      "status":"READY_TO_CLAIM",
+      "task":"FULL_BYTE_REPLAY_EXECUTOR_PREFLIGHT",
+      "origin":"SW-N26 G-SW-N26-FULL-BYTE-REPLAY",
+      "mode":"READ_ONLY_PLUS_SANDBOX_DESIGN",
+      "write_scope":["SW-N35-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N35.json"],
+      "assertion":"A safe executor path for a full pinned tracked-tree byte replay can be identified without canonical mutation or new production wiring.",
+      "steps":["enumerate available execution paths and exact capability constraints using N26 evidence", "select and specify one noncanonical replay executor contract including network/source/mode/readback requirements", "test contract on synthetic decision cases, run 3 refutations, report READY_EXECUTOR or GAP"]
+    },
+    {
+      "node_id":"SW-N36",
+      "status":"READY_TO_CLAIM",
+      "task":"MODEL_SNAPSHOT_PROVENANCE_MATRIX",
+      "origin":"SW-N31 remaining gap: provider-side immutable model snapshots may be unavailable",
+      "mode":"READ_ONLY_RESEARCH",
+      "write_scope":["SW-N36-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N36.json"],
+      "assertion":"Eval provenance can fail closed across providers even when immutable weight/build ids are unavailable by explicitly classifying snapshot guarantees and residual uncertainty.",
+      "steps":["inventory model identity fields required by N31 and provider/source evidence available to project", "define SNAPSHOT_STRONG/PARTIAL/NONE provenance classes and required fallback hashes/metadata", "publish matrix plus 3 refutations and comparability restrictions"]
+    },
+    {
+      "node_id":"SW-N37",
+      "status":"READY_TO_CLAIM",
+      "task":"EVAL_CROSS_VERSION_COMPARABILITY_CONTRACT",
+      "origin":"SW-N31 remaining cross-version migration methodology gap",
+      "mode":"READ_ONLY_DESIGN",
+      "write_scope":["SW-N37-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N37.json"],
+      "assertion":"Cross-version eval results need an explicit comparability review distinct from exact replay.",
+      "steps":["extract all immutable replay dimensions from N31", "define allowed migration classes and fail-closed score comparison rules", "run synthetic old-to-new migration/refutation matrix and publish acceptance contract"]
+    },
+    {
+      "node_id":"SW-N38",
+      "status":"READY_TO_CLAIM",
+      "task":"HTML24_FIXTURE_CORPUS_MANIFEST",
+      "origin":"SW-N33 fixed multilingual/malformed corpus not yet materialized",
+      "mode":"READ_ONLY_PLUS_SANDBOX",
+      "write_scope":["SW-N38-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N38.json"],
+      "assertion":"The N33 24-fixture benchmark can be frozen into a deterministic manifest and gold-precedence contract without installing candidate extractors.",
+      "steps":["materialize specification for 24 fixture IDs across 4 languages x 6 failure classes with deterministic gold precedence", "compute/verify manifest structure, fixture/gold hash rules and forbidden sentinels using local synthetic fixtures only", "run 3 corpus drift refutations and publish runnable corpus contract"]
+    },
+    {
+      "node_id":"SW-N39",
+      "status":"READY_TO_CLAIM",
+      "task":"HTML_EXTRACTION_SCORER_REFERENCE_VECTORS",
+      "origin":"SW-N33 scorer thresholds defined but no independent reference-vector pack",
+      "mode":"SANDBOX_ONLY",
+      "write_scope":["SW-N39-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N39.json"],
+      "assertion":"N33 body/title/metadata/Unicode/boilerplate/repeatability gates can be independently validated with deterministic scorer vectors before any candidate install.",
+      "steps":["derive reference vectors for each N33 metric and hard gate", "execute scorer decision simulations covering promotion/nonpromotion/boundary cases", "publish expected vectors, 3 refutations and mismatch failure classes"]
+    },
+    {
+      "node_id":"SW-N40",
+      "status":"READY_TO_CLAIM",
+      "task":"BROWSERTRIX_WARCIO_RUNTIME_LICENSE_PREFLIGHT",
+      "origin":"SW-N34 remaining acquisition/runtime verification and license gate",
+      "mode":"READ_ONLY_RESEARCH",
+      "write_scope":["SW-N40-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N40.json"],
+      "assertion":"Browsertrix/warcio future acquisition can be preflighted for exact source/image/runtime/license boundaries without downloading or wiring them.",
+      "steps":["verify official source pins, package/image identity surfaces, maintenance and license obligations relevant to intended adapter role", "define exact acquisition/runtime prerequisites and image/browser/reader pin envelope", "classify KEEP/DEFER/BLOCK with 3 refutations; no acquisition"]
+    },
+    {
+      "node_id":"SW-N41",
+      "status":"READY_TO_CLAIM",
+      "task":"WARC_RECORD_TYPE_NORMALIZATION_POLICY",
+      "origin":"SW-N34 remaining revisit/resource/metadata normalization gap",
+      "mode":"READ_ONLY_DESIGN",
+      "write_scope":["SW-N41-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N41.json"],
+      "assertion":"Stable semantic-ledger rules can be extended beyond response records to revisit/resource/metadata while excluding volatile WARC fields.",
+      "steps":["enumerate relevant WARC record types and stable versus volatile fields from N34 contract/source references", "define normalization/digest/replay rules per type and duplicate/revisit semantics", "execute synthetic record-ledger drift matrix plus 3 refutations"]
+    },
+    {
+      "node_id":"SW-N42",
+      "status":"READY_TO_CLAIM",
+      "task":"SPACY_PRE_REPAIR_DRIFT_AND_STAGING_PREFLIGHT",
+      "origin":"SW-N32 requires pre-repair diff guard and upstream-tracked-set-preserving staging",
+      "mode":"READ_ONLY_PLUS_SANDBOX",
+      "write_scope":["SW-N42-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N42.json"],
+      "assertion":"The future spaCy repair can be blocked before mutation unless current canonical drift and exact tracked-set staging prerequisites still match N32.",
+      "steps":["revalidate N32 two-path source identities and define exact pre-repair drift checks", "design/test tracked-set-preserving staging strategy on synthetic ignored-path fixture without canonical writes", "publish abort conditions, 3 refutations and director/reviewer repair-ready packet"]
+    }
+  ],
+  "blocked_preserved":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved_preserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "verdict":"M54_EIGHT_SAFE_CONTINUATION_NODES_READY / N29_N30_ACTIVE_PRESERVED / NO_PHYSICAL_GATE_BYPASS"
+}
