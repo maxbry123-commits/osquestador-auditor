@@ -13,5 +13,19 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writes":"SOL-0_ONLY"},
   "task":"SPECIAL_FILE_SCAN_PROVENANCE_CONTRACT",
   "claimed_at":"2026-09-13T04:28:10Z",
-  "state":"CLAIMED"
+  "state":"RELEASED",
+  "result":"PASS_PENDING_SUPERVISOR_FANIN",
+  "evidence_path":"➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N14-EVIDENCE.md",
+  "evidence_commit_sha":"c462ef0891f4e0e734a6bf3bc407e98caed1fd62",
+  "evidence_blob_sha":"8785a708502f2d7379a9ef41c73ede4f70e11a10",
+  "log_commit_sha":"23013a0bf06e0e7470a1705f326bfd51a4cfa5e3",
+  "coverage":{"schema_steps":"3/3","contract_checks":"12/12","historical_cases":"11/11","tests":"6/6","simulations":"3/3","refutations":"3/3"},
+  "physical_mutations":0,
+  "downloads":0,
+  "git_lfs_operations":0,
+  "canonical_motor_mutations":0,
+  "remaining_gaps":["historical dependency source commits for the 11 old failed runs remain nonrecoverable from persisted canonical evidence","future replay requires immutable pin + pre-scan provenance persistence + exact special-surface ledger + independent authorization gates"],
+  "review_required":"SOL-0 supervisor fan-in",
+  "verified_closed":false,
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
