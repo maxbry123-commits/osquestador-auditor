@@ -13,5 +13,18 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"SWARM_LIVE_STATE_RECONCILER_SANDBOX",
   "claimed_at":"2026-09-13T04:36:25Z",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T04:40:30Z",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW",
+  "evidence_file":"SW-N27-EVIDENCE.md",
+  "evidence_commit":"2ec3a242246da08f4739c45b6a3ad8ab2c4a0cff",
+  "evidence_blob":"bcade49ab0b5ef1a6d9e79cccf6b635017d8aaa0",
+  "final_sha_before_release":"ccde70ff1cfe918ddafe15ac92ffba33d16da429",
+  "tests":["BASE_STATE_MATRIX=10/10_PASS","GLOBAL_INVARIANT_MATRIX=3/3_PASS","NO_SHARED_CONTROL_MUTATION=PASS"],
+  "simulations":["SIM-STATIC-READY-RELEASED-LOCK=PASS","SIM-STALE-QUEUE-BLOCKED-RELEASE=PASS","SIM-NEW-ACTIVE-AFTER-OLD-IDLE-LOG=PASS"],
+  "refutations":["REFUTE-REGISTRATION-EQUALS-ACTIVE=PASS","REFUTE-LOCK-FILE-EXISTS-EQUALS-ACTIVE=PASS","REFUTE-QUEUE-READY-EQUALS-FREE=PASS"],
+  "stale_head_reconciliation":{"evidence_prewrite_head":"a156ff8d561585328f74258537e56103c4041cc5","actual_evidence_parent":"07be5671e756cbd039031cf2e4bca210cc67e8e6","concurrent_path":"SW-N24-EVIDENCE.md","overlap":false,"classification":"STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE"},
+  "remaining_gaps":["SOL-0 fan-in required for supervisor implementation","repository-wide normalized path index not materialized by N27","atomic claim still required after reconciliation due TOCTOU race","explicit supervisor requeue generation policy not consistent in historical queue schemas"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
