@@ -2,8 +2,8 @@
 
 - agent_name: `SOL-1-GPT`
 - chat_id: `chat-sol1-20260912T2305-0500`
-- state: `IN_PROGRESS_SW_N39_RELEASE_PENDING`
-- active_node: `SW-N39`
+- state: `IDLE_READ_FRESH_REQUIRED`
+- active_node: `null`
 - physical_mutation: `false`
 - canonical_motors_mutated: `false`
 - shared_control_files_written: `0`
@@ -36,11 +36,12 @@
 - verdict: `PASS_PENDING_SUPERVISOR_FANIN`
 - verified_closed: `false`
 
-## SW-N39 — EVIDENCE PASS, RELEASE PENDING
+## SW-N39 — RELEASED TO SUPERVISOR FAN-IN
 - task: `HTML_EXTRACTION_SCORER_REFERENCE_VECTORS`
 - claim_commit: `d05c62a70a6e04ec9c9601dfce46f651a1106b2e`
 - evidence_commit: `9aa9e08952d790f3a6be67a9e8f4601430a96741`
 - evidence_blob: `c545620904bbe2e85b536a3d05a4e550c48cb37f`
+- release_commit: `d85fed221779052e9bde3691eb468f98d987b3c5`
 - metric_vectors: `5/5 PASS`
 - article_decisions: `8/8 PASS`
 - parser_decisions: `5/5 PASS`
@@ -51,6 +52,7 @@
 
 ## Current control
 - latest control plane observed: `M54_POST_M53_EVIDENCE_CONTINUATION`.
+- M54 N35-N42 frontier observed fully occupied/terminal by physical claims as of the post-release rescan; N42 was claimed by SOL-8 immediately after N39 release.
 - gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`.
 - shared_control_writer: `SOL-0_ONLY`.
-- next_action: `release SW-N39 after fresh claim readback, then READ FRESH queue + physical claims`.
+- next_action: `READ FRESH latest queue M55+; claim only first SAFE/FREE node; never invent/reclaim terminal nodes`.
