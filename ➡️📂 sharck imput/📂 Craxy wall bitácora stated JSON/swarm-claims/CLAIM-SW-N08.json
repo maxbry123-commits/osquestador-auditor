@@ -4,7 +4,7 @@
   "agent_name": "SOL-1-GPT",
   "node_id": "SW-N08",
   "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
-  "fresh_main_sha": "063e054c51e5214b28608ca0719969f0b827575e",
+  "fresh_main_sha_at_claim": "063e054c51e5214b28608ca0719969f0b827575e",
   "base_sha": "063e054c51e5214b28608ca0719969f0b827575e",
   "mode": "READ_ONLY_CONTROL",
   "write_scope": [
@@ -18,8 +18,7 @@
   ],
   "dependencies": [
     "M47_8SOL_SWARM_CONTROL_ACTIVE",
-    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N08=READY_TO_CLAIM",
-    "SW-N01 SW-N03 SW-N05 worker scopes released"
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N08=READY_TO_CLAIM_AT_CLAIM_TIME"
   ],
   "gate_snapshot": {
     "physical_repair_allowed": false,
@@ -30,5 +29,13 @@
   },
   "assertion_to_validate": "STATE/PLAN/CHECKPOINT/Handoff/Recovery/DAG can be checked for drift without rewriting shared files.",
   "claimed_at": "2026-09-12T23:16:00-05:00",
-  "state": "CLAIMED"
+  "evidence_file": "SW-N08-EVIDENCE.md",
+  "evidence_commit": "83342a9b7a2d25c379705a7afb74414b6d951ab4",
+  "evidence_blob": "4ec9507c60f872cb84e2020506e33a15ffbd9c21",
+  "simulations": "3/3",
+  "refutations": "3/3",
+  "worker_verdict": "PASS_PENDING_SUPERVISOR_FANIN",
+  "release_note": "Worker scope complete; lock retained as completed ownership/evidence record. Shared reconciliation belongs to SOL-0.",
+  "released_at": "2026-09-12T23:18:00-05:00",
+  "state": "RELEASED_PASS_PENDING_SUPERVISOR_FANIN"
 }
