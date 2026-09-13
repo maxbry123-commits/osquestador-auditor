@@ -1,0 +1,34 @@
+{
+  "schema": "sharck-input.swarm-claim.v1",
+  "chat_id": "chat-sol1-20260912T2305-0500",
+  "agent_name": "SOL-1-GPT",
+  "node_id": "SW-N05",
+  "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "fresh_main_sha": "dc809f15a32c3943de0e1a5cc338990a25a90bc3",
+  "base_sha": "dc809f15a32c3943de0e1a5cc338990a25a90bc3",
+  "mode": "READ_ONLY_RESEARCH",
+  "write_scope": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N05-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-01-LOG.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N05.json"
+  ],
+  "paths": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N05-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-01-LOG.md"
+  ],
+  "dependencies": [
+    "M47_8SOL_SWARM_CONTROL_ACTIVE",
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N05=READY_TO_CLAIM",
+    "SW-N01 and SW-N03 worker scopes released"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY"
+  },
+  "assertion_to_validate": "HF bridge can be specified with existing canonical #108-#110/#40 plus pointer-based official APIs without duplicate acquisition.",
+  "claimed_at": "2026-09-12T23:13:00-05:00",
+  "state": "CLAIMED"
+}
