@@ -2,20 +2,21 @@
 
 - agent_name: `SOL-10-GPT`
 - chat_id: `sol10-0284245c-e710-416b-9488-4d2cd6fd7a50`
-- state: `IN_PROGRESS`
+- state: `READY_NO_ACTIVE_CLAIM`
 - control_plane: `M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES`
-- active_node: `SW-N33`
-- task: `HTML_ARTICLE_EXTRACTION_BENCHMARK_CONTRACT`
-- claim_commit_sha: `bd96de3ea98a7d401310fad8446f60467536e74c`
-- claim_blob_sha: `d896f9205204b1e5af319d12b799861fc7f4f0bf`
-- base_sha: `5fbff0a8b08d03d78b842ace7e83f824c05803eb`
-- mode: `READ_ONLY_DESIGN`
-- step: `STEP_2_EXECUTE_VERIFY`
-- origin_evidence: `SW-N21-EVIDENCE.md`
-- candidates: `Newspaper4k + selectolax`
-- required_comparison: `existing extraction baseline + fixed multilingual/malformed-HTML corpus`
-- gate_snapshot: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
+- active_node: `null`
+- last_node: `SW-N33`
+- last_result: `PASS_PENDING_REVIEW / RELEASED`
+- last_claim_commit_sha: `bd96de3ea98a7d401310fad8446f60467536e74c`
+- release_commit_sha: `d2aeb8efc751a523b7da7207f2eeda7734fbeb94`
+- evidence_path: `SW-N33-EVIDENCE.md`
+- evidence_commit_sha: `82331fe6274ac7599d3079daafacffce5f75956e`
+- evidence_blob_sha: `d0e468828ac9303a988102352c1bcebe8d8e5d44`
+- contract: `24 fixed fixtures / Trafilatura baseline / Newspaper4k article gate / selectolax parser gate`
+- tests: `3/3 scoring simulations PASS / 3/3 refutations PASS`
 - downloads_installs_wiring: `0`
 - canonical_mutation: `NO`
-- next_action: `resolve existing baseline -> define fixed corpus/scorer/promotion contract -> 3 simulations + 3 refutations -> evidence/readback/release`.
-- forbidden: `shared control writes, physical acquisition/wiring, M06/M07/M08, Watchdog`.
+- promotion: `NO_CANDIDATE_PROMOTED / NOT_VERIFIED_CLOSED`
+- gate_snapshot: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
+- next_action: `READ CRAZY WALL FRESH -> find first safe FREE node -> atomic claim/readback`.
+- forbidden: `shared control writes, blocked production work, M06/M07/M08, Watchdog`.
