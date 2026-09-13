@@ -30,5 +30,46 @@
   },
   "assertion_to_validate": "agent/runtime candidates can be ranked by maintenance/upstream/license/overlap before any acquisition.",
   "claimed_at": "2026-09-12T23:13:29-05:00",
-  "state": "CLAIMED"
+  "released_at": "2026-09-12T23:18:30-05:00",
+  "state": "RELEASED",
+  "producer_verdict": "PASS_PENDING_REVIEW",
+  "final_sha_before_release": "83342a9b7a2d25c379705a7afb74414b6d951ab4",
+  "commit_sha": "08879e015aa6d6c3049de45d5ebfb8b9e2127102",
+  "blob_sha": "d769b91efdeceae4a5ab09ee81420bf60824ad8a",
+  "tests": [
+    "OFFICIAL_UPSTREAM_RESOLUTION=PASS",
+    "LICENSE_EVIDENCE=PASS",
+    "IMMUTABLE_PIN_CAPTURE=PASS",
+    "CANONICAL_OVERLAP_CHECK=PASS",
+    "NO_PHYSICAL_MUTATION=PASS"
+  ],
+  "run_id": null,
+  "job_id": null,
+  "logs": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"
+  ],
+  "evidence": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N06-EVIDENCE.md",
+    "11 candidate/current-upstream findings",
+    "physical B03 runtime inventory readback",
+    "physical Continue manifest readback",
+    "official GitHub metadata/ref/license readbacks"
+  ],
+  "simulations": [
+    "SIM-1_ACTIVE_SMALL_NET_NEW=PASS",
+    "SIM-2_TRANSFERRED_UPSTREAM=PASS",
+    "SIM-3_EXISTING_CANONICAL_MATCHES_FRESH_HEAD=PASS"
+  ],
+  "refutations": [
+    "REFUTE-1 Continue unmaintained claim refuted",
+    "REFUTE-2 block/goose canonical-source claim refuted",
+    "REFUTE-3 sst/opencode canonical-source claim refuted"
+  ],
+  "remaining_gaps": [
+    "special-file/symlink/submodule/LFS surface not proven for NEW candidates",
+    "no acquisition or runtime integration authorized",
+    "SOL-0 supervisor fan-in required for shared source-pointer and maintenance-drift corrections"
+  ],
+  "review_required": "SOL-0 supervisor / director gate",
+  "next_free_node": "RESCAN_AFTER_RELEASE"
 }
