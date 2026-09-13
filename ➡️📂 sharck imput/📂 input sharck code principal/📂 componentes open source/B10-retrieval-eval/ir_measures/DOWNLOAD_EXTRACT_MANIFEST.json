@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 133247,
+  "bundle_sha256": "389f755f3870c4cfd9c99a25c5d15b73d5aca8f2139372610b4a5658795a3f9e",
+  "extracted_tree": {
+    "bytes": 434646,
+    "files": 94,
+    "sha256": "c2dbc8e8dc575fd3b859e755e7d0435c808570c4d5348bdf950df0633ac89dce"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 133247,
+      "name": "ir_measures.bundle.zip.part-0001",
+      "sha256": "389f755f3870c4cfd9c99a25c5d15b73d5aca8f2139372610b4a5658795a3f9e"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "ir_measures",
+  "source_bytes": 434646,
+  "source_commit": "64b5afd5cd14f7d8323f9b24a1bfd12afdd1e776",
+  "source_files": 94,
+  "source_ref": "64b5afd5cd14f7d8323f9b24a1bfd12afdd1e776",
+  "source_repo": "terrierteam/ir_measures",
+  "source_tree": {
+    "bytes": 434646,
+    "files": 94,
+    "sha256": "c2dbc8e8dc575fd3b859e755e7d0435c808570c4d5348bdf950df0633ac89dce"
+  }
+}
