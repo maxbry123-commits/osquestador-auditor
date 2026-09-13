@@ -1,0 +1,116 @@
+{
+  "schema": "sharck-input.task2.m64.parallel-all.v1",
+  "date": "2026-09-13",
+  "task": "Tarea 2 📌",
+  "status": "CORRECTED / ADDITIVE_ONLY / PARALLEL_ALL_DIRECTOR_PROCESSES / ROOT_ONLY",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "allowed_root": "➡️📂 sharck imput/",
+  "authority": {
+    "prior_architecture": "PRESERVED_UNCHANGED",
+    "director_input": "LITERAL_1_TO_1",
+    "m63_dynamic_parallelism": "SUPERSEDED_NOT_OPERATIVE",
+    "m64": "CURRENT_TASK2_CONTROL"
+  },
+  "hard_rules": {
+    "all_director_processes_parallel": true,
+    "additive_improvements_only": true,
+    "no_dynamic_fanout_policy": true,
+    "no_worker_reduction_policy": true,
+    "no_throughput_reduction_argument": true,
+    "no_replace_prior_architecture": true,
+    "no_delete_prior_steps": true,
+    "no_delete_prior_components": true,
+    "no_serial_monolith": true,
+    "no_cross_project_mix": true,
+    "root_only": true
+  },
+  "prior_architecture_preserved": {
+    "pipeline": "INPUT_RAW → INPUT_LOCK → INTENT/CONSTRAINTS → ENTITY_RESOLUTION → RESEARCH_DECISION → FOCUS_A → QUESTIONS_0_12 || PRESEARCH → DOMAIN/ROLE/GEO/LANGUAGE ROUTER → RESEARCH_DAG → FAN_OUT SOURCES → CAPTURE/SNAPSHOT → EXTRACT/NORMALIZE → INDEX → BM25/SPARSE/DENSE → RRF/RERANK → EVIDENCE GRAPH → CONTRADICTION/COVERAGE/GAP → FOCUS_B → CODE/SKILL/TOOL POINTERS → CONTEXT_COMPRESSION → CONTEXT_PACKAGE → MAIN_LLM",
+    "dynamic_gap_loop_preserved_from_prior_architecture": "MAIN_LLM → STRUCTURED_RESEARCH_REQUEST → RESEARCH_DAG → EVIDENCE_DELTA → CONTEXT_PATCH → MAIN_LLM",
+    "microkernels": [
+      "input_lock", "focus", "questions", "role_router", "geo_language", "query_lattice", "community", "github", "huggingface", "labs", "youtube", "capture", "extract", "index", "dedup", "code_pointer", "skill_pointer", "tool_finder", "evidence", "gap_loop", "context_compiler", "checkpoint", "verdict"
+    ],
+    "existing_layers_preserved": [
+      "capture.warc", "provenance.lineage", "observability.otel", "policy.engine", "supply_chain.sbom", "supply_chain.vuln", "supply_chain.secrets", "structured_output", "evidence.compute", "evidence.rules", "llm_policy_eval"
+    ]
+  },
+  "director_parallel_processes": [
+    "A/B/C literal input decomposition",
+    "Paso 1 advanced research",
+    "Paso 2 skills 3+ libraries / 20+ reads / 3+ selected",
+    "Paso 3 datasets 3+ active / 5 ready",
+    "Paso 4 adapters same parallel discovery pattern",
+    "Paso 5 tools/plugins universal connector",
+    "Paso 6 persistent coda + 12 goals input + 12 goals output + Council12 + 3 refutations + debate + 4 simulations",
+    "Paso 7 evidence sheriff + 10 alternatives",
+    "Paso 8 error lens",
+    "Paso 8 solutions/guides",
+    "Paso 10 Multi-SHARCK debate/refutation",
+    "Paso 11 literal anti-hallucination sheriff",
+    "Motor download/extract traceable per process",
+    "Universal harness",
+    "10/100 parallel searches and workers",
+    "Memory/profile/handoff",
+    "Dedicated microkernels/workflows/APIs per process",
+    "Executable Python handoff",
+    "Paso 12 Reporter SHARCK when news trigger applies",
+    "Paso 13 continuous work/academic research when trigger applies",
+    "Paso 14 active watchdogs per step/global when configured",
+    "Paso 15 persistent coda loop",
+    "deterministic automatic motors",
+    "parallel microkernels",
+    "3-hypothesis simulations where required"
+  ],
+  "m64_additive_improvements": [
+    "per-process isolated context and memory",
+    "direct artifact persistence with source pointers",
+    "append-only evidence ledger",
+    "source URL/date/version/hash/license provenance",
+    "independent checkpoints and recovery per parallel process",
+    "parallel official/community/negative-evidence collection",
+    "claim-to-evidence graphs",
+    "versioned ContextDelta queue without interrupting running work",
+    "source index and executable handoff pointers",
+    "readback/hash verification for downloads",
+    "explicit EVIDENCE vs INFERENCE vs SIMULATION labels",
+    "parallel MCP/API/plugin/SDK discovery",
+    "parallel skill/dataset/adapter candidate evaluation",
+    "parallel local/regional/national/international news lanes",
+    "error isolation so one process cannot stop the others"
+  ],
+  "research_evidence": [
+    {
+      "source": "OpenAI Agents API",
+      "url": "https://openai.com/index/introducing-the-agents-api/",
+      "finding": "Long-running agent harness, tools, context management and parallel work with subagents support the Director's parallel architecture."
+    },
+    {
+      "source": "Anthropic multi-agent research",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "finding": "Parallel subagents plus parallel tools reduced complex research time by up to 90%; isolated contexts and direct artifacts are useful additive patterns."
+    },
+    {
+      "source": "MiniMax Agent Team",
+      "url": "https://www.minimax.io/blog/minimax-agent-team-long-running-1779893953",
+      "finding": "Multiple agents can run in parallel and collaborate on long complex tasks."
+    },
+    {
+      "source": "Kimi Agent Swarm",
+      "url": "https://www.kimi.com/en/help/agent/agent-swarm",
+      "finding": "Up to 300 simultaneous subagents and 4,000+ tool calls; up to 4.5x faster than sequential execution in large-scale search."
+    }
+  ],
+  "root_physical_state_preserved": {
+    "motor2_blob": "84d566e2ee4e98e42eb3a864026d067d48caabd9",
+    "engine_blob": "91e6e4486692eab314be5c7130d8310d3c855397",
+    "relocated_workflows": "➡️📂 sharck imput/📂 workflows reubicados/",
+    "note": "No component/project is deleted by M64. Existing root-only relocation remains preserved."
+  },
+  "task_boundaries": {
+    "task3_opened": false,
+    "task4_opened": false,
+    "task5_opened": false
+  },
+  "verdict": "M64_TASK2_CORRECTED / PRIOR_ARCHITECTURE_PRESERVED / DIRECTOR_PARALLELISM_PRESERVED / ADDITIVE_IMPROVEMENTS_ONLY"
+}
