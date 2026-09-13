@@ -1,0 +1,35 @@
+name: Sharck M59 V3 Candidate Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '➡️📂 sharck imput/📂 input sharck code principal/📂 sharck-v3-parallel-candidate/**'
+      - '.github/workflows/sharck-m59-v3-candidate-tests.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sharck-m59-v3-candidate-tests
+  cancel-in-progress: false
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: '➡️📂 sharck imput/📂 input sharck code principal/📂 sharck-v3-parallel-candidate'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile candidate
+        run: python -m py_compile sharck_v3_runtime.py provider_adapters.py handoff_index.py
+      - name: Runtime contract tests
+        run: python test_sharck_v3_runtime.py
+      - name: Provider adapter tests
+        run: python test_provider_adapters.py
