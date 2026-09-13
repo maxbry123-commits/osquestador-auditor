@@ -1,0 +1,23 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v6",
+  "node":"M55_REOPEN_REAL_GAPS_NO_OVERENGINEERING",
+  "status":"ACTIVE",
+  "dag":"SWARM-DAG-10SOL-M55-DELTA.json",
+  "stale_superseded":[
+    {"old":"SW-N29","reason":"orphan claim/no evidence/no matching worker-log execution","replacement":"SW-N43"},
+    {"old":"SW-N30","reason":"orphan claim/no evidence; SOL-3 log reports no active claim","replacement":"SW-N44"},
+    {"old":"SW-N38","reason":"BLOCKED_RELEASED evidence persistence failure","replacement":"SW-N45"}
+  ],
+  "ready_to_claim":[
+    {"node_id":"SW-N43","claim_file":"swarm-claims/CLAIM-SW-N43.json","evidence_file":"SW-N43-EVIDENCE.md"},
+    {"node_id":"SW-N44","claim_file":"swarm-claims/CLAIM-SW-N44.json","evidence_file":"SW-N44-EVIDENCE.md"},
+    {"node_id":"SW-N45","claim_file":"swarm-claims/CLAIM-SW-N45.json","evidence_file":"SW-N45-EVIDENCE.md"},
+    {"node_id":"SW-N46","claim_file":"swarm-claims/CLAIM-SW-N46.json","evidence_file":"SW-N46-EVIDENCE.md"}
+  ],
+  "terminal_m54":"SW-N35,SW-N36,SW-N37,SW-N39,SW-N40,SW-N41,SW-N42 released; SW-N38 blocked released",
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "orders":"READ HEAD + M55 queue fresh; if idle claim first N43-N46 whose claim file is absent; exactly 3 steps; persist evidence; release; rescan. Do not say NO_TASKS while any N43-N46 is free.",
+  "verdict":"FOUR_REAL_PENDING_NODES_READY / NO_ARTIFICIAL_FILLER"
+}
