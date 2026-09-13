@@ -1,0 +1,11 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M55-REAL-GAPS-040",
+  "base_checkpoint":"CHECKPOINT-DELTA-039-M54-CONTINUATION.json",
+  "node":"M55_REOPEN_REAL_GAPS_NO_OVERENGINEERING",
+  "status":"ACTIVE",
+  "resume_order":["READ main fresh","READ STATE-DELTA-042-M55-REAL-GAPS.json","READ PLAN-DELTA-024-M55-REAL-GAPS.json","READ CRAZY-WALL-SWARM-QUEUE-M55.json","READ SWARM-DAG-10SOL-M55-DELTA.json","READ swarm-claims N43-N46","claim first SAFE/FREE N43-N46"],
+  "ready":["SW-N43","SW-N44","SW-N45","SW-N46"],
+  "do_not_reclaim":["SW-N29","SW-N30","SW-N38"],
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false}
+}
