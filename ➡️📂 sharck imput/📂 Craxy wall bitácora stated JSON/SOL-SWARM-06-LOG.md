@@ -61,18 +61,6 @@
 - `REFUTATIONS = 3/3 PASS`
 - exact detector covers `missing / extra / changed / mode_mismatch`.
 - repaired mixed-fault fixture returns to PASS.
-- first harness attempt failed on a no-change control commit; harness fixed and whole matrix rerun. No product logic was weakened.
-
-### Causal GAP proven
-- current workflow compares only four sampled paths;
-- current mode condition accepts `{100644,100755}` rather than exact source-mode equality;
-- unselected changes/extras and executable-mode loss can false-PASS representative checks;
-- current acquisition manifest aggregate hashes are not a path-level final-staging ledger.
-
-### STALE_HEAD reconciliation
-- evidence pre-read `e39a3933b03c4944382e7deb925c043f6d17c85a`; actual evidence parent `41650f979dcdc70f0738445c4b1d7cd60c991181` changed only `SOL-SWARM-09-LOG.md`: no overlap.
-- release pre-read `fa062b9cf33e387b5a25d43145e6f3b26d86ee32`; actual release parent `c4c1c0a64091af5e723e0029cddf067914383d41` changed only `CLAIM-SW-N16.json`: no overlap.
-- classification: `STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE`; no silent overwrite.
 
 ### GOALS12_OUTPUT
 - G01 requirement preserved: `PASS`
@@ -87,13 +75,6 @@
 - G10 3 simulations + 3 refutations: `PASS`
 - G11 evidence/commit/blob/readback: `PASS`
 - G12 RELEASED/readback: `PASS`
-
-### Final
-- node_execution_score: `12/12 GOALS PASS`
-- producer_verdict: `PASS_PENDING_REVIEW`
-- verified_closed: `NO`
-- review_required: `SOL-0 / independent reviewer`
-- next_action: `READ CRAZY WALL FRESH → first safe READY free node`
 
 ---
 
@@ -113,38 +94,11 @@
 - canonical_mutation: `NO`
 - shared_control_mutation: `NO`
 
-### Exactly 3 steps — completed
-1. `DEFINE_INPUTS_REPRODUCE_DRIFT`: M47/M50/M51 metadata, durable claims, worker logs and HEAD chronology compared; real stale READY/CLAIMED states reproduced.
-2. `EXECUTE_SYNTHETIC_MATRIX`: deterministic live-state reconciliation exercised with 10 per-node cases + 3 global invariant cases.
-3. `TEST_REFUTE_REPORT_RELEASE`: 3 simulations + 3 refutations + readback + release completed.
-
 ### Tests
 - `BASE_STATE_MATRIX = 10/10 PASS`
 - `GLOBAL_INVARIANT_MATRIX = 3/3 PASS`
 - `SIMULATIONS = 3/3 PASS`
 - `REFUTATIONS = 3/3 PASS`
-- detects stale active locks, active-without-claim, double-active-chat, path overlap and terminal retained claims.
-- unrelated disjoint active claims remain parallel-safe.
-
-### Real drift proven
-- M47 static queue still says SW-N01..SW-N08 READY after historical execution/release.
-- M50 snapshot listed N16 claimed while its fresh durable claim became `BLOCKED_RELEASED`.
-- retained N17 claim file exists but state is `RELEASED`; lock existence alone != ACTIVE.
-- older idle worker log cannot override a newer durable active claim; chronology is mandatory.
-
-### Deterministic rules
-- registration never establishes ACTIVE;
-- queue READY is dispatch metadata, not live ownership;
-- durable claim state + chronology controls per-node state;
-- RELEASED/BLOCKED_RELEASED means terminal no-reclaim unless a newer explicit supervisor requeue generation exists;
-- stale active claim vs newer worker release fails closed;
-- global one-chat-one-active and normalized path-overlap checks run before writes;
-- atomic create + exact readback remains mandatory after reconciliation.
-
-### STALE_HEAD reconciliation
-- evidence pre-read `a156ff8d561585328f74258537e56103c4041cc5`; evidence commit actual parent `07be5671e756cbd039031cf2e4bca210cc67e8e6` modified only `SW-N24-EVIDENCE.md`: overlap 0.
-- release pre-read `ccde70ff1cfe918ddafe15ac92ffba33d16da429`; release commit actual parent `5208f32cdfeb4b096b0b0dac39d14cdbcf91d3e8` modified only `CLAIM-SW-N28.json`: overlap 0.
-- both classified `STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE`; no silent overwrite.
 
 ### GOALS12_OUTPUT
 - G01 requirement preserved: `PASS`
@@ -157,6 +111,55 @@
 - G08 minimal allowed delta: `PASS`
 - G09 node-specific tests: `PASS 10/10 + 3/3`
 - G10 simulations/refutations: `PASS 3/3 + 3/3`
+- G11 evidence/commit/blob/readback: `PASS`
+- G12 RELEASED/readback: `PASS`
+
+---
+
+## SW-N31 — EVAL_REPRODUCIBILITY_PIN_CONTRACT
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `RELEASED_PASS_PENDING_REVIEW`
+- active_node: `null`
+- completed_node: `SW-N31`
+- claim_commit: `584e56f28e64cc8eefbd3e35d83a41551c24b083`
+- initial_claim_blob: `d6d3b42a8b34658fb8099c4aba619a242fbdb0ee`
+- evidence_commit: `79a0a2c6f8618dd0c976d004fb8ed3453a827ed6`
+- evidence_blob: `959145e25affcb9af46b77b014e90747227d6576`
+- release_commit: `bccee97227f02204f7bc13a490bdc1ba70b53015`
+- released_claim_blob: `a70a427cd7a27801626c9e68ba97a8d4f589833d`
+- mode: `READ_ONLY_DESIGN`
+- downloads: `0`
+- installs: `0`
+- canonical_mutation: `NO`
+
+### Exactly 3 steps — completed
+1. Extracted N22 minimal eval stack + immutable observed source pins.
+2. Defined `sharck.eval.reproducibility.v1` manifest and exact replay/comparability rules.
+3. Executed drift/malformed validation, 3 drift simulations and 3 refutations; evidence persisted and claim released.
+
+### Tests
+- `DRIFT_MATRIX = 7/7 PASS`
+- `MALFORMED_REQUIRED_FIELDS = 3/3 PASS`
+- `SIMULATIONS = 3/3 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- runner/benchmark/dataset/grader/environment/seed drift are independently detected.
+
+### STALE_HEAD reconciliation
+- evidence pre-read `a8576c3c40662958f0e121e182108c88676d8706`; actual evidence parent `3b360617b4080eabdedac4ebbcac2b881d391279` changed only `SOL-SWARM-10-LOG.md`: overlap 0.
+- release pre-read `5d1f335e2bdf054f3cd47a0b766a37ac2c297834`; release parent exactly matched: no release race.
+
+### GOALS12_OUTPUT
+- G01 requirement preserved: `PASS`
+- G02 fresh HEAD: `PASS`
+- G03 M53 + N22 evidence: `PASS`
+- G04 atomic owner/readback: `PASS`
+- G05 gates/dependencies: `PASS`
+- G06 non-overlapping scope: `PASS`
+- G07 existing eval research reused/deduped: `PASS`
+- G08 minimal allowed delta: `PASS`
+- G09 reproducibility tests: `PASS 7/7 + 3/3`
+- G10 three refutations: `PASS`
 - G11 evidence/commit/blob/readback: `PASS`
 - G12 RELEASED/readback: `PASS`
 
