@@ -262,3 +262,68 @@ Mi imput mis instrucciones van dentro de la arquitectura tu no puedes borrar ree
 
 Así que acomoda la mierda que hiciste y me das el enlace 
 ```
+
+## INPUT BLOCK 11-D — INICIO TAREA 2 / UBICACIÓN AUTORIZADA
+
+```text
+Ok inicia tarea 2 📌 y asegurate que el code y componentes que ya está en curso estén en la raíz destino y ni en otro lugar no autorizado y lo resuelves y continuar con tarea 2 📌 seguir instrucciones 
+```
+
+---
+
+# 12. TAREA 2 — DELTA DE ARQUITECTURA 100X INVESTIGADO — 2026-09-13
+
+Estado: `RESEARCH_COMPLETE / ARCHITECTURE_DELTA / 100X_TARGET_NOT_ASSUMED / ROOT_ONLY`.
+
+Fuente detallada de investigación, evidencia y microflujos: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.md`.
+Control de estado: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.json`.
+
+## 12.1 Regla 100x
+No se declara 100x por diseño ni por cantidad de agentes. `100X_PASS` requiere baseline/candidato en el mismo fixture/host/versiones, >=100x en una métrica explícita y sin degradar cobertura, exactitud, evidencia, seguridad o gates. Métricas: E2E p50/p95, TTFT, evidence/sec, useful-context/sec, context tokens, duplicate-search %, coverage %, citation precision/recall, contradiction detection, tool success %, user-friction actions y coste.
+
+## 12.2 Arquitectura transversal no monolítica
+`INPUT_LOCK → InputSpec → SHARCK_DIRECTOR + DynamicFanoutGovernor → {RESEARCH || SKILLS || DATASETS || ADAPTERS || TOOLS || PERSISTENCE || EVIDENCE_SHERIFF || ERROR_LENS || SOLUTION_GUIDES || MULTI_SHARCK || NEWS? || ACADEMIC? || WATCHDOGS || SIMULATION?} → append-only EVIDENCE_LEDGER + CONTEXT_DELTA_BUS → LITERAL_ALIGNMENT/FAN-IN → minimal CONTEXT_PACKAGE → YAIWES`.
+
+Los números de “paso” del INPUT son referencias de capacidades, no una cadena serial. Los lanes independientes pueden arrancar a la vez; los procesos reactivables/continuos siguen activos según condition/freshness/budget.
+
+## 12.3 Governor 10–100+
+SHARCK soporta expansión dinámica 10→100+ especialistas cuando existen ramas independientes suficientes. No crea 100 workers para cumplir cuota. Variables: independencia, goals descubiertos/no cubiertos, diversidad de fuente, marginal information gain, latency/token/API budget, rate limits, provider health y context pressure. `no_recursive_spawn=true` por defecto; concurrency cap independiente del total; dedup de solicitudes; timeout/circuit breaker; stop por cobertura/evidencia suficiente.
+
+Evidencia investigada: Anthropic reporta mejores resultados en breadth-first y hasta 90% reducción de research time usando 3–5 subagents + tools paralelas; Kimi documenta hasta 300 subagents/4000+ tool calls y hasta 4.5x en búsqueda masiva; OpenAI Agents API expone long-running harness/context/subagents; MiniMax Agent Team usa agents paralelos para trabajo largo. La comunidad también reporta quota explosion y contention cuando no hay governor, por lo que la escala es adaptativa y no fija.
+
+## 12.4 Context engineering
+Cada microagente usa contexto aislado y devuelve evidence/pointers/resumen estructurado. Raw evidence permanece fuera de la ventana del LLM. `memory.md`, `profile.json`, `HANDOFF.md`, `handoff-index.json` y `evidence-ledger.jsonl` preservan estado/pointers; compaction no elimina provenance.
+
+## 12.5 Skills/datasets/adapters/tools
+Skills: >=3 bibliotecas → 20 full reads → pin/license/hash → 3 activos +5 standby → progressive disclosure.
+Datasets: >=3 catálogos → cards/license/freshness/sample/eval → 3 activos +5 standby → pointers, no dump completo.
+Adapters: contract/schema/auth/version/permission scoring → readonly probe → 3 activos +5 standby.
+Tools/plugins: capability → MCP/API registry → schema/auth/version → readonly smoke → instrucciones al agente. Official MCP Registry es source preferente para metadata pública MCP.
+
+## 12.6 Sheriff/refutación/anti-alucinación
+Evidence Sheriff mantiene claim graph `claim→official→independent→contra-evidence→version/freshness→verdict` y 10 alternativas ordenadas por `0 fricción → menor tiempo → menor sobreingeniería → evidencia`.
+Error Lens busca issues/regressions/breaking changes/comentarios negativos como carril adversarial.
+Multi-SHARCK usa rutas rivales con contextos aislados y selección por score/evidencia, no por mayoría textual.
+LiteralAlignment requiere `literal requirement → evidence/context pointer → output obligation`; GAP material bloquea `CONTEXT_READY`.
+
+## 12.7 Persistencia/noticias/continuidad
+Persistence Loop = event ledger + idempotency + checkpoints + heartbeat + stale recovery; 12 goals, Council12, 3 refutaciones, debate y 4 simulaciones pueden ejecutarse como celdas paralelas y fan-in a ContextDelta.
+News Reporter se activa por freshness/event trigger, escala local→regional→nacional→internacional + social traces, con TTL/watchdog según volatilidad.
+Continuous Work publica ContextDelta versionados a YAIWES en safe points sin reiniciar la tarea.
+Watchdogs son condition/TTL-driven; persistencia significa estado/cola/sesión durable, no CPU spin infinito.
+
+## 12.8 Simulación
+Cuando uncertainty/risk supera threshold: 3 hipótesis independientes → simulación → comparación → nuevas solicitudes de evidencia. Toda simulación se etiqueta `SIMULATION`, nunca `EVIDENCE`. Paso 6 conserva las 4 simulaciones exigidas literalmente.
+
+## 12.9 Ubicación física root-only corregida
+Commit de reubicación: `eec96fc8cc324c09dbae8a8d26c2c257e99026cc`.
+- 26 workflows históricos/activos SHARCK fueron retirados de `.github/workflows/` y preservados byte-idénticos en `➡️📂 sharck imput/📂 workflows reubicados/`.
+- `.github/workflows/` ya no contiene nombres `sharck-` ni `shack-input` tras readback.
+- Motor 2 fue copiado byte-idéntico a `➡️📂 sharck imput/📂 motores canónicos copiados/motor_2_queue_download_extract.py`, blob `84d566e2ee4e98e42eb3a864026d067d48caabd9`.
+- Engine fue copiado byte-idéntico a `➡️📂 sharck imput/📂 motores canónicos copiados/hf_download_extract_engine.py`, blob `91e6e4486692eab314be5c7130d8310d3c855397`.
+- Los workflows reubicados son `NON_AUTHORITATIVE_TEMPLATE`, porque desde la raíz ya no son entrypoints automáticos de GitHub Actions; no deben usar sus referencias históricas externas.
+- Todo código M59 y componentes B01–B04/B07/B10 observados permanecen bajo `➡️📂 sharck imput/📂 input sharck code principal/`.
+- B08/B09 no aparecen en el último listado físico de `componentes open source`; no se declaran adquiridos.
+
+## 12.10 Frontera de esta tarea
+Tarea 2 incorpora investigación y arquitectura; no abre descargas de Tarea 3 ni genera los nodos de enjambre de Tarea 4. Los gates históricos `physical_repair_allowed=false`, `b05_b06_download_allowed=false`, `step3_allowed=false` permanecen hasta decisión/gate posterior.

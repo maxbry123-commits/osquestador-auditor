@@ -104,3 +104,46 @@ Reglas vigentes:
 - esta actualización no abre Tarea 2–5 ni gates físicos.
 
 Para esta Tarea 1, las referencias históricas anteriores a archivos fuera de `➡️📂 sharck imput/` quedan como trazabilidad histórica y **no autorizan trabajo fuera de la raíz**.
+
+---
+
+# HANDOFF M63 — TAREA 2 / 100X ARCHITECTURE / ROOT-ONLY RECONCILIATION
+
+Estado: `TASK2_RESEARCH_COMPLETE / ARCHITECTURE_DELTA_READY / ROOT_ONLY / 100X_NOT_YET_MEASURED`.
+
+Lectura obligatoria para continuar Tarea 2:
+1. `📁 readme arquitectura sharck imput V2.1.md` → secciones 11 y 12.
+2. `📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.md`.
+3. `📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.json`.
+4. `📂 workflows reubicados/README.md`.
+5. `📂 input sharck code principal/📂 root-only-runtime/sharck_root_runner.py`.
+6. `📂 motores canónicos copiados/motor_2_queue_download_extract.py` + `hf_download_extract_engine.py`.
+
+## Reconciliación de ubicación
+Commit `eec96fc8cc324c09dbae8a8d26c2c257e99026cc` reubica 26 workflows SHARCK desde `.github/workflows/` a `➡️📂 sharck imput/📂 workflows reubicados/` preservando sus blobs. Readback posterior: búsquedas `sharck-` y `shack-input` en `.github/workflows/` = 0. Motor2/engine se copiaron byte-idénticos bajo la raíz SHARCK.
+
+Los `.yml` reubicados son contratos/plantillas históricas `NON_AUTHORITATIVE_TEMPLATE`; al no estar en `.github/workflows/` ya no son triggers de GitHub Actions. No reintroducirlos fuera de SHARCK.
+
+Para conservar ejecución root-only sin crear motor nuevo, `sharck_root_runner.py` sólo conecta tests/queues existentes al Motor2/engine copiados. Modos: `verify-root`, `test-m59`, `motor2 --queue <file>` (PLAN_ONLY por defecto) y `motor2 --queue <file> --execute` para invocación explícita. Ninguna ruta construida por el launcher puede salir del root SHARCK.
+
+## Arquitectura 100x
+`100x` permanece TARGET, no PASS. Baseline/candidato deben usar mismo fixture/host/versiones y medir E2E p50/p95, TTFT, evidence/sec, useful-context/sec, context tokens, duplicate search, coverage, citation precision/recall, contradiction detection, tool success, user-friction y coste.
+
+Diseño resultante: `INPUT_LOCK → InputSpec → SHARCK_DIRECTOR/DynamicFanoutGovernor → parallel/reactivable/continuous lanes → EVIDENCE_LEDGER + CONTEXT_DELTA_BUS → LiteralAlignment/FAN-IN → minimal CONTEXT_PACKAGE → YAIWES`.
+
+Escala: 10–100+ microagents es capacidad dinámica, no mínimo. Default pequeño; expandir sólo por independencia/marginal information gain/budget/provider health. No recursive spawn por defecto. Contextos aislados; raw evidence fuera del prompt; deterministic gates antes de release.
+
+## Evidencia externa clave
+- OpenAI Agents API: long-running harness/context management/subagents.
+- Anthropic: multi-agent breadth-first; 3–5 subagents y tools paralelas; hasta 90% reducción de research time en consultas complejas; context isolation.
+- MiniMax Agent Team: agents paralelos para trabajo largo.
+- Kimi Agent Swarm: escala hasta 300 subagents/4000+ tool calls y hasta 4.5x en búsqueda masiva; Kimi Code expone timeout/concurrency controls.
+- MCP Registry: discovery/metadata/schema/version/auth/validation estándar.
+- Comunidad: confirma valor de isolation/parallelism, pero también quota explosion/prefill contention sin governor.
+
+## Gates y GAPs
+- `physical_repair_allowed=false`, `b05_b06_download_allowed=false`, `step3_allowed=false` se conservan.
+- No abrir Tarea 3 ni Tarea 4 desde este Handoff.
+- B08/B09 queues existen dentro de SHARCK, pero sus destinos no aparecieron en el último listado físico de componentes; no declarar adquisición.
+- root-only launcher requiere ejecución/readback para declarar runtime PASS.
+- 100x requiere benchmark físico.

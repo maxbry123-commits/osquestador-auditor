@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""Deterministic SHARCK root-only launcher.
+
+This is not a new download engine. It only wires existing SHARCK tests/queues to the
+byte-identical Motor 2 + engine copies inside the authorized SHARCK root.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+HERE = Path(__file__).resolve()
+# .../➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/file.py
+SHARCK_ROOT = HERE.parents[2]
+CODE_ROOT = SHARCK_ROOT / "📂 input sharck code principal"
+ACQ_ROOT = CODE_ROOT / "📂 component acquisition"
+QUEUE_ROOT = ACQ_ROOT / "queues"
+STATE_ROOT = ACQ_ROOT / "state"
+MOTOR_ROOT = SHARCK_ROOT / "📂 motores canónicos copiados"
+MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
+ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
+M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
+
+ALLOWED_PREFIX = SHARCK_ROOT.resolve()
+
+
+def inside_root(path: Path) -> bool:
+    try:
+        path.resolve().relative_to(ALLOWED_PREFIX)
+        return True
+    except ValueError:
+        return False
+
+
+def assert_root_only(*paths: Path) -> None:
+    bad = [str(p) for p in paths if not inside_root(p)]
+    if bad:
+        raise SystemExit(json.dumps({"verdict": "ROOT_SCOPE_VIOLATION", "paths": bad}, ensure_ascii=False))
+
+
+def verify_root() -> int:
+    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59]
+    assert_root_only(*required)
+    missing = [str(p) for p in required if not p.exists()]
+    result = {
+        "schema": "sharck.root-only-runner.v1",
+        "root": str(SHARCK_ROOT),
+        "required": [str(p) for p in required],
+        "missing": missing,
+        "verdict": "PASS" if not missing else "GAP",
+    }
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if not missing else 2
+
+
+def test_m59() -> int:
+    tests = [M59 / "test_sharck_v3_runtime.py", M59 / "test_provider_adapters.py", M59 / "test_sharck_v3_strict.py"]
+    existing = [p for p in tests if p.exists()]
+    assert_root_only(M59, *existing)
+    if not existing:
+        print(json.dumps({"verdict": "GAP", "detail": "M59 tests not found"}))
+        return 2
+    failed = []
+    for test in existing:
+        proc = subprocess.run([sys.executable, str(test)], cwd=M59)
+        if proc.returncode:
+            failed.append({"test": test.name, "returncode": proc.returncode})
+    print(json.dumps({"verdict": "PASS" if not failed else "GAP", "tests": [p.name for p in existing], "failed": failed}, ensure_ascii=False))
+    return 0 if not failed else 2
+
+
+def motor2(queue_name: str, execute: bool) -> int:
+    if Path(queue_name).name != queue_name:
+        raise SystemExit("queue must be a filename inside the SHARCK queue directory")
+    queue = QUEUE_ROOT / queue_name
+    stem = queue.stem
+    state = STATE_ROOT / f"{stem}-state.json"
+    index = STATE_ROOT / f"{stem}-INDEX.md"
+    assert_root_only(queue, state, index, MOTOR2, ENGINE)
+    missing = [str(p) for p in (queue, MOTOR2, ENGINE) if not p.exists()]
+    if missing:
+        print(json.dumps({"verdict": "GAP", "missing": missing}, ensure_ascii=False))
+        return 2
+    plan = {
+        "schema": "sharck.root-only-motor2-plan.v1",
+        "queue": str(queue),
+        "state": str(state),
+        "index": str(index),
+        "motor": str(MOTOR2),
+        "engine": str(ENGINE),
+        "execute": execute,
+    }
+    if not execute:
+        print(json.dumps({**plan, "verdict": "PLAN_ONLY"}, ensure_ascii=False, indent=2))
+        return 0
+    env = dict(os.environ)
+    env.update({
+        "QUEUE_FILE": str(queue),
+        "STATE_FILE": str(state),
+        "INDEX_PATH": str(index),
+        "ENGINE_PATH": str(ENGINE),
+    })
+    return subprocess.call([sys.executable, str(MOTOR2)], cwd=SHARCK_ROOT, env=env)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("verify-root")
+    sub.add_parser("test-m59")
+    p_motor = sub.add_parser("motor2")
+    p_motor.add_argument("--queue", required=True)
+    p_motor.add_argument("--execute", action="store_true", help="Actually invoke Motor 2. Without this flag only emit a root-only plan.")
+    args = parser.parse_args()
+    if args.cmd == "verify-root":
+        return verify_root()
+    if args.cmd == "test-m59":
+        return test_m59()
+    if args.cmd == "motor2":
+        return motor2(args.queue, args.execute)
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

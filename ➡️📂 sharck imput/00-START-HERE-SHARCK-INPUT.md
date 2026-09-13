@@ -70,3 +70,18 @@ Lectura operativa efectiva para esta Tarea 1:
 5. archivos de código/componentes/estado exclusivamente bajo `➡️📂 sharck imput/`.
 
 Las referencias históricas anteriores a archivos fuera de esta raíz se conservan sólo como historia documental; **no autorizan lectura de trabajo, escritura, integración ni mezcla fuera de `➡️📂 sharck imput/` para esta tarea y las siguientes de SHARCK INPUT**. Un motor externo únicamente puede copiarse dentro de esta raíz cuando corresponda.
+
+---
+
+## 10. M63 — TAREA 2 / 100X / ROOT-ONLY
+
+Lectura prioritaria nueva:
+1. `➡️📂 sharck imput/📁 readme arquitectura sharck imput V2.1.md` → secciones 11 y 12.
+2. `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.md`.
+3. `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.json`.
+4. `➡️📂 sharck imput/HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md` → HANDOFF M63.
+5. `➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/sharck_root_runner.py`.
+6. `➡️📂 sharck imput/📂 motores canónicos copiados/`.
+7. `➡️📂 sharck imput/📂 workflows reubicados/README.md`.
+
+Regla vigente: `100x` es target medible y sólo puede ser PASS con benchmark físico. Los 10–100+ microagentes son fan-out dinámico bajo governor, no cuota fija. Tarea 2 no abre Tarea 3/4/5 automáticamente.

@@ -1,0 +1,112 @@
+{
+  "schema": "sharck-input.task2.100x-architecture.v1",
+  "task": "Tarea 2 📌",
+  "date": "2026-09-13",
+  "status": "RESEARCH_COMPLETE / ARCHITECTURE_DELTA_READY / ROOT_ONLY / 100X_TARGET_NOT_ASSUMED",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "allowed_root": "➡️📂 sharck imput/",
+  "no_other_project_components": true,
+  "architecture_edit_mode": "SURGICAL_APPEND_ONLY",
+  "input_literal_preserved": true,
+  "root_relocation": {
+    "commit": "eec96fc8cc324c09dbae8a8d26c2c257e99026cc",
+    "sharck_workflows_removed_from_github_workflows": 26,
+    "relocated_destination": "➡️📂 sharck imput/📂 workflows reubicados/",
+    "external_name_scan": {
+      "sharck_dash_matches": 0,
+      "shack_input_matches": 0,
+      "scope": ".github/workflows after relocation"
+    },
+    "copied_motor2": {
+      "path": "➡️📂 sharck imput/📂 motores canónicos copiados/motor_2_queue_download_extract.py",
+      "blob_sha": "84d566e2ee4e98e42eb3a864026d067d48caabd9",
+      "copy_mode": "BYTE_IDENTICAL"
+    },
+    "copied_engine": {
+      "path": "➡️📂 sharck imput/📂 motores canónicos copiados/hf_download_extract_engine.py",
+      "blob_sha": "91e6e4486692eab314be5c7130d8310d3c855397",
+      "copy_mode": "BYTE_IDENTICAL"
+    }
+  },
+  "research_sources": {
+    "official": [
+      "https://openai.com/index/introducing-the-agents-api/",
+      "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "https://www.minimax.io/blog/minimax-agent-team-long-running-1779893953",
+      "https://www.kimi.com/en/help/agent/agent-swarm",
+      "https://www.kimi.com/code/docs/en/kimi-code-cli/reference/tools.html",
+      "https://modelcontextprotocol.io/registry/about",
+      "https://registry.modelcontextprotocol.io/docs"
+    ],
+    "huggingface": [
+      "https://huggingface.co/datasets/huggingface/agent-usage",
+      "https://huggingface.co/datasets/AI45Research/ATBench",
+      "https://huggingface.co/datasets/SynthTools/SynthTools-Tasks",
+      "https://huggingface.co/datasets/protogonos/verified-tool-use-dataset"
+    ],
+    "community": [
+      "https://github.com/madebyaris/agent-orchestration",
+      "https://www.reddit.com/r/LocalLLaMA/comments/1wb35xo/how_many_agents_can_24090_actually_run_at_once/",
+      "https://www.reddit.com/r/LocalLLaMA/comments/1vl3frs/llamacpp_parallel_agents_fine_for_decode_but_one/",
+      "https://www.reddit.com/r/ClaudeAI/comments/1u71d27/subagents_in_claude_code_arent_a_speed_trick/",
+      "https://www.reddit.com/r/ClaudeAI/comments/1w52pbu/gone_in_60_seconds/"
+    ]
+  },
+  "validated_patterns": [
+    "dynamic fan-out instead of fixed 100 workers",
+    "context isolation per subagent + distilled fan-in",
+    "progressive disclosure for skills",
+    "dataset/adapters/tools active+standby pools",
+    "MCP/API metadata and readonly smoke before mutation",
+    "append-only evidence ledger + versioned ContextDelta bus",
+    "claim graph with official+independent+contra-evidence",
+    "adversarial error lens",
+    "independent Multi-SHARCK counter-routes",
+    "literal requirement->evidence->output deterministic gate",
+    "condition/freshness-driven watchdogs",
+    "durable queue/session/checkpoint rather than CPU spin loop",
+    "resource/token/API governor + concurrency cap + dedup + backpressure",
+    "no recursive spawning by default",
+    "root-only runtime paths"
+  ],
+  "hundred_x_gate": {
+    "verdict": "NOT_MEASURED",
+    "rule": "Do not claim 100x without >=100x measured improvement on an explicit metric using the same fixture/host/versions and without material quality/gate regression.",
+    "metrics": [
+      "E2E_p50_p95",
+      "TTFT",
+      "evidence_per_second",
+      "useful_context_per_second",
+      "context_tokens",
+      "duplicate_search_pct",
+      "coverage_pct",
+      "citation_precision_recall",
+      "contradiction_detection",
+      "tool_success_pct",
+      "user_friction_actions",
+      "api_token_compute_cost"
+    ]
+  },
+  "architecture_outputs": {
+    "canonical_architecture": "➡️📂 sharck imput/📁 readme arquitectura sharck imput V2.1.md#12",
+    "research_detail": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M63-TASK2-100X-RESEARCH-ARCHITECTURE.md",
+    "root_runner": "➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/sharck_root_runner.py",
+    "handoff": "➡️📂 sharck imput/HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+  },
+  "gaps": [
+    "100x is not physically benchmarked yet",
+    "relocated YAML files are no longer automatic GitHub Actions entrypoints and are retained as non-authoritative templates",
+    "B08 and B09 destinations were not visible in the last physical components-root listing; do not claim acquired",
+    "root-only launcher requires execution/readback before runtime PASS",
+    "Task 3 component acquisition is not opened by Task 2",
+    "Task 4 swarm-node generation is not opened by Task 2"
+  ],
+  "gates_preserved": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false
+  },
+  "next": "Run root-only launcher verification/tests, benchmark architecture deltas, then await Director instruction for Task 3."
+}
