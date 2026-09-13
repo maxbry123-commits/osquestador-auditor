@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol6-20260912T2329-0500",
+  "agent_name":"SOL-6-GPT",
+  "node_id":"SW-N34",
+  "parent_node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "fresh_main_sha":"23838f144e2e226cf544db3267b7e5e8eba7c3c4",
+  "base_sha":"23838f144e2e226cf544db3267b7e5e8eba7c3c4",
+  "mode":"READ_ONLY_DESIGN",
+  "write_scope":["SW-N34-EVIDENCE.md","SOL-SWARM-06-LOG.md","swarm-claims/CLAIM-SW-N34.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N34-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"],
+  "dependencies":["M53 active","SW-N21 evidence available","existing #118 Browsertrix + #119 warcio provenance","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"WARC_CAPTURE_FAILURE_READBACK_CONTRACT",
+  "claimed_at":"2026-09-13T04:45:00Z",
+  "state":"CLAIMED"
+}
