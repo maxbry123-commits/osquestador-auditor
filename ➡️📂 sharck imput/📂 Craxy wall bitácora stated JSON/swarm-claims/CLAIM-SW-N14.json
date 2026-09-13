@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v2",
+  "chat_id":"sol7-5f38c044-03f6-4c32-a681-663c0e16b94f",
+  "agent_name":"SOL-7-GPT",
+  "node_id":"SW-N14",
+  "parent_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "fresh_main_sha":"062173a7b40daa5841d86a71ab0c89874d810049",
+  "base_sha":"062173a7b40daa5841d86a71ab0c89874d810049",
+  "mode":"READ_ONLY_DESIGN",
+  "write_scope":["SW-N14-EVIDENCE.md","SOL-SWARM-07-LOG.md","swarm-claims/CLAIM-SW-N14.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N14-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-07-LOG.md"],
+  "dependencies":["M48 active","SW-N02 evidence available"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writes":"SOL-0_ONLY"},
+  "task":"SPECIAL_FILE_SCAN_PROVENANCE_CONTRACT",
+  "claimed_at":"2026-09-13T04:28:10Z",
+  "state":"CLAIMED"
+}
