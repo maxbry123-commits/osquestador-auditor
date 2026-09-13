@@ -1,0 +1,96 @@
+{
+  "created_at": 1789284414,
+  "items": {
+    "M58-B07-01": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 2142981,
+        "bundle_sha256": "eba66bcea68d3625952dd47800f1b354323743e60ad55a79796742128d3f1c70",
+        "elapsed_seconds": 15.65,
+        "extracted_tree": {
+          "bytes": 6384163,
+          "files": 90,
+          "sha256": "33350d01ded7c189a64e1b9728f7534f76c85283edde705919021bdcbf8a0a3a"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 2142981,
+            "name": "bm25s.bundle.zip.part-0001",
+            "sha256": "eba66bcea68d3625952dd47800f1b354323743e60ad55a79796742128d3f1c70"
+          }
+        ],
+        "publish": {
+          "commit": "eba31e83e782d48bcd421454807b3f38e7cf4421",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "bm25s",
+        "source_bytes": 6384163,
+        "source_commit": "a213158181d4b3781ba06bc88840f89871f1c775",
+        "source_files": 90,
+        "source_ref": "a213158181d4b3781ba06bc88840f89871f1c775",
+        "source_repo": "xhluca/bm25s",
+        "source_tree": {
+          "bytes": 6384163,
+          "files": 90,
+          "sha256": "33350d01ded7c189a64e1b9728f7534f76c85283edde705919021bdcbf8a0a3a"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "bm25s",
+      "source_repo": "xhluca/bm25s",
+      "status": "VERIFIED_CLOSED"
+    },
+    "M58-B07-02": {
+      "attempts": 1,
+      "result": {
+        "bundle_bytes": 689300,
+        "bundle_sha256": "9b273da0899751b2ec61db59def38bd3e728e4ba08c7f54f6cf768a7a65ba6e2",
+        "elapsed_seconds": 14.45,
+        "extracted_tree": {
+          "bytes": 1555362,
+          "files": 129,
+          "sha256": "25cda95d016edbd8add1513dc259782d092dbfbc7374a7c145012869321462c3"
+        },
+        "extraction_verified": true,
+        "max_github_blob_bytes": 99614720,
+        "no_lfs": true,
+        "part_size_limit_bytes": 12582912,
+        "parts": [
+          {
+            "bytes": 689300,
+            "name": "fastembed.bundle.zip.part-0001",
+            "sha256": "9b273da0899751b2ec61db59def38bd3e728e4ba08c7f54f6cf768a7a65ba6e2"
+          }
+        ],
+        "publish": {
+          "commit": "5fab399616452be721db78c516272bcf7e4b440c",
+          "verdict": "PUBLISHED_AND_EXTRACTED_READBACK_VERIFIED"
+        },
+        "reconstruction_verified": true,
+        "schema": "yaiwes.hf.download-extract.v1",
+        "slug": "fastembed",
+        "source_bytes": 1555362,
+        "source_commit": "0dab99c23e659e630f642b42c5888af87befb6e2",
+        "source_files": 129,
+        "source_ref": "0dab99c23e659e630f642b42c5888af87befb6e2",
+        "source_repo": "qdrant/fastembed",
+        "source_tree": {
+          "bytes": 1555362,
+          "files": 129,
+          "sha256": "25cda95d016edbd8add1513dc259782d092dbfbc7374a7c145012869321462c3"
+        },
+        "verdict": "VERIFIED_CLOSED"
+      },
+      "slug": "fastembed",
+      "source_repo": "qdrant/fastembed",
+      "status": "VERIFIED_CLOSED"
+    }
+  },
+  "schema": "yaiwes.frontend.download-extract-queue.v1"
+}
