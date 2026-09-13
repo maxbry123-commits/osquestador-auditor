@@ -6,6 +6,7 @@
   "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
   "fresh_main_sha": "8fa359c9684e01dd37134e66d1379df66265ed14",
   "base_sha": "8fa359c9684e01dd37134e66d1379df66265ed14",
+  "final_sha_before_release_write": "526857e6965715613c3766ecb11ed7514d202e7c",
   "mode": "READ_ONLY_ARCHITECTURE",
   "write_scope": [
     "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md",
@@ -20,7 +21,7 @@
     "M47_8SOL_SWARM_CONTROL_ACTIVE",
     "CRAZY-WALL-SWARM-QUEUE-M47:SW-N07=READY_TO_CLAIM",
     "SW-N02=RELEASED:PASS_PENDING_SUPERVISOR_FANIN",
-    "CLAIMS_N01_TO_N06 materialized; N07 absent in fresh claim-directory rescan"
+    "SW-N08 concurrent claim is disjoint"
   ],
   "gate_snapshot": {
     "physical_repair_allowed": false,
@@ -31,5 +32,33 @@
   },
   "assertion_to_validate": "current verified components and approved candidates can be mapped to V2.1 microkernel ports without wiring production.",
   "claimed_at": "2026-09-12T23:14:30-05:00",
-  "state": "CLAIMED"
+  "completed_at": "2026-09-12T23:18:00-05:00",
+  "state": "RELEASED",
+  "result": "PASS_PENDING_SUPERVISOR_FANIN",
+  "evidence_path": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md",
+  "evidence_commit": "c6927518f8de2d9795754ea2b7862502443b2947",
+  "evidence_blob": "0fd6fec0e19aa627afbfd0d9632efdbe20c4aec0",
+  "evidence_readback": "PASS",
+  "log_path": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md",
+  "log_commit": "526857e6965715613c3766ecb11ed7514d202e7c",
+  "log_blob": "17dfc89cff0ab14beed25c02ee2370aeb5d29886",
+  "coverage": {
+    "physical_verified_components_mapped": "17/17",
+    "20x_candidates_mapped_contract_only": "20/20",
+    "static_architecture_checks": "5/5",
+    "simulations": "3/3",
+    "refutations": "3/3"
+  },
+  "production_wiring": 0,
+  "downloads": 0,
+  "physical_repairs": 0,
+  "canonical_motor_mutations": 0,
+  "remaining_gaps": [
+    "Supervisor independent fan-in/review required.",
+    "20X candidates remain RESEARCHED_CANDIDATE_NO_DOWNLOAD until M06/M07/M08/director gates.",
+    "Acquisition VERIFIED_CLOSED does not imply APPROVED_FOR_WIRE; Step3 remains blocked."
+  ],
+  "review_required": true,
+  "verified_closed": false,
+  "next_free_node": "RESCAN_AFTER_RELEASE"
 }
