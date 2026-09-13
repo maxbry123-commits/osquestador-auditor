@@ -1,0 +1,223 @@
+name: sharck-sw-n46-rapidfuzz-full-byte-replay
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/sharck-sw-n46-rapidfuzz-full-byte-replay.yml'
+      - '➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N46.json'
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SOURCE_REPO: https://github.com/rapidfuzz/RapidFuzz.git
+      SOURCE_COMMIT: db6e504539a9c895180b266a06b36a32cb6029ee
+      EXPECTED_TREE: 80b6ab641d0000bd5e6ed1706f6a8ba2c9478e0c
+      GIT_LFS_SKIP_SMUDGE: '1'
+    steps:
+      - name: Full pinned tracked-tree replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/sw-n46-source /tmp/sw-n46-candidate /tmp/sw-n46-output
+          mkdir -p /tmp/sw-n46-source /tmp/sw-n46-candidate /tmp/sw-n46-output
+          git -C /tmp/sw-n46-source init -q
+          git -C /tmp/sw-n46-source remote add origin "$SOURCE_REPO"
+          git -C /tmp/sw-n46-source -c protocol.version=2 fetch --no-tags --depth=1 origin "$SOURCE_COMMIT"
+          ACTUAL_COMMIT="$(git -C /tmp/sw-n46-source rev-parse FETCH_HEAD)"
+          test "$ACTUAL_COMMIT" = "$SOURCE_COMMIT"
+          ACTUAL_TREE="$(git -C /tmp/sw-n46-source rev-parse FETCH_HEAD^{tree})"
+          test "$ACTUAL_TREE" = "$EXPECTED_TREE"
+          python3 <<'PY'
+          import hashlib, json, os, pathlib, shutil, subprocess, sys
+
+          SRC = pathlib.Path('/tmp/sw-n46-source')
+          CAND = pathlib.Path('/tmp/sw-n46-candidate')
+          OUT = pathlib.Path('/tmp/sw-n46-output')
+          COMMIT = os.environ['SOURCE_COMMIT']
+          EXPECTED_TREE = os.environ['EXPECTED_TREE']
+
+          def git(cwd, *args, input_bytes=None):
+              p = subprocess.run(['git', '-C', str(cwd), *args], input=input_bytes,
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+              if p.returncode != 0:
+                  raise RuntimeError(f"git {' '.join(args)} failed rc={p.returncode}: {p.stderr.decode('utf-8','replace')}")
+              return p.stdout
+
+          def sha256(data: bytes) -> str:
+              return hashlib.sha256(data).hexdigest()
+
+          def decode_path(raw: bytes) -> str:
+              return raw.decode('utf-8', 'surrogateescape')
+
+          tree = git(SRC, 'rev-parse', 'FETCH_HEAD^{tree}').decode().strip()
+          if tree != EXPECTED_TREE:
+              raise RuntimeError(f'tree mismatch: {tree} != {EXPECTED_TREE}')
+
+          raw = git(SRC, 'ls-tree', '-rz', '-r', 'FETCH_HEAD')
+          source = {}
+          for rec in raw.split(b'\0'):
+              if not rec:
+                  continue
+              meta, path_b = rec.split(b'\t', 1)
+              mode_b, typ_b, oid_b = meta.split(b' ', 2)
+              mode = mode_b.decode()
+              typ = typ_b.decode()
+              oid = oid_b.decode()
+              path = decode_path(path_b)
+              if mode in ('100644', '100755', '120000'):
+                  blob = git(SRC, 'cat-file', 'blob', oid)
+                  identity = sha256(blob)
+              elif mode == '160000':
+                  blob = None
+                  identity = oid
+              else:
+                  raise RuntimeError(f'unsupported git mode {mode} at {path}')
+              source[path] = {'path': path, 'mode': mode, 'type': typ, 'oid': oid, 'identity': identity}
+
+          if '.gitattributes' in source:
+              attrs = git(SRC, 'cat-file', 'blob', source['.gitattributes']['oid']).decode('utf-8', 'replace')
+              active = [ln for ln in attrs.splitlines() if ln.strip() and not ln.lstrip().startswith('#')]
+              if any('filter=lfs' in ln.replace(' ', '') for ln in active):
+                  raise RuntimeError('LFS attribute detected; fail closed')
+
+          expected_gitlinks = {
+              'extern/rapidfuzz-cpp': '82662f3623b3ca3645e543f677fc32fb8bd1fb95',
+              'extern/taskflow': '130f7952469c01eef8d7b635710bf9a8043f3172',
+          }
+          expected_exec = {
+              'tools/backtrace',
+              'tools/generate_cython.sh',
+              'tools/generate_python.py',
+              'tools/seg_wrapper.sh',
+          }
+          expected_root = {'.gitignore', '.gitattributes', '.gitmodules'}
+          special_errors = []
+          for p in sorted(expected_root):
+              if p not in source:
+                  special_errors.append(f'missing special root {p}')
+          for p, oid in expected_gitlinks.items():
+              got = source.get(p)
+              if not got or got['mode'] != '160000' or got['oid'] != oid:
+                  special_errors.append(f'gitlink mismatch {p}: {got}')
+          for p in sorted(expected_exec):
+              got = source.get(p)
+              if not got or got['mode'] != '100755':
+                  special_errors.append(f'executable mode mismatch {p}: {got}')
+
+          git(CAND, 'init', '-q')
+          git(CAND, 'config', 'core.symlinks', 'true')
+
+          for path, e in sorted(source.items()):
+              target = CAND / path
+              target.parent.mkdir(parents=True, exist_ok=True)
+              mode = e['mode']
+              if mode in ('100644', '100755'):
+                  blob = git(SRC, 'cat-file', 'blob', e['oid'])
+                  target.write_bytes(blob)
+                  os.chmod(target, 0o755 if mode == '100755' else 0o644)
+                  cand_oid = git(CAND, 'hash-object', '-w', '--stdin', input_bytes=blob).decode().strip()
+                  if cand_oid != e['oid']:
+                      raise RuntimeError(f'blob oid mismatch {path}: {cand_oid} != {e["oid"]}')
+                  git(CAND, 'update-index', '--add', '--cacheinfo', f'{mode},{cand_oid},{path}')
+              elif mode == '120000':
+                  blob = git(SRC, 'cat-file', 'blob', e['oid'])
+                  os.symlink(blob.decode('utf-8', 'surrogateescape'), target)
+                  cand_oid = git(CAND, 'hash-object', '-w', '--stdin', input_bytes=blob).decode().strip()
+                  if cand_oid != e['oid']:
+                      raise RuntimeError(f'symlink oid mismatch {path}: {cand_oid} != {e["oid"]}')
+                  git(CAND, 'update-index', '--add', '--cacheinfo', f'120000,{cand_oid},{path}')
+              elif mode == '160000':
+                  git(CAND, 'update-index', '--add', '--cacheinfo', f'160000,{e["oid"]},{path}')
+              else:
+                  raise RuntimeError(f'unexpected mode during materialization: {mode}')
+
+          idx = git(CAND, 'ls-files', '--stage', '-z')
+          candidate = {}
+          for rec in idx.split(b'\0'):
+              if not rec:
+                  continue
+              meta, path_b = rec.split(b'\t', 1)
+              mode_b, oid_b, stage_b = meta.split(b' ', 2)
+              mode = mode_b.decode()
+              oid = oid_b.decode()
+              stage = stage_b.decode()
+              if stage != '0':
+                  raise RuntimeError(f'non-zero index stage at {decode_path(path_b)}')
+              path = decode_path(path_b)
+              target = CAND / path
+              if mode in ('100644', '100755'):
+                  data = target.read_bytes()
+                  identity = sha256(data)
+                  if mode == '100755' and not os.access(target, os.X_OK):
+                      raise RuntimeError(f'executable bit lost at {path}')
+                  if mode == '100644' and os.access(target, os.X_OK):
+                      raise RuntimeError(f'unexpected executable bit at {path}')
+              elif mode == '120000':
+                  if not target.is_symlink():
+                      raise RuntimeError(f'symlink not materialized at {path}')
+                  data = os.readlink(target).encode('utf-8', 'surrogateescape')
+                  identity = sha256(data)
+              elif mode == '160000':
+                  identity = oid
+              else:
+                  raise RuntimeError(f'unsupported candidate mode {mode} at {path}')
+              candidate[path] = {'path': path, 'mode': mode, 'oid': oid, 'identity': identity}
+
+          sp = set(source)
+          cp = set(candidate)
+          missing = sorted(sp - cp)
+          extra = sorted(cp - sp)
+          changed = sorted(p for p in sp & cp if source[p]['identity'] != candidate[p]['identity'] or source[p]['oid'] != candidate[p]['oid'])
+          mode_mismatch = sorted(p for p in sp & cp if source[p]['mode'] != candidate[p]['mode'])
+
+          def ledger_digest(ledger):
+              rows = [ledger[p] for p in sorted(ledger)]
+              payload = json.dumps(rows, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode('utf-8', 'surrogatepass')
+              return sha256(payload)
+
+          source_digest = ledger_digest(source)
+          candidate_digest = ledger_digest(candidate)
+          result = {
+              'schema': 'sharck-input.sw-n46-replay-result.v1',
+              'source_repo': os.environ['SOURCE_REPO'],
+              'source_commit': COMMIT,
+              'source_tree': tree,
+              'expected_tree': EXPECTED_TREE,
+              'source_count': len(source),
+              'candidate_count': len(candidate),
+              'source_ledger_sha256': source_digest,
+              'candidate_ledger_sha256': candidate_digest,
+              'missing': missing,
+              'extra': extra,
+              'changed': changed,
+              'mode_mismatch': mode_mismatch,
+              'special_surface_errors': special_errors,
+              'lfs_used': False,
+              'canonical_write': False,
+          }
+          result['verdict'] = 'PASS' if not (missing or extra or changed or mode_mismatch or special_errors) else 'GAP'
+
+          OUT.mkdir(parents=True, exist_ok=True)
+          (OUT / 'source-ledger.json').write_text(json.dumps([source[p] for p in sorted(source)], ensure_ascii=False, indent=2), encoding='utf-8', errors='surrogatepass')
+          (OUT / 'candidate-ledger.json').write_text(json.dumps([candidate[p] for p in sorted(candidate)], ensure_ascii=False, indent=2), encoding='utf-8', errors='surrogatepass')
+          (OUT / 'sw-n46-result.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(json.dumps(result, ensure_ascii=False, indent=2))
+          if result['verdict'] != 'PASS':
+              sys.exit(2)
+          PY
+
+      - name: Upload replay evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sw-n46-rapidfuzz-full-byte-replay
+          path: /tmp/sw-n46-output
+          if-no-files-found: error
+          retention-days: 7
