@@ -55,3 +55,18 @@ Si no se cumplen los siete puntos: `REJECT_OVERENGINEERING`.
 
 ## 8. Cierre global
 Sharck NO llega a 100% porque un worker termine un nodo. 100% requiere: gates de review M06/M07/M08 resueltos, 23 fallos físicos re-clasificados o reparados con evidencia, adquisiciones necesarias cerradas, wiring mínimo, pruebas integrales/replay/readback, contradicciones resueltas o explícitamente aceptadas y VerdictAuthority final.
+
+---
+
+## 9. DIRECTOR OVERRIDE M62 — ROOT-ONLY
+
+Para todo trabajo nuevo de SHARCK INPUT, la única raíz operativa autorizada es `➡️📂 sharck imput/` dentro de `maxbry123-commits/osquestador-auditor@main`.
+
+Lectura operativa efectiva para esta Tarea 1:
+1. `➡️📂 sharck imput/00-START-HERE-SHARCK-INPUT.md`
+2. `➡️📂 sharck imput/📁 readme arquitectura sharck imput V2.1.md` — sección 11 contiene el INPUT BLOCK literal del Director.
+3. `➡️📂 sharck imput/HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md`
+4. `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M62-TASK1-ROOT-ONLY-ARCHITECTURE-WIRING.json`
+5. archivos de código/componentes/estado exclusivamente bajo `➡️📂 sharck imput/`.
+
+Las referencias históricas anteriores a archivos fuera de esta raíz se conservan sólo como historia documental; **no autorizan lectura de trabajo, escritura, integración ni mezcla fuera de `➡️📂 sharck imput/` para esta tarea y las siguientes de SHARCK INPUT**. Un motor externo únicamente puede copiarse dentro de esta raíz cuando corresponda.
