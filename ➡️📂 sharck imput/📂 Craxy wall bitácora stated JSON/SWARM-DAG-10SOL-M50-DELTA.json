@@ -1,0 +1,38 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M50_ADD_TWO_GAP_DERIVED_SAFE_NODES",
+  "base_dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "mode":"FAIL_CLOSED_LOOP",
+  "source_base_sha":"ef27664a7070301ec4ee60fab1d74565d7527821",
+  "reason":"Maintain parallel utilization only by materializing real unresolved gaps; no task invented for occupancy.",
+  "new_nodes":[
+    {
+      "node_id":"SW-N23",
+      "task":"SPACY_VSCODE_EXTENSIONS_MISSING_FORENSIC",
+      "mode":"READ_ONLY_FORENSIC",
+      "origin_gap":"SW-N03 left second spaCy anomaly website/.vscode/extensions.json without proven cause; SW-N13 only resolved upstream classification for polyleven.c",
+      "write_scope":["SW-N23-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N23.json"],
+      "steps":[
+        "reconstruct pinned spaCy source presence/history for website/.vscode/extensions.json and canonical anomaly evidence",
+        "classify ignore/export/generated/special-file/path-drift cause without touching canonical destination",
+        "publish causal verdict + repair prerequisites + 3 refutations"
+      ],
+      "acceptance":"cause supported by immutable source/evidence OR explicit INCONCLUSIVE with missing evidence enumerated; no physical repair"
+    },
+    {
+      "node_id":"SW-N24",
+      "task":"HISTORICAL_SOURCE_COMMIT_RECOVERY_FEASIBILITY",
+      "mode":"READ_ONLY_FORENSIC",
+      "origin_gap":"SW-N14 proved historical dependency source commits for 11 old source-special failures remain nonrecoverable from persisted canonical evidence; recovery from ancillary historical artifacts/runs has not been exhaustively classified",
+      "write_scope":["SW-N24-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N24.json"],
+      "steps":[
+        "enumerate 11 historical source-special failures and all persisted manifests/logs/runs/commit metadata that could contain source pins",
+        "attempt read-only recovery/classification RECOVERABLE|PARTIAL|NONRECOVERABLE without substituting modern HEAD",
+        "publish provenance recovery matrix + future persistence contract checks + 3 refutations"
+      ],
+      "acceptance":"11/11 classified with evidence pointers and no fabricated source commit"
+    }
+  ],
+  "invariants":{"one_chat_one_active_node":true,"atomic_claim":true,"shared_writes_supervisor_only":true,"no_physical_repair":true,"no_download":true,"no_step3":true,"canonical_motors":"IMMUTABLE"},
+  "verdict":"TWO_REAL_GAP_NODES_ADDED_SAFE_FOR_DYNAMIC_CLAIM"
+}
