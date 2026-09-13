@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol9-20260912T2329-0500",
+  "agent_name":"SOL-9-GPT",
+  "node_id":"SW-N29",
+  "parent_node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "fresh_main_sha":"5208f32cdfeb4b096b0b0dac39d14cdbcf91d3e8",
+  "base_sha":"5208f32cdfeb4b096b0b0dac39d14cdbcf91d3e8",
+  "mode":"READ_ONLY_ARCHITECTURE",
+  "write_scope":["SW-N29-EVIDENCE.md","SOL-SWARM-09-LOG.md","swarm-claims/CLAIM-SW-N29.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N29-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-09-LOG.md"],
+  "dependencies":["M53 active","SW-N20 evidence available","V2.1 ports/adapters inventory readable","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"M40_KEEP_DESTINATION_PORT_MAP",
+  "claimed_at":"2026-09-13T04:40:40Z",
+  "state":"CLAIMED"
+}
