@@ -1,0 +1,15 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":40,
+  "base_state_delta":"STATE-DELTA-039-M52-SWARM-EXPANSION.json",
+  "current_node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "current_step":2,
+  "status":"ACTIVE_FAIL_CLOSED",
+  "control_plane":{"queue":"CRAZY-WALL-SWARM-QUEUE-M53.json","dag_base":"SWARM-DAG-10SOL-M48-v1.json","dag_deltas":["SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json","SWARM-DAG-10SOL-M53-DELTA.json"],"plan":"PLAN-DELTA-022-M53-PREINTEGRATION-WAVE.json"},
+  "terminal_evidence_snapshot":{"SW-N24":{"state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN","classification":{"RECOVERABLE":0,"PARTIAL":0,"NONRECOVERABLE":11}},"SW-N27":{"state":"RELEASED","verdict":"PASS_PENDING_REVIEW","tests":"10/10+3/3 invariants","finding":"live state must derive from claims+logs+HEAD, not queue/registration"},"SW-N28":{"state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN","root_cause":"BOUNDED_EVIDENCE_CREATE_CAPABILITY_BLOCK","n16_state_preserved":"BLOCKED_RELEASED"}},
+  "m53_dispatch_snapshot":{"claimed_at_last_read":["SW-N26:SOL-10","SW-N29:SOL-9","SW-N30:SOL-3"],"no_claim_observed_at_last_read":["SW-N31","SW-N32","SW-N33","SW-N34"],"warning":"snapshot only; fresh physical claims override immediately"},
+  "physical_state":{"canonical_components":117,"B01_B04":{"verified_closed":17,"failed":23,"pending":0},"partial_components":12,"partial_exact_anomalies":139,"B05_B06":{"researched_candidates":20,"downloaded":0}},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "truth_rule":"Live worker state is determined from fresh claim file + compatible worker log/evidence + HEAD chronology. Registered capacity and queue metadata are not proof of activity.",
+  "finding":"M53 expands only evidence-derived pre-integration work while keeping production mutation gates closed."
+}
