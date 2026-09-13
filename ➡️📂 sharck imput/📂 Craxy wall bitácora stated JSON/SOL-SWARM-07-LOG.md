@@ -11,8 +11,9 @@
 - last_evidence_commit: `324a7775ca95d9a43b06fc29650c342922e9a73f`
 - last_evidence_blob: `6b111027ee7d882df745f54b732e95becf77febc`
 - authoritative_queue: `CRAZY-WALL-SWARM-QUEUE-M54.json`
-- M54_live_scan: `SW-N35=RELEASED; SW-N36=RELEASED; SW-N37=RELEASED_SOL-7; SW-N38=BLOCKED_RELEASED; SW-N39=RELEASED; SW-N40=RELEASED_SOL-7; SW-N41=CLAIMED_SOL-6; SW-N42=CLAIMED_SOL-8`
-- no_next_queue: `CRAZY-WALL-SWARM-QUEUE-M55.json=404; CLAIM-SW-N43.json=404; no schema authorizes N43`
+- latest_head_seen: `8e2a22356527c397ff49ce0583b96f221f52e44d`
+- M54_fresh_frontier: `SW-N29=CLAIMED_SOL-9; SW-N30=CLAIMED_SOL-3; SW-N35=RELEASED; SW-N36=RELEASED; SW-N37=RELEASED_SOL-7; SW-N38=BLOCKED_RELEASED; SW-N39=RELEASED; SW-N40=RELEASED_SOL-7; SW-N41=RELEASED; SW-N42=RELEASED`
+- next_queue_check: `CRAZY-WALL-SWARM-QUEUE-M55.json=404; CLAIM-SW-N43.json=404; no schema authorizes N43`
 - gates: `physical_repair_allowed=false; b05_b06_download_allowed=false; step3_allowed=false; canonical_motors=IMMUTABLE`
 - rule: `never reclaim terminal node; never overwrite another claim; physical claim state overrides queue snapshot; no invented nodes`
 - worker_history: `SW-N14; SW-N22; SW-N28; SW-N37; SW-N40 = PASS_PENDING_SUPERVISOR_FANIN`
