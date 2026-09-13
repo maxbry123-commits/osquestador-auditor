@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":43,
+  "base_state_delta":"STATE-DELTA-042-M55-REAL-GAPS.json",
+  "current_node":"M56_N43_CLAIM_RECONCILIATION",
+  "status":"ACTIVE_FAIL_CLOSED",
+  "queue":"CRAZY-WALL-SWARM-QUEUE-M56.json",
+  "active_claims":{"SW-N43":{"owner":"SOL-5-GPT","state":"CLAIMED","claim_blob_sha":"c256e9182e2ed4461023babff6917d974b55f6c1","terminal_evidence":false}},
+  "ready":["SW-N44","SW-N45","SW-N46"],
+  "stale_superseded":["SW-N29","SW-N30","SW-N38"],
+  "physical_state":{"canonical_components":117,"verified_closed":17,"failed":23,"partial_components":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "truth_rule":"Claim file plus compatible evidence and HEAD chronology defines live activity; N43 is live but not terminal; N44-N46 remain dispatchable only after fresh claim readback."
+}
