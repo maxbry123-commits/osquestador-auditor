@@ -1,1 +1,28 @@
-{"chat_id":"chat-sol3-20260912T2330-0500","agent_name":"SOL-3-GPT","node_id":"SW-N20","fresh_main_sha":"c462ef0891f4e0e734a6bf3bc407e98caed1fd62","base_sha":"c462ef0891f4e0e734a6bf3bc407e98caed1fd62","write_scope":["SW-N20-EVIDENCE.md","SOL-SWARM-03-LOG.md"],"paths":["SW-N20-EVIDENCE.md","SOL-SWARM-03-LOG.md"],"claimed_at":"2026-09-12T23:30:40-05:00","state":"CLAIMED"}
+{
+  "chat_id": "chat-sol3-20260912T2330-0500",
+  "agent_name": "SOL-3-GPT",
+  "node_id": "SW-N20",
+  "fresh_main_sha": "c462ef0891f4e0e734a6bf3bc407e98caed1fd62",
+  "base_sha": "c462ef0891f4e0e734a6bf3bc407e98caed1fd62",
+  "write_scope": ["SW-N20-EVIDENCE.md", "SOL-SWARM-03-LOG.md"],
+  "paths": ["SW-N20-EVIDENCE.md", "SOL-SWARM-03-LOG.md"],
+  "claimed_at": "2026-09-12T23:30:40-05:00",
+  "released_at": "2026-09-12T23:37:00-05:00",
+  "completion": {
+    "state": "PASS_PENDING_SUPERVISOR_FANIN",
+    "evidence_commit": "13372930841fecb36c9e1c2016a5f1f35f4622a7",
+    "evidence_blob": "40c3588f9e2bd9fe34ab8ca569c3817b653596f2",
+    "dedup": "22/22",
+    "metadata": "22/22",
+    "immutable_pins": "22/22",
+    "classification": {"KEEP":11,"DEFER":10,"REJECT":1},
+    "queueable_now": 0,
+    "downloads": 0,
+    "simulations": "3/3 PASS",
+    "refutations": "3/3 PASS",
+    "remaining_gap": "DESTINATION_UNASSIGNED_AND_GLOBAL_GATES_FALSE",
+    "physical_mutation": false,
+    "shared_control_write": false
+  },
+  "state": "RELEASED"
+}
