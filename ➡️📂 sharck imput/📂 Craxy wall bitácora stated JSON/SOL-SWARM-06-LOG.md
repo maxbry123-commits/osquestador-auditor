@@ -12,7 +12,8 @@
 - evidence_blob_sha: `d769b91efdeceae4a5ab09ee81420bf60824ad8a`
 - claim_release_commit: `285e1e57390a17d6f834666941744e42ea721e5b`
 - released_claim_blob_sha: `5b61cffee4e7b054fe2666109599dbb57c71b690`
-- final_log_prewrite_head: `2456f1c132e4090a7bcb1e917e3e501e93661a08`
+- final_log_first_commit: `ded796d6061bf45b378ce5f4b56b80372bc89ef1`
+- final_log_reconciliation_prewrite_head: `ded796d6061bf45b378ce5f4b56b80372bc89ef1`
 - write_scope: `SW-N06-EVIDENCE.md + SOL-SWARM-06-LOG.md + CLAIM-SW-N06.json only`
 - reserved nodes untouched: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`
 - gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
@@ -44,11 +45,11 @@
   - `REJECT`: Roo Code.
 
 ## STALE_LOCK_GAP reconciliation
-- Before the release write, fresh main observed: `83342a9b7a2d25c379705a7afb74414b6d951ab4`.
-- The release commit `285e1e57390a17d6f834666941744e42ea721e5b` landed after an unrelated concurrent main advance (`859d59d7a01ddea28593990d7d1ab28d9525f137`, SOL-8 own-log reconciliation).
-- Classification: `STALE_LOCK_GAP_RECOVERED_AFTER_UNRELATED_HEAD_ADVANCE`.
-- Recovery evidence: no overlapping path was written; SW-N06 claim and evidence were re-read after the write; released claim blob is `5b61cffee4e7b054fe2666109599dbb57c71b690`; evidence blob remains `d769b91efdeceae4a5ab09ee81420bf60824ad8a`.
-- This event remains reviewer-visible; it is not treated as silent last-write-wins.
+- Release write pre-read main: `83342a9b7a2d25c379705a7afb74414b6d951ab4`; release commit `285e1e57390a17d6f834666941744e42ea721e5b` actually landed after unrelated concurrent advance `859d59d7a01ddea28593990d7d1ab28d9525f137`.
+- First final-log write pre-read main: `2456f1c132e4090a7bcb1e917e3e501e93661a08`; commit `ded796d6061bf45b378ce5f4b56b80372bc89ef1` actually landed after unrelated concurrent advance `e836d884467178b76fb5c153520e8a7502b2c6b1`.
+- Classification: `STALE_LOCK_GAP_RECOVERED_AFTER_UNRELATED_HEAD_ADVANCE` for both events.
+- Recovery: neither concurrent commit wrote the SW-N06 evidence/claim/log path. Claim, evidence and own log were read back after writes; released claim blob remains `5b61cffee4e7b054fe2666109599dbb57c71b690`; evidence blob remains `d769b91efdeceae4a5ab09ee81420bf60824ad8a`.
+- This final reconciliation write is based on fresh HEAD `ded796d6061bf45b378ce5f4b56b80372bc89ef1` and records both races explicitly; no silent overwrite/last-write-wins is accepted.
 
 ## GOALS12_OUTPUT
 - G01 literal requirement preserved: `PASS`
@@ -68,7 +69,7 @@
 - `SW-N01..SW-N08`: claim files materialized; do not reinterpret original static `READY_TO_CLAIM` entries as free.
 - `SW-N09..SW-N12`: remain `BLOCKED_GATE` under M47 queue.
 - `M06/M07/M08`: reserved to ASTRA/CLAUDE/GROK.
-- latest fresh HEAD immediately before this final log write already reports another worker reconciling `no-free state`.
+- Fresh swarm activity also independently reports/reconciles a `no-free state`.
 - next_free_node: `NONE_SAFE_FREE`
 - next_action_authority: `SOL-0 supervisor fan-in / new authoritative queue or explicit gate change required`.
 
