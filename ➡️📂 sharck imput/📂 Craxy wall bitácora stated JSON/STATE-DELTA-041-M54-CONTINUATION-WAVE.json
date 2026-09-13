@@ -1,0 +1,15 @@
+{
+  "schema":"sharck-input.state-delta.v1",
+  "delta_revision":41,
+  "base_state_delta":"STATE-DELTA-040-M53-PREINTEGRATION-WAVE.json",
+  "current_node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "current_step":2,
+  "status":"ACTIVE_FAIL_CLOSED",
+  "control_plane":{"queue":"CRAZY-WALL-SWARM-QUEUE-M54.json","dag_delta":"SWARM-DAG-10SOL-M54-DELTA.json","plan":"PLAN-DELTA-023-M54-CONTINUATION-WAVE.json"},
+  "live_activity":{"claimed_verified":["SW-N29:SOL-9-GPT","SW-N30:SOL-3-GPT"],"new_ready":["SW-N35","SW-N36","SW-N37","SW-N38","SW-N39","SW-N40","SW-N41","SW-N42"],"terminal_updates":["SW-N26:GAP_RELEASED","SW-N31:RELEASED","SW-N32:RELEASED","SW-N33:RELEASED","SW-N34:RELEASED"]},
+  "evidence_origins":{"SW-N35":"SW-N26 full-byte replay infra gap","SW-N36":"SW-N31 model snapshot provenance gap","SW-N37":"SW-N31 cross-version comparability gap","SW-N38":"SW-N33 fixed corpus materialization gap","SW-N39":"SW-N33 scorer reference-vector gap","SW-N40":"SW-N34 runtime/license/image preflight gap","SW-N41":"SW-N34 non-response WARC normalization gap","SW-N42":"SW-N32 pre-repair drift/staging prerequisite gap"},
+  "physical_state":{"canonical_components":117,"B01_B04":{"verified_closed":17,"failed":23,"pending":0},"partial_components":12,"partial_exact_anomalies":139,"B05_B06":{"researched_candidates":20,"downloaded":0}},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "truth_rule":"Fresh physical claim + compatible worker log/evidence + HEAD chronology is authoritative; registration or queue metadata alone never proves activity.",
+  "finding":"M54 converts only explicit remaining gaps from N26/N31/N32/N33/N34 into eight non-overlapping safe nodes while preserving N29/N30 ownership and closed physical gates."
+}
