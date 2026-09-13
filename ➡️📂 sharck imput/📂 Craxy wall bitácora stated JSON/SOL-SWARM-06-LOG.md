@@ -169,3 +169,60 @@
 - verified_closed: `NO`
 - review_required: `SOL-0 supervisor / independent reviewer`
 - next_action: `READ CRAZY WALL FRESH → first safe READY free node`
+
+---
+
+## SW-N34 — WARC_CAPTURE_FAILURE_READBACK_CONTRACT
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `RELEASED_PASS_PENDING_REVIEW`
+- active_node: `null`
+- completed_node: `SW-N34`
+- claim_commit: `28c8ddaa131bbb3d8de1ac47120f0352c859b192`
+- initial_claim_blob: `2df042456ed5787ed44a390ffdc45b11f0da7758`
+- evidence_commit: `cfe46ffae262e6949483fefdfef8e6e951c05d3e`
+- evidence_blob: `d4f306fc4b4a5e558b75a03656e5188374e2d9c5`
+- release_commit: `58dba31bcec8fd45dfd0ef2c759f33d60e427ce7`
+- released_claim_blob: `ff507a0e86f7249834c8c6746d5ad96b60c3d929`
+- mode: `READ_ONLY_DESIGN`
+- browser_run: `NO`
+- downloads: `0`
+- installs: `0`
+- canonical_mutation: `NO`
+
+### Exactly 3 steps — completed
+1. Read N21 Browsertrix #118 + warcio #119 provenance and defined immutable loopback dynamic fixture.
+2. Defined raw-artifact integrity + normalized semantic ledger + replay/readback failure assertions.
+3. Executed capture/replay matrices, 3 simulations, 3 refutations; evidence persisted/read back; claim released/read back.
+
+### Tests
+- `CAPTURE_MATRIX = 8/8 PASS`
+- `REPLAY_MATRIX = 5/5 PASS`
+- `SIMULATIONS = 3/3 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- parse-only success, raw-hash-only cross-run equality and EXISTING_20X=runtime-ready were all refuted.
+
+### STALE_HEAD reconciliation
+- evidence pre-read `28c8ddaa131bbb3d8de1ac47120f0352c859b192`; actual evidence parent `e3dcea74215b2f68eeed40eb338a930a70a6a159` changed only `SOL-SWARM-10-LOG.md`: overlap 0.
+- release parent exactly matched evidence commit `cfe46ffae262e6949483fefdfef8e6e951c05d3e`; no release race.
+
+### GOALS12_OUTPUT
+- G01 requirement preserved: `PASS`
+- G02 fresh HEAD: `PASS`
+- G03 M53 + N21 #118/#119 provenance: `PASS`
+- G04 atomic owner/readback: `PASS`
+- G05 gates/dependencies: `PASS`
+- G06 non-overlapping scope: `PASS`
+- G07 existing provenance reused/deduped: `PASS`
+- G08 minimal allowed delta: `PASS`
+- G09 capture/replay tests: `PASS 8/8 + 5/5`
+- G10 simulations/refutations: `PASS 3/3 + 3/3`
+- G11 evidence/commit/blob/readback: `PASS`
+- G12 RELEASED/readback: `PASS`
+
+### Final
+- node_execution_score: `12/12 GOALS PASS`
+- producer_verdict: `PASS_PENDING_REVIEW`
+- verified_closed: `NO`
+- review_required: `SOL-0 supervisor / independent reviewer`
+- next_action: `READ CRAZY WALL FRESH → first safe READY free node`
