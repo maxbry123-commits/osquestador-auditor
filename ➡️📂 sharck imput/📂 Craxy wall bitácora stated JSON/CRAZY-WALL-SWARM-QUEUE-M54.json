@@ -1,0 +1,37 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v6",
+  "node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "status":"ACTIVE",
+  "base_queue":"CRAZY-WALL-SWARM-QUEUE-M53.json",
+  "dag_delta":"SWARM-DAG-10SOL-M54-DELTA.json",
+  "source_snapshot_sha":"00b211d782e3076deb597152db0b4df5c24e21e2",
+  "live_truth":"Physical CLAIM-SW-Nxx.json + compatible worker log/evidence + HEAD chronology overrides this queue snapshot.",
+  "active_preserved":[
+    {"node_id":"SW-N29","owner":"SOL-9-GPT","state":"CLAIMED","claim_file":"swarm-claims/CLAIM-SW-N29.json"},
+    {"node_id":"SW-N30","owner":"SOL-3-GPT","state":"CLAIMED","claim_file":"swarm-claims/CLAIM-SW-N30.json"}
+  ],
+  "terminal_now":[
+    {"node_id":"SW-N26","state":"GAP_RELEASED","classification":"INFRA_FAILURE"},
+    {"node_id":"SW-N31","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"},
+    {"node_id":"SW-N32","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N33","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"},
+    {"node_id":"SW-N34","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"}
+  ],
+  "ready_to_claim":[
+    {"node_id":"SW-N35","task":"FULL_BYTE_REPLAY_EXECUTOR_PREFLIGHT","claim_file":"swarm-claims/CLAIM-SW-N35.json","evidence_file":"SW-N35-EVIDENCE.md","write_group":"REPLAY_EXECUTOR"},
+    {"node_id":"SW-N36","task":"MODEL_SNAPSHOT_PROVENANCE_MATRIX","claim_file":"swarm-claims/CLAIM-SW-N36.json","evidence_file":"SW-N36-EVIDENCE.md","write_group":"MODEL_PROVENANCE"},
+    {"node_id":"SW-N37","task":"EVAL_CROSS_VERSION_COMPARABILITY_CONTRACT","claim_file":"swarm-claims/CLAIM-SW-N37.json","evidence_file":"SW-N37-EVIDENCE.md","write_group":"EVAL_COMPARABILITY"},
+    {"node_id":"SW-N38","task":"HTML24_FIXTURE_CORPUS_MANIFEST","claim_file":"swarm-claims/CLAIM-SW-N38.json","evidence_file":"SW-N38-EVIDENCE.md","write_group":"HTML_FIXTURES"},
+    {"node_id":"SW-N39","task":"HTML_EXTRACTION_SCORER_REFERENCE_VECTORS","claim_file":"swarm-claims/CLAIM-SW-N39.json","evidence_file":"SW-N39-EVIDENCE.md","write_group":"HTML_SCORER"},
+    {"node_id":"SW-N40","task":"BROWSERTRIX_WARCIO_RUNTIME_LICENSE_PREFLIGHT","claim_file":"swarm-claims/CLAIM-SW-N40.json","evidence_file":"SW-N40-EVIDENCE.md","write_group":"WARC_RUNTIME_PREFLIGHT"},
+    {"node_id":"SW-N41","task":"WARC_RECORD_TYPE_NORMALIZATION_POLICY","claim_file":"swarm-claims/CLAIM-SW-N41.json","evidence_file":"SW-N41-EVIDENCE.md","write_group":"WARC_NORMALIZATION"},
+    {"node_id":"SW-N42","task":"SPACY_PRE_REPAIR_DRIFT_AND_STAGING_PREFLIGHT","claim_file":"swarm-claims/CLAIM-SW-N42.json","evidence_file":"SW-N42-EVIDENCE.md","write_group":"SPACY_REPAIR_PREFLIGHT"}
+  ],
+  "claim_protocol":"READ FRESH -> verify node SAFE/FREE -> atomically create exact claim file -> readback -> execute exactly 3 steps -> evidence/log -> release -> rescan.",
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "reserved":{"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "shared_write_rule":"Workers never edit Queue/STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG. SOL-0 performs shared fan-in sequentially after fresh readback.",
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "orders":"Continue N29/N30 only by current owners. All other idle SOL chats rescan M54 and atomically claim first SAFE/FREE N35-N42. Never reclaim terminal nodes. Never bypass gates.",
+  "verdict":"M54_ACTIVE / N29_N30_OCCUPIED / EIGHT_NEW_SAFE_NODES_READY / FOUR_PHYSICAL_BLOCKED / THREE_RESERVED"
+}
