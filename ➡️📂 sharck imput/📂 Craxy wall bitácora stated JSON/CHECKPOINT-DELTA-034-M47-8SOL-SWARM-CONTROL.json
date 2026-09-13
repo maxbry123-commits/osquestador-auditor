@@ -1,0 +1,33 @@
+{
+  "schema": "sharck-input.checkpoint-delta.v1",
+  "checkpoint_id": "CP-V2-M47-8SOL-SWARM-CONTROL-034",
+  "base_checkpoint_delta": {
+    "file": "CHECKPOINT-DELTA-033-M46-ROOT-RECOVERY-RECONCILIATION.json",
+    "checkpoint_id": "CP-V2-M46-ROOT-RECOVERY-RECONCILIATION-033"
+  },
+  "status": "VALID_FOR_RESUME_AS_VERSIONED_DELTA",
+  "last_verified_control_node": "M47_8SOL_SWARM_CONTROL_ACTIVE",
+  "resume_rule": "Read fresh main, STATE-DELTA-036, PLAN-DELTA-018, Handoff, SWARM-DAG, CRAZY-WALL queue, watchdog and worker logs. Workers claim only READY nodes through atomic claim files. Supervisor alone reconciles shared state.",
+  "swarm": {
+    "workers": 8,
+    "ready_nodes": ["SW-N01","SW-N02","SW-N03","SW-N04","SW-N05","SW-N06","SW-N07","SW-N08"],
+    "blocked_nodes": ["SW-N09","SW-N10","SW-N11","SW-N12"],
+    "active_claims_at_checkpoint": 0,
+    "claim_namespace": "swarm-claims/CLAIM-<NODE_ID>.json"
+  },
+  "reserved": {"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false
+  },
+  "counts": {
+    "canonical_components":117,
+    "B01_B04_verified_closed":17,
+    "B01_B04_failed":23,
+    "partial_components":12,
+    "partial_exact_anomalies":139,
+    "B05_B06_candidates":20,
+    "B05_B06_downloaded":0
+  }
+}
