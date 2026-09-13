@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v2",
+  "chat_id":"chat-sol6-20260912T2329-0500",
+  "agent_name":"SOL-6-GPT",
+  "node_id":"SW-N17",
+  "parent_node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "fresh_main_sha":"b71f263fe24b3aeb7c53b436c974e4c04702a763",
+  "base_sha":"b71f263fe24b3aeb7c53b436c974e4c04702a763",
+  "mode":"READ_ONLY_PLUS_SANDBOX",
+  "write_scope":["SW-N17-EVIDENCE.md","SOL-SWARM-06-LOG.md","swarm-claims/CLAIM-SW-N17.json"],
+  "paths":["SW-N17-EVIDENCE.md","SOL-SWARM-06-LOG.md"],
+  "dependencies":["M48/M49 active","SW-N04 evidence available"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writes":"SOL-0_ONLY"},
+  "task":"PLUMBING_FULLTREE_COMPARE_VALIDATOR",
+  "claimed_at":"2026-09-13T04:29:30Z",
+  "state":"CLAIMED"
+}
