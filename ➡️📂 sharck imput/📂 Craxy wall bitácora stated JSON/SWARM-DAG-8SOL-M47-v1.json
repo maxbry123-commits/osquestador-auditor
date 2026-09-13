@@ -1,0 +1,185 @@
+{
+  "schema": "sharck-input.swarm-dag.v1",
+  "node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "mode": "FAIL_CLOSED_LOOP",
+  "project": "Sharck Input V2.1",
+  "source_base_sha": "f87af97bd9add04abbf290f28429e0ccb05e35f0",
+  "source_of_truth": {
+    "repo": "maxbry123-commits/osquestador-auditor",
+    "branch": "main",
+    "root": "➡️📂 sharck imput/",
+    "crazy_wall": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/",
+    "handoff": "➡️📂 sharck imput/HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md"
+  },
+  "supervisor": {
+    "owner": "SOL-0",
+    "role": "SUPERVISOR_FANIN_AND_SHARED_WRITER",
+    "exclusive_shared_write_paths": ["STATE*", "PLAN*", "CHECKPOINT*", "HANDOFF*", "WATCHDOG*", "SWARM-DAG*"],
+    "rule": "workers write only their own log + node evidence; supervisor performs shared fan-in sequentially with fresh SHA"
+  },
+  "workers": [
+    {"agent":"SOL-1-GPT","log":"SOL-SWARM-01-LOG.md"},
+    {"agent":"SOL-2-GPT","log":"SOL-SWARM-02-LOG.md"},
+    {"agent":"SOL-3-GPT","log":"SOL-SWARM-03-LOG.md"},
+    {"agent":"SOL-4-GPT","log":"SOL-SWARM-04-LOG.md"},
+    {"agent":"SOL-5-GPT","log":"SOL-SWARM-05-LOG.md"},
+    {"agent":"SOL-6-GPT","log":"SOL-SWARM-06-LOG.md"},
+    {"agent":"SOL-7-GPT","log":"SOL-SWARM-07-LOG.md"},
+    {"agent":"SOL-8-GPT","log":"SOL-SWARM-08-LOG.md"}
+  ],
+  "invariants": {
+    "one_chat_one_active_node": true,
+    "one_node_one_task": true,
+    "one_path_one_active_writer": true,
+    "exactly_three_steps_per_node": true,
+    "atomic_claim_readback": true,
+    "fresh_head_before_every_write": true,
+    "shared_writes_supervisor_only": true,
+    "no_force": true,
+    "no_lfs": true,
+    "no_silent_overwrite": true,
+    "llm_cannot_self_certify_verified_closed": true
+  },
+  "reserved_owner_nodes": {
+    "M06_ASTRA": "ASTRA_ONLY",
+    "M07_CLAUDE": "CLAUDE_ONLY",
+    "M08_GROK": "GROK_ONLY"
+  },
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "B01_B04_verified_closed": 17,
+    "B01_B04_failed": 23,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_researched": 20,
+    "B05_B06_downloaded": 0
+  },
+  "claim_protocol": [
+    "READ_FRESH_HEAD_STATE_PLAN_CHECKPOINT_HANDOFF_WATCHDOG_DAG_LOGS",
+    "SELECT_FIRST_READY_NODE_WITH_NO_ACTIVE_OWNER_AND_NO_PATH_OVERLAP",
+    "WRITE_CLAIM_TO_OWN_LOG_AND_OPTIONAL_UNIQUE_CLAIM_FILE_THEN_READBACK",
+    "IF_COLLISION_OR_STALE_HEAD_ABORT_AND_RESCAN"
+  ],
+  "three_step_contract": [
+    "STEP_1_SYNC_VERIFY_CLAIM",
+    "STEP_2_EXECUTE_VERIFY_WITHIN_SCOPE",
+    "STEP_3_TEST_REFUTE_REPORT_RELEASE"
+  ],
+  "ready_nodes": [
+    {
+      "node_id": "SW-N01",
+      "status": "READY_TO_CLAIM",
+      "task": "M40_20X_DEDUP_AND_DECISION_MATRIX",
+      "mode": "READ_ONLY_RESEARCH",
+      "write_scope": ["SW-N01-EVIDENCE.md", "worker-own-log"],
+      "assertion": "M40 65 findings and 20X candidates can be deduplicated against canonical 117 without downloads",
+      "steps": ["READ catalogs M40 20X and canonical index; build exact overlap set", "verify official source/license/maintenance/ref data for nonduplicates without acquisition", "publish KEEP/DEFER/REJECT evidence matrix and contradictions"],
+      "acceptance": ["zero canonical mutation", "all candidates classified", "sources/evidence recorded", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N02",
+      "status": "READY_TO_CLAIM",
+      "task": "SPECIAL_SOURCE_PROVENANCE_11_GAP_AUDIT",
+      "mode": "READ_ONLY_FORENSIC",
+      "write_scope": ["SW-N02-EVIDENCE.md", "worker-own-log"],
+      "assertion": "11 source-special/symlink failures can be separated into recoverable provenance vs irrecoverable historical-ref gaps",
+      "steps": ["inventory exact 11 failures and historical queue evidence", "cross-check upstream refs/special paths without substituting modern HEAD for missing historical commits", "publish per-component provenance verdict and required repair evidence"],
+      "acceptance": ["11/11 classified", "no fabricated commit", "repair prerequisites explicit", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N03",
+      "status": "READY_TO_CLAIM",
+      "task": "PARTIAL_139_ANOMALY_CLASSIFICATION",
+      "mode": "READ_ONLY_FORENSIC",
+      "write_scope": ["SW-N03-EVIDENCE.md", "worker-own-log"],
+      "assertion": "139 exact anomalies can be mapped to causal classes and repair/test requirements",
+      "steps": ["read exact readback artifacts and enumerate 139 anomaly universe", "classify ignore-rule/EOL/spaCy/other with component mapping", "publish coverage matrix and unresolved contradictions"],
+      "acceptance": ["139/139 accounted or explicit unknown", "12/12 components mapped", "no physical repair", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N04",
+      "status": "READY_TO_CLAIM",
+      "task": "STRATEGYDELTA_SANDBOX_COVERAGE_EXPANSION_DESIGN",
+      "mode": "SANDBOX_ONLY",
+      "write_scope": ["SW-N04-EVIDENCE.md", "worker-own-log"],
+      "assertion": "M25 representative coverage 3/12 and 4/139 can be expanded safely in isolated sandbox before production authorization",
+      "steps": ["read M25/M35 evidence and identify uncovered causal classes/components", "design or run noncanonical sandbox-only representative tests using canonical motor hashes unchanged", "report coverage achieved, failures and production gate recommendation"],
+      "acceptance": ["canonical destinations untouched", "motor hashes unchanged", "coverage denominator explicit", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N05",
+      "status": "READY_TO_CLAIM",
+      "task": "HF_BRIDGE_PORT_CONTRACT_AUDIT",
+      "mode": "READ_ONLY_RESEARCH",
+      "write_scope": ["SW-N05-EVIDENCE.md", "worker-own-log"],
+      "assertion": "HF bridge can be specified with existing #108-#110/#40 plus pointer-based APIs without duplicate acquisition",
+      "steps": ["read HF-BRIDGE-DESIGN and physical B04 state", "map huggingface_hub/datasets/hf-mcp/skills and reference-only APIs to ports and failure contracts", "publish minimal adapter/test contract and remaining gaps"],
+      "acceptance": ["no duplicate component proposed without gap", "ports/adapters/tests mapped", "failed B04 items remain fail-closed", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N06",
+      "status": "READY_TO_CLAIM",
+      "task": "RUNTIME_AND_AGENT_MAINTENANCE_RISK_AUDIT",
+      "mode": "READ_ONLY_RESEARCH",
+      "write_scope": ["SW-N06-EVIDENCE.md", "worker-own-log"],
+      "assertion": "agent/runtime candidates can be ranked by maintenance/upstream/license/overlap before any acquisition",
+      "steps": ["read M40 I08/I10 and existing catalog runtime components", "verify upstream status and overlap for Hermes/OpenClaw/OpenHands/Cline/mini-SWE/OpenAI Agents SDK/Continue and related candidates", "publish KEEP/REFERENCE/DEFER/REJECT matrix with exact reasons"],
+      "acceptance": ["no download", "official upstream evidence", "overlap with existing 117 identified", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N07",
+      "status": "READY_TO_CLAIM",
+      "task": "COMPONENT_PORT_ADAPTER_TEST_MATRIX",
+      "mode": "READ_ONLY_ARCHITECTURE",
+      "write_scope": ["SW-N07-EVIDENCE.md", "worker-own-log"],
+      "assertion": "current verified components and approved candidates can be mapped to V2.1 microkernel ports without wiring production",
+      "steps": ["read V2.1 microkernels and component catalog", "map component→capability→port→adapter→failure contract→test with overlaps", "publish minimal wiring candidate matrix and explicit no-op/reject cases"],
+      "acceptance": ["architecture preserved", "no production wiring", "each proposed adapter has test contract", "3 refutations"]
+    },
+    {
+      "node_id": "SW-N08",
+      "status": "READY_TO_CLAIM",
+      "task": "CONTROL_PLANE_CONTRADICTION_WATCH",
+      "mode": "READ_ONLY_CONTROL",
+      "write_scope": ["SW-N08-EVIDENCE.md", "worker-own-log"],
+      "assertion": "STATE/PLAN/CHECKPOINT/Handoff/Recovery/DAG can be checked for drift without rewriting shared files",
+      "steps": ["read latest versions and compare current node/counts/gates/owners", "identify stale references or contradictions and rank severity", "publish supervisor-ready reconciliation delta proposal without applying shared writes"],
+      "acceptance": ["all control surfaces compared", "no shared file write by worker", "contradictions cited", "3 refutations"]
+    }
+  ],
+  "blocked_nodes": [
+    {
+      "node_id": "SW-N09",
+      "status": "BLOCKED_GATE",
+      "task": "REPAIR_23_PHYSICAL_FAILURES",
+      "dependency": "M06+M07+M08 fan-in + director approval + physical_repair_allowed=true",
+      "steps": ["preflight approved repair set", "execute canonical repair with immutable evidence", "full-tree/hash readback and report"]
+    },
+    {
+      "node_id": "SW-N10",
+      "status": "BLOCKED_GATE",
+      "task": "ACQUIRE_APPROVED_B05_B06_OR_M40_COMPONENTS",
+      "dependency": "director approval + b05_b06_download_allowed=true + license/ref/commit/special-scan/destination gates",
+      "steps": ["final acquisition preflight", "acquire with canonical motor discipline", "full-tree/hash/readback and index evidence"]
+    },
+    {
+      "node_id": "SW-N11",
+      "status": "BLOCKED_GATE",
+      "task": "WIRE_PRUNE_MIN_CODE",
+      "dependency": "required acquisitions VERIFIED_CLOSED + step3_allowed=true",
+      "steps": ["wire only approved ports/adapters", "prune overlaps and minimize custom code", "component/integration tests and report"]
+    },
+    {
+      "node_id": "SW-N12",
+      "status": "BLOCKED_GATE",
+      "task": "SYSTEM_TEST_REFUTATION_FANIN",
+      "dependency": "SW-N11 complete + exact candidate SHA",
+      "steps": ["run failure-path/integration suites", "run three simulations and three refutations", "publish evidence verdict for independent review"]
+    }
+  ],
+  "fan_in_rule": "worker PASS is PASS_PENDING_SUPERVISOR_FANIN; supervisor cross-checks evidence then publishes versioned shared deltas",
+  "current_verdict": "8_PARALLEL_SAFE_NODES_READY / 4_PHYSICAL_NODES_BLOCKED / M06_M07_M08_RESERVED / NO_GATE_BYPASS"
+}
