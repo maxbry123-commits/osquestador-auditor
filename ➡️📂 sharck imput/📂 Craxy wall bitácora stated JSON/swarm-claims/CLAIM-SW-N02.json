@@ -6,6 +6,7 @@
   "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
   "fresh_main_sha": "77e544c2d29bbb47b38573ce3fd7811d14cd63a2",
   "base_sha": "77e544c2d29bbb47b38573ce3fd7811d14cd63a2",
+  "final_sha_before_release_write": "c8be8d0f73a602439c81ef371387b05f1be7c8da",
   "mode": "READ_ONLY_FORENSIC",
   "write_scope": [
     "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N02-EVIDENCE.md",
@@ -19,7 +20,7 @@
   "dependencies": [
     "M47_8SOL_SWARM_CONTROL_ACTIVE",
     "CRAZY-WALL-SWARM-QUEUE-M47:SW-N02=READY_TO_CLAIM",
-    "CLAIM-SW-N01 occupied by SOL-1-GPT; SW-N02 next safe free node"
+    "CLAIM-SW-N01 occupied by SOL-1-GPT; SW-N02 selected after fresh rescan"
   ],
   "gate_snapshot": {
     "physical_repair_allowed": false,
@@ -30,5 +31,34 @@
   },
   "assertion_to_validate": "11 source-special/symlink failures can be separated into recoverable provenance versus irrecoverable historical-ref gaps without fabricating source commits.",
   "claimed_at": "2026-09-12T23:06:45-05:00",
-  "state": "CLAIMED"
+  "completed_at": "2026-09-12T23:14:00-05:00",
+  "state": "RELEASED",
+  "result": "PASS_PENDING_SUPERVISOR_FANIN",
+  "classification": [
+    "SOURCE_PROVENANCE_FAILURE",
+    "EVIDENCE_FAILURE"
+  ],
+  "evidence_path": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N02-EVIDENCE.md",
+  "evidence_commit": "985f6312cfe850a27c26a87b54373fe456d5eba2",
+  "evidence_blob": "79ca3de35673f8d17cbe8d5b805cd59e1d1b703c",
+  "evidence_readback": "PASS",
+  "log_path": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md",
+  "log_commit": "c8be8d0f73a602439c81ef371387b05f1be7c8da",
+  "log_blob": "a06f05576c3143e658060c77e0228338560636ff",
+  "tests": [
+    "QUEUE_REF_TEST:PASS",
+    "FAILED_STATE_PERSISTENCE_TEST:PASS",
+    "UPSTREAM_CURRENT_TOPOLOGY_TEST:PASS_WITH_HISTORICAL_ABSTENTION",
+    "ORCHESTRATOR_SHA_REFUTATION_TEST:PASS"
+  ],
+  "simulations": "3/3",
+  "refutations": "3/3",
+  "fabricated_source_commits": 0,
+  "remaining_gaps": [
+    "Historical dependency source commits for all 11 early source-special failures are not durably recoverable from current canonical failed-state evidence.",
+    "Any physical replay/repair remains blocked by current gates and requires pinned immutable source provenance before scan."
+  ],
+  "review_required": true,
+  "verified_closed": false,
+  "next_free_node": "RESCAN_AFTER_RELEASE"
 }
