@@ -31,5 +31,19 @@
     "gate_recommendation":"KEEP_PHYSICAL_GATES_CLOSED",
     "review_required":"SOL-0 supervisor fan-in"
   },
+  "post_release_rescan":{
+    "checked_at":"2026-09-12T23:39:11-05:00",
+    "latest_control":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+    "latest_head_observed":"88e479890d3eaf90a9a8d0e8079a95f430f77fb5",
+    "SW-N23":"RELEASED_BY_SOL-8",
+    "SW-N24":"CLAIMED_BY_SOL-9",
+    "SW-N25":"CLAIMED_BY_SOL-1",
+    "SW-N26":"CLAIMED_BY_SOL-10",
+    "SW-N27":"CLAIMED_BY_SOL-6",
+    "SW-N28":"CLAIMED_BY_SOL-7",
+    "SW-N09_SW-N12":"BLOCKED_GATE",
+    "next_free_node":"NONE_SAFE_FREE_AT_M52_RESCAN",
+    "rule":"DO_NOT_INVENT_TASK"
+  },
   "state":"RELEASED"
 }
