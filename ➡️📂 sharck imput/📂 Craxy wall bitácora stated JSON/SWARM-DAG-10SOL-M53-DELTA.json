@@ -1,0 +1,67 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "base_dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "prior_deltas":["SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json"],
+  "mode":"FAIL_CLOSED_LOOP",
+  "source_base_sha":"a352b6e87a405b7532564858a1e605156a06ea74",
+  "new_nodes":[
+    {
+      "node_id":"SW-N29",
+      "task":"M40_KEEP_DESTINATION_PORT_MAP",
+      "mode":"READ_ONLY_ARCHITECTURE",
+      "origin_gap":"SW-N20 classified 11 KEEP candidates but queueable_now=0 with DESTINATION_UNASSIGNED_AND_GLOBAL_GATES_FALSE",
+      "write_scope":["SW-N29-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N29.json"],
+      "steps":["read N20 11 KEEP set and existing V2.1 ports/adapters","assign proposed non-overlapping destination + capability + port + adapter owner without downloads","publish destination/port map + conflict matrix + 3 refutations"],
+      "acceptance":"11/11 KEEP mapped or explicitly GAP; zero acquisition/wiring"
+    },
+    {
+      "node_id":"SW-N30",
+      "task":"OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_MANIFEST",
+      "mode":"READ_ONLY_FORENSIC",
+      "origin_gap":"SW-N19 confirmed symlink_120000 surfaces for OpenClaw and Agent Skills plus upstream drift; exact acquisition special-surface manifest is not yet persisted",
+      "write_scope":["SW-N30-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N30.json"],
+      "steps":["pin exact observed refs from N19 and enumerate symlink/submodule/LFS/special paths","compare current drift without replacing immutable candidate pin","publish acquisition pre-scan ledger + failure rules + 3 refutations"],
+      "acceptance":"source-special ledger with immutable refs; no download and no historical substitution"
+    },
+    {
+      "node_id":"SW-N31",
+      "task":"EVAL_REPRODUCIBILITY_PIN_CONTRACT",
+      "mode":"READ_ONLY_DESIGN",
+      "origin_gap":"SW-N22 requires future eval runs to pin exact runner/benchmark/dataset/grader versions",
+      "write_scope":["SW-N31-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N31.json"],
+      "steps":["extract N22 recommended minimal eval stack and benchmark dependencies","define runner+benchmark+dataset+grader+seed+environment immutable pin schema","refute reproducibility contract on three drift scenarios and publish acceptance template"],
+      "acceptance":"deterministic eval provenance contract; no install/download"
+    },
+    {
+      "node_id":"SW-N32",
+      "task":"SPACY_EXACT_REPAIR_MANIFEST_DRYRUN",
+      "mode":"READ_ONLY_PLUS_SANDBOX",
+      "origin_gap":"SW-N13 and SW-N23 now establish source facts/causes for both spaCy anomalies while physical repair remains gated",
+      "write_scope":["SW-N32-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N32.json"],
+      "steps":["combine pinned spaCy source evidence for polyleven.c and website/.vscode/extensions.json","build expected destination tracked-set/hash/mode manifest in sandbox only","publish future repair acceptance/readback manifest + 3 refutations without canonical write"],
+      "acceptance":"exact two-path plus full-tree guard manifest; physical repair remains false"
+    },
+    {
+      "node_id":"SW-N33",
+      "task":"HTML_ARTICLE_EXTRACTION_BENCHMARK_CONTRACT",
+      "mode":"READ_ONLY_DESIGN",
+      "origin_gap":"SW-N21 defers Newspaper4k/selectolax promotion until fixed multilingual/malformed-HTML benchmark against existing extraction baseline",
+      "write_scope":["SW-N33-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N33.json"],
+      "steps":["define fixed multilingual/malformed-html corpus characteristics and existing baseline metrics","define deterministic title/body/metadata/selector/unicode/repeatability scoring","publish promotion thresholds + overlap rejection rules + 3 refutations"],
+      "acceptance":"benchmark contract runnable later without candidate installation now"
+    },
+    {
+      "node_id":"SW-N34",
+      "task":"WARC_CAPTURE_FAILURE_READBACK_CONTRACT",
+      "mode":"READ_ONLY_DESIGN",
+      "origin_gap":"SW-N21 recommends Browsertrix producer + warcio reader with fixed dynamic fixture, record count, digest and replay/readback but contract is not yet formalized",
+      "write_scope":["SW-N34-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N34.json"],
+      "steps":["define local dynamic capture fixture and immutable inputs","define WARC record-count/digest/replay/readback/failure assertions using existing #118/#119 provenance","publish failure contract + acquisition gate prerequisites + 3 refutations"],
+      "acceptance":"capture/readback contract complete; no browser run/download required"
+    }
+  ],
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "invariants":{"one_chat_one_active_node":true,"atomic_claim":true,"one_path_one_writer":true,"shared_writes_supervisor_only":true,"no_self_verified_closed":true},
+  "verdict":"SIX_REAL_GAP_NODES_ADDED / READ_ONLY_OR_SANDBOX / NO_GATE_BYPASS"
+}
