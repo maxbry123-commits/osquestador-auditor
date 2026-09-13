@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol6-20260912T2329-0500",
+  "agent_name":"SOL-6-GPT",
+  "node_id":"SW-N31",
+  "parent_node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "fresh_main_sha":"c7625886aba5d69e65fce2588a6556db549b44c6",
+  "base_sha":"c7625886aba5d69e65fce2588a6556db549b44c6",
+  "mode":"READ_ONLY_DESIGN",
+  "write_scope":["SW-N31-EVIDENCE.md","SOL-SWARM-06-LOG.md","swarm-claims/CLAIM-SW-N31.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N31-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-06-LOG.md"],
+  "dependencies":["M53 active","SW-N22 evidence available","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"EVAL_REPRODUCIBILITY_PIN_CONTRACT",
+  "claimed_at":"2026-09-13T04:42:00Z",
+  "state":"CLAIMED"
+}
