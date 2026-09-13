@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol9-20260912T2329-0500",
+  "agent_name":"SOL-9-GPT",
+  "node_id":"SW-N24",
+  "parent_node":"M50_ADD_TWO_GAP_DERIVED_SAFE_NODES",
+  "fresh_main_sha":"c8dab4acc0ead9da9cdb6640f8377193f2e7646b",
+  "base_sha":"c8dab4acc0ead9da9cdb6640f8377193f2e7646b",
+  "mode":"READ_ONLY_FORENSIC",
+  "write_scope":["SW-N24-EVIDENCE.md","SOL-SWARM-09-LOG.md","swarm-claims/CLAIM-SW-N24.json"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N24-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-09-LOG.md"],
+  "dependencies":["M50 active","SW-N14 evidence available","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
+  "task":"HISTORICAL_SOURCE_COMMIT_RECOVERY_FEASIBILITY",
+  "claimed_at":"2026-09-12T23:34:20-05:00",
+  "state":"CLAIMED"
+}
