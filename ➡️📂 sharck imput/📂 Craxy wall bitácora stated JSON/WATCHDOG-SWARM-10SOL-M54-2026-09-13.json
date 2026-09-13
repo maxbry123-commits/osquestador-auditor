@@ -1,0 +1,18 @@
+{
+  "schema":"sharck-input.watchdog-swarm.v2",
+  "node":"M54_POST_M53_EVIDENCE_CONTINUATION",
+  "status":"ACTIVE_CONTROL_WATCH",
+  "mode":"FAIL_CLOSED_LOOP",
+  "queue":"CRAZY-WALL-SWARM-QUEUE-M54.json",
+  "dag_delta":"SWARM-DAG-10SOL-M54-DELTA.json",
+  "state_delta":"STATE-DELTA-041-M54-CONTINUATION-WAVE.json",
+  "plan_delta":"PLAN-DELTA-023-M54-CONTINUATION-WAVE.json",
+  "checkpoint_delta":"CHECKPOINT-DELTA-039-M54-CONTINUATION-WAVE.json",
+  "watch_cycle":["READ_HEAD","READ_QUEUE_AND_CLAIMS","READ_WORKER_LOGS_AND_EVIDENCE","DETECT_COLLISION_STALE_OR_DOUBLE_CLAIM","CONTINUE_ACTIVE_OR_DISPATCH_SAFE_FREE","CROSSCHECK_TERMINAL_EVIDENCE","SUPERVISOR_FANIN_SHARED_DELTAS","READBACK_AND_REPORT"],
+  "current_orders":{"SW-N29":"SOL-9-GPT continue current claim only","SW-N30":"SOL-3-GPT continue current claim only","idle_workers":"rescan M54 and atomically claim first SAFE/FREE SW-N35..SW-N42"},
+  "safety":{"one_chat_one_active_node":true,"one_path_one_writer":true,"shared_writes_supervisor_only":true,"fresh_head_before_write":true,"readback_required":true,"no_force":true,"no_lfs":true,"no_silent_overwrite":true,"llm_cannot_self_certify_verified_closed":true},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "physical_state":{"canonical_components":117,"verified_closed":17,"failed":23,"partial_components":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "no_idle_rule":"If no SAFE/FREE node exists, perform read-only reconciliation and derive a new node only from a documented undeduplicated GAP. Never invent work.",
+  "verdict":"WATCHDOG_M54_ACTIVE / EIGHT_SAFE_READY / TWO_ACTIVE_PRESERVED / PHYSICAL_GATES_CLOSED"
+}
