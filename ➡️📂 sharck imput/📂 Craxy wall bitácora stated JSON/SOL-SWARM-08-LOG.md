@@ -2,72 +2,57 @@
 
 - agent_name: `SOL-8-GPT`
 - chat_id: `chat-sol8-20260912T2313-0500`
-- state: `SW-N18_PASS_PENDING_RELEASE`
-- active_node: `SW-N18`
-- current_worker_dag: `SWARM-DAG-10SOL-M48-v1.json` + latest M49 fan-in delta
+- state: `SW-N23_PASS_PENDING_RELEASE`
+- active_node: `SW-N23`
+- current_worker_control: `M50_ADD_TWO_GAP_DERIVED_SAFE_NODES`
 - rule: dynamic first-safe-free claim only after fresh read; one active node; write only this log + node-unique evidence + own atomic claim; never write shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG.
 - reserved nodes forbidden: `M06_ASTRA`, `M07_CLAUDE`, `M08_GROK`.
 - physical mutation: forbidden while latest gates remain false.
 
-## 2026-09-12 — BOOT / COLLISION SCAN / NO SAFE FREE NODE
+## 2026-09-12 — BOOT / M47 HISTORY
 
-- first_observed_main_sha: `526857e6965715613c3766ecb11ed7514d202e7c`
-- control_node: `M47_8SOL_SWARM_CONTROL_ACTIVE`
-- authoritative_worker_dag: `SWARM-DAG-8SOL-M47-v1.json`
-- queue: `CRAZY-WALL-SWARM-QUEUE-M47.json`
-- latest_state_delta_read: `STATE-DELTA-036-M47-8SOL-SWARM-CONTROL.json`
-- latest_checkpoint_delta_read: `CHECKPOINT-DELTA-034-M47-8SOL-SWARM-CONTROL.json`
-- latest_plan_delta_read: `PLAN-DELTA-018-M47-8SOL-SWARM-CONTROL.json`
-- gates: `physical_repair_allowed=false / b05_b06_download_allowed=false / step3_allowed=false / canonical_motors=IMMUTABLE`
-- owner_locks: `M06=ASTRA_ONLY / M07=CLAUDE_ONLY / M08=GROK_ONLY`
-- collision_observed: `SW-N08 already CLAIMED by SOL-1-GPT; no overwrite attempted`
-- completed_or_released_seen_initially: `SW-N01 / SW-N02 / SW-N03 / SW-N04`
-- active_claims_seen_initially: `SW-N05=SOL-1-GPT / SW-N06=SOL-6-GPT / SW-N07=SOL-2-GPT / SW-N08=SOL-1-GPT`
-- canonical_control_drift_seen: `STATE.json / PLAN.json / CHECKPOINT.json remain at M36-era base revisions while latest versioned deltas advance control to M47`; scope left to N08 owner.
-- action: `NO CLAIM FILE CREATED`
-- verdict: `NO_SAFE_FREE_UNEXECUTED_READY_NODE`
+- initial control: `M47_8SOL_SWARM_CONTROL_ACTIVE`
+- initial verdict: `NO_SAFE_FREE_UNEXECUTED_READY_NODE`
+- collision discipline preserved; no shared/product write performed without legal node ownership.
+- stale-head event was reconciled as `CONTROL_PLANE_CONCURRENCY / STALE_LOCK_GAP_NONOVERLAP`.
 
-## STALE_HEAD_GAP — RECONCILED
+## M48/M49 NEXT-WAVE RESCAN
 
-- stale_condition: `main advanced after first_observed_main_sha and before the first SOL-8 log write`
-- first_log_commit: `6d719d29157bb5593f107117211c6c7fc6785c6b`
-- actual_parent_of_first_log_commit: `0995ea2ec760e22fa0276875f04818cf12e8c1c5`
-- intervening_change: `SW-N07 RELEASED with PASS_PENDING_SUPERVISOR_FANIN`
-- classification: `CONTROL_PLANE_CONCURRENCY / STALE_LOCK_GAP_NONOVERLAP`
-- safety_result: `NO CLAIM was created; no shared control file or product path was written; only SOL-8 own log changed`
-- fresh_main_sha_for_reconciliation: `08879e015aa6d6c3049de45d5ebfb8b9e2127102`
-- corrected_completed_or_released: `SW-N01 / SW-N02 / SW-N03 / SW-N04 / SW-N07`
-- decision_after_revalidation: `NO_SAFE_FREE_UNEXECUTED_READY_NODE`
+- N14/N15/N16/N17 collisions were detected and abandoned without overwrite.
+- N18 was legally claimed and completed.
 
-## M48/M49 NEXT-WAVE RESCAN — COLLISIONS PRESERVED
-
-- N14: collision; physical claim won by `SOL-7-GPT`; no overwrite.
-- N15: collision after platform-blocked write; physical claim won by another worker; no overwrite.
-- N16: create returned 422 because path appeared concurrently; no overwrite.
-- N17: fresh HEAD showed another owner claim before SOL-8 write; no overwrite.
-- N18: verified free on fresh M49 state and atomically claimed by SOL-8.
-
-## SW-N18 — HF_HUB_SPECIAL_PROVENANCE_FORENSIC
+## SW-N18 — HF_HUB_SPECIAL_PROVENANCE_FORENSIC — RELEASED
 
 - claim_commit: `ac038d86593163e729ac8457d26ea89cc6b7c40e`
-- claim_blob: `50b3853958901283c8916b54998423638173b480`
-- evidence_path: `SW-N18-EVIDENCE.md`
 - evidence_commit: `7ee2d841537ea96463023c26d68ba53d4824a191`
-- evidence_blob_readback: `d99839a51754003d81cf3152f845ad32796793cd`
-- scope: `READ_ONLY_FORENSIC`
-- finding_1: `B04-01 #108 failed 3x at SOURCE_SPECIAL_FILE_GAP:CLAUDE.md; failed state does not persist exact resolved source_commit.`
-- finding_2: `historical queue requested source_ref=HEAD; exact historical commit therefore remains UNKNOWN_NOT_RECOVERABLE_FROM_CURRENT_CANONICAL_PERSISTENCE.`
-- finding_3: `official current upstream main 129bbb5cf1a7ca2128636eca1695c9960bddd5ca contains CLAUDE.md Git mode 120000, blob 47dc3e3d863cfb5727b87d785d09abf9743c0a72, target AGENTS.md.`
-- finding_4: `current official topology reproduces the special-file class but is explicitly NOT historical identity proof.`
-- causal_engine_check: `canonical engine resolves commit before scan_tree, but persists source_commit only in manifest after scan_tree; special scan abort explains provenance loss.`
-- tests: `7/7 PASS`
+- evidence_blob: `d99839a51754003d81cf3152f845ad32796793cd`
+- release_commit: `b76b7a5b5ef5ac9619c5876a77b4bc72ae032e89`
+- result: `PASS_PENDING_SUPERVISOR_FANIN`
+- tests: `7/7`; simulations `3/3`; refutations `3/3`; Council12 `12/12`.
+- key boundary: historical B04-01 exact source commit remains unrecoverable; current upstream symlink topology is preflight evidence only.
+
+## SW-N23 — SPACY_VSCODE_EXTENSIONS_MISSING_FORENSIC
+
+- claim_commit: `5cce3a6b6e11b026c9939d72b807f59d50c7fdd1`
+- claim_blob: `f45dd493c66f266ee97663a0a66a63b9ac9c1abc`
+- evidence_commit: `9ed99bd7e89349e658b6225110f1075922dc60bb`
+- evidence_blob_readback: `ec83af67c9f6fc289ce9ab1d9a0e01c473122407`
+- pinned_source_commit: `26b4d1dc04a812f426e4bef3e8a1b6f159d6f048`
+- exact_path: `website/.vscode/extensions.json`
+- source_git_blob: `4b533827a909bc135ca82fcb122587645508b302`
+- source_bytes: `165`
+- source_sha256: `515b1ef75f9d7e9b2e63f7009ffe9b9cf4a809b27d7a96265f72f48127767fdf`
+- causal_verdict: `IMPORTED_GITIGNORE_RESTAGING_CONFIRMED`
+- evidence_chain: `immutable source path/hash exists → source .gitignore matches .vscode → canonical publish uses non-forced git add --sparse → isolated microtest omits file → canonical path absent`.
+- rejected_causes: `SOURCE_ABSENT / PATH_DRIFT / GENERATED_ONLY / SPECIAL_FILE / DOWNLOAD_INCOMPLETE`.
+- tests: `8/8 PASS`
 - simulations: `3/3 PASS`
 - refutations: `3/3 PASS`
-- council12: `12/12 worker-scope PASS`
+- council12: `12/12 PASS`
 - downloads: `0`
 - physical_repairs: `0`
 - canonical_motor_mutations: `0`
 - shared_control_writes: `0`
 - worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
-- remaining_gap: `historical exact B04-01 source_commit remains unknowable from current canonical persistence; physical repair remains gate-blocked.`
-- release_action: `update own CLAIM-SW-N18.json to RELEASED after fresh-head/readback verification; then rescan queue.`
+- repair_prerequisite: `future authorized staging must preserve exact upstream tracked set/bytes/modes and full-tree readback; broad unsafe ignore bypass rejected.`
+- release_action: `release N23 after fresh-head/readback, then rescan latest queue.`
