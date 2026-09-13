@@ -13,5 +13,17 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"FULL_BYTE_REPLAY_EXECUTOR_PREFLIGHT",
   "claimed_at":"2026-09-13T00:19:00-05:00",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T00:23:00-05:00",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW_READY_EXECUTOR",
+  "evidence_file":"SW-N35-EVIDENCE.md",
+  "evidence_commit":"7d15604545e469ba534a07bc242e02a1756aa24b",
+  "evidence_blob":"10e58eba1b90d2fb5fc5dd7cdd3575f6a0d259cc",
+  "log_commit":"44f0902f1bfb510221dc2e411b35aa66a1883509",
+  "tests":["FULL_LEDGER_MATRIX=8/8_PASS","EXECUTOR_ELIGIBILITY_MATRIX=8/8_PASS","NO_CANONICAL_OR_WORKFLOW_MUTATION=PASS"],
+  "simulations":["EXACT_AND_BYTE_DRIFT=PASS","SPECIAL_MODE_AND_GITLINK_DRIFT=PASS","MIXED_MISSING_EXTRA_CHANGED_MODE=PASS"],
+  "refutations":["MOTOR3_ALONE_FULLTREE=REFUTED","CHECKOUT_ALONE_REPLAY=REFUTED","SAMPLED_PARITY_FULLTREE=REFUTED"],
+  "remaining_gaps":["real RapidFuzz full-byte replay not executed by N35","generic full-tree GHA contract not materialized because workflow writes are outside N35 scope"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
