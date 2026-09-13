@@ -1,0 +1,66 @@
+{
+  "schema": "sharck-input.watchdog-swarm.v1",
+  "node": "M47_8SOL_SWARM_WATCHDOG_ACTIVE",
+  "mode": "FAIL_CLOSED_LOOP",
+  "status": "ACTIVE_CONTROL_WATCH",
+  "supervisor": "SOL-0",
+  "swarm_dag": "SWARM-DAG-8SOL-M47-v1.json",
+  "read_cycle": [
+    "main HEAD",
+    "latest STATE delta",
+    "latest PLAN delta",
+    "latest CHECKPOINT delta",
+    "Handoff",
+    "watchdog",
+    "DAGs",
+    "worker logs",
+    "recent commits/actions/runs relevant to active nodes"
+  ],
+  "supervisor_loop": [
+    "READ_FRESH",
+    "RECONCILE_CLAIMS",
+    "DETECT_COLLISIONS_OR_STALE_LOCKS",
+    "ORDER_READY_WORK",
+    "VERIFY_WORKER_EVIDENCE",
+    "FAN_IN_SHARED_CONTROL_FILES_SEQUENTIALLY",
+    "READBACK",
+    "REPORT_PROGRESS",
+    "REPEAT"
+  ],
+  "worker_policy": {
+    "workers": 8,
+    "one_chat_one_active_node": true,
+    "claim_only_READY_TO_CLAIM": true,
+    "workers_write_shared_control_files": false,
+    "workers_write_own_log_and_unique_evidence_only": true,
+    "collision_response": "ABORT_WRITE_READ_FRESH_FIND_NEXT_SAFE_NODE",
+    "idle_response": "READ_ONLY_RECONCILIATION_OR_GENUINELY_NEW_GAP_DISCOVERY; NEVER_INVENT_WORK"
+  },
+  "current_queue": {
+    "ready_parallel_safe": ["SW-N01","SW-N02","SW-N03","SW-N04","SW-N05","SW-N06","SW-N07","SW-N08"],
+    "blocked_gate": ["SW-N09","SW-N10","SW-N11","SW-N12"],
+    "reserved_external_owners": ["M06_ASTRA","M07_CLAUDE","M08_GROK"]
+  },
+  "global_gates": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "director_gate": "PENDING",
+    "canonical_motors": "IMMUTABLE"
+  },
+  "progress_snapshot": {
+    "canonical_components": 117,
+    "verified_closed_B01_B04": 17,
+    "failed_B01_B04": 23,
+    "partial_components": 12,
+    "partial_exact_anomalies": 139,
+    "B05_B06_researched": 20,
+    "B05_B06_downloaded": 0
+  },
+  "promotion_rules": {
+    "worker_result": "PASS_PENDING_SUPERVISOR_FANIN",
+    "verified_closed_requires": ["fresh evidence", "tests/readback", "gate satisfied", "independent review when contract requires"],
+    "no_historical_pass_inheritance_after_sha_change": true
+  },
+  "verdict": "WATCHDOG_ACTIVE / EIGHT_SAFE_NODES_READY / PHYSICAL_MUTATION_FAIL_CLOSED"
+}
