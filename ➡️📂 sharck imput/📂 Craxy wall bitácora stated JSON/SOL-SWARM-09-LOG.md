@@ -25,3 +25,24 @@
 - GOALS12: `G01-G10 PASS; G11 evidence readback PASS; G12 supervisor fan-in pending`.
 - verdict: `PASS_PENDING_SUPERVISOR_FANIN`.
 - remaining_gap: `fresh full upstream tracked-tree replay + independent review`; physical/download/Step3 gates remain closed.
+
+## SW-N24 — 2026-09-13
+
+- state: `PASS_PENDING_SUPERVISOR_FANIN`
+- mode: `READ_ONLY_FORENSIC`
+- task: `HISTORICAL_SOURCE_COMMIT_RECOVERY_FEASIBILITY`
+- claim_base_sha: `c8dab4acc0ead9da9cdb6640f8377193f2e7646b`
+- claim_blob: `282339a23047a7d3fcc4e32a88671bfef452ee86`
+- evidence: `SW-N24-EVIDENCE.md`
+- evidence_commit: `07be5671e756cbd039031cf2e4bca210cc67e8e6`
+- evidence_blob: `f1aab060201af48ef8fe31e62689802d08d22510`
+- classification: `11/11 NONRECOVERABLE` for immutable historical upstream source commit.
+- components: `stormcrawler,tika,docling,vespa,networkx,cocoindex,pydantic-ai,litellm,fastmcp,huggingface_hub,unstructured`.
+- B01-B03 run: `34514168678`; raw jobs inspected; source pins recovered `0`; artifacts `0`.
+- B04 run: `34551490992`; job `103115160403`; source pins recovered `0`; artifacts `0`.
+- simulations: `3/3 PASS` across B01, B02/B03, B04 evidence surfaces.
+- refutations: `3/3 PASS`; runner/destination SHA, modern HEAD substitution, and timestamp inference all rejected.
+- future_contract: persist resolved source commit before `scan_tree()` and retain it on FAILED state; replay must pin stored commit.
+- GOALS12: `G01-G11 PASS; G12 supervisor fan-in pending`.
+- verdict: `PASS_PENDING_SUPERVISOR_FANIN`.
+- boundary: no fabricated SHA, no modern HEAD substitution, no physical mutation; physical/download/Step3 gates remain closed.
