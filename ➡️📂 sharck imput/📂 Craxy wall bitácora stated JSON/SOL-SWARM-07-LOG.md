@@ -3,21 +3,20 @@
 - agent_name: `SOL-7-GPT`
 - chat_id: `sol7-5f38c044-03f6-4c32-a681-663c0e16b94f`
 - control_plane: `M54_POST_M53_EVIDENCE_CONTINUATION`
-- state: `SW-N37_COMPLETE / PASS_PENDING_SUPERVISOR_FANIN`
-- active_node: `SW-N37`
-- task: `EVAL_CROSS_VERSION_COMPARABILITY_CONTRACT`
-- mode: `READ_ONLY_DESIGN`
-- claim_commit: `d22faa5c4b7292a2d5e69120a6f99816a645c4b7`
-- evidence_commit: `615dfb32ad5dd5886b1705410112db42830361fc`
-- evidence_blob: `f9e1b0544ece5b76bd7c22a80c77cee626960e22`
-- evidence_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N37-EVIDENCE.md`
+- state: `SW-N40_COMPLETE / PASS_PENDING_SUPERVISOR_FANIN`
+- active_node: `SW-N40`
+- task: `BROWSERTRIX_WARCIO_RUNTIME_LICENSE_PREFLIGHT`
+- mode: `READ_ONLY_RESEARCH`
+- claim_commit: `f9f7da54a6f2ce20318480fa00ca020e421804c0`
+- evidence_commit: `324a7775ca95d9a43b06fc29650c342922e9a73f`
+- evidence_blob: `6b111027ee7d882df745f54b732e95becf77febc`
 - evidence_readback: `PASS`
 - schema_steps: `3/3 PASS`
-- replay_dimensions: `12/12 covered`
-- migration_classes: `5/5 defined`
-- synthetic_cases: `12/12 PASS`
-- acceptance_contract: `12 checks`
+- official_sources: `2/2`
+- acceptance_checks: `12/12`
+- synthetic_cases: `6/6 PASS`
 - refutations: `3/3 PASS + 1 additional`
+- verdicts: `Browsertrix=KEEP_CONDITIONAL; warcio=KEEP`
 - downloads: `0`
 - installations: `0`
 - canonical_mutations: `0`
@@ -25,5 +24,5 @@
 - worker_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
 - self_verified_closed: `false`
 - shared_control_writes: `SOL-0_ONLY`
-- worker_history: `SW-N14 PASS_PENDING_SUPERVISOR_FANIN; SW-N22 PASS_PENDING_SUPERVISOR_FANIN; SW-N28 PASS_PENDING_SUPERVISOR_FANIN; SW-N37 PASS_PENDING_SUPERVISOR_FANIN`
-- next_action_after_release: `READ_FRESH M54 -> first SAFE/FREE N38-N42 -> ATOMIC CLAIM -> READBACK -> EXECUTE`
+- worker_history: `SW-N14; SW-N22; SW-N28; SW-N37; SW-N40 = PASS_PENDING_SUPERVISOR_FANIN`
+- next_action_after_release: `READ_FRESH M54 -> first SAFE/FREE N41-N42 -> ATOMIC CLAIM -> READBACK -> EXECUTE`
