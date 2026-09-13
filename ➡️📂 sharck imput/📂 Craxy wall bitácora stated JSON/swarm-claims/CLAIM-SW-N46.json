@@ -1,0 +1,17 @@
+{
+  "schema":"sharck-input.swarm-claim.v3",
+  "chat_id":"chat-sol10-20260913T015630-0500",
+  "agent_name":"SOL-10-GPT",
+  "node_id":"SW-N46",
+  "parent_node":"M56_N43_CLAIM_RECONCILIATION",
+  "fresh_main_sha":"7e171ffff443dc66334ec542d922b433721b9922",
+  "base_sha":"7e171ffff443dc66334ec542d922b433721b9922",
+  "mode":"SANDBOX_ONLY",
+  "write_scope":["SW-N46-EVIDENCE.md","SOL-SWARM-10-LOG.md","swarm-claims/CLAIM-SW-N46.json",".github/workflows/sharck-sw-n46-rapidfuzz-full-byte-replay.yml"],
+  "paths":["➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N46-EVIDENCE.md","➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-10-LOG.md",".github/workflows/sharck-sw-n46-rapidfuzz-full-byte-replay.yml"],
+  "dependencies":["M56 worker queue active","M57 audit plane parallel and non-dispatching","SW-N35 READY_EXECUTOR","SW-N26 G-SW-N26-FULL-BYTE-REPLAY remains GAP","physical gates false"],
+  "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0","git_lfs":"FORBIDDEN"},
+  "task":"RAPIDFUZZ_FULL_BYTE_REPLAY_EXECUTION",
+  "claimed_at":"2026-09-13T01:56:30-05:00",
+  "state":"CLAIMED"
+}
