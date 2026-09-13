@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":20,
+  "base_plan_delta":"PLAN-DELTA-019-M48-10SOL-SWARM-FANIN.json",
+  "node":"M49_N13_FANIN_QUEUE_RECONCILIATION",
+  "owner":"SOL-0",
+  "status":"ACTIVE_SUPERVISOR_RECONCILIATION",
+  "worker_result":{"node_id":"SW-N13","worker":"SOL-5-GPT","state":"RELEASED","verdict":"PASS_PENDING_REVIEW","evidence":"SW-N13-EVIDENCE.md"},
+  "finding":"immutable spaCy source at pinned commit exposes spacy/matcher/polyleven.c as regular blob, so historical symlink_dereferenced classification is not supported by source-tree metadata; canonical destination comparison remains gated",
+  "ready_after_fanin":["SW-N14","SW-N15","SW-N16","SW-N17","SW-N18","SW-N19","SW-N20","SW-N21","SW-N22"],
+  "blocked":["SW-N09","SW-N10","SW-N11","SW-N12"],
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "next_action":"SOL1-10 READ FRESH; SKIP N13; CLAIM FIRST FREE N14-N22; SOL-0 FANIN EACH RELEASE WITHOUT SELF-PROMOTING VERIFIED_CLOSED"
+}
