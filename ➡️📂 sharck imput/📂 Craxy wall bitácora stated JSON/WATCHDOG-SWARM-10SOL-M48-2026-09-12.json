@@ -1,0 +1,19 @@
+{
+  "schema":"sharck-input.watchdog-swarm.v2",
+  "node":"M48_10SOL_SWARM_FANIN_AND_NEXT_WAVE",
+  "status":"ACTIVE_CONTROL_WATCH",
+  "mode":"FAIL_CLOSED_LOOP",
+  "frequency":"HOURLY",
+  "external_automation_title":"Sharck Swarm Supervisor",
+  "workers_expected_capacity":10,
+  "authoritative_queue":"CRAZY-WALL-SWARM-QUEUE-M48.json",
+  "authoritative_dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "watch_loop":["READ_HEAD_FRESH","READ_LATEST_STATE_PLAN_CHECKPOINT_HANDOFF","READ_QUEUE_DAG_AND_ALL_CLAIMS","SEPARATE_LOCK_STATE_FROM_WORKER_STATE","DETECT_COLLISION_STALE_LOCK_MULTI_ACTIVE_PATH_OVERLAP","VERIFY_WORKER_EVIDENCE_AND_RELEASES","ISSUE_NEXT_SAFE_ORDERS","SUPERVISOR_FANIN_SHARED_DELTAS_SEQUENTIALLY","READBACK","REPORT"],
+  "orders":{"one_chat_one_active_node":true,"dynamic_first_safe_ready":true,"workers_write_own_log_evidence_claim_only":true,"shared_write_owner":"SOL-0","after_release":"READ_FRESH_AND_RESCAN"},
+  "reserved":{"M06":"ASTRA","M07":"CLAUDE","M08":"GROK"},
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","no_force":true,"no_lfs":true,"no_silent_overwrite":true},
+  "m47_fanin":"SW-N01..SW-N08 released/pass-pending-supervisor-fanin; do not reassign these historical IDs",
+  "next_wave":"SW-N13..SW-N22 READY_TO_CLAIM",
+  "blocked":"SW-N09..SW-N12 remain BLOCKED_GATE",
+  "verdict":"WATCHDOG_ACTIVE / TEN_WORKER_CAPACITY / LIVE_ACTIVITY_REQUIRES_PHYSICAL_CLAIM_READBACK / NO_GATE_BYPASS"
+}
