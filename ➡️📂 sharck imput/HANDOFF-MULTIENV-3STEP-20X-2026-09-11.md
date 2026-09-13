@@ -1,80 +1,87 @@
 # 🦈 HANDOFF MULTI-ENTORNO — SHARCK INPUT V2.1
 
-Estado: `ACTIVE / FAIL_CLOSED / STEP2 / M56_N43_CLAIM_ACTIVE / PHYSICAL_GATES_CLOSED`
+Estado: `ACTIVE / FAIL_CLOSED / M56_WORKER_PLANE + M57_TRIPLE_AUDIT / PHYSICAL_GATES_CLOSED`
 Repo: `maxbry123-commits/osquestador-auditor` · branch `main` · root `➡️📂 sharck imput/`.
 
-## LECTURA ACTUAL OBLIGATORIA
+## START HERE — lectura actual obligatoria
+1. `00-START-HERE-SHARCK-INPUT.md`.
+2. repo root `AGENTS.md`.
+3. repo root `PIPELINE/00_METODO_TRABAJO_Y_ARQUITECTURA.md`.
+4. repo root `PIPELINE/FORENSIC_CODE_AUDIT.md`.
+5. `README-METODO-TRABAJO-MULTIAGENTE.md`.
+6. `📁 readme arquitectura sharck imput V2.1.md`.
+7. Worker plane: M56 queue + current claims/log/evidence.
+8. Audit plane: `📂 Craxy wall bitácora stated JSON/M57-TRIPLE-AUDIT-PACKET.md` + `CRAZY-WALL-AUDIT-M57.json`.
 
-M56 **SUPERA M55 para supervisión/dispatch state**. M55 conserva las definiciones de tarea; M56 sólo reconcilia actividad viva observada.
-
-1. `README-METODO-TRABAJO-MULTIAGENTE.md`
-2. `📁 readme arquitectura sharck imput V2.1.md`
-3. `📂 Craxy wall bitácora stated JSON/STATE-DELTA-043-M56-N43-CLAIM.json`
-4. `📂 Craxy wall bitácora stated JSON/PLAN-DELTA-025-M56-N43-CLAIM.json`
-5. `📂 Craxy wall bitácora stated JSON/CHECKPOINT-DELTA-041-M56-N43-CLAIM.json`
-6. `📂 Craxy wall bitácora stated JSON/SWARM-DAG-10SOL-M55-DELTA.json`
-7. `📂 Craxy wall bitácora stated JSON/CRAZY-WALL-SWARM-QUEUE-M56.json`
-8. `📂 Craxy wall bitácora stated JSON/WATCHDOG-SWARM-10SOL-M56-2026-09-13.json`
-9. `📂 Craxy wall bitácora stated JSON/swarm-claims/`
-10. worker own log + evidence del nodo.
+Los deltas/recoveries/queues M47–M55 son trazabilidad histórica; no son la puerta de entrada si existe versión posterior.
 
 Fuente de verdad: `physical tree/hash/run/readback > STATE > CHECKPOINT > PLAN > Handoff > logs > chat`.
 Actividad viva: `claim físico + log/evidence compatible + HEAD chronology`.
 
-## M56 — RECONCILIACIÓN DE CLAIM VIVO
+# PLANO 1 — M56 WORKER EXECUTION
+M56 supera M55 para supervisión/dispatch state. M55 conserva las definiciones base de N43–N46.
 
-HEAD observado en el cambio que abrió M56: `64dd81a5794d4ab1a1fca23bf9f54c8bfb489b0d`, commit `SOL-5 claim SW-N43`.
+Control vigente:
+- `STATE-DELTA-043-M56-N43-CLAIM.json`
+- `PLAN-DELTA-025-M56-N43-CLAIM.json`
+- `CHECKPOINT-DELTA-041-M56-N43-CLAIM.json`
+- `SWARM-DAG-10SOL-M55-DELTA.json`
+- `CRAZY-WALL-SWARM-QUEUE-M56.json`
+- `WATCHDOG-SWARM-10SOL-M56-2026-09-13.json`
 
-- `SW-N43`: claim físico presente, owner `SOL-5-GPT`, estado `CLAIMED`; `SW-N43-EVIDENCE.md` ausente al read-back del supervisor. Por tanto está `ACTIVE_NONTERMINAL`, no PASS/FAIL terminal.
-- `SW-N44`: claim ausente al read-back M56 → `READY_TO_CLAIM` sujeto a releer HEAD inmediatamente antes del claim.
-- `SW-N45`: claim ausente al read-back M56 → `READY_TO_CLAIM` sujeto a releer HEAD inmediatamente antes del claim.
-- `SW-N46`: claim ausente al read-back M56 → `READY_TO_CLAIM` sujeto a releer HEAD inmediatamente antes del claim.
+Snapshot verificado al abrir M56:
+- `SW-N43`: owner `SOL-5-GPT`, `CLAIMED / EVIDENCE_PENDING`.
+- `SW-N44`: `READY_TO_CLAIM` si claim sigue ausente al read fresh.
+- `SW-N45`: `READY_TO_CLAIM` si claim sigue ausente al read fresh.
+- `SW-N46`: `READY_TO_CLAIM / SANDBOX_ONLY` si claim sigue ausente al read fresh.
 
-SOL-0 no duplica ni toma N43; sólo mantiene shared control plane. Un worker idle debe reclamar el primer N44–N46 físicamente libre usando lock atómico/readback.
+Stale/superseded:
+- `SW-N29 → SW-N43`.
+- `SW-N30 → SW-N44`.
+- `SW-N38 BLOCKED_RELEASED → SW-N45`.
+- `G-SW-N26-FULL-BYTE-REPLAY → SW-N46`.
 
-## STALE / SUPERSEDED
+Orden worker:
+`READ HEAD FRESH → READ M56 QUEUE → READ CLAIMS N43..N46 → CONTINUE OWN CLAIM OR CLAIM FIRST SAFE/FREE → READBACK → EXACTLY 3 STEPS → TEST + 3 REFUTATIONS → EVIDENCE READBACK → RELEASE → RESCAN`.
 
-- `SW-N29` → `STALE_SUPERSEDED_BY_SW-N43`.
-- `SW-N30` → `STALE_SUPERSEDED_BY_SW-N44`.
-- `SW-N38` → `BLOCKED_RELEASED / SUPERSEDED_BY_SW-N45`.
-- `G-SW-N26-FULL-BYTE-REPLAY` continúa únicamente como `SW-N46`.
+Reglas: `1 CHAT = 1 ACTIVE NODE`, `1 NODE = 1 OWNER`, `1 PATH = 1 ACTIVE WRITER`.
 
-Esos locks históricos no bloquean la cola vigente.
+# PLANO 2 — M57 TRIPLE INDEPENDENT AUDIT
+M57 NO compite con nodos SOL. Usa los owners reservados:
+- `M06 → ASTRA_ONLY` — arquitectura/gates/simplicidad.
+- `M07 → CLAUDE_ONLY` — code/ports/tests/coverage.
+- `M08 → GROK_ONLY` — OSS/license/security/overlap.
 
-## COLA ACTIVA REAL
+Fuente común: `M57-TRIPLE-AUDIT-PACKET.md`.
+Cola: `CRAZY-WALL-AUDIT-M57.json`.
+Outputs exclusivos:
+- `M06-M57-ASTRA-AUDIT-EVIDENCE.md`
+- `M07-M57-CLAUDE-AUDIT-EVIDENCE.md`
+- `M08-M57-GROK-AUDIT-EVIDENCE.md`
 
-`SW-N43` — `M40_KEEP_DESTINATION_PORT_MAP_RECOVERY` — `CLAIMED by SOL-5-GPT / EVIDENCE_PENDING`.
+Cada auditoría debe incluir: inventario raíz, cross-check documentación↔physical tree, `12 GOALS INPUT`, `12 GOALS OUTPUT`, `COUNCIL12`, `3 refutaciones`, debate pro/contra, `4 simulaciones`, validación 10x medible, máximo 5 fixes y lista `DO NOT BUILD`.
 
-`SW-N44` — `OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_RECOVERY` — `READY_TO_CLAIM`.
+Ningún auditor escribe STATE/PLAN/CHECKPOINT/Handoff. SOL-0 hace fan-in sólo después de recibir evidencia; mayoría sin evidencia no decide.
 
-`SW-N45` — `HTML24_FIXTURE_EVIDENCE_RECOVERY` — `READY_TO_CLAIM`.
+# ESTADO FÍSICO PRESERVADO
+- catálogo canónico: `117 = 77 legacy + 40 V2`.
+- B01–B04: `17 VERIFIED_CLOSED / 23 FAILED / 0 pending`.
+- `23 FAILED = 12 partial + 11 source-special/symlink`.
+- partial: `12 components / 139 anomalies`.
+- B05/B06: `20 researched / 0 downloaded / 0 wired / 0 tested`.
 
-`SW-N46` — `RAPIDFUZZ_FULL_BYTE_REPLAY_EXECUTION` — `READY_TO_CLAIM / SANDBOX_ONLY`.
-
-## ORDEN ÚNICA DEL ENJAMBRE
-
-`READ HEAD FRESH → READ M56 QUEUE → READ CLAIMS N43..N46 → DO NOT DUPLICATE LIVE CLAIM → CLAIM FIRST SAFE/FREE N44..N46 → READBACK CLAIM → EXACTLY 3 STEPS → TEST/3 REFUTATIONS → EVIDENCE READBACK → RELEASE → RESCAN`
-
-`1 CHAT = 1 ACTIVE NODE`, `1 NODE = 1 OWNER`, `1 PATH = 1 ACTIVE WRITER`.
-
-Si N43–N46 quedan todos terminales: no inventar tareas; SOL-0 deriva sucesor sólo de un remaining GAP explícito de evidencia terminal.
-
-## GATES PRESERVADOS
-
+Gates:
 - `physical_repair_allowed=false`
 - `b05_b06_download_allowed=false`
 - `step3_allowed=false`
 - canonical motors `IMMUTABLE`
-- `M06 → ASTRA`, `M07 → CLAUDE`, `M08 → GROK`
-- `SW-N09..SW-N12` continúan bloqueados.
+- `SW-N09..SW-N12` bloqueados.
 
-Estado físico preservado: `117 canonical / 17 VERIFIED_CLOSED / 23 FAILED / 12 partial / 139 anomalies / B05-B06 20 researched / 0 downloaded`.
+# POLÍTICA ANTI-SOBREINGENIERÍA
+No añadir nuevo componente/servicio/capa si no existe GAP real, no hay reuse/COPY/ADAPT equivalente, el beneficio no es medible, no existe test antes/después o el rollback no es simple. En caso contrario: `DEFER_OR_REJECT`.
 
-## WATCHDOG
-
-Watchdog documental vigente: `WATCHDOG-SWARM-10SOL-M56-2026-09-13.json`.
-Checkpoint vigente: `CP-V2-M56-N43-CLAIM-041`.
+# POLÍTICA DE CONTINUIDAD
+El watchdog puede continuar tareas ya autorizadas en la cola vigente y derivar sucesor documental/read-only desde un GAP explícito. No puede abrir gates físicos, reparar/adquirir/wirear sin autorización/gates correspondientes. Si N43–N46 quedan terminales, no crear filler: esperar evidencia de M57 o derivar únicamente un next-node desde remaining GAP explícito.
 
 ## VEREDICTO
-
-`M56_ACTIVE / N43_LIVE_CLAIM_SOL5_EVIDENCE_PENDING / N44_N45_N46_READY / N29_N30_N38_STALE_SUPERSEDED / NO_ARTIFICIAL_FILLER / PHYSICAL_GATES_STILL_CLOSED`.
+`M56_WORKER_PLANE_ACTIVE / M57_TRIPLE_AUDIT_READY / START_HERE_SIMPLIFIED / N43_LIVE_CLAIM_LAST_VERIFIED / N44_N45_N46_SAFE_IF_STILL_FREE / M06_M07_M08_INDEPENDENT_REVIEW_READY / PHYSICAL_STATE_17_VERIFIED_23_FAILED / STEP3_NOT_STARTED`.
