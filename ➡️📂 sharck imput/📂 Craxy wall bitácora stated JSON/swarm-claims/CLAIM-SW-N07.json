@@ -1,0 +1,35 @@
+{
+  "schema": "sharck-input.swarm-claim.v1",
+  "chat_id": "chat-sol2-20260912T2306-0500",
+  "agent_name": "SOL-2-GPT",
+  "node_id": "SW-N07",
+  "parent_node": "M47_8SOL_SWARM_CONTROL_PLANE",
+  "fresh_main_sha": "8fa359c9684e01dd37134e66d1379df66265ed14",
+  "base_sha": "8fa359c9684e01dd37134e66d1379df66265ed14",
+  "mode": "READ_ONLY_ARCHITECTURE",
+  "write_scope": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N07.json"
+  ],
+  "paths": [
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md",
+    "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SOL-SWARM-02-LOG.md"
+  ],
+  "dependencies": [
+    "M47_8SOL_SWARM_CONTROL_ACTIVE",
+    "CRAZY-WALL-SWARM-QUEUE-M47:SW-N07=READY_TO_CLAIM",
+    "SW-N02=RELEASED:PASS_PENDING_SUPERVISOR_FANIN",
+    "CLAIMS_N01_TO_N06 materialized; N07 absent in fresh claim-directory rescan"
+  ],
+  "gate_snapshot": {
+    "physical_repair_allowed": false,
+    "b05_b06_download_allowed": false,
+    "step3_allowed": false,
+    "canonical_motors": "IMMUTABLE",
+    "shared_control_writes": "SOL-0_ONLY"
+  },
+  "assertion_to_validate": "current verified components and approved candidates can be mapped to V2.1 microkernel ports without wiring production.",
+  "claimed_at": "2026-09-12T23:14:30-05:00",
+  "state": "CLAIMED"
+}
