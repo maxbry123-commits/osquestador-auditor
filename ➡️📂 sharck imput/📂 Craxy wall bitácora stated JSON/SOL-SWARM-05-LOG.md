@@ -27,3 +27,13 @@
 - active_node: `null`.
 - forbidden response: do not execute an unclaimed node, do not substitute own-log intent for the required claim file, do not bypass tool safety via alternate Git plumbing.
 - next_safe_action: fresh-rescan only; execute only after an exact claim file is successfully materialized and read back.
+
+## 2026-09-12T23:19-05:00 — persistent queue checkpoint after M47 worker releases
+- fresh_main_sha: `e1767786f57a1853a5eb94930a3d16be3a224b0e`.
+- physical claim namespace has retained locks for `SW-N01` through `SW-N08`; no lock path is absent/free for a new atomic create.
+- observed worker releases/evidence: N01/N02/N03/N04/N05/N06/N07/N08 have produced worker evidence and release activity; N06 release commit `285e1e57390a17d6f834666941744e42ea721e5b`; N08 release commit `f258b58ee21cc2b5c58a87d6785c5bff06e82f9e`.
+- SW-N08 control-drift evidence explicitly concludes there is no legally free N01-N08 node and that next authorized work is SOL-0 supervisor fan-in, not invented N13 work.
+- `SW-N09..SW-N12` remain gate-blocked under M47 semantics; `M06/M07/M08` remain reserved external-owner nodes.
+- state: `READY_NO_ACTIVE_CLAIM / WAITING_SOL0_FANIN`.
+- action: no shared control write; no component/product mutation; no re-claim of RELEASED nodes.
+- continuation: read fresh Crazy Wall and only claim a newly authorized SAFE/FREE node after exact atomic claim + readback.
