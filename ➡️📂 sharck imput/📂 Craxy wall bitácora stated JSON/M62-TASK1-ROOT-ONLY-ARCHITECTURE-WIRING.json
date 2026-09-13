@@ -1,0 +1,27 @@
+{
+  "schema": "sharck-input.task1.root-only-wiring.v1",
+  "date": "2026-09-13",
+  "status": "TASK1_ARCHITECTURE_INPUT_EMBEDDED_ROOT_ONLY_WIRED",
+  "repository": "maxbry123-commits/osquestador-auditor",
+  "branch": "main",
+  "allowed_work_root": "➡️📂 sharck imput/",
+  "scope_rule": "All SHARCK INPUT work, code, components, state, documentation and handoff changes must stay inside ➡️📂 sharck imput/. Do not mix components or code from other projects. A canonical motor may only be copied into this root when explicitly needed; the external location is not a work area.",
+  "canonical_architecture": {
+    "path": "➡️📂 sharck imput/📁 readme arquitectura sharck imput V2.1.md",
+    "input_section": "# 11. INPUT BLOCK DEL DIRECTOR — PRESERVACIÓN LITERAL 1 A 1 — 2026-09-13",
+    "architecture_commit": "c35b0da0f0a6245828c040544e7d7b6be7394366",
+    "architecture_blob": "da9c6df89f828b3e1299c390dd14755c2355065d",
+    "preservation_rule": "Sections 1-10 remain preserved; Director input is appended literally in section 11."
+  },
+  "wired_files": {
+    "start_here": "➡️📂 sharck imput/00-START-HERE-SHARCK-INPUT.md",
+    "handoff": "➡️📂 sharck imput/HANDOFF-MULTIENV-3STEP-20X-2026-09-11.md",
+    "crazy_wall": "➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M62-TASK1-ROOT-ONLY-ARCHITECTURE-WIRING.json"
+  },
+  "historical_cleanup": {
+    "M60-TASK1-SHARCK-AGENCY-ARCHITECTURE.json": "SUPERSEDED_NON_AUTHORITATIVE",
+    "M61-TASK1-LITERAL-INPUT-STATE.json": "SUPERSEDED_BY_M62",
+    "readme arquitectura IMPUT sharck.md": "REMOVE_REDUNDANT_PARALLEL_ARCHITECTURE_ENTRYPOINT"
+  },
+  "task_boundary": "Tarea 1 only. Do not start Tarea 2-5 without a new Director instruction."
+}
