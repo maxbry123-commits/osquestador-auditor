@@ -1,0 +1,52 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M51_ADD_CONCURRENCY_AND_REPLAY_SAFE_NODES",
+  "base_dag":"SWARM-DAG-10SOL-M48-v1.json",
+  "prior_delta":"SWARM-DAG-10SOL-M50-DELTA.json",
+  "mode":"FAIL_CLOSED_LOOP",
+  "source_base_sha":"b6c7b54f635a490f009bc71a9858590b776ec48c",
+  "new_nodes":[
+    {
+      "node_id":"SW-N25",
+      "task":"STALE_HEAD_CONCURRENCY_PROTOCOL_SANDBOX",
+      "mode":"SANDBOX_ONLY",
+      "origin_gap":"SW-N17 recorded STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_LOG_WRITE; concurrent-write protocol has not been adversarially exercised as a standalone contract",
+      "write_scope":["SW-N25-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N25.json"],
+      "steps":[
+        "model fresh-head/write/readback races with unrelated and overlapping synthetic paths",
+        "execute collision/stale/abort-rescan fixtures without shared canonical mutation",
+        "publish protocol verdict + race matrix + 3 refutations"
+      ],
+      "acceptance":"detect stale overlap deterministically, permit unrelated non-overlap safely, no silent overwrite"
+    },
+    {
+      "node_id":"SW-N26",
+      "task":"FRESH_TRACKED_TREE_REPLAY_SANDBOX",
+      "mode":"SANDBOX_ONLY",
+      "origin_gap":"SW-N15 passed 87/87 fixture cases but explicitly left fresh full upstream tracked-tree replay unresolved",
+      "write_scope":["SW-N26-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N26.json"],
+      "steps":[
+        "select a fresh pinned upstream representative with ignore/mode/EOL/special-surface characteristics",
+        "run isolated tracked-tree copy/readback/fulltree comparison with no canonical destination writes",
+        "publish parity metrics + coverage delta + 3 refutations"
+      ],
+      "acceptance":"exact pinned source trace plus missing/changed/extra/mode report; sandbox only"
+    },
+    {
+      "node_id":"SW-N27",
+      "task":"SWARM_LIVE_STATE_RECONCILER_SANDBOX",
+      "mode":"READ_ONLY_PLUS_SANDBOX",
+      "origin_gap":"M47/M48 repeatedly exposed drift between static queue READY labels, retained claim locks and worker RELEASED/CLAIMED state",
+      "write_scope":["SW-N27-EVIDENCE.md","worker-own-log","swarm-claims/CLAIM-SW-N27.json"],
+      "steps":[
+        "define reconciler inputs for queue metadata + claim files + worker logs + HEAD chronology",
+        "test synthetic stale-lock/double-active/path-overlap/released-lock scenarios",
+        "publish deterministic live-state schema and supervisor acceptance rules + 3 refutations"
+      ],
+      "acceptance":"never infer active from registration/static queue alone; detect one-chat-multi-node and path collisions fail-closed"
+    }
+  ],
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "invariants":{"dynamic_claim":true,"one_chat_one_active_node":true,"shared_writes_supervisor_only":true,"no_force":true,"no_lfs":true,"no_silent_overwrite":true},
+  "verdict":"THREE_REAL_GAP_NODES_ADDED / SANDBOX_OR_READ_ONLY / NO_GATE_BYPASS"
+}
