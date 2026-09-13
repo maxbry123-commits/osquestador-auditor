@@ -1,0 +1,14 @@
+{
+  "schema":"sharck-input.checkpoint-delta.v1",
+  "checkpoint":"CP-V2-M53-PREINTEGRATION-WAVE-038",
+  "base_checkpoint":"CHECKPOINT-DELTA-037-M52-SWARM-EXPANSION.json",
+  "node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "status":"ACTIVE",
+  "resume_order":["READ main fresh","READ STATE-DELTA-040-M53-PREINTEGRATION-WAVE.json","READ PLAN-DELTA-022-M53-PREINTEGRATION-WAVE.json","READ CRAZY-WALL-SWARM-QUEUE-M53.json","READ SWARM-DAG-10SOL-M48-v1.json + M50/M51/M52/M53 deltas","READ WATCHDOG-SWARM-10SOL-M53-2026-09-12.json or successor","READ swarm-claims and SOL-SWARM-01..10 logs fresh","READ evidence for terminal worker nodes before fan-in","dispatch only first SAFE/FREE node after atomic claim readback"],
+  "known_terminal_highlights":{"SW-N16":"BLOCKED_RELEASED","SW-N24":"11/11 NONRECOVERABLE historical source pins","SW-N27":"RELEASED PASS_PENDING_REVIEW","SW-N28":"RELEASED PASS_PENDING_SUPERVISOR_FANIN"},
+  "m53_new_nodes":["SW-N29","SW-N30","SW-N31","SW-N32","SW-N33","SW-N34"],
+  "activity_snapshot":{"claimed":["SW-N26","SW-N29","SW-N30"],"unclaimed_observed":["SW-N31","SW-N32","SW-N33","SW-N34"],"authoritative":"RECHECK_PHYSICAL_CLAIMS_FRESH"},
+  "physical_snapshot":{"canonical_components":117,"verified_closed":17,"failed":23,"partial_components":12,"exact_anomalies":139,"B05_B06_downloaded":0},
+  "gates":{"M06":"ASTRA_REQUIRED","M07":"CLAUDE_REQUIRED","M08":"GROK_REQUIRED","director":"REQUIRED_FOR_PHYSICAL_PROMOTION","physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false},
+  "resume_rule":"Never infer active status from this checkpoint snapshot. Fresh claims/logs/evidence override it; preserve failures and blockers fail-closed."
+}
