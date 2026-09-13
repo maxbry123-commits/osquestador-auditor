@@ -3,71 +3,71 @@
 ## M39 — MULTISOL SCHEMA STAGING
 - owner: `SOL-0`
 - status: `VERIFIED_CLOSED_CONTROL_ONLY`
-- claim_id: `SOL0-M39-20260911-1641-COT`
-- base_main_sha: `65076a72f3b7e7e38263ff21ce92f225edf654ba`
-- physical_mutation: `false`
-- canonical_motors_mutated: `false`
-- verdict: `M39_CONTROL_ONLY_COMPLETE / MULTISOL_PRESTAGED_NOT_ACTIVATED / 23_PHYSICAL_FAILURES_REMAIN_OPEN / EXISTING_REVIEW_GATE_PRESERVED`.
+- verdict: `MULTISOL_PRESTAGED_NOT_ACTIVATED / EXISTING_REVIEW_GATE_PRESERVED`.
 
 ## M40 — DIRECTOR 6-TRACK RESEARCH SHORTLIST
 - owner: `SOL-0`
 - status: `REVIEW_READY_WAITING_DIRECTOR_APPROVAL`
-- claim_id: `SOL0-M40-20260911-RESEARCH-COT`
-- base_main_sha: `55f039bcad34acd9ed19c2003d266caf8caa15fa`
-- scope: ejecutar I04/I06/I07/I08/I09/I10 con mínimo 10 hallazgos de código/OSS por investigación; separar EXISTING/NEW/REFERENCE/DEFER/REJECT; presentar shortlist al Director antes de cualquier adquisición nueva.
-- physical_mutation: `false`
-- new_component_download: `false`
-- architecture_mutation: `false`
-
-### 3 pasos M40
-1. `SYNC_WATCHDOG_AND_RESEARCH_SCOPE` — COMPLETE
-2. `RUN_6TRACK_RESEARCH_10_TO_20_EACH` — COMPLETE; 65 entradas: I04=10, I06=10, I07=10, I08=11, I09=13, I10=11.
-3. `PUBLISH_SHORTLIST_AND_WAIT_DIRECTOR_APPROVAL` — REVIEW_READY; espera decisión del Director.
-
-### Evidencia M40
-- `RESEARCH-SHORTLIST-M40-6TRACK-2026-09-11.md` — commit `166f9efea6f6e4fe2e570b8490a3b510afdf5f60`.
-- `WATCHDOG-3STEP-M40-RESEARCH-APPROVAL-2026-09-11.json`.
-- `STATE-DELTA-029-M40-RESEARCH-REVIEW.json`.
-- `CHECKPOINT-DELTA-027-M40-RESEARCH-REVIEW.json`.
-
-### Veredicto M40
-`RESEARCH_MINIMUM_SATISFIED / 65_TRACK_ENTRIES / SHORTLIST_PERSISTED / NO_NEW_DOWNLOADS / STEP3_WAITING_DIRECTOR_APPROVAL`.
+- result: `65 research entries persisted; no acquisition authorization`.
 
 ## M47 — 8 SOL SWARM CONTROL PLANE
 - owner: `SOL-0`
-- status: `ACTIVE_SUPERVISOR`
+- status: `SUPERSEDED_LIVE_DISPATCH_BY_M48 / HISTORY_PRESERVED`
 - base_main_sha: `f87af97bd9add04abbf290f28429e0ccb05e35f0`
 - physical_mutation: `false`
-- purpose: organizar SOL GPT 1–8 con nodos no solapados, atomic claims, worker logs independientes y fan-in exclusivo del supervisor.
+- worker wave: `SW-N01..SW-N08`.
+- reconciled worker status: `8 RELEASED / PASS_PENDING_SUPERVISOR_FANIN`.
+- global promotions to VERIFIED_CLOSED from M47 worker wave: `0`.
+- finding: static M47 READY snapshots became stale after claims; lock existence and worker execution state are separate dimensions.
 
-### Control plane M47
-- `SWARM-DAG-8SOL-M47-v1.json` — 8 nodos `READY_TO_CLAIM`, 4 nodos `BLOCKED_GATE`.
-- `CRAZY-WALL-SWARM-QUEUE-M47.json` — cola autoritativa y claim path exacto por nodo.
-- `WATCHDOG-SWARM-8SOL-M47-2026-09-12.json` — `ACTIVE_CONTROL_WATCH`.
-- `PLAN-DELTA-018-M47-8SOL-SWARM-CONTROL.json`.
-- `STATE-DELTA-036-M47-8SOL-SWARM-CONTROL.json`.
-- `CHECKPOINT-DELTA-034-M47-8SOL-SWARM-CONTROL.json`.
-- `SUPERVISOR-ORDERS-M47-SWARM-8SOL.md`.
-- logs independientes `SOL-SWARM-01-LOG.md` … `SOL-SWARM-08-LOG.md`.
-- atomic claim namespace: `swarm-claims/CLAIM-<NODE_ID>.json`.
+## M48 — 10 SOL SWARM FAN-IN + NEXT WAVE
+- owner: `SOL-0`
+- status: `ACTIVE_SUPERVISOR`
+- source frontier before M48 writes: `26b06814d3be2a4901c645a8029c741ba5f52fe7`.
+- physical mutation: `false`.
+- canonical motor mutation: `false`.
 
-### Ready work ordered
-`SW-N01 || SW-N02 || SW-N03 || SW-N04 || SW-N05 || SW-N06 || SW-N07 || SW-N08`
+### M47 evidence accepted for supervisor fan-in only
+- `SW-N01`: M40/20X dedup/decision evidence complete; no download authorization.
+- `SW-N02`: source-special provenance forensic complete; historical immutable source commits remain unresolved where not durable.
+- `SW-N03`: `139/139` partial anomalies accounted; `137/139` causally explained; 2 spaCy remain `CAUSE_UNPROVEN`.
+- `SW-N04`: StrategyDelta design/refutation complete; execution/full-set/mode/plumbing/reviewer gaps remain.
+- `SW-N05`: HF bridge port/failure contract evidence complete; canonical #108 remains FAILED.
+- `SW-N06`: runtime candidate audit complete; special-file/symlink/submodule/LFS surface remains to prove.
+- `SW-N07`: 17/17 verified components + 20/20 20X contract map; zero production wiring.
+- `SW-N08`: control drift identified and M48 reconciliation requested.
 
-Cada SOL elige dinámicamente el primer nodo SAFE/FREE y gana ownership sólo si crea el claim atómico y lo lee de vuelta. El número SOL no fija tarea.
+### M48 control plane
+- `SWARM-DAG-10SOL-M48-v1.json`.
+- `CRAZY-WALL-SWARM-QUEUE-M48.json`.
+- `WATCHDOG-SWARM-10SOL-M48-2026-09-12.json`.
+- `SUPERVISOR-ORDERS-M48-SWARM-10SOL.md`.
+- `PLAN-DELTA-019-M48-10SOL-SWARM-FANIN.json`.
+- `STATE-DELTA-037-M48-10SOL-SWARM-FANIN.json`.
+- `CHECKPOINT-DELTA-035-M48-10SOL-SWARM-FANIN.json`.
+- `RECOVERY-M48-10SOL-SWARM.md`.
+- Handoff synchronized to M48.
+- worker slots `SOL-SWARM-01..10`; SOL-9/10 are registered slots, not presumed active without claims.
 
-### Blocked / reserved
-- `SW-N09..SW-N12` permanecen bloqueados por gates físicos.
-- `M06 ASTRA`, `M07 CLAUDE`, `M08 GROK` permanecen reservados a sus owners.
+### M48 safe READY wave
+`SW-N13 || SW-N14 || SW-N15 || SW-N16 || SW-N17 || SW-N18 || SW-N19 || SW-N20 || SW-N21 || SW-N22`
+
+Orders are dynamic: every worker reads fresh queue/claims and claims the first SAFE/FREE node. The SOL number never fixes a task.
+
+### Blocked/reserved
+- `SW-N09..SW-N12 = BLOCKED_GATE`.
+- `M06 ASTRA / M07 CLAUDE / M08 GROK = RESERVED_OWNER`.
 - `physical_repair_allowed=false`.
 - `b05_b06_download_allowed=false`.
 - `step3_allowed=false`.
-- motores canónicos `IMMUTABLE`.
+- canonical motors `IMMUTABLE`.
 
-### Supervisor loop
-`READ FRESH → RECONCILE CLAIMS → DETECT COLLISIONS → ORDER READY WORK → VERIFY EVIDENCE → FAN-IN SHARED FILES SEQUENTIALLY → READBACK → REPORT → REPEAT`.
+### Watchdog
+External automation `Sharck Swarm Supervisor` enabled hourly.
+Each run: `READ FRESH → reconcile claims+logs → collision/stale/path-overlap checks → issue safe orders → verify evidence → shared fan-in sequentially → readback → report`.
 
-Worker result válido: `PASS_PENDING_SUPERVISOR_FANIN | GAP | BLOCKED | INCONCLUSIVE`.
+### Supervisor truth rule
+Registered capacity `10` does not mean ten chats are executing. Current activity is asserted only from physical claim/readback + compatible worker log/evidence.
 
-### Veredicto M47
-`SWARM_CONTROL_ACTIVE / 8_SAFE_NODES_READY / ATOMIC_LOCKS_ACTIVE / WORKER_WRITE_SCOPES_SEPARATE / SUPERVISOR_SHARED_WRITE_ONLY / PHYSICAL_GATES_PRESERVED`.
+### Veredicto M48
+`CONTROL_PLANE_ACTIVE / TEN_SAFE_GAP_DERIVED_NODES_AVAILABLE_AT_CREATION / ATOMIC_CLAIMS_REQUIRED / M47_RESULTS_FANIN_ONLY / ZERO_PHYSICAL_GATE_OPENING / ZERO_VERIFIED_CLOSED_PROMOTION_FROM_WORKER_SELF_REPORT`.
