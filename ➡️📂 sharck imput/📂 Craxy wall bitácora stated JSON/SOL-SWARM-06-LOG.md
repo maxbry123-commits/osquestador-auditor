@@ -226,3 +226,41 @@
 - verified_closed: `NO`
 - review_required: `SOL-0 supervisor / independent reviewer`
 - next_action: `READ CRAZY WALL FRESH → first safe READY free node`
+
+---
+
+## SW-N35 — FULL_BYTE_REPLAY_EXECUTOR_PREFLIGHT
+
+- chat_id: `chat-sol6-20260912T2329-0500`
+- state: `PASS_PENDING_REVIEW_READY_EXECUTOR`
+- active_node: `SW-N35` until release readback
+- claim_commit: `074e275820204cadef04d364b39b4e9955ee5b54`
+- claim_blob: `411760aca04861f6d4a0b6a0228b029950b021ae`
+- evidence_commit: `7d15604545e469ba534a07bc242e02a1756aa24b`
+- evidence_blob: `10e58eba1b90d2fb5fc5dd7cdd3575f6a0d259cc`
+- mode: `READ_ONLY_PLUS_SANDBOX_DESIGN`
+- canonical_mutation: `NO`
+- workflow_mutation: `NO`
+- downloads: `0`
+- Git_LFS: `NO / FORBIDDEN`
+
+### Exactly 3 steps — completed
+1. Enumerated local-container, connector, push-main workflow, existing StrategyDelta sandbox and GitHub-hosted ephemeral runner capability/constraints from N26 and current code.
+2. Selected `GHA_EPHEMERAL_GIT_PLUMBING_REPLAY_V1`: exact pinned commit, complete Git-tree ledger, byte readback, exact modes including `120000/160000`, bounded network, read-only repo, temp-only candidate, no push.
+3. Executed synthetic full-ledger and executor-eligibility matrices plus 3 refutations; evidence persisted and read back.
+
+### Tests
+- `FULL_LEDGER_MATRIX = 8/8 PASS`
+- `EXECUTOR_ELIGIBILITY_MATRIX = 8/8 PASS`
+- `REFUTATIONS = 3/3 PASS`
+- Motor-3-only full-tree claim: `REFUTED`
+- checkout-only replay claim: `REFUTED`
+- sampled-parity full-tree claim: `REFUTED`
+
+### Final
+- node_scope_score: `3/3 STEPS PASS`
+- evidence_readback: `PASS`
+- producer_verdict: `PASS_PENDING_REVIEW / READY_EXECUTOR`
+- N26_real_byte_replay_closed: `NO`
+- remaining_gap: `later authorized node must materialize/run the contract on real pinned RapidFuzz bytes`
+- next_action: `RELEASE SW-N35 → readback → READ CRAZY WALL FRESH`
