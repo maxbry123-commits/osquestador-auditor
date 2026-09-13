@@ -3,71 +3,54 @@
 - schema: `sharck-input.sol-swarm-log.v1`
 - agent_name: `SOL-2-GPT`
 - chat_id: `chat-sol2-20260912T2306-0500`
-- state: `PASS_PENDING_SUPERVISOR_FANIN`
-- active_node: `SW-N07`
+- state: `READY_NO_ACTIVE_CLAIM`
+- active_node: `null`
 - parent_node: `M47_8SOL_SWARM_CONTROL_PLANE`
-- mode: `READ_ONLY_ARCHITECTURE`
-- claim_state: `CLAIMED_RELEASE_PENDING`
-- current_claim_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/swarm-claims/CLAIM-SW-N07.json`
-- current_claim_commit: `002cfa814ce23bb14777615673b30664ae9c3638`
-- current_claim_blob: `e3b10fac1bdcb0728a0b2f4fe66aefd202b8947d`
-- current_base_sha: `8fa359c9684e01dd37134e66d1379df66265ed14`
-- current_evidence_path: `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/SW-N07-EVIDENCE.md`
-- current_evidence_commit: `c6927518f8de2d9795754ea2b7862502443b2947`
-- current_evidence_blob: `0fd6fec0e19aa627afbfd0d9632efdbe20c4aec0`
-- current_evidence_readback: `PASS`
-- node_verdict: `PASS_PENDING_SUPERVISOR_FANIN`
+- mode: `FAIL_CLOSED_LOOP`
+- claim_state: `NONE_ACTIVE`
+- last_fresh_head_before_write: `f258b58ee21cc2b5c58a87d6785c5bff06e82f9e`
 - review_required: `true`
-- verified_closed: `false`
+- verified_closed_by_worker: `false`
 
 ## Completed node history
 
 ### SW-N02 — RELEASED
-
+- task: `SPECIAL_SOURCE_PROVENANCE_11_GAP_AUDIT`
 - result: `PASS_PENDING_SUPERVISOR_FANIN`
-- release_commit: `8fa359c9684e01dd37134e66d1379df66265ed14`
-- release_claim_blob: `f1e2eb2849a656717dcbd707a4041dd608c83dce`
 - evidence_commit: `985f6312cfe850a27c26a87b54373fe456d5eba2`
 - evidence_blob: `79ca3de35673f8d17cbe8d5b805cd59e1d1b703c`
-- result: 11/11 source-special failures classified; historical dependency commit not fabricated; physical repair remained blocked.
+- release_commit: `8fa359c9684e01dd37134e66d1379df66265ed14`
+- release_claim_blob: `f1e2eb2849a656717dcbd707a4041dd608c83dce`
+- tests: `4/4`; simulations: `3/3`; refutations: `3/3`
+- summary: `11/11 source-special failures classified without fabricating historical dependency commits.`
 
-## SW-N07 result
+### SW-N07 — RELEASED
+- task: `COMPONENT_PORT_ADAPTER_TEST_MATRIX`
+- result: `PASS_PENDING_SUPERVISOR_FANIN`
+- evidence_commit: `c6927518f8de2d9795754ea2b7862502443b2947`
+- evidence_blob: `0fd6fec0e19aa627afbfd0d9632efdbe20c4aec0`
+- release_commit: `0995ea2ec760e22fa0276875f04818cf12e8c1c5`
+- release_claim_blob: `e583d99f274f4b5dc2ae5f66b7b46ac974753d2e`
+- physical_verified_components_mapped: `17/17`
+- candidate_contracts_mapped: `20/20`
+- static_architecture_checks: `5/5`; simulations: `3/3`; refutations: `3/3`
+- production_wiring: `0`; downloads: `0`; physical_repairs: `0`; canonical_motor_mutations: `0`
+- summary: `provider-neutral component→capability→port→adapter→failure→test matrix produced without promoting acquisition status into wiring approval.`
 
-Mapped the V2.1 integration surface without wiring production:
-
-- `17/17` acquisition-`VERIFIED_CLOSED` components mapped to capability → port/microkernel → adapter → typed failure → test contract.
-- `20/20` 20X candidates mapped as architecture contracts only; authoritative status remains `RESEARCHED_CANDIDATE_NO_DOWNLOAD / REVIEW_GATE_REQUIRED`.
-- overlapping providers marked `ROUTE`, `SELECT_ONE`, `PRUNE`, or `DEFER` rather than blindly multi-wired.
-- no component was promoted to `APPROVED_FOR_WIRE`, `WIRED`, `RUNTIME_ACTIVE`, `TESTED`, or `SYSTEM_VERIFIED`.
-
-### N07 test/refute
-
-- static architecture checks: `5/5`
-- simulations: `3/3`
-- refutations: `3/3`
-- production wiring: `0`
-- component downloads: `0`
-- physical repairs: `0`
-- canonical motor mutation: `0`
-
-### Important architecture correction
-
-`VERIFIED_CLOSED` acquisition is not wiring approval. The code-root contract requires separate `APPROVED_FOR_WIRE → WIRED → TESTED → PROMOTED` states. The 20X candidate set is research-only and cannot be downloaded while the B05/B06 gate is false.
-
-## Gates
-
+## Current gates
 - `physical_repair_allowed=false`
 - `b05_b06_download_allowed=false`
 - `step3_allowed=false`
 - `canonical_motors=IMMUTABLE`
 - M06/M07/M08 remain reserved to ASTRA/CLAUDE/GROK
+- N09/N10/N11/N12 remain blocked by declared dependencies/gates
 
-## GOALS12
+## Current queue interpretation
+Fresh SW-N08 control-plane evidence reports physical claim locks for all `SW-N01` through `SW-N08`; SW-N08 itself has now been released. Retained `RELEASED` locks are ownership/evidence records and are not reinterpreted as `FREE` without a later explicit control-plane contract. `CLAIMED/ACTIVE` nodes are never reclaimable.
 
-G01 PASS; G02 PASS; G03 PASS; G04 PASS; G05 PASS; G06 PASS; G07 PASS; G08 PASS; G09 PASS; G10 PASS; G11 PASS after N07 evidence commit/blob readback; G12 requires N07 atomic release + supervisor fan-in.
+Therefore SOL-2 currently has no legal free M47 node to claim. It must not invent another task or bypass N09-N12 gates.
 
-## Next atomic operation
+## Next legal action
+`READ_FRESH → if a later verified STATE/PLAN/DAG/queue explicitly exposes a new FREE non-overlapping node, atomic-claim it; otherwise remain READY_NO_ACTIVE_CLAIM while SOL-0 performs supervisor fan-in.`
 
-Fetch fresh HEAD and N07 claim blob; if ownership/scope remain intact, release `CLAIM-SW-N07.json` with N07 evidence hashes and `PASS_PENDING_SUPERVISOR_FANIN`. Then rescan the M47 queue. If N01-N08 are all materialized/finished-or-active, do not invent a ninth safe task: N09-N12 remain gate-blocked.
-
-Rules retained: one active node only; shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG are supervisor-only; no M06/M07/M08 claim; no physical mutation while gates remain false.
+Rules retained: one active node only; shared STATE/PLAN/CHECKPOINT/Handoff/Watchdog/DAG are SOL-0-only; no M06/M07/M08 claim; no physical mutation while gates remain false; no LFS; no force; no silent overwrite.
