@@ -34,190 +34,112 @@ jobs:
           test "$(git -C /tmp/sw-n46-source rev-parse FETCH_HEAD^{tree})" = "$EXPECTED_TREE"
           python3 <<'PY'
           import hashlib, json, os, pathlib, subprocess, sys
+          SRC=pathlib.Path('/tmp/sw-n46-source'); CAND=pathlib.Path('/tmp/sw-n46-candidate'); OUT=pathlib.Path('/tmp/sw-n46-output')
+          COMMIT=os.environ['SOURCE_COMMIT']; TREE=os.environ['EXPECTED_TREE']
 
-          SRC = pathlib.Path('/tmp/sw-n46-source')
-          CAND = pathlib.Path('/tmp/sw-n46-candidate')
-          OUT = pathlib.Path('/tmp/sw-n46-output')
-          COMMIT = os.environ['SOURCE_COMMIT']
-          EXPECTED_TREE = os.environ['EXPECTED_TREE']
-
-          def git(cwd, *args, input_bytes=None):
-              p = subprocess.run(['git', '-C', str(cwd), *args], input=input_bytes,
-                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-              if p.returncode != 0:
-                  raise RuntimeError(f"git {' '.join(args)} rc={p.returncode}: {p.stderr.decode('utf-8','replace')}")
+          def git(cwd,*args,input_bytes=None):
+              p=subprocess.run(['git','-C',str(cwd),*args],input=input_bytes,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+              if p.returncode: raise RuntimeError(f"git {' '.join(args)} rc={p.returncode}: {p.stderr.decode('utf-8','replace')}")
               return p.stdout
+          def h(b): return hashlib.sha256(b).hexdigest()
+          def pt(b): return b.decode('utf-8','surrogateescape')
 
-          def sha256(data):
-              return hashlib.sha256(data).hexdigest()
+          actual_tree=git(SRC,'rev-parse','FETCH_HEAD^{tree}').decode().strip()
+          if actual_tree!=TREE: raise RuntimeError(f'tree mismatch {actual_tree} != {TREE}')
+          source={}
+          for rec in git(SRC,'ls-tree','-rz','-r','FETCH_HEAD').split(b'\0'):
+              if not rec: continue
+              meta,pb=rec.split(b'\t',1); mb,tb,ob=meta.split(b' ',2)
+              mode,typ,oid,path=mb.decode(),tb.decode(),ob.decode(),pt(pb)
+              if mode in ('100644','100755','120000'): ident=h(git(SRC,'cat-file','blob',oid))
+              elif mode=='160000': ident=oid
+              else: raise RuntimeError(f'unsupported source mode {mode} at {path}')
+              source[path]={'path':path,'mode':mode,'type':typ,'oid':oid,'identity':ident}
 
-          def path_text(raw):
-              return raw.decode('utf-8', 'surrogateescape')
+          attrs=git(SRC,'cat-file','blob',source['.gitattributes']['oid']).decode('utf-8','replace')
+          active=[x for x in attrs.splitlines() if x.strip() and not x.lstrip().startswith('#')]
+          if any('filter=lfs' in x.replace(' ','') for x in active): raise RuntimeError('LFS attribute detected')
 
-          tree = git(SRC, 'rev-parse', 'FETCH_HEAD^{tree}').decode().strip()
-          if tree != EXPECTED_TREE:
-              raise RuntimeError(f'tree mismatch {tree} != {EXPECTED_TREE}')
+          gitlinks={'extern/rapidfuzz-cpp':'82662f3623b3ca3645e543f677fc32fb8bd1fb95','extern/taskflow':'130f7952469c01eef8d7b635710bf9a8043f3172'}
+          executables={'tools/backtrace','tools/generate_cython.sh','tools/generate_python.py','tools/seg_wrapper.sh'}
+          roots={'.gitignore','.gitattributes','.gitmodules'}
+          special=[]
+          for p in roots:
+              if p not in source: special.append(f'missing root {p}')
+          for p,oid in gitlinks.items():
+              e=source.get(p)
+              if not e or e['mode']!='160000' or e['oid']!=oid: special.append(f'gitlink mismatch {p}')
+          for p in executables:
+              e=source.get(p)
+              if not e or e['mode']!='100755': special.append(f'executable mismatch {p}')
 
-          source = {}
-          for rec in git(SRC, 'ls-tree', '-rz', '-r', 'FETCH_HEAD').split(b'\0'):
-              if not rec:
-                  continue
-              meta, path_b = rec.split(b'\t', 1)
-              mode_b, typ_b, oid_b = meta.split(b' ', 2)
-              mode, typ, oid, path = mode_b.decode(), typ_b.decode(), oid_b.decode(), path_text(path_b)
-              if mode in ('100644','100755','120000'):
-                  identity = sha256(git(SRC, 'cat-file', 'blob', oid))
-              elif mode == '160000':
-                  identity = oid
-              else:
-                  raise RuntimeError(f'unsupported source mode {mode} at {path}')
-              source[path] = {'path':path,'mode':mode,'type':typ,'oid':oid,'identity':identity}
-
-          if '.gitattributes' in source:
-              attrs = git(SRC, 'cat-file', 'blob', source['.gitattributes']['oid']).decode('utf-8','replace')
-              active = [x for x in attrs.splitlines() if x.strip() and not x.lstrip().startswith('#')]
-              if any('filter=lfs' in x.replace(' ','') for x in active):
-                  raise RuntimeError('LFS attribute detected; fail closed')
-
-          expected_gitlinks = {
-              'extern/rapidfuzz-cpp':'82662f3623b3ca3645e543f677fc32fb8bd1fb95',
-              'extern/taskflow':'130f7952469c01eef8d7b635710bf9a8043f3172',
-          }
-          expected_exec = {'tools/backtrace','tools/generate_cython.sh','tools/generate_python.py','tools/seg_wrapper.sh'}
-          expected_root = {'.gitignore','.gitattributes','.gitmodules'}
-          special_errors = []
-          for p in expected_root:
-              if p not in source: special_errors.append(f'missing special root {p}')
-          for p, oid in expected_gitlinks.items():
-              e = source.get(p)
-              if not e or e['mode'] != '160000' or e['oid'] != oid: special_errors.append(f'gitlink mismatch {p}')
-          for p in expected_exec:
-              e = source.get(p)
-              if not e or e['mode'] != '100755': special_errors.append(f'executable mismatch {p}')
-
-          git(CAND, 'init', '-q')
-          git(CAND, 'config', 'core.symlinks', 'true')
-          for path, e in sorted(source.items()):
-              target = CAND / path
-              target.parent.mkdir(parents=True, exist_ok=True)
-              mode, oid = e['mode'], e['oid']
+          git(CAND,'init','-q'); git(CAND,'config','core.symlinks','true')
+          for path,e in sorted(source.items()):
+              t=CAND/path; t.parent.mkdir(parents=True,exist_ok=True); mode=e['mode']; oid=e['oid']
               if mode in ('100644','100755'):
-                  blob = git(SRC, 'cat-file', 'blob', oid)
-                  target.write_bytes(blob)
-                  os.chmod(target, 0o755 if mode == '100755' else 0o644)
-                  cand_oid = git(CAND, 'hash-object', '-w', '--stdin', input_bytes=blob).decode().strip()
-                  if cand_oid != oid: raise RuntimeError(f'blob OID mismatch {path}')
-                  git(CAND, 'update-index', '--add', '--cacheinfo', f'{mode},{cand_oid},{path}')
-              elif mode == '120000':
-                  blob = git(SRC, 'cat-file', 'blob', oid)
-                  os.symlink(blob.decode('utf-8','surrogateescape'), target)
-                  cand_oid = git(CAND, 'hash-object', '-w', '--stdin', input_bytes=blob).decode().strip()
-                  if cand_oid != oid: raise RuntimeError(f'symlink OID mismatch {path}')
-                  git(CAND, 'update-index', '--add', '--cacheinfo', f'120000,{cand_oid},{path}')
-              elif mode == '160000':
-                  git(CAND, 'update-index', '--add', '--cacheinfo', f'160000,{oid},{path}')
+                  b=git(SRC,'cat-file','blob',oid); t.write_bytes(b); os.chmod(t,0o755 if mode=='100755' else 0o644)
+                  coid=git(CAND,'hash-object','-w','--stdin',input_bytes=b).decode().strip()
+                  if coid!=oid: raise RuntimeError(f'blob OID mismatch {path}')
+                  git(CAND,'update-index','--add','--cacheinfo',f'{mode},{coid},{path}')
+              elif mode=='120000':
+                  b=git(SRC,'cat-file','blob',oid); os.symlink(b.decode('utf-8','surrogateescape'),t)
+                  coid=git(CAND,'hash-object','-w','--stdin',input_bytes=b).decode().strip()
+                  if coid!=oid: raise RuntimeError(f'symlink OID mismatch {path}')
+                  git(CAND,'update-index','--add','--cacheinfo',f'120000,{coid},{path}')
+              elif mode=='160000': git(CAND,'update-index','--add','--cacheinfo',f'160000,{oid},{path}')
 
-          def read_candidate():
-              out = {}
-              for rec in git(CAND, 'ls-files', '--stage', '-z').split(b'\0'):
+          def readcand():
+              out={}
+              for rec in git(CAND,'ls-files','--stage','-z').split(b'\0'):
                   if not rec: continue
-                  meta, path_b = rec.split(b'\t', 1)
-                  mode_b, oid_b, stage_b = meta.split(b' ', 2)
-                  mode, oid, stage, path = mode_b.decode(), oid_b.decode(), stage_b.decode(), path_text(path_b)
-                  if stage != '0': raise RuntimeError(f'non-zero stage {path}')
-                  target = CAND / path
+                  meta,pb=rec.split(b'\t',1); mb,ob,sb=meta.split(b' ',2); mode,oid,stage,path=mb.decode(),ob.decode(),sb.decode(),pt(pb)
+                  if stage!='0': raise RuntimeError(f'nonzero stage {path}')
+                  t=CAND/path
                   if mode in ('100644','100755'):
-                      data = target.read_bytes()
-                      identity = sha256(data)
-                      if mode == '100755' and not os.access(target, os.X_OK): raise RuntimeError(f'exec bit lost {path}')
-                      if mode == '100644' and os.access(target, os.X_OK): raise RuntimeError(f'unexpected exec bit {path}')
-                  elif mode == '120000':
-                      if not target.is_symlink(): raise RuntimeError(f'symlink lost {path}')
-                      identity = sha256(os.readlink(target).encode('utf-8','surrogateescape'))
-                  elif mode == '160000':
-                      identity = oid
+                      data=t.read_bytes(); ident=h(data)
+                      if mode=='100755' and not os.access(t,os.X_OK): raise RuntimeError(f'exec lost {path}')
+                      if mode=='100644' and os.access(t,os.X_OK): raise RuntimeError(f'unexpected exec {path}')
+                  elif mode=='120000':
+                      if not t.is_symlink(): raise RuntimeError(f'symlink lost {path}')
+                      ident=h(os.readlink(t).encode('utf-8','surrogateescape'))
+                  elif mode=='160000': ident=oid
                   else: raise RuntimeError(f'unsupported candidate mode {mode} at {path}')
-                  out[path] = {'path':path,'mode':mode,'oid':oid,'identity':identity}
+                  out[path]={'path':path,'mode':mode,'oid':oid,'identity':ident}
               return out
 
-          def compare(candidate):
-              sp, cp = set(source), set(candidate)
-              return {
-                  'missing': sorted(sp-cp),
-                  'extra': sorted(cp-sp),
-                  'changed': sorted(p for p in sp&cp if source[p]['identity'] != candidate[p]['identity'] or source[p]['oid'] != candidate[p]['oid']),
-                  'mode_mismatch': sorted(p for p in sp&cp if source[p]['mode'] != candidate[p]['mode']),
-              }
+          def compare(c):
+              sp,cp=set(source),set(c)
+              return {'missing':sorted(sp-cp),'extra':sorted(cp-sp),'changed':sorted(p for p in sp&cp if source[p]['identity']!=c[p]['identity'] or source[p]['oid']!=c[p]['oid']),'mode_mismatch':sorted(p for p in sp&cp if source[p]['mode']!=c[p]['mode'])}
 
-          candidate = read_candidate()
-          parity = compare(candidate)
-          positive_ok = not any(parity.values()) and not special_errors and len(source) == len(candidate)
-          if not positive_ok:
-              raise RuntimeError(f'positive replay failed: {parity}, special={special_errors}')
+          candidate=readcand(); parity=compare(candidate)
+          positive_ok=(len(source)==len(candidate) and not special and not any(parity.values()))
+          if not positive_ok: raise RuntimeError(f'positive replay failed {parity} special={special}')
+          negatives=[]
 
-          negatives = []
+          git(CAND,'update-index','--force-remove','.gitignore')
+          nc1=compare(readcand()); ok1='.gitignore' in nc1['missing']; negatives.append({'id':'NC1_MISSING','pass':ok1,'observed':nc1})
+          e=source['.gitignore']; git(CAND,'update-index','--add','--cacheinfo',f"{e['mode']},{e['oid']},.gitignore")
 
-          # NC1: remove one tracked entry from candidate index; must detect missing.
-          git(CAND, 'update-index', '--force-remove', '.gitignore')
-          nc1 = compare(read_candidate())
-          nc1_ok = '.gitignore' in nc1['missing']
-          negatives.append({'id':'NC1_MISSING','expected':'.gitignore in missing','observed':nc1,'pass':nc1_ok})
-          e = source['.gitignore']
-          git(CAND, 'update-index', '--add', '--cacheinfo', f"{e['mode']},{e['oid']},.gitignore")
+          p='tools/backtrace'; e=source[p]; os.chmod(CAND/p,0o644); git(CAND,'update-index','--cacheinfo',f"100644,{e['oid']},{p}")
+          nc2=compare(readcand()); ok2=p in nc2['mode_mismatch']; negatives.append({'id':'NC2_MODE','pass':ok2,'observed':nc2})
+          os.chmod(CAND/p,0o755); git(CAND,'update-index','--cacheinfo',f"100755,{e['oid']},{p}")
 
-          # NC2: flip a real executable mode in both index and filesystem; must detect mode mismatch.
-          p = 'tools/backtrace'; e = source[p]
-          os.chmod(CAND/p, 0o644)
-          git(CAND, 'update-index', '--cacheinfo', f"100644,{e['oid']},{p}")
-          nc2 = compare(read_candidate())
-          nc2_ok = p in nc2['mode_mismatch']
-          negatives.append({'id':'NC2_MODE','expected':f'{p} in mode_mismatch','observed':nc2,'pass':nc2_ok})
-          os.chmod(CAND/p, 0o755)
-          git(CAND, 'update-index', '--cacheinfo', f"100755,{e['oid']},{p}")
+          gp='extern/taskflow'; ge=source[gp]; alternate_gitlink=gitlinks['extern/rapidfuzz-cpp']
+          git(CAND,'update-index','--cacheinfo',f'160000,{alternate_gitlink},{gp}')
+          rogue=CAND/'rogue.extra'; rogue.write_bytes(b'negative-control\n'); roid=git(CAND,'hash-object','-w','--stdin',input_bytes=rogue.read_bytes()).decode().strip()
+          git(CAND,'update-index','--add','--cacheinfo',f'100644,{roid},rogue.extra')
+          nc3=compare(readcand()); ok3=gp in nc3['changed'] and 'rogue.extra' in nc3['extra']; negatives.append({'id':'NC3_GITLINK_EXTRA','pass':ok3,'observed':nc3})
+          git(CAND,'update-index','--cacheinfo',f"160000,{ge['oid']},{gp}"); git(CAND,'update-index','--force-remove','rogue.extra'); rogue.unlink()
 
-          # NC3: mutate a real gitlink OID and add a rogue tracked file; must detect changed + extra.
-          gp = 'extern/taskflow'; ge = source[gp]; fake_oid = '0'*40
-          git(CAND, 'update-index', '--cacheinfo', f"160000,{fake_oid},{gp}")
-          rogue = CAND/'rogue.extra'; rogue.write_bytes(b'negative-control\n')
-          rogue_oid = git(CAND, 'hash-object', '-w', '--stdin', input_bytes=rogue.read_bytes()).decode().strip()
-          git(CAND, 'update-index', '--add', '--cacheinfo', f'100644,{rogue_oid},rogue.extra')
-          nc3 = compare(read_candidate())
-          nc3_ok = gp in nc3['changed'] and 'rogue.extra' in nc3['extra']
-          negatives.append({'id':'NC3_GITLINK_EXTRA','expected':f'{gp} changed and rogue.extra extra','observed':nc3,'pass':nc3_ok})
-          git(CAND, 'update-index', '--cacheinfo', f"160000,{ge['oid']},{gp}")
-          git(CAND, 'update-index', '--force-remove', 'rogue.extra')
-          rogue.unlink()
-
-          final_candidate = read_candidate()
-          restore_parity = compare(final_candidate)
-          restore_ok = not any(restore_parity.values())
-          negatives_ok = all(x['pass'] for x in negatives)
-
-          result = {
-              'schema':'sharck-input.sw-n46-replay-result.v2',
-              'source_repo':os.environ['SOURCE_REPO'],
-              'source_commit':COMMIT,
-              'source_tree':tree,
-              'expected_tree':EXPECTED_TREE,
-              'source_count':len(source),
-              'candidate_count':len(candidate),
-              'missing':parity['missing'], 'extra':parity['extra'], 'changed':parity['changed'], 'mode_mismatch':parity['mode_mismatch'],
-              'special_surface_errors':special_errors,
-              'negative_controls':negatives,
-              'negative_controls_pass':negatives_ok,
-              'restore_parity':restore_parity,
-              'restore_pass':restore_ok,
-              'lfs_used':False,
-              'canonical_write':False,
-              'verdict':'PASS' if positive_ok and negatives_ok and restore_ok else 'GAP',
-          }
-          OUT.mkdir(parents=True, exist_ok=True)
+          restore=compare(readcand()); restore_ok=not any(restore.values()); negatives_ok=all(x['pass'] for x in negatives)
+          result={'schema':'sharck-input.sw-n46-replay-result.v3','source_repo':os.environ['SOURCE_REPO'],'source_commit':COMMIT,'source_tree':actual_tree,'expected_tree':TREE,'source_count':len(source),'candidate_count':len(candidate),**parity,'special_surface_errors':special,'negative_controls':negatives,'negative_controls_pass':negatives_ok,'restore_parity':restore,'restore_pass':restore_ok,'lfs_used':False,'canonical_write':False,'verdict':'PASS' if positive_ok and negatives_ok and restore_ok else 'GAP'}
+          OUT.mkdir(parents=True,exist_ok=True)
           (OUT/'source-ledger.json').write_text(json.dumps([source[p] for p in sorted(source)],ensure_ascii=False,indent=2),encoding='utf-8',errors='surrogatepass')
           (OUT/'candidate-ledger.json').write_text(json.dumps([candidate[p] for p in sorted(candidate)],ensure_ascii=False,indent=2),encoding='utf-8',errors='surrogatepass')
           (OUT/'negative-controls.json').write_text(json.dumps(negatives,ensure_ascii=False,indent=2),encoding='utf-8')
           (OUT/'sw-n46-result.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
           print(json.dumps(result,ensure_ascii=False,indent=2))
-          if result['verdict'] != 'PASS': sys.exit(2)
+          if result['verdict']!='PASS': sys.exit(2)
           PY
 
       - name: Upload replay evidence artifact
