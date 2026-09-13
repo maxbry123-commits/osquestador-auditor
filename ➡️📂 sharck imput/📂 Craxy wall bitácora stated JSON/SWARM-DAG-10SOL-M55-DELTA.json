@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.swarm-dag-delta.v1",
+  "node":"M55_REOPEN_REAL_GAPS_NO_OVERENGINEERING",
+  "base":"SWARM-DAG-10SOL-M54-DELTA.json",
+  "mode":"FAIL_CLOSED_LOOP",
+  "reason":"M54 safe queue exhausted; N29/N30 are stale orphan claims; N38 blocked on evidence persistence; N35 proved a real executor path but did not execute the byte replay.",
+  "supersedes":{"SW-N29":"SW-N43","SW-N30":"SW-N44","SW-N38":"SW-N45","G-SW-N26-FULL-BYTE-REPLAY":"SW-N46"},
+  "nodes":[
+    {"node_id":"SW-N43","state":"READY_TO_CLAIM","task":"M40_KEEP_DESTINATION_PORT_MAP_RECOVERY","mode":"READ_ONLY_ARCHITECTURE","claim_file":"swarm-claims/CLAIM-SW-N43.json","evidence_file":"SW-N43-EVIDENCE.md","origin":"SW-N29 stale claim: claim exists but no N29 evidence and SOL-9 log has no N29 execution","steps":["read N20/M40 KEEP=11 and current ports","map 11 KEEP to destination/capability/port/adapter without download","publish matrix + 3 refutations + release"]},
+    {"node_id":"SW-N44","state":"READY_TO_CLAIM","task":"OPENCLAW_AGENTSKILLS_SPECIAL_SURFACE_RECOVERY","mode":"READ_ONLY_FORENSIC","claim_file":"swarm-claims/CLAIM-SW-N44.json","evidence_file":"SW-N44-EVIDENCE.md","origin":"SW-N30 stale claim: claim exists but no N30 evidence and SOL-3 log says READY_NO_ACTIVE_CLAIM","steps":["read N19 + pinned OpenClaw/Agent Skills refs","enumerate special/symlink/submodule/ignore surfaces and drift","publish immutable manifest + 3 refutations + release"]},
+    {"node_id":"SW-N45","state":"READY_TO_CLAIM","task":"HTML24_FIXTURE_EVIDENCE_RECOVERY","mode":"READ_ONLY_DESIGN","claim_file":"swarm-claims/CLAIM-SW-N45.json","evidence_file":"SW-N45-EVIDENCE.md","origin":"SW-N38 BLOCKED_RELEASED: 24/24 structure and 3/3 refutations ran but evidence file was not persisted","steps":["reconstruct/rerun N38 fixture manifest from N33 contract","persist full 24-fixture evidence + hashes","readback evidence + 3 refutations + release"]},
+    {"node_id":"SW-N46","state":"READY_TO_CLAIM","task":"RAPIDFUZZ_FULL_BYTE_REPLAY_EXECUTION","mode":"SANDBOX_ONLY","claim_file":"swarm-claims/CLAIM-SW-N46.json","evidence_file":"SW-N46-EVIDENCE.md","origin":"N35 READY_EXECUTOR; N26 replay still GAP","steps":["instantiate N35 GHA ephemeral read-only executor for exact RapidFuzz pin without canonical writes","execute complete source→candidate tracked-tree byte/mode/gitlink replay and compute missing/extra/changed/mode sets","persist run/job/log/artifact/readback evidence; 3 refutations; classify PASS/GAP"]}
+  ],
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "dispatch_rule":"Idle worker claims first SAFE/FREE SW-N43..SW-N46 atomically. Never reuse stale N29/N30/N38 claim files. Exactly one active node per chat."
+}
