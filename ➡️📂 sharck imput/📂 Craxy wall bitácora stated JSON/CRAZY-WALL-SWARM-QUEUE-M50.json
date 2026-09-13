@@ -1,0 +1,39 @@
+{
+  "schema":"sharck-input.crazy-wall-swarm-queue.v3",
+  "node":"M50_ADD_TWO_GAP_DERIVED_SAFE_NODES",
+  "status":"ACTIVE",
+  "base_queue":"CRAZY-WALL-SWARM-QUEUE-M48.json",
+  "dag_base":"SWARM-DAG-10SOL-M48-v1.json",
+  "dag_delta":"SWARM-DAG-10SOL-M50-DELTA.json",
+  "source_snapshot_sha":"3dc39fda70e1c571e22a2b41eab9af886b14a254",
+  "truth_rule":"claim file + worker log/evidence are authoritative for live execution state; this queue is dispatch metadata and must not override fresher claim state",
+  "completed_known":[
+    {"node_id":"SW-N13","state":"RELEASED","verdict":"PASS_PENDING_REVIEW"},
+    {"node_id":"SW-N14","state":"RELEASED","verdict":"PASS_PENDING_SUPERVISOR_FANIN"},
+    {"node_id":"SW-N17","state":"RELEASED","verdict":"CHECK_WORKER_EVIDENCE_FOR_FANIN"}
+  ],
+  "claimed_at_last_verified_reads":[
+    {"node_id":"SW-N15","worker":"SOL-9-GPT","state_source":"swarm-claims/CLAIM-SW-N15.json"},
+    {"node_id":"SW-N16","worker":"SOL-1-GPT","state_source":"swarm-claims/CLAIM-SW-N16.json"},
+    {"node_id":"SW-N18","worker":"SOL-8-GPT","state_source":"swarm-claims/CLAIM-SW-N18.json"},
+    {"node_id":"SW-N19","worker":"SOL-4-GPT","state_source":"swarm-claims/CLAIM-SW-N19.json"},
+    {"node_id":"SW-N20","worker":"SOL-3-GPT","state_source":"swarm-claims/CLAIM-SW-N20.json"},
+    {"node_id":"SW-N21","worker":"SOL-5-GPT","state_source":"swarm-claims/CLAIM-SW-N21.json"},
+    {"node_id":"SW-N22","worker":"SOL-7-GPT","state_source":"swarm-claims/CLAIM-SW-N22.json"}
+  ],
+  "ready_to_claim":[
+    {"node_id":"SW-N23","claim_file":"swarm-claims/CLAIM-SW-N23.json","evidence_file":"SW-N23-EVIDENCE.md","mode":"READ_ONLY_FORENSIC","write_group":"SPACY_SECOND_ANOMALY"},
+    {"node_id":"SW-N24","claim_file":"swarm-claims/CLAIM-SW-N24.json","evidence_file":"SW-N24-EVIDENCE.md","mode":"READ_ONLY_FORENSIC","write_group":"HISTORICAL_PIN_RECOVERY"}
+  ],
+  "blocked":[
+    {"node_id":"SW-N09","state":"BLOCKED_GATE"},
+    {"node_id":"SW-N10","state":"BLOCKED_GATE"},
+    {"node_id":"SW-N11","state":"BLOCKED_GATE"},
+    {"node_id":"SW-N12","state":"BLOCKED_GATE"}
+  ],
+  "reserved":[{"node_id":"M06","owner":"ASTRA"},{"node_id":"M07","owner":"CLAUDE"},{"node_id":"M08","owner":"GROK"}],
+  "orders":"Every free SOL reads fresh main + latest queue + claim files, then atomically claims first safe READY node. Never reclaim a RELEASED node. If N23/N24 are already claimed, rescan; do not invent a task.",
+  "shared_write_owner":"SOL-0",
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE"},
+  "verdict":"N23_N24_ADDED_FROM_REAL_GAPS / LIVE_CLAIMS_MUST_BE_RECHECKED_FRESH / NO_GATE_BYPASS"
+}
