@@ -46,3 +46,10 @@
 - release_blob: `5a9d8771e326750f0e12ac513a1c1ba1bdfb57b8`.
 - verdict: `PASS_PENDING_SUPERVISOR_FANIN`.
 - state: `READY_NO_ACTIVE_CLAIM`.
+
+## 2026-09-13T00:22-05:00 — SW-N38 blocked release
+- claim_commit: `aee736d8ca60ac8236ddc03b56ff024a3b90bca0`.
+- sandbox contract execution: `24/24 fixture structure PASS`; manifest_sha256 `10f6cc61aa8e8a22c3725ef8b3e265bbeb8c198c7d895fa46caeb70a460079bc`; drift refutations `3/3 PASS`.
+- evidence persistence: `BLOCKED` after three normal `create_file` attempts, including minimal payload; no bypass attempted.
+- verdict: `BLOCKED / EVIDENCE_PERSISTENCE_WRITEPATH_BLOCKED`; not PASS, not VERIFIED_CLOSED.
+- next: release N38 fail-closed and rescan M54.
