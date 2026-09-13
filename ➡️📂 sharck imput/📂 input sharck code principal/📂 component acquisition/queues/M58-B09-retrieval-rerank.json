@@ -1,0 +1,30 @@
+{
+  "schema": "sharck-input.acquisition-queue.m58.v1",
+  "batch": "M58-B09",
+  "capability": "RETRIEVAL_RERANK",
+  "destination": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B09-retrieval-rerank",
+  "queue": [
+    {
+      "id": "M58-B09-01",
+      "source_repo": "FlagOpen/FlagEmbedding",
+      "source_ref": "fd1a2bdf69488ffebe0327999d4400d8c8058a0b",
+      "slug": "FlagEmbedding",
+      "license": "MIT_CODE_REPO_ONLY",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B09-retrieval-rerank",
+      "publish": true
+    },
+    {
+      "id": "M58-B09-02",
+      "source_repo": "AnswerDotAI/rerankers",
+      "source_ref": "5b9cbb073335b0246bc33e939600f51f934c460d",
+      "slug": "rerankers",
+      "license": "Apache-2.0",
+      "dest_repo": "maxbry123-commits/osquestador-auditor",
+      "dest_branch": "main",
+      "dest_root": "➡️📂 sharck imput/📂 input sharck code principal/📂 componentes open source/B09-retrieval-rerank",
+      "publish": true
+    }
+  ]
+}
