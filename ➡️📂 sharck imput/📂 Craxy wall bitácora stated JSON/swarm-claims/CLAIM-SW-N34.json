@@ -13,5 +13,18 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"WARC_CAPTURE_FAILURE_READBACK_CONTRACT",
   "claimed_at":"2026-09-13T04:45:00Z",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T04:47:00Z",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW",
+  "evidence_file":"SW-N34-EVIDENCE.md",
+  "evidence_commit":"cfe46ffae262e6949483fefdfef8e6e951c05d3e",
+  "evidence_blob":"d4f306fc4b4a5e558b75a03656e5188374e2d9c5",
+  "final_sha_before_release":"cfe46ffae262e6949483fefdfef8e6e951c05d3e",
+  "tests":["CAPTURE_MATRIX=8/8_PASS","REPLAY_MATRIX=5/5_PASS","NO_BROWSER_RUN_DOWNLOAD_INSTALL_MUTATION=PASS"],
+  "simulations":["SIM-PARTIAL-CAPTURE=PASS_FAIL_CLOSED","SIM-ARTIFACT-CORRUPTION=PASS_FAIL_CLOSED","SIM-REPLAY-DRIFT=PASS_FAIL_CLOSED"],
+  "refutations":["REFUTE-PARSEABLE-WARC-EQUALS-SUCCESS=PASS","REFUTE-RAW-SHA-ONLY-CROSSRUN=PASS","REFUTE-EXISTING20X-EQUALS-RUNTIME-READY=PASS"],
+  "stale_head_reconciliation":{"evidence_prewrite_head":"28c8ddaa131bbb3d8de1ac47120f0352c859b192","actual_evidence_parent":"e3dcea74215b2f68eeed40eb338a930a70a6a159","concurrent_path":"SOL-SWARM-10-LOG.md","overlap":false,"classification":"STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE"},
+  "remaining_gaps":["Browsertrix/warcio acquisition/runtime verification not performed","first real baseline must record WARC type/count profile","revisit/resource normalization to be extended when present","Browsertrix license approval and execution sandbox remain future prerequisites"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
