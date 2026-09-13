@@ -13,5 +13,18 @@
   "gate_snapshot":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","shared_control_writer":"SOL-0"},
   "task":"EVAL_REPRODUCIBILITY_PIN_CONTRACT",
   "claimed_at":"2026-09-13T04:42:00Z",
-  "state":"CLAIMED"
+  "released_at":"2026-09-13T04:44:00Z",
+  "state":"RELEASED",
+  "producer_verdict":"PASS_PENDING_REVIEW",
+  "evidence_file":"SW-N31-EVIDENCE.md",
+  "evidence_commit":"79a0a2c6f8618dd0c976d004fb8ed3453a827ed6",
+  "evidence_blob":"959145e25affcb9af46b77b014e90747227d6576",
+  "final_sha_before_release":"5d1f335e2bdf054f3cd47a0b766a37ac2c297834",
+  "tests":["DRIFT_MATRIX=7/7_PASS","MALFORMED_REQUIRED_FIELDS=3/3_PASS","NO_DOWNLOAD_INSTALL_MUTATION=PASS"],
+  "simulations":["BENCHMARK_DRIFT=PASS_REJECT_EXACT_REPLAY","DATASET_GRADER_DRIFT=PASS_REJECT_EXACT_REPLAY","ENVIRONMENT_RUNNER_DRIFT=PASS_REJECT_EXACT_REPLAY"],
+  "refutations":["REFUTE-BENCHMARK-PIN-ONLY=PASS","REFUTE-SAME-SCORE-COMPARABLE=PASS","REFUTE-LATEST-MAIN-REPRODUCIBLE=PASS"],
+  "stale_head_reconciliation":{"evidence_prewrite_head":"a8576c3c40662958f0e121e182108c88676d8706","actual_evidence_parent":"3b360617b4080eabdedac4ebbcac2b881d391279","concurrent_path":"SOL-SWARM-10-LOG.md","overlap":false,"classification":"STALE_HEAD_GAP_RECOVERED_AFTER_UNRELATED_WRITE"},
+  "remaining_gaps":["no eval acquisition authorized","provider model immutable snapshot may be unavailable and must be explicit","materialized dataset content hash required even with upstream pin","cross-version score migration methodology outside N31"],
+  "review_required":"SOL-0 supervisor / independent reviewer",
+  "next_free_node":"RESCAN_AFTER_RELEASE"
 }
