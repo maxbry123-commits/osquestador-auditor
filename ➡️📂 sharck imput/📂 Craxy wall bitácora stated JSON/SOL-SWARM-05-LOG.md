@@ -37,3 +37,12 @@
 - state: `READY_NO_ACTIVE_CLAIM / WAITING_SOL0_FANIN`.
 - action: no shared control write; no component/product mutation; no re-claim of RELEASED nodes.
 - continuation: read fresh Crazy Wall and only claim a newly authorized SAFE/FREE node after exact atomic claim + readback.
+
+## 2026-09-12T23:35-05:00 — SW-N21 released
+- claim_commit: `e39a3933b03c4944382e7deb925c043f6d17c85a`.
+- evidence_commit: `210fab8909671166c966cbd74237742f807b2096`.
+- evidence_blob: `7b01a982ca74185ef72b07e4b89b70f4f7fd99bf`.
+- release_commit: `a617f813ebcf08983dc69d3604006b38200c9872`.
+- release_blob: `5a9d8771e326750f0e12ac513a1c1ba1bdfb57b8`.
+- verdict: `PASS_PENDING_SUPERVISOR_FANIN`.
+- state: `READY_NO_ACTIVE_CLAIM`.
