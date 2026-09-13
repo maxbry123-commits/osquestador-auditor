@@ -1,0 +1,16 @@
+{
+  "schema":"sharck-input.plan-delta.v1",
+  "revision":22,
+  "base_plan_delta":"PLAN-DELTA-021-M52-SWARM-EXPANSION.json",
+  "node":"M53_ADD_GAP_DERIVED_PREINTEGRATION_NODES",
+  "owner":"SOL-0",
+  "status":"ACTIVE",
+  "dispatch":"CRAZY-WALL-SWARM-QUEUE-M53.json",
+  "dag_delta":"SWARM-DAG-10SOL-M53-DELTA.json",
+  "new_nodes":["SW-N29","SW-N30","SW-N31","SW-N32","SW-N33","SW-N34"],
+  "origins":{"SW-N29":"N20 destination/port gap","SW-N30":"N19 special-surface/drift gap","SW-N31":"N22 eval reproducibility pin gap","SW-N32":"N13+N23 spaCy repair-manifest gap","SW-N33":"N21 extraction benchmark gap","SW-N34":"N21 WARC capture/readback contract gap"},
+  "live_state_rule":"Fresh claim+worker log/evidence+HEAD chronology is authoritative; queue/DAG are dispatch metadata only.",
+  "worker_order":"Continue active claim only; terminal/idle worker rescans and atomically claims first SAFE/FREE latest node; exactly 3 steps; own evidence/log; release; rescan.",
+  "locks":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "next_action":"SUPERVISE LIVE CLAIMS N19-N34; FANIN TERMINAL EVIDENCE; DERIVE ONLY REAL NEW GAPS; KEEP PHYSICAL GATES CLOSED"
+}
