@@ -1,0 +1,33 @@
+{
+  "bundle_bytes": 689300,
+  "bundle_sha256": "9b273da0899751b2ec61db59def38bd3e728e4ba08c7f54f6cf768a7a65ba6e2",
+  "extracted_tree": {
+    "bytes": 1555362,
+    "files": 129,
+    "sha256": "25cda95d016edbd8add1513dc259782d092dbfbc7374a7c145012869321462c3"
+  },
+  "extraction_verified": true,
+  "max_github_blob_bytes": 99614720,
+  "no_lfs": true,
+  "part_size_limit_bytes": 12582912,
+  "parts": [
+    {
+      "bytes": 689300,
+      "name": "fastembed.bundle.zip.part-0001",
+      "sha256": "9b273da0899751b2ec61db59def38bd3e728e4ba08c7f54f6cf768a7a65ba6e2"
+    }
+  ],
+  "reconstruction_verified": true,
+  "schema": "yaiwes.hf.download-extract.v1",
+  "slug": "fastembed",
+  "source_bytes": 1555362,
+  "source_commit": "0dab99c23e659e630f642b42c5888af87befb6e2",
+  "source_files": 129,
+  "source_ref": "0dab99c23e659e630f642b42c5888af87befb6e2",
+  "source_repo": "qdrant/fastembed",
+  "source_tree": {
+    "bytes": 1555362,
+    "files": 129,
+    "sha256": "25cda95d016edbd8add1513dc259782d092dbfbc7374a7c145012869321462c3"
+  }
+}
