@@ -1,0 +1,19 @@
+{
+  "schema":"sharck-input.watchdog-swarm.v3",
+  "node":"M52_EVIDENCE_PERSISTENCE_AND_CONCURRENCY_WAVE",
+  "status":"ACTIVE_CONTROL_WATCH",
+  "mode":"FAIL_CLOSED_LOOP",
+  "frequency":"HOURLY",
+  "external_automation_title":"Sharck Swarm Supervisor",
+  "worker_capacity":10,
+  "authoritative_dispatch":"CRAZY-WALL-SWARM-QUEUE-M52.json",
+  "dag_chain":["SWARM-DAG-10SOL-M48-v1.json","SWARM-DAG-10SOL-M50-DELTA.json","SWARM-DAG-10SOL-M51-DELTA.json","SWARM-DAG-10SOL-M52-DELTA.json"],
+  "state":"STATE-DELTA-039-M52-SWARM-EXPANSION.json",
+  "plan":"PLAN-DELTA-021-M52-SWARM-EXPANSION.json",
+  "checkpoint":"CHECKPOINT-DELTA-037-M52-SWARM-EXPANSION.json",
+  "watch_loop":["READ_HEAD_FRESH","READ_LATEST_CONTROL","READ_ALL_RELEVANT_CLAIMS_LOGS_EVIDENCE","DERIVE_LIVE_STATE_FROM_CLAIM_PLUS_LOG_NOT_STATIC_QUEUE","DETECT_MULTI_ACTIVE_PATH_OVERLAP_STALE_HEAD_EVIDENCE_WRITE_FAILURE","VERIFY_RELEASED_RESULTS_FAIL_CLOSED","ISSUE_NEXT_SAFE_DYNAMIC_ORDERS","MATERIALIZE_ONLY_REAL_NEW_GAPS","SOL0_FANIN_SHARED_DELTAS_SEQUENTIALLY","READBACK","REPORT"],
+  "orders":{"one_chat_one_active_node":true,"one_path_one_writer":true,"workers_write_own_scope_only":true,"shared_control_writer":"SOL-0","after_terminal":"RESCAN_FRESH"},
+  "gates":{"physical_repair_allowed":false,"b05_b06_download_allowed":false,"step3_allowed":false,"canonical_motors":"IMMUTABLE","M06":"ASTRA_ONLY","M07":"CLAUDE_ONLY","M08":"GROK_ONLY"},
+  "forbidden":["infer 10 active from capacity","promote worker self-report to VERIFIED_CLOSED","reclaim terminal node","overwrite claim/evidence path","repair canonical destinations while gate false","download acquisition candidates while gate false"],
+  "verdict":"WATCHDOG_M52_ACTIVE / EXTERNAL_HOURLY_AUTOMATION_ENABLED / LIVE_CLAIMS_ARE_TRUTH"
+}
