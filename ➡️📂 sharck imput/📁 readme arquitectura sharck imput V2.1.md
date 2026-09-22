@@ -327,3 +327,40 @@ Commit de reubicación: `eec96fc8cc324c09dbae8a8d26c2c257e99026cc`.
 
 ## 12.10 Frontera de esta tarea
 Tarea 2 incorpora investigación y arquitectura; no abre descargas de Tarea 3 ni genera los nodos de enjambre de Tarea 4. Los gates históricos `physical_repair_allowed=false`, `b05_b06_download_allowed=false`, `step3_allowed=false` permanecen hasta decisión/gate posterior.
+
+# 13. M65 — TIMESFM 3 / CAPACIDAD DE PREDICCIÓN TEMPORAL — 2026-09-22
+
+Estado: `WIRED_STATIC_TEST_PASS / RUNTIME_MODEL_TEST_PENDING / ADDITIVE_ONLY / ROOT_ONLY`.
+
+## 13.1 Definición
+TimesFM es una capacidad/modelo especializado en forecasting de series temporales; no se trata como agente completo ni como autoridad sobre el futuro. Dentro de SHARCK Input, su salida se clasifica como `PROBABILISTIC_CONTEXT_NOT_FUTURE_FACT`.
+
+Arquitectura integrada:
+`YAIWES AGENT → KERNEL → CAPABILITY_DECISION → TIMESFM TOOL/SKILL → ROUTER INTELIGENTE UNIVERSAL → AI STAFF → TIMESFM 3.0 → FORECAST + QUANTILES → KERNEL → AGENT_DECISION`.
+
+La referencia a Router Inteligente Universal / AI STAFF es una frontera externa del contrato. M65 no escribe fuera de `➡️📂 sharck imput/`.
+
+## 13.2 Wiring físico root-only
+- `📂 input sharck code principal/📂 root-only-runtime/timesfm_capability.py`
+- `📂 input sharck code principal/📂 root-only-runtime/TIMESFM-SKILL.md`
+- `📂 input sharck code principal/📂 root-only-runtime/test_timesfm_capability.py`
+- `📂 input sharck code principal/📂 root-only-runtime/timesfm_request.example.json`
+- `sharck_root_runner.py` expone `timesfm` y `test-timesfm`.
+
+Contrato mínimo: serie histórica + horizonte. Acepta univariado y multivariado; covariables pasadas y pasado+futuro son opcionales. La salida devuelve forecast y cuantiles cuando se solicitan.
+
+## 13.3 Gates deterministas
+- PLAN_ONLY es el modo por defecto.
+- Ejecución real requiere `--execute`, runtime TimesFM disponible y `TIMESFM_3_LICENSE_ACCEPTED=1`.
+- El checkpoint configurado `google/timesfm-3.0-pytorch` se limita aquí a research/development/noncommercial; `commercial` y `production` fallan cerrado.
+- Error de dependencia, licencia, contrato o runtime → `GAP`.
+- Forecast/cuantiles entran al contexto/evidence path; nunca se convierten por sí solos en decisión del agente.
+
+## 13.4 Evidencia oficial
+Google Research publicó TimesFM 3.0 en agosto de 2026 con forecasting univariado/multivariado, covariables y cuantiles. Fuentes:
+- https://github.com/google-research/timesfm
+- https://huggingface.co/google/timesfm-3.0-pytorch
+- https://www.research.google/blog/timesfm-3-a-zero-shot-foundation-model-for-multivariate-forecasting/
+
+## 13.5 Frontera de validación
+Se validó estáticamente el contrato del adapter (univariado, multivariado, horizonte, cuantiles y fail-closed de uso). No se declara `RUNTIME_MODEL_PASS` hasta ejecutar inferencia real con dependencias/pesos en un entorno de cómputo autorizado.
