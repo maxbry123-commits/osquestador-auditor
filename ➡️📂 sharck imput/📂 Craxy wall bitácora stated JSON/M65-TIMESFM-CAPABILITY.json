@@ -38,5 +38,22 @@
   ],
   "authority": "FORECAST_IS_PROBABILISTIC_CONTEXT_NOT_FUTURE_FACT",
   "external_boundary": "Router Inteligente Universal / AI STAFF referenced by contract only; no cross-repo writes",
-  "license": "TimesFM 3.0 checkpoint restricted to noncommercial/nonproduction use in this integration"
+  "license": "TimesFM 3.0 checkpoint restricted to noncommercial/nonproduction use in this integration",
+  "validation": {
+    "contract_test": "PASS",
+    "github_readback": "PASS",
+    "runner_commit": "80444a6fe81fffe40b2bb41b1a2429a00cefadd5",
+    "runner_blob_sha": "0a96c225283f3cb8503eb2fd661deb9326443ca9",
+    "runner_checks": [
+      "TIMESFM_CONSTANTS",
+      "TIMESFM_FUNCTIONS",
+      "CLI_COMMANDS",
+      "CLI_DISPATCH",
+      "VERIFY_ROOT_INCLUDES_TIMESFM"
+    ],
+    "runtime_model_inference": "PENDING"
+  },
+  "gaps": [
+    "Runtime TimesFM 3 model inference with weights/dependencies has not been executed in the GitHub connector environment."
+  ]
 }
