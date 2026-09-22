@@ -85,3 +85,12 @@ Lectura prioritaria nueva:
 7. `➡️📂 sharck imput/📂 workflows reubicados/README.md`.
 
 Regla vigente: `100x` es target medible y sólo puede ser PASS con benchmark físico. Los 10–100+ microagentes son fan-out dinámico bajo governor, no cuota fija. Tarea 2 no abre Tarea 3/4/5 automáticamente.
+
+## 11. M65 — TIMESFM 3 CAPABILITY
+TimesFM 3 queda cableado de forma aditiva dentro del runtime root-only como `forecast.timeseries.timesfm3`. Leer:
+1. `➡️📂 sharck imput/HANDOFF-M65-TIMESFM-CAPABILITY.md`
+2. `➡️📂 sharck imput/📂 Craxy wall bitácora stated JSON/M65-TIMESFM-CAPABILITY.json`
+3. `➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/TIMESFM-SKILL.md`
+4. `➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/timesfm_capability.py`
+
+Regla: forecast/cuantiles = contexto probabilístico; no autoridad futura. Estado: `WIRED_STATIC_TEST_PASS / RUNTIME_MODEL_TEST_PENDING`.
