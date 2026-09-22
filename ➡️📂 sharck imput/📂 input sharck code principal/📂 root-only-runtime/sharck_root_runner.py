@@ -43,7 +43,7 @@ def assert_root_only(*paths: Path) -> None:
 
 
 def verify_root() -> int:
-    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59]
+    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59, TIMESFM, TIMESFM_TEST]
     assert_root_only(*required)
     missing = [str(p) for p in required if not p.exists()]
     result = {
