@@ -1,0 +1,42 @@
+{
+  "schema": "yaiwes.crazy-wall.node/v1",
+  "node_id": "M65-TIMESFM-CAPABILITY",
+  "repo": "maxbry123-commits/osquestador-auditor",
+  "root": "➡️📂 sharck imput/",
+  "mode": "ADDITIVE_ONLY",
+  "status": "WIRED_STATIC_TEST_PASS",
+  "task": "Integrar TimesFM 3 como tool/skill de forecasting en SHARCK Input",
+  "steps": [
+    {
+      "id": "RESEARCH",
+      "status": "PASS",
+      "evidence": [
+        "Google Research TimesFM 3.0",
+        "google/timesfm-3.0-pytorch",
+        "official agent skill exists"
+      ]
+    },
+    {
+      "id": "EXECUTE",
+      "status": "PASS",
+      "evidence": [
+        "timesfm_capability.py",
+        "TIMESFM-SKILL.md",
+        "sharck_root_runner.py CLI wiring"
+      ]
+    },
+    {
+      "id": "VALIDATE",
+      "status": "PASS_STATIC_ONLY",
+      "evidence": [
+        "test_timesfm_capability.py contract test"
+      ],
+      "gaps": [
+        "Runtime model download/inference not executed in GitHub connector environment"
+      ]
+    }
+  ],
+  "authority": "FORECAST_IS_PROBABILISTIC_CONTEXT_NOT_FUTURE_FACT",
+  "external_boundary": "Router Inteligente Universal / AI STAFF referenced by contract only; no cross-repo writes",
+  "license": "TimesFM 3.0 checkpoint restricted to noncommercial/nonproduction use in this integration"
+}
