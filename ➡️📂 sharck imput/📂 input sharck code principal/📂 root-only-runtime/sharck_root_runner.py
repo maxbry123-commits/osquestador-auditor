@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic SHARCK root-only launcher.
 
-This is not a new download engine. It only wires existing SHARCK tests/queues to the
-byte-identical Motor 2 + engine copies inside the authorized SHARCK root.
+Wires existing SHARCK tests/queues and root-only specialist capabilities without
+moving code outside the authorized SHARCK root.
 """
 from __future__ import annotations
 
@@ -24,6 +24,8 @@ MOTOR_ROOT = SHARCK_ROOT / "📂 motores canónicos copiados"
 MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
 ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
 M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
+TIMESFM = HERE.with_name("timesfm_capability.py")
+TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")
 
 ALLOWED_PREFIX = SHARCK_ROOT.resolve()
 
@@ -47,7 +49,7 @@ def verify_root() -> int:
     assert_root_only(*required)
     missing = [str(p) for p in required if not p.exists()]
     result = {
-        "schema": "sharck.root-only-runner.v1",
+        "schema": "sharck.root-only-runner.v2",
         "root": str(SHARCK_ROOT),
         "required": [str(p) for p in required],
         "missing": missing,
@@ -71,6 +73,29 @@ def test_m59() -> int:
             failed.append({"test": test.name, "returncode": proc.returncode})
     print(json.dumps({"verdict": "PASS" if not failed else "GAP", "tests": [p.name for p in existing], "failed": failed}, ensure_ascii=False))
     return 0 if not failed else 2
+
+
+def test_timesfm() -> int:
+    assert_root_only(TIMESFM, TIMESFM_TEST)
+    if not TIMESFM_TEST.exists():
+        print(json.dumps({"verdict": "GAP", "detail": "TimesFM contract test not found"}))
+        return 2
+    return subprocess.call([sys.executable, str(TIMESFM_TEST)], cwd=TIMESFM_TEST.parent)
+
+
+def timesfm(input_file: str, execute: bool) -> int:
+    request = Path(input_file)
+    if not request.is_absolute():
+        request = SHARCK_ROOT / request
+    assert_root_only(request, TIMESFM)
+    missing = [str(p) for p in (request, TIMESFM) if not p.exists()]
+    if missing:
+        print(json.dumps({"verdict": "GAP", "missing": missing}, ensure_ascii=False))
+        return 2
+    cmd = [sys.executable, str(TIMESFM), "--input", str(request)]
+    if execute:
+        cmd.append("--execute")
+    return subprocess.call(cmd, cwd=SHARCK_ROOT)
 
 
 def motor2(queue_name: str, execute: bool) -> int:
@@ -112,6 +137,10 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("verify-root")
     sub.add_parser("test-m59")
+    sub.add_parser("test-timesfm")
+    p_timesfm = sub.add_parser("timesfm")
+    p_timesfm.add_argument("--input", required=True, help="JSON request file inside the authorized SHARCK root")
+    p_timesfm.add_argument("--execute", action="store_true", help="Run TimesFM 3. Default is PLAN_ONLY.")
     p_motor = sub.add_parser("motor2")
     p_motor.add_argument("--queue", required=True)
     p_motor.add_argument("--execute", action="store_true", help="Actually invoke Motor 2. Without this flag only emit a root-only plan.")
@@ -120,6 +149,10 @@ def main() -> int:
         return verify_root()
     if args.cmd == "test-m59":
         return test_m59()
+    if args.cmd == "test-timesfm":
+        return test_timesfm()
+    if args.cmd == "timesfm":
+        return timesfm(args.input, args.execute)
     if args.cmd == "motor2":
         return motor2(args.queue, args.execute)
     return 2
