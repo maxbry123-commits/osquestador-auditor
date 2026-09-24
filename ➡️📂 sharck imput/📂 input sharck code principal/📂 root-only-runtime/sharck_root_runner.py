@@ -243,7 +243,11 @@ def main() -> int:
     p_timesfm.add_argument("--input", required=True, help="JSON request file inside the authorized SHARCK root")
     p_timesfm.add_argument("--execute", action="store_true", help="Run TimesFM 3. Default is PLAN_ONLY.")
 
-    p_repair = sub.add_parser("motor2-repair")\n    p_repair.add_argument("--queue", required=True)\n    p_repair.add_argument("--execute", action="store_true", help="Execute canonical Motor 2 through the additive case-repair engine.")\n\n    p_motor = sub.add_parser("motor2")
+    p_repair = sub.add_parser("motor2-repair")
+    p_repair.add_argument("--queue", required=True)
+    p_repair.add_argument("--execute", action="store_true", help="Execute canonical Motor 2 through the additive case-repair engine.")
+
+    p_motor = sub.add_parser("motor2")
     p_motor.add_argument("--queue", required=True)
     p_motor.add_argument("--execute", action="store_true", help="Actually invoke Motor 2. Without this flag only emit a root-only plan.")
 
@@ -260,6 +264,8 @@ def main() -> int:
         return test_timesfm()
     if args.cmd == "timesfm":
         return timesfm(args.input, args.execute)
+    if args.cmd == "motor2-repair":
+        return motor2_repair(args.queue, args.execute)
     if args.cmd == "motor2":
         return motor2(args.queue, args.execute)
     return 2
