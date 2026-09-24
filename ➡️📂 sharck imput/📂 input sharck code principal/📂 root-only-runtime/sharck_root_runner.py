@@ -25,7 +25,7 @@ MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
 ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
 M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
 TIMESFM = HERE.with_name("timesfm_capability.py")
-TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")
+TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")\nPRESEARCH_ROOT = HERE / "📂 research-prepass-native"\nPRESEARCH_ENGINE = PRESEARCH_ROOT / "research_prepass.py"\nPRESEARCH_REGISTRY = PRESEARCH_ROOT / "source_registry_no_hf.json"\nPRESEARCH_TESTS = [PRESEARCH_ROOT / "test_research_prepass.py", PRESEARCH_ROOT / "test_websearch_engine.py", M59 / "test_sharck_v3_presearch.py"]\nPRESEARCH_BRIDGE = M59 / "sharck_v3_presearch.py"
 
 ALLOWED_PREFIX = SHARCK_ROOT.resolve()
 
@@ -45,7 +45,7 @@ def assert_root_only(*paths: Path) -> None:
 
 
 def verify_root() -> int:
-    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59, TIMESFM, TIMESFM_TEST]
+    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59, TIMESFM, TIMESFM_TEST, PRESEARCH_ROOT, PRESEARCH_ENGINE, PRESEARCH_REGISTRY, PRESEARCH_BRIDGE, *PRESEARCH_TESTS]
     assert_root_only(*required)
     missing = [str(p) for p in required if not p.exists()]
     result = {
@@ -137,7 +137,7 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("verify-root")
     sub.add_parser("test-m59")
-    sub.add_parser("test-timesfm")
+    sub.add_parser("test-timesfm")\n    sub.add_parser("test-presearch")\n    p_presearch = sub.add_parser("presearch")\n    p_presearch.add_argument("--input", required=True, help="Literal input file inside the authorized SHARCK root")\n    p_presearch.add_argument("--force", action="store_true", help="Bypass research-prepass cache; still uses NO_HF registry.")
     p_timesfm = sub.add_parser("timesfm")
     p_timesfm.add_argument("--input", required=True, help="JSON request file inside the authorized SHARCK root")
     p_timesfm.add_argument("--execute", action="store_true", help="Run TimesFM 3. Default is PLAN_ONLY.")
