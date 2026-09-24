@@ -21,7 +21,7 @@ QUEUE_ROOT = ACQ_ROOT / "queues"
 STATE_ROOT = ACQ_ROOT / "state"
 MOTOR_ROOT = SHARCK_ROOT / "📂 motores canónicos copiados"
 MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
-ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
+ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"\nCASE_ENGINE = SHARCK_ROOT / "📂 motores caso" / "motor_repair_download_extract.py"
 M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
 
 TIMESFM = HERE.with_name("timesfm_capability.py")
@@ -57,7 +57,7 @@ def assert_root_only(*paths: Path) -> None:
 def verify_root() -> int:
     required = [
         SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59,
-        TIMESFM, TIMESFM_TEST, PRESEARCH_ROOT, PRESEARCH_ENGINE,
+        TIMESFM, TIMESFM_TEST, CASE_ENGINE, PRESEARCH_ROOT, PRESEARCH_ENGINE,
         PRESEARCH_REGISTRY, PRESEARCH_BRIDGE, *PRESEARCH_TESTS,
     ]
     assert_root_only(*required)
@@ -153,6 +153,46 @@ def timesfm(input_file: str, execute: bool) -> int:
     return subprocess.call(cmd, cwd=SHARCK_ROOT)
 
 
+def motor2_repair(queue_name: str, execute: bool) -> int:
+    if Path(queue_name).name != queue_name:
+        raise SystemExit("queue must be a filename inside the SHARCK queue directory")
+    queue = QUEUE_ROOT / queue_name
+    stem = queue.stem
+    state = STATE_ROOT / f"{stem}-state.json"
+    index = STATE_ROOT / f"{stem}-INDEX.md"
+    assert_root_only(queue, state, index, MOTOR2, ENGINE, CASE_ENGINE)
+    missing = [str(p) for p in (queue, MOTOR2, ENGINE, CASE_ENGINE) if not p.exists()]
+    if missing:
+        print(json.dumps({"verdict": "GAP", "missing": missing}, ensure_ascii=False))
+        return 2
+    plan = {
+        "schema": "sharck.root-only-motor2-case-repair-plan.v1",
+        "queue": str(queue),
+        "state": str(state),
+        "index": str(index),
+        "motor": str(MOTOR2),
+        "canonical_engine": str(ENGINE),
+        "case_engine": str(CASE_ENGINE),
+        "repair_existing": True,
+        "github_actions": False,
+        "huggingface_jobs": False,
+        "execute": execute,
+    }
+    if not execute:
+        print(json.dumps({**plan, "verdict": "PLAN_ONLY"}, ensure_ascii=False, indent=2))
+        return 0
+    env = dict(os.environ)
+    env.update({
+        "QUEUE_FILE": str(queue),
+        "STATE_FILE": str(state),
+        "INDEX_PATH": str(index),
+        "ENGINE_PATH": str(CASE_ENGINE),
+        "CANONICAL_ENGINE_PATH": str(ENGINE),
+        "REPAIR_EXISTING": "1",
+    })
+    return subprocess.call([sys.executable, str(MOTOR2)], cwd=SHARCK_ROOT, env=env)
+
+
 def motor2(queue_name: str, execute: bool) -> int:
     if Path(queue_name).name != queue_name:
         raise SystemExit("queue must be a filename inside the SHARCK queue directory")
@@ -203,7 +243,7 @@ def main() -> int:
     p_timesfm.add_argument("--input", required=True, help="JSON request file inside the authorized SHARCK root")
     p_timesfm.add_argument("--execute", action="store_true", help="Run TimesFM 3. Default is PLAN_ONLY.")
 
-    p_motor = sub.add_parser("motor2")
+    p_repair = sub.add_parser("motor2-repair")\n    p_repair.add_argument("--queue", required=True)\n    p_repair.add_argument("--execute", action="store_true", help="Execute canonical Motor 2 through the additive case-repair engine.")\n\n    p_motor = sub.add_parser("motor2")
     p_motor.add_argument("--queue", required=True)
     p_motor.add_argument("--execute", action="store_true", help="Actually invoke Motor 2. Without this flag only emit a root-only plan.")
 
