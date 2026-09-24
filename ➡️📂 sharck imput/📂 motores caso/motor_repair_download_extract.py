@@ -88,6 +88,44 @@ def deref_in_root(root: pathlib.Path) -> int:
     return done
 
 
+
+def materialize_gitlinks(root: pathlib.Path, eng) -> int:
+    """Initialize exact gitlink commits declared by the pinned parent tree."""
+    if not (root / ".gitmodules").is_file():
+        return 0
+    staged = eng.run(["git", "ls-files", "--stage"], root)
+    gitlinks = []
+    for line in staged.splitlines():
+        if not line.startswith("160000 "):
+            continue
+        try:
+            _, rel = line.split("\t", 1)
+        except ValueError as exc:
+            raise RuntimeError("GITLINK_PARSE_GAP:" + line[:200]) from exc
+        gitlinks.append(rel)
+    if not gitlinks:
+        return 0
+
+    env = dict(os.environ)
+    env["GIT_LFS_SKIP_SMUDGE"] = "1"
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    eng.run(["git", "submodule", "sync", "--recursive"], root, env=env)
+    eng.run(["git", "submodule", "update", "--init", "--recursive", "--depth", "1"], root, env=env)
+
+    for rel in gitlinks:
+        d = root / pathlib.PurePosixPath(rel)
+        if not d.is_dir() or not any(d.iterdir()):
+            raise RuntimeError("GITLINK_MATERIALIZATION_GAP:" + rel)
+
+    # Keep canonical no-LFS behavior inside every initialized submodule too.
+    for dotgit in sorted(root.rglob(".git"), key=lambda p: p.as_posix()):
+        sub = dotgit.parent
+        if sub == root:
+            continue
+        if sub.is_dir():
+            eng.no_lfs(sub)
+    return len(gitlinks)
+
 def load_engine():
     if not ENGINE.is_file():
         raise RuntimeError("CANONICAL_ENGINE_MISSING:" + str(ENGINE))
@@ -103,7 +141,9 @@ def install_overrides(eng):
 
     def acquire_case(work):
         src, commit = original_acquire(work)
+        gitlinks = materialize_gitlinks(src, eng)
         count = deref_in_root(src)
+        os.environ["YAIWES_GITLINK_COUNT"] = str(gitlinks)
         os.environ["YAIWES_DEREF_COUNT"] = str(count)
         return src, commit
 
@@ -189,6 +229,7 @@ def install_overrides(eng):
             "commit": commit,
             "repair_existing": REPAIR_EXISTING,
             "deref_count": int(os.getenv("YAIWES_DEREF_COUNT", "0")),
+            "gitlink_count": int(os.getenv("YAIWES_GITLINK_COUNT", "0")),
         }
 
     eng.acquire = acquire_case
