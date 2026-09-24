@@ -98,11 +98,16 @@ def test_m59() -> int:
         M59 / "test_provider_adapters.py",
         M59 / "test_sharck_v3_strict.py",
         M59 / "test_sharck_v3_presearch.py",
+        M59_ENTRYPOINT_TEST,
     ])
 
 
 def test_presearch() -> int:
     return run_tests(PRESEARCH_TESTS)
+
+
+def test_repair_motor() -> int:
+    return run_tests([CASE_ENGINE_TEST])
 
 
 def presearch(input_file: str, force: bool) -> int:
@@ -258,6 +263,8 @@ def main() -> int:
         return test_m59()
     if args.cmd == "test-presearch":
         return test_presearch()
+    if args.cmd == "test-repair-motor":
+        return test_repair_motor()
     if args.cmd == "presearch":
         return presearch(args.input, args.force)
     if args.cmd == "test-timesfm":
