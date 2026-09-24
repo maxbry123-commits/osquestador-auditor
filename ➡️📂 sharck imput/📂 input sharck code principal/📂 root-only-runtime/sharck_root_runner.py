@@ -14,7 +14,6 @@ import subprocess
 import sys
 
 HERE = Path(__file__).resolve()
-# .../➡️📂 sharck imput/📂 input sharck code principal/📂 root-only-runtime/file.py
 SHARCK_ROOT = HERE.parents[2]
 CODE_ROOT = SHARCK_ROOT / "📂 input sharck code principal"
 ACQ_ROOT = CODE_ROOT / "📂 component acquisition"
@@ -24,8 +23,19 @@ MOTOR_ROOT = SHARCK_ROOT / "📂 motores canónicos copiados"
 MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
 ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
 M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
+
 TIMESFM = HERE.with_name("timesfm_capability.py")
-TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")\nPRESEARCH_ROOT = HERE / "📂 research-prepass-native"\nPRESEARCH_ENGINE = PRESEARCH_ROOT / "research_prepass.py"\nPRESEARCH_REGISTRY = PRESEARCH_ROOT / "source_registry_no_hf.json"\nPRESEARCH_TESTS = [PRESEARCH_ROOT / "test_research_prepass.py", PRESEARCH_ROOT / "test_websearch_engine.py", M59 / "test_sharck_v3_presearch.py"]\nPRESEARCH_BRIDGE = M59 / "sharck_v3_presearch.py"
+TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")
+
+PRESEARCH_ROOT = HERE / "📂 research-prepass-native"
+PRESEARCH_ENGINE = PRESEARCH_ROOT / "research_prepass.py"
+PRESEARCH_REGISTRY = PRESEARCH_ROOT / "source_registry_no_hf.json"
+PRESEARCH_BRIDGE = M59 / "sharck_v3_presearch.py"
+PRESEARCH_TESTS = [
+    PRESEARCH_ROOT / "test_research_prepass.py",
+    PRESEARCH_ROOT / "test_websearch_engine.py",
+    M59 / "test_sharck_v3_presearch.py",
+]
 
 ALLOWED_PREFIX = SHARCK_ROOT.resolve()
 
@@ -45,11 +55,15 @@ def assert_root_only(*paths: Path) -> None:
 
 
 def verify_root() -> int:
-    required = [SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59, TIMESFM, TIMESFM_TEST, PRESEARCH_ROOT, PRESEARCH_ENGINE, PRESEARCH_REGISTRY, PRESEARCH_BRIDGE, *PRESEARCH_TESTS]
+    required = [
+        SHARCK_ROOT, CODE_ROOT, QUEUE_ROOT, STATE_ROOT, MOTOR2, ENGINE, M59,
+        TIMESFM, TIMESFM_TEST, PRESEARCH_ROOT, PRESEARCH_ENGINE,
+        PRESEARCH_REGISTRY, PRESEARCH_BRIDGE, *PRESEARCH_TESTS,
+    ]
     assert_root_only(*required)
     missing = [str(p) for p in required if not p.exists()]
     result = {
-        "schema": "sharck.root-only-runner.v2",
+        "schema": "sharck.root-only-runner.v3",
         "root": str(SHARCK_ROOT),
         "required": [str(p) for p in required],
         "missing": missing,
@@ -59,20 +73,61 @@ def verify_root() -> int:
     return 0 if not missing else 2
 
 
-def test_m59() -> int:
-    tests = [M59 / "test_sharck_v3_runtime.py", M59 / "test_provider_adapters.py", M59 / "test_sharck_v3_strict.py"]
-    existing = [p for p in tests if p.exists()]
-    assert_root_only(M59, *existing)
-    if not existing:
-        print(json.dumps({"verdict": "GAP", "detail": "M59 tests not found"}))
+def run_tests(tests: list[Path]) -> int:
+    assert_root_only(*tests)
+    missing = [str(p) for p in tests if not p.exists()]
+    if missing:
+        print(json.dumps({"verdict": "GAP", "missing": missing}, ensure_ascii=False))
         return 2
     failed = []
-    for test in existing:
-        proc = subprocess.run([sys.executable, str(test)], cwd=M59)
+    for test in tests:
+        proc = subprocess.run([sys.executable, str(test)], cwd=test.parent)
         if proc.returncode:
             failed.append({"test": test.name, "returncode": proc.returncode})
-    print(json.dumps({"verdict": "PASS" if not failed else "GAP", "tests": [p.name for p in existing], "failed": failed}, ensure_ascii=False))
+    print(json.dumps({
+        "verdict": "PASS" if not failed else "GAP",
+        "tests": [p.name for p in tests],
+        "failed": failed,
+    }, ensure_ascii=False))
     return 0 if not failed else 2
+
+
+def test_m59() -> int:
+    return run_tests([
+        M59 / "test_sharck_v3_runtime.py",
+        M59 / "test_provider_adapters.py",
+        M59 / "test_sharck_v3_strict.py",
+        M59 / "test_sharck_v3_presearch.py",
+    ])
+
+
+def test_presearch() -> int:
+    return run_tests(PRESEARCH_TESTS)
+
+
+def presearch(input_file: str, force: bool) -> int:
+    request = Path(input_file)
+    if not request.is_absolute():
+        request = SHARCK_ROOT / request
+    assert_root_only(request, PRESEARCH_ENGINE, PRESEARCH_REGISTRY)
+    missing = [str(p) for p in (request, PRESEARCH_ENGINE, PRESEARCH_REGISTRY) if not p.exists()]
+    if missing:
+        print(json.dumps({"verdict": "GAP", "missing": missing}, ensure_ascii=False))
+        return 2
+    cmd = [
+        sys.executable,
+        str(PRESEARCH_ENGINE),
+        "--input-file",
+        str(request),
+        "--registry",
+        str(PRESEARCH_REGISTRY),
+    ]
+    if force:
+        cmd.append("--force")
+    env = dict(os.environ)
+    env.pop("HF_TOKEN", None)
+    env.pop("HUGGINGFACE_TOKEN", None)
+    return subprocess.call(cmd, cwd=PRESEARCH_ROOT, env=env)
 
 
 def test_timesfm() -> int:
@@ -137,18 +192,30 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("verify-root")
     sub.add_parser("test-m59")
-    sub.add_parser("test-timesfm")\n    sub.add_parser("test-presearch")\n    p_presearch = sub.add_parser("presearch")\n    p_presearch.add_argument("--input", required=True, help="Literal input file inside the authorized SHARCK root")\n    p_presearch.add_argument("--force", action="store_true", help="Bypass research-prepass cache; still uses NO_HF registry.")
+    sub.add_parser("test-presearch")
+    sub.add_parser("test-timesfm")
+
+    p_presearch = sub.add_parser("presearch")
+    p_presearch.add_argument("--input", required=True, help="Literal input file inside the authorized SHARCK root")
+    p_presearch.add_argument("--force", action="store_true", help="Bypass research-prepass cache; still uses NO_HF registry.")
+
     p_timesfm = sub.add_parser("timesfm")
     p_timesfm.add_argument("--input", required=True, help="JSON request file inside the authorized SHARCK root")
     p_timesfm.add_argument("--execute", action="store_true", help="Run TimesFM 3. Default is PLAN_ONLY.")
+
     p_motor = sub.add_parser("motor2")
     p_motor.add_argument("--queue", required=True)
     p_motor.add_argument("--execute", action="store_true", help="Actually invoke Motor 2. Without this flag only emit a root-only plan.")
+
     args = parser.parse_args()
     if args.cmd == "verify-root":
         return verify_root()
     if args.cmd == "test-m59":
         return test_m59()
+    if args.cmd == "test-presearch":
+        return test_presearch()
+    if args.cmd == "presearch":
+        return presearch(args.input, args.force)
     if args.cmd == "test-timesfm":
         return test_timesfm()
     if args.cmd == "timesfm":
