@@ -21,8 +21,12 @@ QUEUE_ROOT = ACQ_ROOT / "queues"
 STATE_ROOT = ACQ_ROOT / "state"
 MOTOR_ROOT = SHARCK_ROOT / "📂 motores canónicos copiados"
 MOTOR2 = MOTOR_ROOT / "motor_2_queue_download_extract.py"
-ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"\nCASE_ENGINE = SHARCK_ROOT / "📂 motores caso" / "motor_repair_download_extract.py"\nCASE_ENGINE_TEST = SHARCK_ROOT / "📂 motores caso" / "test_motor_repair_download_extract.py"
-M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"\nM59_ENTRYPOINT = M59 / "sharck_v3_entrypoint.py"\nM59_ENTRYPOINT_TEST = M59 / "test_sharck_v3_entrypoint.py"
+ENGINE = MOTOR_ROOT / "hf_download_extract_engine.py"
+CASE_ENGINE = SHARCK_ROOT / "📂 motores caso" / "motor_repair_download_extract.py"
+CASE_ENGINE_TEST = SHARCK_ROOT / "📂 motores caso" / "test_motor_repair_download_extract.py"
+M59 = CODE_ROOT / "📂 sharck-v3-parallel-candidate"
+M59_ENTRYPOINT = M59 / "sharck_v3_entrypoint.py"
+M59_ENTRYPOINT_TEST = M59 / "test_sharck_v3_entrypoint.py"
 
 TIMESFM = HERE.with_name("timesfm_capability.py")
 TIMESFM_TEST = HERE.with_name("test_timesfm_capability.py")
@@ -237,7 +241,8 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("verify-root")
     sub.add_parser("test-m59")
-    sub.add_parser("test-presearch")\n    sub.add_parser("test-repair-motor")
+    sub.add_parser("test-presearch")
+    sub.add_parser("test-repair-motor")
     sub.add_parser("test-timesfm")
 
     p_presearch = sub.add_parser("presearch")
