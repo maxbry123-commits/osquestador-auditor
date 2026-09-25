@@ -1,0 +1,49 @@
+{
+  "schema": "sharck-input.crazy-wall.m67.v1",
+  "node": "M67-LOOP-REPAIR-AND-WIRING",
+  "status": "RUNTIME_EXECUTION_BLOCKED",
+  "root": "➡️📂 sharck imput/",
+  "constraints": {
+    "github_actions": false,
+    "huggingface": false,
+    "alternate_downloader": false,
+    "canonical_motors_only": true
+  },
+  "step1": {
+    "goal": "descargar/extractar componentes faltantes al root SHARCK",
+    "queue": "📂 input sharck code principal/📂 component acquisition/queues/M67-ALL-PENDING-REPAIR.json",
+    "total": 29,
+    "repair_existing": 14,
+    "materialize_missing": 15,
+    "case_motor": "📂 motores caso/motor_repair_download_extract.py",
+    "canonical_motor2": "📂 motores canónicos copiados/motor_2_queue_download_extract.py",
+    "canonical_engine": "📂 motores canónicos copiados/hf_download_extract_engine.py",
+    "state": "READY_BUT_NOT_EXECUTED",
+    "blocker": "Current ChatGPT execution container cannot resolve github.com; canonical engine git fetch cannot run. User forbids GitHub Actions, Hugging Face, and alternate download methods."
+  },
+  "step2": {
+    "goal": "cablear motor de búsqueda/presearch al workflow SHARCK",
+    "state": "WIRED_STATIC_READBACK",
+    "no_hf_registry": "📂 input sharck code principal/📂 root-only-runtime/📂 research-prepass-native/source_registry_no_hf.json",
+    "bridge": "📂 input sharck code principal/📂 sharck-v3-parallel-candidate/sharck_v3_presearch.py",
+    "entrypoint": "📂 input sharck code principal/📂 sharck-v3-parallel-candidate/sharck_v3_entrypoint.py",
+    "runner": "📂 input sharck code principal/📂 root-only-runtime/sharck_root_runner.py",
+    "runtime_test": "PENDING"
+  },
+  "fixes": [
+    {
+      "issue": "literal newline corruption in root runner",
+      "status": "FIXED",
+      "commit": "af197c60411d6e09a54146999481528cde95716d"
+    }
+  ],
+  "evidence": {
+    "queue_blob_sha": "ea2c6fa977079e028f860c5edc7ae9a3cabf36c1",
+    "case_motor_blob_sha": "fbccdd2b6cf23cd600e06842dbe59f9cc8f625cf",
+    "case_motor_test_blob_sha": "06857839b3e9bdfbddfefa6fea892e8df1ca4c6d",
+    "runner_blob_sha": "5f612114a6114597ebbc2e4fb4b8d6d266098b13",
+    "presearch_bridge_blob_sha": "977ae37d954d72d4e45e8a87d56acb1a5b10d3d4",
+    "entrypoint_blob_sha": "b21a0e1e82687694cc967253553fff104a1403cc"
+  },
+  "next": "Execute M67 queue only in a runtime that can reach GitHub and supply GitHub write auth, using canonical Motor 2 + additive case engine; then read-back every component and run SHARCK workflow tests."
+}
